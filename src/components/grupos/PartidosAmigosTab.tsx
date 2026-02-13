@@ -68,12 +68,20 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
         }
     }
 
+    const [confirmandoEliminar, setConfirmandoEliminar] = useState<string | null>(null)
+
     const handleEliminarPartido = async (partidoId: string) => {
+        if (confirmandoEliminar !== partidoId) {
+            setConfirmandoEliminar(partidoId)
+            return
+        }
         try {
             await eliminarPartido(partidoId)
             showToast('Partido eliminado', 'success')
         } catch {
             showToast('Error al eliminar', 'error')
+        } finally {
+            setConfirmandoEliminar(null)
         }
     }
 
@@ -169,9 +177,12 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
                                     </button>
                                     <button
                                         onClick={() => handleEliminarPartido(p.id)}
-                                        className="px-3 py-2.5 rounded-xl text-xs text-[#ef4444] border border-[#ef4444]/30 hover:bg-[#ef4444]/10"
+                                        className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-all ${confirmandoEliminar === p.id
+                                                ? 'bg-[#ef4444] text-white border-[#ef4444]'
+                                                : 'text-[#ef4444] border-[#ef4444]/30 hover:bg-[#ef4444]/10'
+                                            }`}
                                     >
-                                        🗑️
+                                        {confirmandoEliminar === p.id ? '¿Seguro?' : '🗑️'}
                                     </button>
                                 </div>
                             </PartidoCard>

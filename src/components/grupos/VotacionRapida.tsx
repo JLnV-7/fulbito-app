@@ -35,6 +35,9 @@ export function VotacionRapida({ jugadores, onVotarTodos, onClose }: VotacionRap
         try {
             await onVotarTodos(votos)
             onClose()
+        } catch (error: unknown) {
+            alert('Error al guardar votos. Intentá de nuevo.')
+            console.error('Error en votación rápida:', error)
         } finally {
             setGuardando(false)
         }

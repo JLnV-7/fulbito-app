@@ -24,7 +24,7 @@ export default function Perfil() {
     promedio_general: 0,
     total_votos: 0
   })
-  const [prodeStats, setProdeStats] = useState<any>(null)
+  const [prodeStats, setProdeStats] = useState<{ user_id: string; puntos_totales: number; aciertos_exactos: number; aciertos_parciales: number } | null>(null)
   const [loading, setLoading] = useState(true)
 
   // Estado del editor

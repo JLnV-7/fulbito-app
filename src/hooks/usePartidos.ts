@@ -53,8 +53,13 @@ export function usePartidos(filtroLiga: Liga = 'Todos') {
   useEffect(() => {
     fetchPartidos()
 
-    // Polling simple para "simular" realtime
-    const intervalId = setInterval(fetchPartidos, POLL_INTERVAL)
+    // Smart polling: 60s si hay partidos en vivo, 180s si no
+    const getInterval = () => {
+      const hasLive = (state.data || []).some(p => p.estado === 'EN_JUEGO')
+      return hasLive ? 60000 : 180000
+    }
+
+    const intervalId = setInterval(fetchPartidos, getInterval())
 
     return () => clearInterval(intervalId)
   }, [fetchPartidos])

@@ -229,9 +229,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Nav Bar */}
-        <NavBar />
       </main>
+      <NavBar />
     </>
   )
 }

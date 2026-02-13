@@ -10,8 +10,22 @@ import { useToast } from '@/contexts/ToastContext'
 import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { PartidosAmigosTab } from '@/components/grupos/PartidosAmigosTab'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { motion } from 'framer-motion'
 import type { GrupoProde } from '@/types'
+
+interface MiembroGrupo {
+    user_id: string
+    puntos_grupo: number
+    joined_at: string
+    profile?: {
+        id: string
+        username: string | null
+        avatar_url: string | null
+        equipo: string | null
+    }
+    puntos_mostrados: number
+}
 
 export default function GrupoDetailPage() {
     const { id } = useParams()
@@ -21,15 +35,15 @@ export default function GrupoDetailPage() {
     const { showToast } = useToast()
 
     const [grupo, setGrupo] = useState<GrupoProde | null>(null)
-    const [miembros, setMiembros] = useState<any[]>([])
+    const [miembros, setMiembros] = useState<MiembroGrupo[]>([])
     const [loading, setLoading] = useState(true)
     const [confirmandoSalir, setConfirmandoSalir] = useState(false)
     const [procesando, setProcesando] = useState(false)
     const [activeTab, setActiveTab] = useState<'ranking' | 'partidos'>('ranking')
 
     useEffect(() => {
-        if (id) fetchGrupoData()
-    }, [id])
+        if (id && user) fetchGrupoData()
+    }, [id, user])
 
     const fetchGrupoData = async () => {
         try {
@@ -117,7 +131,11 @@ export default function GrupoDetailPage() {
 
     const esAdmin = user?.id === grupo?.admin_id
 
-    if (loading) return <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">⏳</div>
+    if (loading) return (
+        <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+            <LoadingSpinner />
+        </div>
+    )
 
     return (
         <>
@@ -146,8 +164,8 @@ export default function GrupoDetailPage() {
                         <button
                             onClick={() => setActiveTab('ranking')}
                             className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'ranking'
-                                    ? 'bg-[#10b981] text-white shadow-md'
-                                    : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
+                                ? 'bg-[#10b981] text-white shadow-md'
+                                : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                 }`}
                         >
                             🏆 Ranking Pronósticos
@@ -155,8 +173,8 @@ export default function GrupoDetailPage() {
                         <button
                             onClick={() => setActiveTab('partidos')}
                             className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'partidos'
-                                    ? 'bg-[#10b981] text-white shadow-md'
-                                    : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
+                                ? 'bg-[#10b981] text-white shadow-md'
+                                : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                 }`}
                         >
                             ⚽ Partidos Amigos

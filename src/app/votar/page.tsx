@@ -12,15 +12,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
 import { LIGAS, type Liga } from '@/lib/constants'
 import { PartidoCardSkeleton } from '@/components/skeletons/PartidoCardSkeleton'
-
-interface Partido {
-  id: number
-  liga: string
-  equipo_local: string
-  equipo_visitante: string
-  fecha_inicio: string
-  estado?: 'PREVIA' | 'EN_JUEGO' | 'FINALIZADO'
-}
+import type { Partido } from '@/types'
 
 export default function VotarPage() {
   const router = useRouter()
