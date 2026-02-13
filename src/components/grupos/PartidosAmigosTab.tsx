@@ -130,7 +130,13 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
                                         onClick={() => setVotando(p)}
                                         className="flex-1 bg-[#10b981] text-white py-3 rounded-xl font-black hover:bg-[#059669] transition-all"
                                     >
-                                        🗳️ Ir a Votar
+                                        🗳️ Votar
+                                    </button>
+                                    <button
+                                        onClick={() => setViendoResultados(p)}
+                                        className="flex-1 bg-[#8b5cf6] text-white py-3 rounded-xl font-black hover:bg-[#7c3aed] transition-all"
+                                    >
+                                        📊 Resultados
                                     </button>
                                     {esAdmin && (
                                         cerrandoId === p.id ? (
@@ -150,7 +156,7 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
                                                 onClick={() => setCerrandoId(p.id)}
                                                 className="px-3 py-3 rounded-xl text-xs font-bold border border-[var(--card-border)] text-[var(--text-muted)] hover:bg-[var(--hover-bg)]"
                                             >
-                                                🔒 Cerrar
+                                                🔒
                                             </button>
                                         )
                                     )}
