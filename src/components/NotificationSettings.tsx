@@ -20,6 +20,13 @@ export function NotificationSettings() {
         resultadoProde: true
     })
     const { isSupported, subscription, subscribeToPush, loading } = usePushNotifications()
+    const [permissionState, setPermissionState] = useState<NotificationPermission>('default')
+
+    useEffect(() => {
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+            setPermissionState(Notification.permission)
+        }
+    }, [])
 
     useEffect(() => {
         // Cargar preferencias guardadas
@@ -49,14 +56,23 @@ export function NotificationSettings() {
         savePrefs(newPrefs)
     }
 
+    const handleSubscribe = async () => {
+        // En móvil, es crucial pedir permiso dentro de un handler de evento de usuario
+        const result = await Notification.requestPermission()
+        setPermissionState(result)
+        if (result === 'granted') {
+            await subscribeToPush()
+        }
+    }
+
     if (!isSupported) {
         return (
             <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] p-6">
                 <div className="text-center">
                     <span className="text-4xl mb-4 block">🔕</span>
-                    <h3 className="font-bold mb-2">Notificaciones no soportadas</h3>
+                    <h3 className="font-bold mb-2 text-[var(--foreground)]">Notificaciones no soportadas</h3>
                     <p className="text-sm text-[var(--text-muted)]">
-                        Tu navegador no soporta notificaciones push
+                        Tu navegador o dispositivo no soporta notificaciones push.
                     </p>
                 </div>
             </div>
@@ -71,23 +87,32 @@ export function NotificationSettings() {
         >
             {/* Header */}
             <div className="px-5 py-4 bg-[var(--background)] border-b border-[var(--card-border)]">
-                <h3 className="font-bold flex items-center gap-2">
+                <h3 className="font-bold flex items-center gap-2 text-[var(--foreground)]">
                     <span>🔔</span> Notificaciones
                 </h3>
             </div>
 
             <div className="p-5 space-y-4">
                 {/* Estado del permiso */}
-                {!subscription ? (
+                {permissionState === 'denied' ? (
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
+                        <p className="text-sm mb-2 text-red-500 font-medium">
+                            🚫 Notificaciones bloqueadas
+                        </p>
+                        <p className="text-xs text-[var(--text-muted)]">
+                            Tenés que habilitarlas desde la configuración de tu navegador o celular.
+                        </p>
+                    </div>
+                ) : !subscription ? (
                     <div className="bg-[#ff6b6b]/10 border border-[#ff6b6b]/30 rounded-xl p-4 text-center">
-                        <p className="text-sm mb-3">
+                        <p className="text-sm mb-3 text-[var(--foreground)]">
                             📢 Activa las notificaciones para recibir alertas de partidos
                         </p>
                         <button
-                            onClick={subscribeToPush}
+                            onClick={handleSubscribe}
                             disabled={loading}
                             className="bg-[#ff6b6b] text-white px-4 py-2 rounded-lg font-bold text-sm
-                                        hover:bg-[#ee5a5a] transition-colors disabled:opacity-50"
+                                        hover:bg-[#ee5a5a] transition-colors disabled:opacity-50 shadow-lg"
                         >
                             {loading ? 'Activando...' : 'Activar Notificaciones'}
                         </button>
@@ -121,7 +146,7 @@ export function NotificationSettings() {
 
                         {/* Estado activo */}
                         <div className="pt-3 border-t border-[var(--card-border)]">
-                            <p className="text-xs text-[var(--text-muted)] flex items-center gap-2">
+                            <p className="text-xs text-[#10b981] flex items-center gap-2 font-medium">
                                 <span className="w-2 h-2 bg-[#10b981] rounded-full animate-pulse"></span>
                                 Notificaciones activas
                             </p>

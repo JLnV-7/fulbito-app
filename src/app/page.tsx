@@ -100,6 +100,32 @@ export default function Home() {
 
         {/* Container para desktop */}
         <div className="max-w-4xl mx-auto px-6">
+
+          {/* Accesos Rápidos (Votar y Chat) */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <button
+              onClick={() => router.push('/votar')}
+              className="bg-[var(--card-bg)] border border-[var(--card-border)] p-4 rounded-xl
+                         flex flex-col items-center justify-center gap-2 group hover:border-[#ff6b6b] transition-all"
+            >
+              <div className="bg-[#ff6b6b]/10 p-3 rounded-full group-hover:bg-[#ff6b6b]/20 transition-colors">
+                <span className="text-2xl">✋</span>
+              </div>
+              <span className="font-bold text-[var(--foreground)]">Votar Figura</span>
+            </button>
+
+            <button
+              onClick={() => router.push('/chat')}
+              className="bg-[var(--card-bg)] border border-[var(--card-border)] p-4 rounded-xl
+                         flex flex-col items-center justify-center gap-2 group hover:border-[#10b981] transition-all"
+            >
+              <div className="bg-[#10b981]/10 p-3 rounded-full group-hover:bg-[#10b981]/20 transition-colors">
+                <span className="text-2xl">💬</span>
+              </div>
+              <span className="font-bold text-[var(--foreground)]">Chat Global</span>
+            </button>
+          </div>
+
           {/* Filtros de Liga */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar mb-4 md:justify-center">
             {LIGAS.map((liga) => (

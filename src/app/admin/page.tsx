@@ -3,13 +3,35 @@
 import { useState } from 'react'
 import { DesktopNav } from '@/components/DesktopNav'
 import { NavBar } from '@/components/NavBar'
+import { useAuth } from '@/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
 import { fetchFixturesAction } from '@/app/actions/football'
 import { LIGAS } from '@/lib/constants'
 import { MatchUpdater } from '@/components/admin/MatchUpdater'
 
 export default function AdminPage() {
+    const { user } = useAuth()
+    const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [logs, setLogs] = useState<string[]>([])
+
+    // 🔒 Protección básica de Admin
+    const ADMIN_EMAILS = ['admin@fulbitoo.com', 'julian@test.com', 'julianvallejo09@gmail.com'] // TODO: Agregar email real
+
+    if (!user || !user.email || !ADMIN_EMAILS.includes(user.email)) {
+        return (
+            <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-6 text-center">
+                <div>
+                    <h1 className="text-4xl mb-4">🚫</h1>
+                    <h2 className="text-xl font-bold mb-2">Acceso Restringido</h2>
+                    <p className="text-[var(--text-muted)]">No tenés permisos para ver esta página.</p>
+                    <button onClick={() => router.push('/')} className="mt-6 text-[#ff6b6b] hover:underline">
+                        Volver al inicio
+                    </button>
+                </div>
+            </div>
+        )
+    }
 
     const addLog = (msg: string) => setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev])
 

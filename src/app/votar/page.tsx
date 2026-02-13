@@ -1,12 +1,18 @@
-// src/app/page.tsx
+// src/app/votar/page.tsx
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import { PartidoCard } from '@/components/PartidoCard'
+import { DesktopNav } from '@/components/DesktopNav'
+import { NavBar } from '@/components/NavBar'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { ErrorMessage } from '@/components/ErrorMessage'
+import { LIGAS, type Liga } from '@/lib/constants'
+import { PartidoCardSkeleton } from '@/components/skeletons/PartidoCardSkeleton'
 
-// 🎯 Tipos centralizados
 interface Partido {
   id: number
   liga: string
@@ -16,25 +22,13 @@ interface Partido {
   estado?: 'PREVIA' | 'EN_JUEGO' | 'FINALIZADO'
 }
 
-import { LIGAS, type Liga } from '@/lib/constants'
-
-export default function Home() {
+export default function VotarPage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [partidos, setPartidos] = useState<Partido[]>([])
   const [filtroLiga, setFiltroLiga] = useState<Liga>('Todos')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  // 🔐 Verificar autenticación
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.push('/login')
-      }
-    }
-    checkAuth()
-  }, [router])
 
   // 📊 Fetch partidos con manejo de errores
   const fetchPartidos = useCallback(async () => {
@@ -45,7 +39,9 @@ export default function Home() {
       let query = supabase
         .from('partidos')
         .select('*')
-        .order('fecha_inicio', { ascending: true })
+        // Solo partidos en juego o finalizados recientemente para votar
+        .in('estado', ['EN_JUEGO', 'FINALIZADO'])
+        .order('fecha_inicio', { ascending: false })
 
       if (filtroLiga !== 'Todos') {
         query = query.eq('liga', filtroLiga)
@@ -58,7 +54,7 @@ export default function Home() {
       setPartidos(data || [])
     } catch (err) {
       console.error('Error cargando partidos:', err)
-      setError('No pudimos cargar los partidos. Intentá de nuevo.')
+      setError('No pudimos cargar los partidos habilitados para votación.')
     } finally {
       setLoading(false)
     }
@@ -68,104 +64,106 @@ export default function Home() {
     fetchPartidos()
   }, [fetchPartidos])
 
-  // 🔄 Función para retry
-  const handleRetry = () => {
-    fetchPartidos()
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[var(--background)] pb-24 md:pt-20">
+        <DesktopNav />
+        <div className="max-w-4xl mx-auto px-6 py-6">
+          <h1 className="text-2xl font-bold mb-6 text-[var(--foreground)]">Votar Figura del Partido ✋</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Array(4).fill(0).map((_, idx) => (
+              <PartidoCardSkeleton key={idx} />
+            ))}
+          </div>
+        </div>
+        <NavBar />
+      </main>
+    )
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white pb-24 font-sans">
+    <main className="min-h-screen bg-[var(--background)] pb-24 md:pt-20 transition-colors duration-300">
+      <DesktopNav />
       {/* Header */}
-      <div className="p-8 bg-gradient-to-b from-blue-900/20 to-transparent text-center">
-        <h1 className="text-4xl font-black italic tracking-tighter">
-          FULBITO <span className="text-blue-500">1x1</span>
-        </h1>
-        <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.3em] mt-2">
-          Fixture & Votación
-        </p>
-      </div>
-
-      {/* Filtros de Liga */}
-      <div className="flex gap-2 px-6 overflow-x-auto no-scrollbar mb-8">
-        {LIGAS.map((liga) => (
+      <div className="p-6 bg-[var(--card-bg)] border-b border-[var(--card-border)] mb-6">
+        <div className="max-w-4xl mx-auto">
           <button
-            key={liga}
-            onClick={() => setFiltroLiga(liga)}
-            className={`px-5 py-2 rounded-full text-[10px] font-black uppercase 
-                       transition-all whitespace-nowrap border
-                       ${filtroLiga === liga
-                ? 'bg-blue-600 border-blue-600 text-white scale-105'
-                : 'bg-gray-900 border-gray-800 text-gray-500 hover:border-gray-700'
-              }`}
+            onClick={() => router.back()}
+            className="text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors mb-2 text-sm"
           >
-            {liga}
+            ← Volver
           </button>
-        ))}
+          <h1 className="text-2xl font-bold text-[var(--foreground)] flex items-center gap-2">
+            ✋ Votación de Figuras
+          </h1>
+          <p className="text-[var(--text-muted)] text-sm mt-1">
+            Elegí el partido y votá a la figura. Solo partidos en vivo o terminados.
+          </p>
+        </div>
       </div>
 
-      {/* Lista de Partidos */}
-      <div className="px-6 space-y-4 max-w-xl mx-auto">
-        {/* Loading State */}
-        {loading && (
-          <div className="text-center py-10">
-            <div className="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-gray-700 font-black animate-pulse uppercase text-xs">
-              Buscando partidos...
-            </p>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && !loading && (
-          <div className="bg-red-500/10 border border-red-500/50 rounded-2xl p-6 text-center">
-            <p className="text-red-400 font-bold mb-4">⚠️ {error}</p>
+      <div className="max-w-4xl mx-auto px-6">
+        {/* Filtros de Liga */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar mb-6">
+          {LIGAS.map((liga) => (
             <button
-              onClick={handleRetry}
-              className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-full text-sm font-black uppercase transition-all"
+              key={liga}
+              onClick={() => setFiltroLiga(liga)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold
+                           transition-all whitespace-nowrap uppercase tracking-wide
+                           ${filtroLiga === liga
+                  ? 'bg-[#ff6b6b] text-white'
+                  : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:bg-[var(--hover-bg)] hover:text-[var(--foreground)]'
+                }`}
             >
-              Reintentar
+              {liga}
             </button>
-          </div>
-        )}
+          ))}
+        </div>
 
-        {/* Empty State */}
-        {!loading && !error && partidos.length === 0 && (
-          <div className="text-center py-20">
-            <div className="text-6xl mb-4">⚽</div>
-            <p className="text-gray-600 font-black uppercase text-sm">
-              No hay partidos programados
-            </p>
-          </div>
-        )}
+        {/* Lista de Partidos */}
+        <div>
+          {/* Error State */}
+          {error && (
+            <ErrorMessage
+              message={error}
+              onRetry={() => fetchPartidos()}
+            />
+          )}
 
-        {/* Partidos List */}
-        {!loading && !error && partidos.length > 0 && (
-          <>
-            {partidos.map((partido) => (
-              <PartidoCard key={partido.id} partido={partido} />
-            ))}
-          </>
-        )}
+          {/* Empty State */}
+          {!loading && !error && partidos.length === 0 && (
+            <div className="text-center py-20 bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)]">
+              <div className="text-6xl mb-4">⌛</div>
+              <p className="text-[var(--foreground)] font-bold text-lg mb-2">No hay partidos para votar</p>
+              <p className="text-[var(--text-muted)] text-sm max-w-xs mx-auto">
+                La votación se habilita cuando los partidos comienzan o terminan.
+              </p>
+              <button
+                onClick={() => router.push('/')}
+                className="mt-6 text-[#ff6b6b] font-semibold hover:underline"
+              >
+                Ver próximos partidos
+              </button>
+            </div>
+          )}
+
+          {/* Partidos Grid */}
+          {!loading && !error && partidos.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {partidos.map((partido) => (
+                <div key={partido.id} onClick={() => router.push(`/partido/${partido.id}`)} className="cursor-pointer group">
+                  <PartidoCard partido={partido} />
+                  <div className="mt-2 text-center">
+                    <span className="text-xs font-bold text-[#ff6b6b] group-hover:underline">Tocá para votar ✋</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-
-      {/* Nav Bar Inferior */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-[#0a0a0a]/95 backdrop-blur-xl 
-                      border-t border-gray-900 px-10 py-5 flex justify-around items-center z-50">
-        <button
-          onClick={() => router.push('/')}
-          className="text-blue-500 flex flex-col items-center gap-1"
-        >
-          <span className="text-xl">🏟️</span>
-          <span className="text-[9px] font-black uppercase tracking-tighter">Home</span>
-        </button>
-        <button
-          onClick={() => router.push('/perfil')}
-          className="text-gray-500 flex flex-col items-center gap-1 hover:text-white transition-colors"
-        >
-          <span className="text-xl">👤</span>
-          <span className="text-[9px] font-black uppercase tracking-tighter">Perfil</span>
-        </button>
-      </nav>
+      <NavBar />
     </main>
   )
 }

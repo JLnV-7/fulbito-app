@@ -186,3 +186,55 @@ export interface StatsProde {
   accuracy: number // porcentaje de aciertos
   racha: number
 }
+
+// ⚽ Partidos entre Amigos
+export type TipoPartidoAmigo = '5' | '7' | '8' | '9' | '11'
+export type EstadoPartidoAmigo = 'borrador' | 'votacion_abierta' | 'finalizado'
+
+export interface PartidoAmigo {
+  id: string
+  grupo_id: string
+  creado_por: string
+  tipo_partido: TipoPartidoAmigo
+  fecha: string
+  hora: string
+  cancha?: string
+  estado: EstadoPartidoAmigo
+  resultado_azul?: number
+  resultado_rojo?: number
+  created_at: string
+  updated_at: string
+
+  // Computados
+  jugadores_count?: number
+  votos_usuarios?: number
+  total_miembros?: number
+  jugadores?: JugadorPartidoAmigo[]
+}
+
+export interface JugadorPartidoAmigo {
+  id: string
+  partido_amigo_id: string
+  nombre: string
+  equipo: 'azul' | 'rojo'
+  orden: number
+  created_at: string
+
+  // Computados
+  promedio?: number
+  total_votos?: number
+  mi_voto?: VotoPartidoAmigo | null
+}
+
+export interface VotoPartidoAmigo {
+  id: string
+  partido_amigo_id: string
+  jugador_id: string
+  user_id: string
+  nota: number
+  comentario?: string
+  created_at: string
+
+  // Relaciones
+  profile?: Profile
+}

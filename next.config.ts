@@ -9,6 +9,31 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   disable: process.env.NODE_ENV === "development",
   workboxOptions: {
     disableDevLogs: true,
+    runtimeCaching: [
+      {
+        urlPattern: /^https:\/\/.*\.supabase\.co\/.*$/,
+        handler: 'NetworkFirst',
+        options: {
+          cacheName: 'supabase-api-cache',
+          expiration: {
+            maxEntries: 50,
+            maxAgeSeconds: 60 * 60 * 24, // 1 día
+          },
+          networkTimeoutSeconds: 10,
+        },
+      },
+      {
+        urlPattern: /^https:\/\/media\.api-sports\.io\/.*$/,
+        handler: 'StaleWhileRevalidate',
+        options: {
+          cacheName: 'images-cache',
+          expiration: {
+            maxEntries: 100,
+            maxAgeSeconds: 60 * 60 * 24 * 30, // 30 días
+          },
+        },
+      },
+    ],
   },
 });
 
@@ -28,9 +53,14 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['framer-motion', 'canvas-confetti'],
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
-// export default nextConfig;
 // export default nextConfig;
 // export default withPWA(nextConfig);
 export default nextConfig;

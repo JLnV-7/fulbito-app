@@ -10,6 +10,7 @@ import { FavoriteButton } from './FavoriteButton'
 import { TeamForm } from './TeamForm'
 import { TeamLogo } from './TeamLogo'
 import type { Partido } from '@/types'
+import { formatearFecha, formatearHora, generateCalendarUrl } from '@/lib/utils'
 
 interface PartidoCardProps {
   partido: Partido
@@ -42,35 +43,6 @@ export const PartidoCard = memo(({ partido }: PartidoCardProps) => {
 
   const handleClick = () => {
     router.push(`/partido/${partido.id}`)
-  }
-
-  const formatearHora = (fecha: string) => {
-    try {
-      const date = new Date(fecha)
-      return date.toLocaleTimeString('es-AR', {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    } catch {
-      return '--:--'
-    }
-  }
-
-  const formatearFecha = (fecha: string) => {
-    try {
-      const date = new Date(fecha)
-      const hoy = new Date()
-      const esHoy = date.toDateString() === hoy.toDateString()
-
-      if (esHoy) return 'Hoy'
-
-      return date.toLocaleDateString('es-AR', {
-        day: 'numeric',
-        month: 'short'
-      })
-    } catch {
-      return ''
-    }
   }
 
   const EstadoBadge = () => {
@@ -108,24 +80,9 @@ export const PartidoCard = memo(({ partido }: PartidoCardProps) => {
     )
   }
 
-  const generateCalendarUrl = () => {
-    const startDate = new Date(partido.fecha_inicio)
-    const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000)) // +2 horas
-
-    const formatForCalendar = (date: Date) => {
-      return date.toISOString().replace(/-|:|\.\d{3}/g, '')
-    }
-
-    const title = encodeURIComponent(`⚽ ${partido.equipo_local} vs ${partido.equipo_visitante}`)
-    const details = encodeURIComponent(`Partido de ${partido.liga}\n\nSeguilo en Fulbito 🔥`)
-    const location = encodeURIComponent(partido.liga)
-
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatForCalendar(startDate)}/${formatForCalendar(endDate)}&details=${details}&location=${location}`
-  }
-
   const handleCalendarClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    window.open(generateCalendarUrl(), '_blank')
+    window.open(generateCalendarUrl(partido), '_blank')
   }
 
   return (

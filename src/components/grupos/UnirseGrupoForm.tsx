@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useGrupos } from '@/hooks/useGrupos'
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function UnirseGrupoForm({ onCancel, onSuccess }: Props) {
+    const router = useRouter()
     const { unirseAGrupo } = useGrupos()
     const [codigo, setCodigo] = useState('')
     const [procesando, setProcesando] = useState(false)
@@ -19,10 +21,11 @@ export function UnirseGrupoForm({ onCancel, onSuccess }: Props) {
 
         setProcesando(true)
         try {
-            await unirseAGrupo(codigo)
+            const grupo = await unirseAGrupo(codigo)
             setCodigo('')
             if (onSuccess) onSuccess()
-            onCancel() // Close form
+            // Navegar directamente al grupo
+            router.push(`/grupos/${grupo.id}`)
         } catch (error: any) {
             alert(error.message)
         } finally {

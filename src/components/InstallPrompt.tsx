@@ -64,12 +64,17 @@ export function InstallPrompt() {
                     </div>
 
                     {isIOS ? (
-                        <button
-                            onClick={() => setShowPrompt(false)}
-                            className="text-gray-400 hover:text-white"
-                        >
-                            ✕
-                        </button>
+                        <div className="flex flex-col items-end gap-2">
+                            <button
+                                onClick={() => setShowPrompt(false)}
+                                className="text-gray-400 hover:text-white mb-1"
+                            >
+                                ✕
+                            </button>
+                            <p className="text-xs text-gray-400 max-w-[200px] text-right">
+                                Tocá el botón <span className="text-blue-400 font-bold">Compartir</span> y elegí <span className="font-bold text-white">"Agregar a Inicio"</span>
+                            </p>
+                        </div>
                     ) : (
                         <div className="flex gap-2">
                             <button
@@ -88,7 +93,7 @@ export function InstallPrompt() {
                     )}
 
                     {isIOS && (
-                        <div className="absolute -bottom-2 right-6 w-4 h-4 bg-[#1c1c1c] border-r border-b border-gray-800 transform rotate-45"></div>
+                        <div className="absolute -bottom-2 right-1/2 translate-x-1/2 w-4 h-4 bg-[#1c1c1c] border-r border-b border-gray-800 transform rotate-45"></div>
                     )}
                 </motion.div>
             )}

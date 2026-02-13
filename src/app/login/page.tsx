@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [isRegistering, setIsRegistering] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,22 +53,22 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#1a1a1a] flex items-center justify-center p-6">
+    <main className="min-h-screen bg-[var(--background)] flex items-center justify-center p-6 transition-colors duration-300">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Fulbito</h1>
-          <p className="text-[#909090] text-sm">
+          <h1 className="text-3xl font-bold mb-2 text-[var(--foreground)]">Fulbito</h1>
+          <p className="text-[var(--text-muted)] text-sm">
             {isRegistering ? 'Creá tu cuenta para votar' : 'Iniciá sesión para votar'}
           </p>
         </div>
 
         {/* Form */}
-        <div className="bg-[#242424] rounded-2xl border border-[#333333] p-6">
+        <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] p-6 shadow-xl transition-colors duration-300">
           <form onSubmit={isRegistering ? handleRegister : handleLogin} className="space-y-4">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2">
+              <label htmlFor="email" className="block text-sm font-medium mb-2 text-[var(--foreground)]">
                 Email
               </label>
               <input
@@ -75,30 +77,39 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#333333] rounded-lg
-                         focus:outline-none focus:border-[#ff6b6b] transition-colors"
+                className="w-full px-4 py-2.5 bg-[var(--input-bg)] border border-[var(--card-border)] rounded-lg
+                         text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] transition-colors placeholder:text-[var(--text-muted)]"
                 placeholder="tu@email.com"
               />
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2">
+              <label htmlFor="password" className="block text-sm font-medium mb-2 text-[var(--foreground)]">
                 Contraseña
               </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#333333] rounded-lg
-                         focus:outline-none focus:border-[#ff6b6b] transition-colors"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-2.5 bg-[var(--input-bg)] border border-[var(--card-border)] rounded-lg
+                           text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] transition-colors placeholder:text-[var(--text-muted)] pr-10"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
               {isRegistering && (
-                <p className="text-xs text-[#909090] mt-1">Mínimo 6 caracteres</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">Mínimo 6 caracteres</p>
               )}
             </div>
 
@@ -113,8 +124,8 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#ff6b6b] hover:bg-[#ff5252] py-3 rounded-lg font-semibold
-                       disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white py-3 rounded-lg font-semibold
+                       disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg hover:shadow-xl hover:-translate-y-0.5 transform duration-200"
             >
               {loading
                 ? (isRegistering ? 'Registrando...' : 'Iniciando...')
@@ -130,7 +141,7 @@ export default function LoginPage() {
                 setIsRegistering(!isRegistering)
                 setError('')
               }}
-              className="text-sm text-[#909090] hover:text-[#f5f5f5] transition-colors"
+              className="text-sm text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors"
             >
               {isRegistering
                 ? '¿Ya tenés cuenta? Iniciá sesión'
@@ -141,7 +152,7 @@ export default function LoginPage() {
 
         {/* Back to home */}
         <div className="mt-4 text-center">
-          <Link href="/" className="text-sm text-[#909090] hover:text-[#f5f5f5] transition-colors">
+          <Link href="/" className="text-sm text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors">
             ← Volver al inicio
           </Link>
         </div>
