@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useToast } from '@/contexts/ToastContext'
 import type { JugadorPartidoAmigo } from '@/types'
 
 interface VotacionRapidaProps {
@@ -12,6 +13,7 @@ interface VotacionRapidaProps {
 }
 
 export function VotacionRapida({ jugadores, onVotarTodos, onClose }: VotacionRapidaProps) {
+    const { showToast } = useToast()
     const [votosRapidos, setVotosRapidos] = useState<Record<string, number>>(() => {
         const initial: Record<string, number> = {}
         jugadores.forEach(j => {
@@ -36,7 +38,7 @@ export function VotacionRapida({ jugadores, onVotarTodos, onClose }: VotacionRap
             await onVotarTodos(votos)
             onClose()
         } catch (error: unknown) {
-            alert('Error al guardar votos. Intentá de nuevo.')
+            showToast('Error al guardar votos. Intentá de nuevo.', 'error')
             console.error('Error en votación rápida:', error)
         } finally {
             setGuardando(false)

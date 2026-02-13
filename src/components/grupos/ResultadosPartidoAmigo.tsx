@@ -157,6 +157,12 @@ function TeamResults({ equipo, color, emoji, jugadores, promedio, onClickJugador
     promedio: number
     onClickJugador: (j: JugadorPartidoAmigo) => void
 }) {
+    const getNotaColor = (nota: number) => {
+        if (nota >= 7) return '#22c55e'
+        if (nota >= 4) return '#fbbf24'
+        return '#ef4444'
+    }
+
     return (
         <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] overflow-hidden">
             <div className="p-4 border-b border-[var(--card-border)]" style={{ borderLeftColor: color, borderLeftWidth: 4 }}>
@@ -177,10 +183,24 @@ function TeamResults({ equipo, color, emoji, jugadores, promedio, onClickJugador
                         <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-[#ffd700] text-black' : 'bg-[var(--background)] text-[var(--text-muted)]'}`}>
                             {i + 1}
                         </span>
-                        <span className="font-bold flex-1">
-                            {i === 0 && '👑 '}{j.nombre}
-                        </span>
-                        <span className="text-sm font-black text-[#fbbf24]">{j.promedio} ⭐</span>
+                        <div className="flex-1 min-w-0">
+                            <span className="font-bold text-sm block">
+                                {i === 0 && '👑 '}{j.nombre}
+                            </span>
+                            {/* Barra visual de nota */}
+                            <div className="flex items-center gap-2 mt-1">
+                                <div className="flex-1 h-1.5 bg-[var(--background)] rounded-full overflow-hidden">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${((j.promedio || 0) / 10) * 100}%` }}
+                                        transition={{ delay: 0.1 * i, duration: 0.5 }}
+                                        className="h-full rounded-full"
+                                        style={{ backgroundColor: getNotaColor(j.promedio || 0) }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <span className="text-sm font-black" style={{ color: getNotaColor(j.promedio || 0) }}>{j.promedio}</span>
                         <span className="text-xs text-[var(--text-muted)]">({j.total_votos})</span>
                     </button>
                 ))}

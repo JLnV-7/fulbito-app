@@ -10,6 +10,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { PartidosAmigosTab } from '@/components/grupos/PartidosAmigosTab'
+import { CommentSection } from '@/components/CommentSection'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { motion } from 'framer-motion'
 import type { GrupoProde } from '@/types'
@@ -39,7 +40,7 @@ export default function GrupoDetailPage() {
     const [loading, setLoading] = useState(true)
     const [confirmandoSalir, setConfirmandoSalir] = useState(false)
     const [procesando, setProcesando] = useState(false)
-    const [activeTab, setActiveTab] = useState<'ranking' | 'partidos'>('ranking')
+    const [activeTab, setActiveTab] = useState<'ranking' | 'partidos' | 'chat'>('ranking')
 
     useEffect(() => {
         if (id && user) fetchGrupoData()
@@ -177,7 +178,16 @@ export default function GrupoDetailPage() {
                                 : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                 }`}
                         >
-                            ⚽ Partidos Amigos
+                            ⚽ Partidos
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('chat')}
+                            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'chat'
+                                ? 'bg-[#10b981] text-white shadow-md'
+                                : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
+                                }`}
+                        >
+                            💬 Chat
                         </button>
                     </div>
                 </div>
@@ -285,9 +295,16 @@ export default function GrupoDetailPage() {
                                 )}
                             </div>
                         </>
-                    ) : (
+                    ) : activeTab === 'partidos' ? (
                         /* Partidos Amigos Tab */
                         grupo && <PartidosAmigosTab grupo={grupo} />
+                    ) : (
+                        /* Chat Tab */
+                        grupo && (
+                            <div className="mt-2">
+                                <CommentSection partidoId={`grupo-${grupo.id}`} />
+                            </div>
+                        )
                     )}
                 </div>
 

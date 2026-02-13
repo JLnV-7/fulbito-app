@@ -80,7 +80,7 @@ export function NavBar() {
         <button
           onClick={() => router.push('/')}
           className={`flex flex-col items-center gap-1 transition-all ${isActive('/')
-            ? 'text-[#ff6b6b] scale-105'
+            ? 'text-[#ff6b6b] scale-105 nav-active-dot'
             : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
             }`}
         >
@@ -91,7 +91,7 @@ export function NavBar() {
         <button
           onClick={() => router.push('/prode')}
           className={`flex flex-col items-center gap-1 transition-all ${isActive('/prode')
-            ? 'text-[#10b981] scale-105'
+            ? 'text-[#10b981] scale-105 nav-active-dot'
             : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
             }`}
         >
@@ -102,7 +102,7 @@ export function NavBar() {
         <button
           onClick={() => router.push('/ranking')}
           className={`flex flex-col items-center gap-1 transition-all ${isActive('/ranking')
-            ? 'text-[#ffd700] scale-105'
+            ? 'text-[#ffd700] scale-105 nav-active-dot'
             : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
             }`}
         >
@@ -131,7 +131,7 @@ export function NavBar() {
         <button
           onClick={() => router.push(user ? '/perfil' : '/login')}
           className={`flex flex-col items-center gap-1 transition-all ${isActive('/perfil') || isActive('/login')
-            ? 'text-[#ff6b6b] scale-105'
+            ? 'text-[#ff6b6b] scale-105 nav-active-dot'
             : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
             }`}
         >

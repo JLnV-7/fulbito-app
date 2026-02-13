@@ -122,7 +122,7 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
                         {votacionAbierta.map(p => (
                             <PartidoCard key={p.id} partido={p} variant="votacion">
                                 <div className="flex items-center justify-between gap-2 text-xs text-[var(--text-muted)] mb-3">
-                                    <span>👥 {p.votos_usuarios || 0}/{p.total_miembros || 0} votaron</span>
+                                    <span>👥 {p.votos_usuarios || 0} votaron</span>
                                     <span>{p.jugadores_count} jugadores</span>
                                 </div>
                                 <div className="flex gap-2">
@@ -178,8 +178,8 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
                                     <button
                                         onClick={() => handleEliminarPartido(p.id)}
                                         className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-all ${confirmandoEliminar === p.id
-                                                ? 'bg-[#ef4444] text-white border-[#ef4444]'
-                                                : 'text-[#ef4444] border-[#ef4444]/30 hover:bg-[#ef4444]/10'
+                                            ? 'bg-[#ef4444] text-white border-[#ef4444]'
+                                            : 'text-[#ef4444] border-[#ef4444]/30 hover:bg-[#ef4444]/10'
                                             }`}
                                     >
                                         {confirmandoEliminar === p.id ? '¿Seguro?' : '🗑️'}

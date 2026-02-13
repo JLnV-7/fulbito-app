@@ -1,7 +1,8 @@
 {
     "name": "Fulbito",
     "short_name": "Fulbito",
-    "description": "Votá a tus jugadores favoritos",
+    "description": "Votá jugadores, hacé pronósticos y competí con amigos ⚽",
+    "id": "/",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#1a1a1a",
