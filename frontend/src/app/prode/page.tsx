@@ -13,6 +13,7 @@ import { DesktopNav } from '@/components/DesktopNav'
 import { PartidoCardSkeleton } from '@/components/skeletons/PartidoCardSkeleton'
 import { ReglasPuntajeModal } from '@/components/ReglasPuntajeModal'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/contexts/ToastContext'
 
 
 import { LIGAS, type Liga } from '@/lib/constants'
@@ -21,6 +22,7 @@ type FiltroPronostico = 'todos' | 'sin_pronosticar' | 'pronosticados'
 export default function ProdePage() {
     const router = useRouter()
     const { user } = useAuth()
+    const { showToast } = useToast()
     const [filtroLiga, setFiltroLiga] = useState<Liga>('Todos')
     const [filtroPronostico, setFiltroPronostico] = useState<FiltroPronostico>('todos')
 
@@ -68,7 +70,7 @@ export default function ProdePage() {
         try {
             await guardarPronostico(String(partidoId), golesLocal, golesVisitante)
         } catch (error: any) {
-            alert(error.message || 'Error al guardar pronóstico')
+            showToast(error.message || 'Error al guardar pronóstico', 'error')
         }
     }
 

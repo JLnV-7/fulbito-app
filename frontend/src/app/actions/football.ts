@@ -4,7 +4,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { getStandings, getTopScorers, getFixtures, getFixtureById } from '@/lib/api'
 import { LIGAS_MAP, CURRENT_SEASONS } from '@/lib/constants'
-import type { ApiLeagueResponse } from '@/types/api'
+import type { ApiLeagueResponse, ApiFixture } from '@/types/api'
 import type { Partido } from '@/types'
 
 export async function fetchStandingsAction(ligaName: string) {
@@ -26,9 +26,6 @@ export async function fetchStandingsAction(ligaName: string) {
     }
 
     console.warn(`[Standings] Empty response or invalid structure for ${ligaName}:`, JSON.stringify(data))
-    return []
-
-    console.warn(`[Standings] No standings found for ${ligaName}`)
     return []
 }
 
@@ -74,7 +71,7 @@ export async function fetchFixtureByIdAction(id: number): Promise<Partido | null
 }
 
 // Helper para adaptar respuesta API a nuestro tipo Partido
-function adaptApiFixtureToPartido(item: any): Partido {
+function adaptApiFixtureToPartido(item: ApiFixture): Partido {
     return {
         id: item.fixture.id,
         liga: item.league.name, // O mapear a nuestro nombre interno si es necesario
@@ -82,8 +79,8 @@ function adaptApiFixtureToPartido(item: any): Partido {
         equipo_visitante: item.teams.away.name,
         fecha_inicio: item.fixture.date,
         estado: mapStatusToState(item.fixture.status.short),
-        goles_local: item.goals.home,
-        goles_visitante: item.goals.away,
+        goles_local: item.goals.home ?? undefined,
+        goles_visitante: item.goals.away ?? undefined,
         logo_local: item.teams.home.logo,
         logo_visitante: item.teams.away.logo,
         fixture_id: item.fixture.id

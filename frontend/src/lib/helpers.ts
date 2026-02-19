@@ -10,14 +10,3 @@ export function calcularEstadoPartido(fechaInicio: string): EstadoPartido {
   if (ahora >= inicio && ahora < fin) return 'EN_JUEGO'
   return 'FINALIZADO'
 }
-
-export function formatearHora(fecha: string): string {
-  try {
-    return new Date(fecha).toLocaleTimeString('es-AR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  } catch {
-    return '--:--'
-  }
-}

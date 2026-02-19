@@ -1,37 +1,63 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Background -->
-  <rect width="512" height="512" rx="80" fill="url(#gradient)"/>
-  
-  <!-- Gradient Definition -->
   <defs>
-    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#ff4757;stop-opacity:1" />
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="50%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#34d399"/>
     </linearGradient>
-    <filter id="shadow">
-      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.3"/>
+    <radialGradient id="light" cx="30%" cy="25%" r="60%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.18)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+    <filter id="ballShadow">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#064e3b" flood-opacity="0.35"/>
     </filter>
   </defs>
-  
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="108" fill="url(#light)"/>
+
   <!-- Soccer Ball -->
-  <g filter="url(#shadow)">
-    <!-- Outer circle -->
-    <circle cx="256" cy="256" r="120" fill="#ffffff" stroke="#1a1a1a" stroke-width="4"/>
+  <g filter="url(#ballShadow)" transform="translate(256, 256)">
+    <!-- Ball body -->
+    <circle cx="0" cy="0" r="135" fill="#FFFFFF"/>
     
-    <!-- Pentagon in center -->
-    <path d="M 256 156 L 293 188 L 276 233 L 236 233 L 219 188 Z" fill="#1a1a1a"/>
+    <!-- Seams (white hexagonal lines) drawn as strokes -->
+    <!-- Center pentagon -->
+    <polygon points="0,-38 36,-12 22,31 -22,31 -36,-12" 
+             fill="none" stroke="#d1d5db" stroke-width="3.5" stroke-linejoin="round"/>
     
-    <!-- Pentagon segments -->
-    <path d="M 256 156 L 219 188 L 176 168 L 193 123 L 236 123 Z" fill="#1a1a1a"/>
-    <path d="M 293 188 L 336 168 L 353 123 L 310 123 L 256 156 Z" fill="#1a1a1a"/>
-    <path d="M 276 233 L 293 278 L 256 310 L 219 278 L 236 233 Z" fill="#1a1a1a"/>
-    <path d="M 176 168 L 136 188 L 119 233 L 156 253 L 219 188 Z" fill="#1a1a1a"/>
-    <path d="M 336 168 L 376 188 L 393 233 L 356 253 L 293 188 Z" fill="#1a1a1a"/>
+    <!-- Lines from center pentagon to edges -->
+    <line x1="0" y1="-38" x2="0" y2="-90" stroke="#d1d5db" stroke-width="3"/>
+    <line x1="36" y1="-12" x2="85" y2="-52" stroke="#d1d5db" stroke-width="3"/>
+    <line x1="22" y1="31" x2="75" y2="62" stroke="#d1d5db" stroke-width="3"/>
+    <line x1="-22" y1="31" x2="-75" y2="62" stroke="#d1d5db" stroke-width="3"/>
+    <line x1="-36" y1="-12" x2="-85" y2="-52" stroke="#d1d5db" stroke-width="3"/>
+    
+    <!-- Outer seam lines -->
+    <line x1="0" y1="-90" x2="55" y2="-78" stroke="#d1d5db" stroke-width="3"/>
+    <line x1="0" y1="-90" x2="-55" y2="-78" stroke="#d1d5db" stroke-width="3"/>
+    <line x1="85" y1="-52" x2="95" y2="10" stroke="#d1d5db" stroke-width="3"/>
+    <line x1="55" y1="-78" x2="85" y2="-52" stroke="#d1d5db" stroke-width="3"/>
+    <line x1="95" y1="10" x2="75" y2="62" stroke="#d1d5db" stroke-width="3"/>
+    <line x1="75" y1="62" x2="35" y2="100" stroke="#d1d5db" stroke-width="3"/>
+    <line x1="-75" y1="62" x2="-35" y2="100" stroke="#d1d5db" stroke-width="3"/>
+    <line x1="-75" y1="62" x2="-95" y2="10" stroke="#d1d5db" stroke-width="3"/>
+    <line x1="-95" y1="10" x2="-85" y2="-52" stroke="#d1d5db" stroke-width="3"/>
+    <line x1="-55" y1="-78" x2="-85" y2="-52" stroke="#d1d5db" stroke-width="3"/>
+    <line x1="35" y1="100" x2="-35" y2="100" stroke="#d1d5db" stroke-width="3"/>
+
+    <!-- Ball highlight (specular) -->
+    <ellipse cx="-40" cy="-45" rx="40" ry="35" fill="rgba(255,255,255,0.45)" transform="rotate(-20)"/>
+    <ellipse cx="-28" cy="-35" rx="18" ry="13" fill="rgba(255,255,255,0.5)" transform="rotate(-20)"/>
   </g>
-  
-  <!-- Star accent (voting theme) -->
-  <g transform="translate(400, 100)">
-    <path d="M 0,-20 L 5,-5 L 20,0 L 5,5 L 0,20 L -5,5 L -20,0 L -5,-5 Z" 
-          fill="#ffd700" stroke="#1a1a1a" stroke-width="2" filter="url(#shadow)"/>
+
+  <!-- Accent sparkle -->
+  <g opacity="0.85">
+    <circle cx="395" cy="105" r="8" fill="#fbbf24"/>
+    <circle cx="395" cy="105" r="4" fill="#fef08a"/>
+    <circle cx="120" cy="395" r="5" fill="rgba(255,255,255,0.4)"/>
+    <circle cx="380" cy="380" r="4" fill="rgba(255,255,255,0.25)"/>
   </g>
 </svg>

@@ -5,11 +5,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/contexts/ToastContext'
 import { Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
   const { signIn, signUp } = useAuth()
+  const { showToast } = useToast()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -43,7 +45,7 @@ export default function LoginPage() {
 
     try {
       await signUp(email, password)
-      alert('✅ Cuenta creada! Revisá tu email para confirmar.')
+      showToast('✅ Cuenta creada! Revisá tu email para confirmar.', 'success')
       setIsRegistering(false)
     } catch (err: any) {
       setError(err.message || 'Error al registrarse')

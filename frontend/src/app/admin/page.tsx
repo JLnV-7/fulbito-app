@@ -16,7 +16,7 @@ export default function AdminPage() {
     const [logs, setLogs] = useState<string[]>([])
 
     // 🔒 Protección básica de Admin
-    const ADMIN_EMAILS = ['admin@fulbitoo.com', 'julian@test.com', 'julianvallejo09@gmail.com'] // TODO: Agregar email real
+    const ADMIN_EMAILS = ['soyjuli127712@gmail.com']
 
     if (!user || !user.email || !ADMIN_EMAILS.includes(user.email)) {
         return (

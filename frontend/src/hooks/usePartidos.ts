@@ -3,7 +3,7 @@ import type { Partido, Liga, AsyncState } from '@/types'
 import { fetchFixturesAction } from '@/app/actions/football'
 import { LIGAS_MAP } from '@/lib/constants'
 
-const POLL_INTERVAL = 60000 // 1 minuto para partidos en vivo
+const POLL_INTERVAL = 180000 // 3 minutos
 
 export function usePartidos(filtroLiga: Liga = 'Todos') {
   const [state, setState] = useState<AsyncState<Partido[]>>({
@@ -53,13 +53,8 @@ export function usePartidos(filtroLiga: Liga = 'Todos') {
   useEffect(() => {
     fetchPartidos()
 
-    // Smart polling: 60s si hay partidos en vivo, 180s si no
-    const getInterval = () => {
-      const hasLive = (state.data || []).some(p => p.estado === 'EN_JUEGO')
-      return hasLive ? 60000 : 180000
-    }
-
-    const intervalId = setInterval(fetchPartidos, getInterval())
+    // Polling fijo: el efecto se re-ejecuta al cambiar filtroLiga
+    const intervalId = setInterval(fetchPartidos, POLL_INTERVAL)
 
     return () => clearInterval(intervalId)
   }, [fetchPartidos])

@@ -20,8 +20,20 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Fulbito - Votá a tus jugadores favoritos",
-  description: "Plataforma de votación para jugadores de fútbol",
+  description: "Plataforma de votación para jugadores de fútbol. Pronósticos, ranking, grupos y más.",
   manifest: "/manifest.json",
+  openGraph: {
+    title: "Fulbito - Votá a tus jugadores favoritos",
+    description: "Pronósticos de fútbol, votación de figuras, ranking y grupos con amigos.",
+    type: "website",
+    locale: "es_AR",
+    siteName: "Fulbito",
+  },
+  twitter: {
+    card: "summary",
+    title: "Fulbito - Votá a tus jugadores favoritos",
+    description: "Pronósticos de fútbol, votación de figuras, ranking y grupos con amigos.",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

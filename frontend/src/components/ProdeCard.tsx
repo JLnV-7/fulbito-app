@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import confetti from 'canvas-confetti'
 import type { Partido, Pronostico } from '@/types'
+import { formatearHora, formatearFecha } from '@/lib/utils'
 
 interface ProdeCardProps {
     partido: Partido
@@ -43,34 +44,6 @@ export function ProdeCard({ partido, pronosticoExistente, onGuardar }: ProdeCard
         }
     }
 
-    const formatearHora = (fecha: string) => {
-        try {
-            const date = new Date(fecha)
-            return date.toLocaleTimeString('es-AR', {
-                hour: '2-digit',
-                minute: '2-digit'
-            })
-        } catch {
-            return '--:--'
-        }
-    }
-
-    const formatearFecha = (fecha: string) => {
-        try {
-            const date = new Date(fecha)
-            const hoy = new Date()
-            const esHoy = date.toDateString() === hoy.toDateString()
-
-            if (esHoy) return 'Hoy'
-
-            return date.toLocaleDateString('es-AR', {
-                day: 'numeric',
-                month: 'short'
-            })
-        } catch {
-            return ''
-        }
-    }
 
     return (
         <motion.div
