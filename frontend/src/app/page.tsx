@@ -165,9 +165,9 @@ export default function Home() {
               <button
                 key={liga}
                 onClick={() => setFiltroLiga(liga)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap
                   ${filtroLiga === liga
-                    ? 'bg-[#ff6b6b] text-white shadow-sm shadow-[#ff6b6b]/25'
+                    ? 'bg-[#10b981] text-white shadow-sm shadow-[#10b981]/25'
                     : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)] border border-[var(--card-border)]'
                   }`}
               >

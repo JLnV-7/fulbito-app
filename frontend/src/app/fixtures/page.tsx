@@ -107,9 +107,11 @@ export default function FixturesPage() {
             <DesktopNav />
             <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20">
                 {/* Header */}
-                <div className="px-6 py-6">
+                <div className="px-6 py-6 md:py-8">
                     <div className="max-w-4xl mx-auto">
-                        <h1 className="text-2xl font-black mb-1">📆 Fixtures</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
+                            📆 Fixtures
+                        </h1>
                         <p className="text-sm text-[var(--text-muted)]">
                             Todos los partidos organizados por fecha
                         </p>
@@ -155,10 +157,10 @@ export default function FixturesPage() {
                                 <button
                                     key={liga}
                                     onClick={() => setLigaFiltro(liga)}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all
                                         ${ligaFiltro === liga
-                                            ? 'bg-[var(--foreground)] text-[var(--background)]'
-                                            : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-muted)]'
+                                            ? 'bg-[#10b981] text-white'
+                                            : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                         }`}
                                 >
                                     {liga}

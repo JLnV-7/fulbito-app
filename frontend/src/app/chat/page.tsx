@@ -13,18 +13,12 @@ export default function ChatPage() {
             <DesktopNav />
 
             {/* Header */}
-            <div className="p-6 bg-[var(--card-bg)] border-b border-[var(--card-border)] flex items-center gap-4">
-                <button
-                    onClick={() => router.back()}
-                    className="text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors"
-                >
-                    ← Volver
-                </button>
-                <div>
-                    <h1 className="text-xl font-bold text-[var(--foreground)] flex items-center gap-2">
+            <div className="px-6 py-6 md:py-8">
+                <div className="max-w-4xl mx-auto">
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
                         💬 Chat Global
                     </h1>
-                    <p className="text-xs text-[var(--text-muted)]">
+                    <p className="text-sm text-[var(--text-muted)]">
                         Comentá con toda la comunidad
                     </p>
                 </div>

@@ -77,12 +77,9 @@ export default function RankingPage() {
                     <div className="max-w-4xl mx-auto">
                         <div className="flex items-center justify-between">
                             <div>
-                                <div className="flex items-center gap-3 mb-2">
-                                    <span className="text-4xl">🏆</span>
-                                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-                                        Tabla de Posiciones
-                                    </h1>
-                                </div>
+                                <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
+                                    🏆 Tabla de Posiciones
+                                </h1>
                                 <p className="text-sm text-[var(--text-muted)]">
                                     Los mejores pronosticadores del momento
                                 </p>
@@ -100,8 +97,8 @@ export default function RankingPage() {
                                 onClick={() => setTipoRanking('global')}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
                            ${tipoRanking === 'global'
-                                        ? 'bg-[#ffd700] text-black'
-                                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--card-border)]'
+                                        ? 'bg-[#10b981] text-white'
+                                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--card-border)] hover:text-[var(--foreground)]'
                                     }`}
                             >
                                 🌍 Global
@@ -110,8 +107,8 @@ export default function RankingPage() {
                                 onClick={() => setTipoRanking('liga')}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
                            ${tipoRanking === 'liga'
-                                        ? 'bg-[#ffd700] text-black'
-                                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--card-border)]'
+                                        ? 'bg-[#10b981] text-white'
+                                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--card-border)] hover:text-[var(--foreground)]'
                                     }`}
                             >
                                 ⚽ Por Liga

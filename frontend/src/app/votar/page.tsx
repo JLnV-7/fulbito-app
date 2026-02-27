@@ -77,18 +77,12 @@ export default function VotarPage() {
     <main className="min-h-screen bg-[var(--background)] pb-24 md:pt-20 transition-colors duration-300">
       <DesktopNav />
       {/* Header */}
-      <div className="p-6 bg-[var(--card-bg)] border-b border-[var(--card-border)] mb-6">
+      <div className="px-6 py-6 md:py-8">
         <div className="max-w-4xl mx-auto">
-          <button
-            onClick={() => router.back()}
-            className="text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors mb-2 text-sm"
-          >
-            ← Volver
-          </button>
-          <h1 className="text-2xl font-bold text-[var(--foreground)] flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
             ✋ Votación de Figuras
           </h1>
-          <p className="text-[var(--text-muted)] text-sm mt-1">
+          <p className="text-sm text-[var(--text-muted)]">
             Elegí el partido y votá a la figura. Solo partidos en vivo o terminados.
           </p>
         </div>
@@ -101,11 +95,11 @@ export default function VotarPage() {
             <button
               key={liga}
               onClick={() => setFiltroLiga(liga)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold
-                           transition-all whitespace-nowrap uppercase tracking-wide
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium
+                           transition-all whitespace-nowrap
                            ${filtroLiga === liga
-                  ? 'bg-[#ff6b6b] text-white'
-                  : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:bg-[var(--hover-bg)] hover:text-[var(--foreground)]'
+                  ? 'bg-[#10b981] text-white'
+                  : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)] border border-[var(--card-border)]'
                 }`}
             >
               {liga}

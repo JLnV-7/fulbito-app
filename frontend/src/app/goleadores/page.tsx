@@ -69,10 +69,12 @@ export default function GoleadoresPage() {
             <DesktopNav />
             <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20">
                 {/* Header */}
-                <div className="px-6 py-8">
+                <div className="px-6 py-6 md:py-8">
                     <div className="max-w-4xl mx-auto">
-                        <h1 className="text-3xl font-black mb-2">⚽ Goleadores</h1>
-                        <p className="text-[var(--text-muted)] text-sm">
+                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
+                            ⚽ Goleadores
+                        </h1>
+                        <p className="text-sm text-[var(--text-muted)]">
                             Los máximos artilleros de cada liga
                         </p>
                     </div>
@@ -86,10 +88,10 @@ export default function GoleadoresPage() {
                                 <button
                                     key={ligaName}
                                     onClick={() => setLiga(ligaName)}
-                                    className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all
                                         ${liga === ligaName
-                                            ? 'bg-[#ffd700] text-black'
-                                            : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-muted)]'
+                                            ? 'bg-[#10b981] text-white'
+                                            : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                         }`}
                                 >
                                     {ligaName}
