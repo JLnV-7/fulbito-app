@@ -15,7 +15,7 @@ import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { PartidoCardSkeleton } from '@/components/skeletons/PartidoCardSkeleton'
 import { ReglasPuntajeModal } from '@/components/ReglasPuntajeModal'
-import { Hand, MessageCircle, Star, Search, CalendarDays } from 'lucide-react'
+import { Hand, MessageCircle, Star, Search, CalendarDays, Film } from 'lucide-react'
 import type { Partido } from '@/types'
 
 import { LIGAS, type Liga } from '@/lib/constants'
@@ -117,6 +117,15 @@ export default function Home() {
               <span className="text-[var(--foreground)]">Chat</span>
             </button>
 
+            <button
+              onClick={() => router.push('/log')}
+              className="flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-[#f59e0b] to-[#d97706] 
+                         rounded-xl text-sm font-semibold text-white hover:shadow-md hover:shadow-[#f59e0b]/20 transition-all group"
+            >
+              <Film size={16} className="group-hover:scale-110 transition-transform" />
+              <span>Loguear</span>
+            </button>
+
             {/* Spacer */}
             <div className="flex-1" />
 
@@ -124,8 +133,8 @@ export default function Home() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`p-2 rounded-xl border transition-all ${showFilters || searchQuery || dateFilter
-                  ? 'bg-[#ff6b6b]/10 border-[#ff6b6b]/30 text-[#ff6b6b]'
-                  : 'bg-[var(--card-bg)] border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)]'
+                ? 'bg-[#ff6b6b]/10 border-[#ff6b6b]/30 text-[#ff6b6b]'
+                : 'bg-[var(--card-bg)] border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)]'
                 }`}
               title="Filtrar"
             >

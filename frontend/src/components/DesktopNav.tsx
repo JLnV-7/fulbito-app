@@ -3,7 +3,7 @@
 
 import { useRouter, usePathname } from 'next/navigation'
 import { ThemeToggle } from './ThemeToggle'
-import { Trophy, Target, BarChart3, Calendar, User } from 'lucide-react'
+import { Trophy, Target, BarChart3, Calendar, User, Film, PenLine } from 'lucide-react'
 
 interface NavItem {
     label: string
@@ -19,6 +19,7 @@ export function DesktopNav() {
 
     const mainItems: NavItem[] = [
         { label: 'Partidos', path: '/' },
+        { label: 'Reseñas', path: '/feed', icon: <Film size={14} /> },
         { label: 'Prode', path: '/prode', icon: <Target size={14} /> },
         { label: 'Ranking', path: '/ranking', icon: <Trophy size={14} /> },
         { label: 'Tabla', path: '/posiciones', icon: <BarChart3 size={14} /> },
@@ -83,7 +84,16 @@ export function DesktopNav() {
             </div>
 
             {/* Right: Actions */}
-            <div className="w-36 flex justify-end items-center gap-2">
+            <div className="w-48 flex justify-end items-center gap-2">
+                <button
+                    onClick={() => router.push('/log')}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold
+                             bg-[#f59e0b] text-white hover:bg-[#d97706] transition-all shadow-sm shadow-[#f59e0b]/20"
+                    title="Loguear partido"
+                >
+                    <PenLine size={13} />
+                    Loguear
+                </button>
                 <button
                     onClick={() => router.push('/perfil')}
                     className={`p-2 rounded-lg transition-all ${isActive('/perfil')

@@ -250,3 +250,54 @@ export interface RachaMundial {
   fase: number // 0-7
   copas: number
 }
+
+// 🎬 Match Logs (Letterboxd para Fútbol)
+export type MatchType = 'tv' | 'stadium' | 'friend' | 'other'
+
+export interface MatchLog {
+  id: string
+  user_id: string
+  partido_id?: string | number
+  match_type: MatchType
+  equipo_local: string
+  equipo_visitante: string
+  logo_local?: string
+  logo_visitante?: string
+  liga?: string
+  fecha_partido: string
+  goles_local?: number
+  goles_visitante?: number
+  rating_partido: number       // 0.5-5 estrellas
+  rating_arbitro?: number      // 0.5-5
+  rating_atmosfera?: number    // 0.5-5
+  review_title?: string
+  review_text?: string
+  is_spoiler: boolean
+  is_private: boolean
+  watched_at: string
+  created_at: string
+  updated_at: string
+  // Computados / relaciones
+  player_ratings?: MatchLogPlayerRating[]
+  likes_count?: number
+  is_liked?: boolean
+  tags?: string[]
+  profile?: Profile
+}
+
+export interface MatchLogPlayerRating {
+  id: string
+  match_log_id: string
+  player_name: string
+  player_team: 'local' | 'visitante'
+  rating: number
+  comment?: string
+}
+
+export interface UserFollow {
+  id: string
+  follower_id: string
+  following_id: string
+  created_at: string
+  profile?: Profile
+}

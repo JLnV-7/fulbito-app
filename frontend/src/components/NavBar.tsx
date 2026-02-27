@@ -89,6 +89,17 @@ export function NavBar() {
         </button>
 
         <button
+          onClick={() => router.push('/feed')}
+          className={`flex flex-col items-center gap-1 transition-all ${isActive('/feed')
+            ? 'text-[#f59e0b] scale-105 nav-active-dot'
+            : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
+            }`}
+        >
+          <span className="text-xl">🎬</span>
+          <span className="text-[10px] font-medium">Reseñas</span>
+        </button>
+
+        <button
           onClick={() => router.push('/prode')}
           className={`flex flex-col items-center gap-1 transition-all ${isActive('/prode')
             ? 'text-[#10b981] scale-105 nav-active-dot'
