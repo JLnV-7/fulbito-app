@@ -48,24 +48,40 @@ export default function PartidoPage() {
   const [guardando, setGuardando] = useState(false)
   const formacionesRef = useRef<HTMLDivElement>(null)
 
-  // Cargar datos del partido (desde API)
+  // Cargar datos del partido (desde API o DB)
   useEffect(() => {
     const fetchPartido = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        // ID puede ser string o number dependiendo de la URL. API usa number.
         const matchId = Number(id)
-        if (isNaN(matchId)) throw new Error('ID de partido inválido')
 
-        const data = await fetchFixtureByIdAction(matchId)
+        if (isNaN(matchId)) {
+          // ID no es numérico — puede ser un UUID de la tabla partidos en Supabase
+          const { data: dbPartido } = await supabase
+            .from('partidos')
+            .select('*')
+            .eq('id', id)
+            .single()
 
-        if (data) {
-          setPartido(data)
-          setEstado(calcularEstadoPartido(data.fecha_inicio))
+          if (dbPartido) {
+            setPartido(dbPartido as Partido)
+            setEstado(calcularEstadoPartido(dbPartido.fecha_inicio))
+          } else {
+            // Podría ser un match_log ID — redirigir
+            router.replace(`/log/${id}`)
+            return
+          }
         } else {
-          throw new Error('Partido no encontrado en API')
+          // ID numérico — buscar en la API
+          const data = await fetchFixtureByIdAction(matchId)
+          if (data) {
+            setPartido(data)
+            setEstado(calcularEstadoPartido(data.fecha_inicio))
+          } else {
+            throw new Error('Partido no encontrado en API')
+          }
         }
       } catch (err) {
         console.error('Error cargando partido:', err)
@@ -76,7 +92,7 @@ export default function PartidoPage() {
     }
 
     if (id) fetchPartido()
-  }, [id])
+  }, [id, router])
 
   // Cargar alineaciones cuando el partido está finalizado
   useEffect(() => {
