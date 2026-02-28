@@ -19,15 +19,8 @@ export function usePartidos(filtroLiga: Liga = 'Todos') {
       let data: Partido[] = []
 
       if (filtroLiga === 'Todos') {
-        // Traer de todas las ligas configuradas
-        const promises = Object.keys(LIGAS_MAP).map(ligaName =>
-          fetchFixturesAction(ligaName).catch(e => {
-            console.error(`Error fetching ${ligaName}:`, e)
-            return []
-          })
-        )
-        const results = await Promise.all(promises)
-        data = results.flat()
+        // Free tier: solo traer Liga Profesional por defecto para ahorrar requests
+        data = await fetchFixturesAction('Liga Profesional')
       } else {
         data = await fetchFixturesAction(filtroLiga)
       }

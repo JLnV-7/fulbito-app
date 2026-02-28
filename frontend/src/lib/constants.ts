@@ -12,10 +12,11 @@ export const LEAGUE_IDS = {
     COPA_SUDAMERICANA: 11,
 } as const
 
-// Temporadas actuales (actualizar anualmente)
+// Temporadas actuales
+// Free plan: solo accede a seasons 2022-2024
 export const CURRENT_SEASONS = {
-    ARGENTINA: 2024, // 2025 aún no tiene datos en API
-    EUROPE: 2024,    // 2024-2025
+    ARGENTINA: 2024, // Free tier limit — upgrade to Pro for 2025
+    EUROPE: 2024,    // 2024-2025 runs Aug-May
 } as const
 
 // Mapeo de nombres internos a IDs
@@ -27,10 +28,11 @@ export const LIGAS_MAP: Record<string, number> = {
 }
 
 // Configuración de revalidación (en segundos)
+// Free tier = 100 req/día → ser conservador con cache
 export const REVALIDATE_CONFIG = {
-    STANDINGS: 3600,      // 1 hora
-    FIXTURES: 3600,       // 1 hora (por plan free)
-    LIVE: 60,             // 1 minuto (solo para detalles partido)
+    STANDINGS: 7200,      // 2 horas
+    FIXTURES: 7200,       // 2 horas
+    LIVE: 120,            // 2 minutos (solo para detalles partido)
     SCORERS: 86400,       // 24 horas
 } as const
 

@@ -2,7 +2,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
 import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { motion } from 'framer-motion'
@@ -27,12 +26,7 @@ interface TeamStanding {
     form: string[] // últimos 5 resultados
 }
 
-const LIGAS_CONFIG: Record<string, { id: number; season: number }> = {
-    'Liga Profesional': { id: 128, season: 2025 },
-    'Primera Nacional': { id: 129, season: 2025 },
-    'La Liga': { id: 140, season: 2024 },
-    'Premier League': { id: 39, season: 2024 },
-}
+const LIGAS_POSICIONES = ['Liga Profesional', 'Primera Nacional', 'La Liga', 'Premier League'] as const
 
 export default function PosicionesPage() {
     const [liga, setLiga] = useState<string>('Liga Profesional')
@@ -77,124 +71,6 @@ export default function PosicionesPage() {
     }
 
 
-    // Demo data para testear la UI
-    const generateDemoStandings = (ligaName: string): TeamStanding[] => {
-        // IDs reales de API-Football para escudos correctos
-        const equiposConId: Record<string, { name: string; id: number }[]> = {
-            'Liga Profesional': [
-                { name: 'River Plate', id: 435 },
-                { name: 'Boca Juniors', id: 451 },
-                { name: 'Racing Club', id: 436 },
-                { name: 'Independiente', id: 434 },
-                { name: 'San Lorenzo', id: 437 },
-                { name: 'Vélez Sarsfield', id: 440 },
-                { name: 'Estudiantes', id: 459 },
-                { name: 'Talleres', id: 449 },
-                { name: 'Lanús', id: 446 },
-                { name: 'Argentinos Jrs', id: 442 },
-                { name: 'Newell\'s Old Boys', id: 455 },
-                { name: 'Rosario Central', id: 460 },
-                { name: 'Unión', id: 471 },
-                { name: 'Colón', id: 473 },
-                { name: 'Gimnasia LP', id: 463 },
-                { name: 'Huracán', id: 441 },
-                { name: 'Def. y Justicia', id: 476 },
-                { name: 'Tigre', id: 478 },
-                { name: 'Banfield', id: 445 },
-                { name: 'Platense', id: 2434 },
-            ],
-            'Primera Nacional': [
-                { name: 'San Martín SJ', id: 458 },
-                { name: 'Belgrano', id: 466 },
-                { name: 'Instituto', id: 2421 },
-                { name: 'All Boys', id: 2426 },
-                { name: 'Nueva Chicago', id: 2435 },
-                { name: 'Almagro', id: 2451 },
-                { name: 'Quilmes', id: 477 },
-                { name: 'Atlanta', id: 2429 },
-                { name: 'Temperley', id: 475 },
-                { name: 'Brown Adrogué', id: 2431 },
-                { name: 'Dep. Morón', id: 2432 },
-                { name: 'San Telmo', id: 2436 },
-                { name: 'Almirante Brown', id: 2428 },
-                { name: 'Def. de Belgrano', id: 2422 },
-                { name: 'Sacachispas', id: 2437 },
-            ],
-            'La Liga': [
-                { name: 'Real Madrid', id: 541 },
-                { name: 'Barcelona', id: 529 },
-                { name: 'Atlético Madrid', id: 530 },
-                { name: 'Real Sociedad', id: 548 },
-                { name: 'Athletic Bilbao', id: 531 },
-                { name: 'Betis', id: 543 },
-                { name: 'Villarreal', id: 533 },
-                { name: 'Sevilla', id: 536 },
-                { name: 'Valencia', id: 532 },
-                { name: 'Girona', id: 547 },
-                { name: 'Getafe', id: 546 },
-                { name: 'Osasuna', id: 727 },
-                { name: 'Celta Vigo', id: 538 },
-                { name: 'Mallorca', id: 798 },
-                { name: 'Las Palmas', id: 534 },
-                { name: 'Rayo Vallecano', id: 728 },
-                { name: 'Alavés', id: 542 },
-                { name: 'Cádiz', id: 724 },
-                { name: 'Granada', id: 715 },
-                { name: 'Almería', id: 723 },
-            ],
-            'Premier League': [
-                { name: 'Arsenal', id: 42 },
-                { name: 'Man City', id: 50 },
-                { name: 'Liverpool', id: 40 },
-                { name: 'Aston Villa', id: 66 },
-                { name: 'Tottenham', id: 47 },
-                { name: 'Man United', id: 33 },
-                { name: 'Newcastle', id: 34 },
-                { name: 'Brighton', id: 51 },
-                { name: 'West Ham', id: 48 },
-                { name: 'Chelsea', id: 49 },
-                { name: 'Wolves', id: 39 },
-                { name: 'Bournemouth', id: 35 },
-                { name: 'Fulham', id: 36 },
-                { name: 'Crystal Palace', id: 52 },
-                { name: 'Brentford', id: 55 },
-                { name: 'Everton', id: 45 },
-                { name: 'Nottingham', id: 65 },
-                { name: 'Luton Town', id: 1359 },
-                { name: 'Burnley', id: 44 },
-                { name: 'Sheffield Utd', id: 62 },
-            ],
-        }
-
-        const teams = equiposConId[ligaName] || equiposConId['Liga Profesional']
-
-        return teams.map((teamData, idx) => {
-            const played = Math.floor(Math.random() * 10) + 15
-            const won = Math.floor(Math.random() * played * 0.6)
-            const lost = Math.floor(Math.random() * (played - won) * 0.5)
-            const draw = played - won - lost
-            const goalsFor = won * 2 + draw + Math.floor(Math.random() * 10)
-            const goalsAgainst = lost * 2 + draw + Math.floor(Math.random() * 8)
-
-            const formOptions = ['W', 'D', 'L']
-            const form = Array(5).fill(null).map(() => formOptions[Math.floor(Math.random() * 3)])
-
-            return {
-                position: idx + 1,
-                team: teamData.name,
-                logo: `https://media.api-sports.io/football/teams/${teamData.id}.png`,
-                played,
-                won,
-                draw,
-                lost,
-                goalsFor,
-                goalsAgainst,
-                goalDiff: goalsFor - goalsAgainst,
-                points: won * 3 + draw,
-                form,
-            }
-        }).sort((a, b) => b.points - a.points).map((t, idx) => ({ ...t, position: idx + 1 }))
-    }
 
     const getFormColor = (result: string) => {
         switch (result) {
@@ -232,7 +108,7 @@ export default function PosicionesPage() {
                 <div className="px-6 mb-6">
                     <div className="max-w-4xl mx-auto">
                         <div className="flex gap-2 overflow-x-auto no-scrollbar">
-                            {Object.keys(LIGAS_CONFIG).map(ligaName => (
+                            {LIGAS_POSICIONES.map(ligaName => (
                                 <button
                                     key={ligaName}
                                     onClick={() => setLiga(ligaName)}
@@ -359,7 +235,7 @@ export default function PosicionesPage() {
 
                         {/* Nota sobre datos */}
                         <div className="mt-4 text-center text-[10px] text-[var(--text-muted)]">
-                            ⚠️ Datos de demostración. Conectar API para datos reales.
+                            Datos actualizados via API-Football · Actualización cada 2hs
                         </div>
                     </div>
                 </div>

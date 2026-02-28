@@ -181,7 +181,7 @@ export default function GoleadoresPage() {
                                     {/* Footer */}
                                     <div className="px-4 py-3 bg-[var(--background)] border-t border-[var(--card-border)] text-center">
                                         <p className="text-[10px] text-[var(--text-muted)]">
-                                            ⚠️ Datos de demostración. Conectar API para stats reales.
+                                            Datos actualizados via API-Football · Top 20 goleadores
                                         </p>
                                     </div>
                                 </motion.div>

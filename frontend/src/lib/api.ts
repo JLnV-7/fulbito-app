@@ -54,6 +54,22 @@ export const getFixtures = async (leagueId: number, season: number, from: string
     )
 }
 
+// Fetch fixtures for a specific round
+export const getFixturesByRound = async (leagueId: number, season: number, round: string) => {
+    return fetchApi<ApiFixture[]>(
+        `/fixtures?league=${leagueId}&season=${season}&round=${encodeURIComponent(round)}`,
+        REVALIDATE_CONFIG.FIXTURES
+    )
+}
+
+// Get available rounds for a league/season
+export const getRounds = async (leagueId: number, season: number) => {
+    return fetchApi<string[]>(
+        `/fixtures/rounds?league=${leagueId}&season=${season}`,
+        REVALIDATE_CONFIG.FIXTURES
+    )
+}
+
 export const getTopScorers = async (leagueId: number, season: number) => {
     return fetchApi<ApiScorer[]>(
         `/players/topscorers?league=${leagueId}&season=${season}`,
@@ -62,8 +78,7 @@ export const getTopScorers = async (leagueId: number, season: number) => {
 }
 
 export const getFixtureById = async (id: number) => {
-    // Cache corto porque puede estar en vivo
-    const data = await fetchApi<ApiFixture[]>(`/fixtures?id=${id}`, 60)
+    const data = await fetchApi<ApiFixture[]>(`/fixtures?id=${id}`, 120)
     return data && data.length > 0 ? data[0] : null
 }
 
