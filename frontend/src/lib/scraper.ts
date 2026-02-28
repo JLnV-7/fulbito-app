@@ -1,166 +1,108 @@
 // src/lib/scraper.ts
-// Scraper using Sofascore public API for current season data
+// Data source using TheSportsDB free API (no auth, server-friendly)
 import 'server-only'
 
-const SOFASCORE_BASE = 'https://api.sofascore.com/api/v1'
-const HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    'Accept': 'application/json',
+const BASE_URL = 'https://www.thesportsdb.com/api/v1/json/3'
+
+// TheSportsDB league IDs
+const TSDB_LEAGUE_IDS: Record<string, number> = {
+    'Liga Profesional': 4406,
+    'Primera Nacional': 4616,
+    'La Liga': 4335,
+    'Premier League': 4328,
 }
 
-// Sofascore tournament IDs
-const TOURNAMENT_IDS: Record<string, number> = {
-    'Liga Profesional': 155,
-    'Primera Nacional': 703,
-    'La Liga': 8,
-    'Premier League': 17,
+// Current seasons in TheSportsDB format
+const TSDB_SEASONS: Record<string, string> = {
+    'Liga Profesional': '2026',
+    'Primera Nacional': '2026',
+    'La Liga': '2025-2026',
+    'Premier League': '2025-2026',
 }
 
-// Current Sofascore season IDs (update when new season starts)
-const SEASON_IDS: Record<string, number> = {
-    'Liga Profesional': 87913,  // LPF 2026 Apertura
-    'Primera Nacional': 87940,  // Primera Nacional 2026
-    'La Liga': 77559,           // LaLiga 25/26
-    'Premier League': 76986,    // Premier League 25/26
-}
+// Leagues where TheSportsDB standings work correctly
+// (Argentine leagues return cumulative data, not single-season)
+const STANDINGS_SUPPORTED = ['La Liga', 'Premier League']
 
-// Cache for auto-detected season IDs
-const seasonIdCache: Record<number, number> = {}
-
-// Auto-detect current season ID if hardcoded one fails
-async function getSeasonId(ligaName: string): Promise<number | null> {
-    const tournamentId = TOURNAMENT_IDS[ligaName]
-    if (!tournamentId) return null
-
-    // Try hardcoded first
-    if (SEASON_IDS[ligaName]) return SEASON_IDS[ligaName]
-
-    // Check cache
-    if (seasonIdCache[tournamentId]) return seasonIdCache[tournamentId]
-
-    // Auto-detect from API
+async function fetchTSDB<T>(endpoint: string): Promise<T | null> {
     try {
-        const data = await fetchSofascore<{
-            seasons: { id: number; name: string; year: string }[]
-        }>(`/unique-tournament/${tournamentId}/seasons`)
-
-        if (data?.seasons?.[0]) {
-            seasonIdCache[tournamentId] = data.seasons[0].id
-            console.log(`[Scraper] Auto-detected season for ${ligaName}: ${data.seasons[0].name} (${data.seasons[0].id})`)
-            return data.seasons[0].id
-        }
-    } catch (e) {
-        console.warn(`[Scraper] Failed to auto-detect season for ${ligaName}`)
-    }
-
-    return null
-}
-
-
-interface SofascoreEvent {
-    id: number
-    slug: string
-    startTimestamp: number
-    status: {
-        code: number
-        description: string
-        type: string // 'notstarted' | 'inprogress' | 'finished'
-    }
-    homeTeam: {
-        id: number
-        name: string
-        shortName: string
-    }
-    awayTeam: {
-        id: number
-        name: string
-        shortName: string
-    }
-    homeScore?: {
-        current?: number
-        display?: number
-    }
-    awayScore?: {
-        current?: number
-        display?: number
-    }
-    tournament: {
-        name: string
-        uniqueTournament: {
-            id: number
-            name: string
-        }
-    }
-    roundInfo?: {
-        round: number
-    }
-    time?: {
-        currentPeriodStartTimestamp?: number
-    }
-}
-
-interface SofascoreStandingRow {
-    position: number
-    team: {
-        id: number
-        name: string
-        shortName: string
-    }
-    matches: number
-    wins: number
-    draws: number
-    losses: number
-    scoresFor: number
-    scoresAgainst: number
-    points: number
-    id: number
-}
-
-async function fetchSofascore<T>(endpoint: string): Promise<T | null> {
-    try {
-        const res = await fetch(`${SOFASCORE_BASE}${endpoint}`, {
-            headers: HEADERS,
+        const res = await fetch(`${BASE_URL}${endpoint}`, {
             next: { revalidate: 300 }, // 5 min cache
         })
 
         if (!res.ok) {
-            console.error(`[Scraper] Error ${res.status}: ${endpoint}`)
+            console.error(`[TSDB] Error ${res.status}: ${endpoint}`)
             return null
         }
 
         return await res.json()
     } catch (error) {
-        console.error('[Scraper] Fetch error:', error)
+        console.error('[TSDB] Fetch error:', error)
         return null
     }
 }
 
-// Get team logo URL from Sofascore
-function getTeamLogo(teamId: number): string {
-    return `https://api.sofascore.com/api/v1/team/${teamId}/image`
+// ============================================
+// TYPES
+// ============================================
+
+interface TSDBEvent {
+    idEvent: string
+    strEvent: string
+    strHomeTeam: string
+    strAwayTeam: string
+    intHomeScore: string | null
+    intAwayScore: string | null
+    strHomeTeamBadge: string
+    strAwayTeamBadge: string
+    dateEvent: string
+    strTime: string
+    strStatus: string
+    strLeague: string
+    intRound: string
+    strTimestamp: string
 }
 
-// Map Sofascore status to our app status
-function mapStatus(type: string): 'PREVIA' | 'EN_JUEGO' | 'FINALIZADO' {
-    if (type === 'notstarted') return 'PREVIA'
-    if (type === 'finished') return 'FINALIZADO'
-    return 'EN_JUEGO' // inprogress, etc.
+interface TSDBStanding {
+    intRank: string
+    idTeam: string
+    strTeam: string
+    strTeamBadge: string
+    intPlayed: string
+    intWin: string
+    intDraw: string
+    intLoss: string
+    intGoalsFor: string
+    intGoalsAgainst: string
+    intGoalDifference: string
+    intPoints: string
+    strForm?: string
 }
 
-// Adapt Sofascore event to our Partido type
-function adaptEvent(event: SofascoreEvent) {
+// ============================================
+// HELPERS
+// ============================================
+
+function mapStatus(status: string): 'PREVIA' | 'EN_JUEGO' | 'FINALIZADO' {
+    if (!status || status === 'Not Started' || status === 'NS') return 'PREVIA'
+    if (status === 'Match Finished' || status === 'FT' || status === 'AET' || status === 'PEN') return 'FINALIZADO'
+    return 'EN_JUEGO'
+}
+
+function adaptEvent(event: TSDBEvent) {
+    const dateStr = event.strTimestamp || `${event.dateEvent}T${event.strTime || '00:00:00'}+00:00`
     return {
-        id: event.id,
-        liga: event.tournament.uniqueTournament.name,
-        equipo_local: event.homeTeam.name,
-        equipo_visitante: event.awayTeam.name,
-        fecha_inicio: new Date(event.startTimestamp * 1000).toISOString(),
-        estado: mapStatus(event.status.type),
-        goles_local: event.homeScore?.current ?? event.homeScore?.display ?? undefined,
-        goles_visitante: event.awayScore?.current ?? event.awayScore?.display ?? undefined,
-        logo_local: getTeamLogo(event.homeTeam.id),
-        logo_visitante: getTeamLogo(event.awayTeam.id),
-        fixture_id: event.id,
+        id: parseInt(event.idEvent),
+        liga: event.strLeague,
+        equipo_local: event.strHomeTeam,
+        equipo_visitante: event.strAwayTeam,
+        fecha_inicio: new Date(dateStr).toISOString(),
+        estado: mapStatus(event.strStatus),
+        goles_local: event.intHomeScore !== null ? parseInt(event.intHomeScore) : undefined,
+        goles_visitante: event.intAwayScore !== null ? parseInt(event.intAwayScore) : undefined,
+        logo_local: event.strHomeTeamBadge || '',
+        logo_visitante: event.strAwayTeamBadge || '',
+        fixture_id: parseInt(event.idEvent),
     }
 }
 
@@ -169,95 +111,105 @@ function adaptEvent(event: SofascoreEvent) {
 // ============================================
 
 /**
- * Get fixtures for a league on a specific date range (scraping Sofascore)
+ * Get fixtures for a league using eventsround (the only reliable endpoint)
+ * Fetches current round + previous round
  */
 export async function scrapeFixtures(ligaName: string) {
-    const tournamentId = TOURNAMENT_IDS[ligaName]
-    if (!tournamentId) return []
+    const leagueId = TSDB_LEAGUE_IDS[ligaName]
+    const season = TSDB_SEASONS[ligaName]
+    if (!leagueId || !season) return []
 
-    // Fetch today's matches + yesterday + tomorrow (3 days)
-    const dates: string[] = []
-    for (let i = -1; i <= 1; i++) {
-        const d = new Date()
-        d.setDate(d.getDate() + i)
-        dates.push(d.toISOString().split('T')[0])
+    // Find the current round by trying from round 15 down
+    const allEvents: TSDBEvent[] = []
+
+    // Try a range of rounds around the current one
+    const roundPromises = []
+    for (let r = 1; r <= 15; r++) {
+        roundPromises.push(
+            fetchTSDB<{ events: TSDBEvent[] | null }>(
+                `/eventsround.php?id=${leagueId}&r=${r}&s=${season}`
+            ).then(data => ({ round: r, events: data?.events || [] }))
+        )
     }
 
-    const allEvents: SofascoreEvent[] = []
+    const results = await Promise.all(roundPromises)
 
-    for (const date of dates) {
-        const data = await fetchSofascore<{ events: SofascoreEvent[] }>(
-            `/sport/football/scheduled-events/${date}`
-        )
-        if (data?.events) {
-            const filtered = data.events.filter(
-                e => e.tournament?.uniqueTournament?.id === tournamentId
-            )
-            allEvents.push(...filtered)
+    // Find rounds that have matches near today
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    for (const { events } of results) {
+        if (events.length > 0) {
+            allEvents.push(...events)
         }
     }
 
-    // De-duplicate by event ID
-    const uniqueEvents = [...new Map(allEvents.map(e => [e.id, e])).values()]
+    if (allEvents.length === 0) return []
 
-    return uniqueEvents.map(adaptEvent)
+    // Sort by date and return the most relevant matches
+    // (near today: 2 weeks before to 2 weeks after)
+    const twoWeeksAgo = new Date(today)
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
+    const twoWeeksFromNow = new Date(today)
+    twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14)
+
+    // De-duplicate
+    const uniqueMap = new Map(allEvents.map(e => [e.idEvent, e]))
+    const adapted = [...uniqueMap.values()].map(adaptEvent)
+
+    // Filter to recent/upcoming matches
+    const relevant = adapted.filter(p => {
+        const d = new Date(p.fecha_inicio)
+        return d >= twoWeeksAgo && d <= twoWeeksFromNow
+    })
+
+    // If we have relevant matches, return those; otherwise return all
+    const finalList = relevant.length > 0 ? relevant : adapted
+
+    return finalList.sort((a, b) =>
+        new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime()
+    )
 }
 
 /**
- * Get fixtures for ALL configured leagues on today's date
- */
-export async function scrapeTodayAllLeagues() {
-    const today = new Date().toISOString().split('T')[0]
-    const data = await fetchSofascore<{ events: SofascoreEvent[] }>(
-        `/sport/football/scheduled-events/${today}`
-    )
-
-    if (!data?.events) return []
-
-    const tournamentIds = new Set(Object.values(TOURNAMENT_IDS))
-    const filtered = data.events.filter(
-        e => tournamentIds.has(e.tournament?.uniqueTournament?.id)
-    )
-
-    return filtered.map(adaptEvent)
-}
-
-/**
- * Get current standings for a league (scraping Sofascore)
+ * Get standings - only works for European leagues on TheSportsDB
+ * Returns null for Argentine leagues to trigger API-Football fallback
  */
 export async function scrapeStandings(ligaName: string) {
-    const tournamentId = TOURNAMENT_IDS[ligaName]
-    if (!tournamentId) return []
-    const seasonId = await getSeasonId(ligaName)
-    if (!seasonId) return []
+    // Only use TSDB standings for leagues where it's accurate
+    if (!STANDINGS_SUPPORTED.includes(ligaName)) return null
 
-    const data = await fetchSofascore<{
-        standings: { rows: SofascoreStandingRow[] }[]
-    }>(`/unique-tournament/${tournamentId}/season/${seasonId}/standings/total`)
+    const leagueId = TSDB_LEAGUE_IDS[ligaName]
+    const season = TSDB_SEASONS[ligaName]
+    if (!leagueId || !season) return null
 
-    if (!data?.standings?.[0]?.rows) return []
+    const data = await fetchTSDB<{ table: TSDBStanding[] | null }>(
+        `/lookuptable.php?l=${leagueId}&s=${season}`
+    )
 
-    return data.standings[0].rows.map(row => ({
-        rank: row.position,
+    if (!data?.table || data.table.length === 0) return null
+
+    return data.table.map(row => ({
+        rank: parseInt(row.intRank),
         team: {
-            id: row.team.id,
-            name: row.team.name,
-            logo: getTeamLogo(row.team.id),
+            id: parseInt(row.idTeam),
+            name: row.strTeam,
+            logo: row.strTeamBadge || '',
         },
-        points: row.points,
-        goalsDiff: row.scoresFor - row.scoresAgainst,
+        points: parseInt(row.intPoints),
+        goalsDiff: parseInt(row.intGoalDifference),
         group: '',
-        form: '',
+        form: row.strForm || '',
         status: '',
         description: null,
         all: {
-            played: row.matches,
-            win: row.wins,
-            draw: row.draws,
-            lose: row.losses,
+            played: parseInt(row.intPlayed),
+            win: parseInt(row.intWin),
+            draw: parseInt(row.intDraw),
+            lose: parseInt(row.intLoss),
             goals: {
-                for: row.scoresFor,
-                against: row.scoresAgainst,
+                for: parseInt(row.intGoalsFor),
+                against: parseInt(row.intGoalsAgainst),
             },
         },
         home: null,
@@ -267,80 +219,24 @@ export async function scrapeStandings(ligaName: string) {
 }
 
 /**
- * Get top scorers for a league (scraping Sofascore)
+ * Top scorers not available on TheSportsDB free tier
  */
-export async function scrapeTopScorers(ligaName: string) {
-    const tournamentId = TOURNAMENT_IDS[ligaName]
-    if (!tournamentId) return []
-    const seasonId = await getSeasonId(ligaName)
-    if (!seasonId) return []
+export async function scrapeTopScorers(_ligaName: string) {
+    return null
+}
 
-    const data = await fetchSofascore<{
-        topPlayers: {
-            goals: {
-                playerId: number
-                player: {
-                    id: number
-                    name: string
-                    slug: string
-                    shortName: string
-                    team: {
-                        id: number
-                        name: string
-                    }
-                    userCount: number
-                    position: string
-                    country: {
-                        name: string
-                    }
-                }
-                statistics: {
-                    goals: number
-                    assists?: number
-                    appearances: number
-                }
-                team: {
-                    id: number
-                    name: string
-                }
-            }[]
-        }
-    }>(`/unique-tournament/${tournamentId}/season/${seasonId}/top-players/overall`)
-
-    if (!data?.topPlayers?.goals) return null
-
-    return data.topPlayers.goals.slice(0, 20).map(item => ({
-        player: {
-            id: item.player.id,
-            name: item.player.name,
-            firstname: item.player.shortName,
-            lastname: '',
-            age: 0,
-            nationality: item.player.country?.name || '',
-            photo: `https://api.sofascore.com/api/v1/player/${item.player.id}/image`,
-        },
-        statistics: [{
-            team: {
-                id: item.team.id,
-                name: item.team.name,
-                logo: getTeamLogo(item.team.id),
-            },
-            league: { id: tournamentId, name: ligaName, country: '', logo: '', season: 2025 },
-            games: {
-                appearences: item.statistics.appearances || 0,
-                lineups: 0,
-                minutes: 0,
-                number: null,
-                position: item.player.position || '',
-                rating: '',
-                captain: false,
-            },
-            goals: {
-                total: item.statistics.goals || 0,
-                conceded: 0,
-                assists: item.statistics.assists ?? null,
-                saves: null,
-            },
-        }],
-    }))
+/**
+ * Get today's fixtures for all leagues
+ */
+export async function scrapeTodayAllLeagues() {
+    const results = await Promise.all(
+        Object.keys(TSDB_LEAGUE_IDS).map(async liga => {
+            try {
+                return await scrapeFixtures(liga)
+            } catch {
+                return []
+            }
+        })
+    )
+    return results.flat()
 }

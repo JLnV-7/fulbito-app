@@ -50,6 +50,11 @@ const nextConfig: NextConfig = {
         hostname: 'api.sofascore.com',
         pathname: '/api/v1/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.thesportsdb.com',
+        pathname: '/images/**',
+      },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
