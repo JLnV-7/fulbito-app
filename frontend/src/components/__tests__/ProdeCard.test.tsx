@@ -15,14 +15,12 @@ vi.mock('next/image', () => ({
 // Mock framer-motion to render children directly
 vi.mock('framer-motion', () => ({
     motion: {
-        div: ({ children, className }: any) => <div className={className}>{children}</div>,
-        input: ({ children, onChange, value, className, ...props }: any) => (
-            <input className={className} value={value} onChange={onChange} {...props} />
+        div: ({ children, className, ...rest }: any) => <div className={className}>{children}</div>,
+        button: ({ children, onClick, disabled, className, whileTap, whileHover, ...rest }: any) => (
+            <button className={className} onClick={onClick} disabled={disabled} {...rest}>{children}</button>
         ),
-        button: ({ children, onClick, disabled, className }: any) => (
-            <button className={className} onClick={onClick} disabled={disabled}>{children}</button>
-        )
-    }
+    },
+    AnimatePresence: ({ children }: any) => <>{children}</>,
 }))
 
 const mockPartido: Partido = {
@@ -39,42 +37,55 @@ const mockPartido: Partido = {
 }
 
 describe('ProdeCard', () => {
-    it('renders correctly with default values', () => {
+    it('renders correctly with team names and stepper buttons', () => {
         render(<ProdeCard partido={mockPartido} onGuardar={vi.fn()} />)
 
         expect(screen.getByText('Team A')).toBeDefined()
         expect(screen.getByText('Team B')).toBeDefined()
-        expect(screen.getAllByRole('spinbutton')).toHaveLength(2)
+        // Stepper buttons: 2 minus, 2 plus
+        expect(screen.getByLabelText('Restar gol Team A')).toBeDefined()
+        expect(screen.getByLabelText('Sumar gol Team A')).toBeDefined()
+        expect(screen.getByLabelText('Restar gol Team B')).toBeDefined()
+        expect(screen.getByLabelText('Sumar gol Team B')).toBeDefined()
     })
 
-    it('calls onGuardar with input values when clicking save', async () => {
+    it('increments and decrements goals using stepper buttons', async () => {
         const onGuardarMock = vi.fn()
         render(<ProdeCard partido={mockPartido} onGuardar={onGuardarMock} />)
 
-        // Inputs are rendered by motion.input which we mocked as input
-        const inputs = screen.getAllByRole('spinbutton') as HTMLInputElement[]
+        const plusLocal = screen.getByLabelText('Sumar gol Team A')
+        const plusVisitante = screen.getByLabelText('Sumar gol Team B')
 
-        fireEvent.change(inputs[0], { target: { value: '2' } })
-        fireEvent.change(inputs[1], { target: { value: '1' } })
+        // Click + twice for local
+        fireEvent.click(plusLocal)
+        fireEvent.click(plusLocal)
+
+        // Click + once for visitante
+        fireEvent.click(plusVisitante)
 
         const saveButton = screen.getByText('Guardar pronóstico')
         fireEvent.click(saveButton)
 
-        // Verify inputs
-        expect(inputs[0].value).toBe('2')
-        expect(inputs[1].value).toBe('1')
-
-        // Wait for async handler if needed, but here it's direct in mock environment?
-        // ProdeCard calls onGuardar which is async.
         expect(onGuardarMock).toHaveBeenCalledWith(2, 1)
     })
 
-    it('disables inputs if match is blocked (past or in play)', () => {
+    it('disables stepper buttons if match is blocked (in play)', () => {
         const blockedMatch = { ...mockPartido, estado: 'EN_JUEGO' as const }
         render(<ProdeCard partido={blockedMatch} onGuardar={vi.fn()} />)
 
-        const inputs = screen.getAllByRole('spinbutton') as HTMLInputElement[]
-        expect(inputs[0].disabled).toBe(true)
-        expect(inputs[1].disabled).toBe(true)
+        const minusLocal = screen.getByLabelText('Restar gol Team A')
+        const plusLocal = screen.getByLabelText('Sumar gol Team A')
+
+        expect(minusLocal).toHaveProperty('disabled', true)
+        expect(plusLocal).toHaveProperty('disabled', true)
+    })
+
+    it('does not go below 0 when decrementing', () => {
+        render(<ProdeCard partido={mockPartido} onGuardar={vi.fn()} />)
+
+        const minusLocal = screen.getByLabelText('Restar gol Team A')
+
+        // Value starts at 0, minus button should be disabled
+        expect(minusLocal).toHaveProperty('disabled', true)
     })
 })

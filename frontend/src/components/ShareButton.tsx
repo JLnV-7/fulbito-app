@@ -138,8 +138,8 @@ export function ShareButton({ titulo, texto, url, captureRef }: ShareButtonProps
                 disabled={capturing}
                 className="
                     flex items-center gap-2 px-4 py-2 rounded-full
-                    bg-[#242424] hover:bg-[#333333] border border-[#333333]
-                    text-[#f5f5f5] text-sm font-medium
+                    bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] border border-[var(--card-border)]
+                    text-[var(--foreground)] text-sm font-medium
                     transition-all duration-200
                     disabled:opacity-50
                 "
@@ -151,11 +151,11 @@ export function ShareButton({ titulo, texto, url, captureRef }: ShareButtonProps
             {showMenu && (
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-                    <div className="absolute right-0 top-full mt-2 bg-[#242424] border border-[#333333] 
+                    <div className="absolute right-0 top-full mt-2 bg-[var(--card-bg)] border border-[var(--card-border)] 
                                     rounded-xl overflow-hidden shadow-xl z-50 min-w-[180px]">
                         <button
                             onClick={handleShareLink}
-                            className="w-full px-4 py-3 text-left text-sm hover:bg-[#333333] 
+                            className="w-full px-4 py-3 text-left text-sm hover:bg-[var(--hover-bg)] 
                                        transition-colors flex items-center gap-3"
                         >
                             <span className="text-lg">🔗</span>
@@ -164,8 +164,8 @@ export function ShareButton({ titulo, texto, url, captureRef }: ShareButtonProps
                         {captureRef && (
                             <button
                                 onClick={handleShareImage}
-                                className="w-full px-4 py-3 text-left text-sm hover:bg-[#333333] 
-                                           transition-colors flex items-center gap-3 border-t border-[#333333]"
+                                className="w-full px-4 py-3 text-left text-sm hover:bg-[var(--hover-bg)] 
+                                            transition-colors flex items-center gap-3 border-t border-[var(--card-border)]"
                             >
                                 <span className="text-lg">📸</span>
                                 <span>Compartir imagen</span>

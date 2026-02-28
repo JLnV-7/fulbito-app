@@ -1,11 +1,9 @@
 // src/app/offline/page.tsx
 'use client'
 
-import { useTheme } from '@/contexts/ThemeContext'
 import { useEffect, useState } from 'react'
 
 export default function OfflinePage() {
-    const { theme } = useTheme()
     const [isOnline, setIsOnline] = useState(false)
 
     useEffect(() => {
@@ -21,20 +19,17 @@ export default function OfflinePage() {
     }, [isOnline])
 
     return (
-        <main className={`min-h-screen flex items-center justify-center p-6 ${theme === 'dark'
-                ? 'bg-[#1a1a1a] text-[#f5f5f5]'
-                : 'bg-white text-gray-900'
-            }`}>
+        <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] flex items-center justify-center p-6">
             <div className="text-center max-w-sm">
                 <div className="text-6xl mb-6">📵</div>
                 <h1 className="text-2xl font-bold mb-4">Sin conexión</h1>
-                <p className={`mb-6 ${theme === 'dark' ? 'text-[#909090]' : 'text-gray-600'}`}>
+                <p className="mb-6 text-[var(--text-muted)]">
                     Parece que no tenés internet. La app intentará reconectar automáticamente.
                 </p>
 
                 {/* Connection indicator */}
                 <div className="mb-6">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-600 dark:text-yellow-400">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-600">
                         <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
                         <span className="text-sm font-medium">Esperando conexión...</span>
                     </div>

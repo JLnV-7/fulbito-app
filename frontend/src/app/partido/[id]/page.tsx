@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { calcularEstadoPartido } from '@/lib/helpers'
@@ -46,7 +47,11 @@ export default function PartidoPage() {
   const [loadingLineups, setLoadingLineups] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
+  const [votosGuardados, setVotosGuardados] = useState(false)
   const formacionesRef = useRef<HTMLDivElement>(null)
+
+  // Determinar si estamos en modo votación (formaciones cargadas)
+  const isVotingMode = equipos.length > 0 && estado === 'FINALIZADO'
 
   // Cargar datos del partido (desde API o DB)
   useEffect(() => {
@@ -58,7 +63,6 @@ export default function PartidoPage() {
         const matchId = Number(id)
 
         if (isNaN(matchId)) {
-          // ID no es numérico — puede ser un UUID de la tabla partidos en Supabase
           const { data: dbPartido } = await supabase
             .from('partidos')
             .select('*')
@@ -69,12 +73,10 @@ export default function PartidoPage() {
             setPartido(dbPartido as Partido)
             setEstado(calcularEstadoPartido(dbPartido.fecha_inicio))
           } else {
-            // Podría ser un match_log ID — redirigir
             router.replace(`/log/${id}`)
             return
           }
         } else {
-          // ID numérico — buscar en la API
           const data = await fetchFixtureByIdAction(matchId)
           if (data) {
             setPartido(data)
@@ -101,10 +103,6 @@ export default function PartidoPage() {
 
       try {
         setLoadingLineups(true)
-        // Nota: Si usamos API real, idealmente también deberíamos traer lineups de la API.
-        // Por ahora mantenemos la lógica existente que llamaba a un endpoint local /api/partido/.../lineups
-        // Ese endpoint probablemente busca en DB. Si el partido viene de API, quizás ese endpoint falle si no existe en DB.
-        // TODO: Migrar lineups a API-Football también.
         const res = await fetch(`/api/partido/${partido.id}/lineups`)
         const data = await res.json()
 
@@ -112,7 +110,6 @@ export default function PartidoPage() {
           setEquipos(data.equipos)
         }
       } catch (err) {
-        // Silently fail for lineups if not found
         console.error('Error cargando alineaciones:', err)
       } finally {
         setLoadingLineups(false)
@@ -154,11 +151,20 @@ export default function PartidoPage() {
 
       if (insertError) throw insertError
 
-      alert('¡Votos guardados exitosamente! 🎉')
-      router.push('/')
+      // Confetti celebration
+      confetti({
+        particleCount: 80,
+        spread: 100,
+        origin: { y: 0.7 },
+        colors: ['#10b981', '#ffd700', '#ff6b6b']
+      })
+
+      setVotosGuardados(true)
+
+      // Redirect after a short delay
+      setTimeout(() => router.push('/'), 1500)
     } catch (err) {
       console.error('Error guardando votos:', err)
-      alert('Error al guardar. Intentá de nuevo.')
     } finally {
       setGuardando(false)
     }
@@ -166,10 +172,11 @@ export default function PartidoPage() {
 
   const totalVotados = Object.keys(votos).length
   const totalJugadores = equipos.reduce((acc, eq) => acc + eq.titulares.length, 0)
+  const progressPercent = totalJugadores > 0 ? (totalVotados / totalJugadores) * 100 : 0
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
         <LoadingSpinner />
       </div>
     )
@@ -177,7 +184,7 @@ export default function PartidoPage() {
 
   if (error || !partido) {
     return (
-      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-6">
         <ErrorMessage
           message={error || 'Partido no encontrado'}
           onRetry={() => window.location.reload()}
@@ -189,14 +196,15 @@ export default function PartidoPage() {
   return (
     <>
       <DesktopNav />
-      <main className="min-h-screen bg-[#1a1a1a] text-[#f5f5f5] pb-24 md:pt-20">
+      <main className={`min-h-screen bg-[var(--background)] text-[var(--foreground)] md:pt-20
+                         ${isVotingMode ? 'pb-36' : 'pb-24'}`}>
         {/* Header compacto */}
-        <div className="bg-[#242424] border-b border-[#333333]">
+        <div className="bg-[var(--card-bg)] border-b border-[var(--card-border)]">
           <div className="max-w-4xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between mb-4">
               <button
                 onClick={() => router.push('/')}
-                className="text-[#909090] text-sm hover:text-[#f5f5f5] transition-colors"
+                className="text-[var(--text-muted)] text-sm hover:text-[var(--foreground)] transition-colors"
               >
                 ← Volver
               </button>
@@ -245,7 +253,7 @@ export default function PartidoPage() {
                   <span className="text-2xl font-bold">
                     {estado === 'FINALIZADO' && partido.goles_local !== undefined
                       ? partido.goles_local
-                      : <span className="text-[#606060]">-</span>
+                      : <span className="text-[var(--text-muted)] opacity-50">-</span>
                     }
                   </span>
                 </div>
@@ -268,7 +276,7 @@ export default function PartidoPage() {
                   <span className="text-2xl font-bold">
                     {estado === 'FINALIZADO' && partido.goles_visitante !== undefined
                       ? partido.goles_visitante
-                      : <span className="text-[#606060]">-</span>
+                      : <span className="text-[var(--text-muted)] opacity-50">-</span>
                     }
                   </span>
                 </div>
@@ -284,16 +292,16 @@ export default function PartidoPage() {
                 <LoadingSpinner />
               </div>
             ) : equipos.length === 0 ? (
-              <div className="bg-[#242424] rounded-lg border border-[#333333] p-10 text-center">
+              <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] p-10 text-center">
                 <p className="text-4xl mb-3">⚽</p>
-                <p className="text-[#909090]">Alineaciones no disponibles</p>
+                <p className="text-[var(--text-muted)]">Alineaciones no disponibles</p>
               </div>
             ) : (
               <div className="space-y-6">
                 <MatchStats />
 
-                <div className="text-center bg-[#242424] rounded-lg border border-[#333333] p-4">
-                  <p className="text-sm text-[#909090]">
+                <div className="text-center bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] p-4">
+                  <p className="text-sm text-[var(--text-muted)]">
                     Hacé click en cada jugador para votarlo (1-10)
                   </p>
                 </div>
@@ -311,22 +319,56 @@ export default function PartidoPage() {
                   ))}
                 </div>
 
-                <div className="fixed bottom-0 left-0 right-0 bg-[#1a1a1a]/95 backdrop-blur-xl 
-                                border-t border-[#333333] p-4 md:pb-4 pb-20 z-40">
-                  <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
-                    <p className="text-xs text-[#909090]">
-                      {totalVotados} de {totalJugadores} votados
-                    </p>
-                    <button
-                      onClick={handleGuardarVotos}
-                      disabled={guardando || totalVotados === 0}
-                      className="bg-[#10b981] hover:bg-[#059669] px-6 py-2.5 rounded-lg font-semibold text-sm
-                                disabled:opacity-50 disabled:cursor-not-allowed transition-all text-white"
-                    >
-                      {guardando ? 'Guardando...' : (user ? 'Guardar' : 'Iniciar sesión para guardar')}
-                    </button>
-                  </div>
-                </div>
+                {/* Footer fijo de votación — ocupa el espacio de la NavBar */}
+                <AnimatePresence>
+                  <motion.div
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    className="fixed bottom-0 left-0 right-0 glass z-50 border-t border-[var(--card-border)]"
+                  >
+                    <div className="max-w-6xl mx-auto px-6 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                      {/* Progress bar */}
+                      <div className="mb-2 flex items-center gap-3">
+                        <div className="flex-1 h-1.5 bg-[var(--card-border)] rounded-full overflow-hidden">
+                          <motion.div
+                            className="h-full bg-[#10b981] rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progressPercent}%` }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        </div>
+                        <span className="text-xs text-[var(--text-muted)] tabular-nums whitespace-nowrap">
+                          {totalVotados}/{totalJugadores}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-4">
+                        <p className="text-xs text-[var(--text-muted)]">
+                          {votosGuardados
+                            ? '✅ ¡Votos guardados!'
+                            : totalVotados === 0
+                              ? 'Tocá un jugador para calificarlo'
+                              : `${totalVotados} jugador${totalVotados > 1 ? 'es' : ''} votado${totalVotados > 1 ? 's' : ''}`
+                          }
+                        </p>
+                        <motion.button
+                          onClick={handleGuardarVotos}
+                          disabled={guardando || totalVotados === 0 || votosGuardados}
+                          whileTap={{ scale: 0.95 }}
+                          className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition-all
+                                    ${votosGuardados
+                              ? 'bg-[#10b981] text-white'
+                              : 'bg-[#10b981] hover:bg-[#059669] text-white'
+                            }
+                                    disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                          {guardando ? 'Guardando...' : votosGuardados ? '✓ Guardado' : (user ? 'Guardar' : 'Iniciar sesión')}
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
               </div>
             )
           ) : (
@@ -338,14 +380,14 @@ export default function PartidoPage() {
                 logoVisitante={partido.logo_visitante}
               />
 
-              <div className="bg-[#242424] rounded-lg border border-[#333333] p-8 text-center">
+              <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] p-8 text-center">
                 <p className="text-5xl mb-4">
                   {estado === 'PREVIA' ? '⏳' : '⚽'}
                 </p>
-                <p className="text-lg font-semibold text-[#f5f5f5] mb-2">
+                <p className="text-lg font-semibold mb-2">
                   {estado === 'PREVIA' ? 'Próximamente' : 'Partido en curso'}
                 </p>
-                <p className="text-[#909090] text-sm">
+                <p className="text-[var(--text-muted)] text-sm">
                   {estado === 'PREVIA'
                     ? 'La votación estará disponible cuando finalice el partido'
                     : 'Seguí el partido y comentá en vivo'}
@@ -359,7 +401,8 @@ export default function PartidoPage() {
           <CommentSection partidoId={String(id)} />
         </div>
 
-        <NavBar />
+        {/* Solo mostrar NavBar cuando NO estamos votando */}
+        {!isVotingMode && <NavBar />}
       </main>
     </>
   )

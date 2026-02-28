@@ -33,7 +33,7 @@ export const JugadorVotacion = memo(({ jugador, voto, onVotar }: JugadorVotacion
 
   return (
     <motion.div
-      className="bg-[#242424] rounded-lg border border-[#333333] overflow-hidden
+      className="bg-[var(--card-bg)] rounded-lg border border-[var(--card-border)] overflow-hidden
                   hover:border-[#ff6b6b]/30 transition-all"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -43,15 +43,15 @@ export const JugadorVotacion = memo(({ jugador, voto, onVotar }: JugadorVotacion
       <div className="px-4 py-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           {/* Número */}
-          <div className="w-8 h-8 bg-[#1e1e1e] rounded-lg flex items-center justify-center
-                          text-xs font-bold text-[#909090] shrink-0">
+          <div className="w-8 h-8 bg-[var(--background)] rounded-lg flex items-center justify-center
+                          text-xs font-bold text-[var(--text-muted)] shrink-0">
             {jugador.numero || '?'}
           </div>
 
           {/* Nombre y posición */}
           <div className="min-w-0 flex-1">
             <p className="font-semibold text-sm truncate">{jugador.nombre}</p>
-            <p className="text-[10px] text-[#909090] uppercase font-medium tracking-wide">
+            <p className="text-[10px] text-[var(--text-muted)] uppercase font-medium tracking-wide">
               {jugador.posicion}
             </p>
           </div>
@@ -71,8 +71,8 @@ export const JugadorVotacion = memo(({ jugador, voto, onVotar }: JugadorVotacion
       </div>
 
       {/* Votación con estrellas */}
-      <div className="px-4 py-2 bg-[#1e1e1e] flex items-center justify-between border-t border-[#333333]">
-        <span className="text-[10px] text-[#909090] uppercase font-medium">Calificación</span>
+      <div className="px-4 py-2 bg-[var(--background)] flex items-center justify-between border-t border-[var(--card-border)]">
+        <span className="text-[10px] text-[var(--text-muted)] uppercase font-medium">Calificación</span>
         <div className="flex gap-0.5">
           {[1, 2, 3, 4, 5].map(estrella => (
             <motion.button
@@ -84,7 +84,7 @@ export const JugadorVotacion = memo(({ jugador, voto, onVotar }: JugadorVotacion
               className={`w-7 h-7 flex items-center justify-center rounded transition-colors
                          ${voto >= estrella
                   ? 'text-[#fbbf24]'
-                  : 'text-[#3a3a3a] hover:text-[#606060]'
+                  : 'text-[var(--card-border)] hover:text-[var(--text-muted)]'
                 }`}
               aria-label={`Votar ${estrella} estrellas`}
             >

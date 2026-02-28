@@ -14,8 +14,8 @@ export function DateFilter({ value, onChange }: DateFilterProps) {
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 className="
-          bg-[#242424] text-[#f5f5f5] 
-          border border-[#333333] hover:border-[#444444] focus:border-[#ff6b6b]
+          bg-[var(--card-bg)] text-[var(--foreground)] 
+          border border-[var(--card-border)] hover:border-[var(--hover-bg)] focus:border-[#ff6b6b]
           rounded-xl px-4 py-3 text-sm outline-none transition-colors
           cursor-pointer
           [&::-webkit-calendar-picker-indicator]:invert
@@ -28,7 +28,7 @@ export function DateFilter({ value, onChange }: DateFilterProps) {
                 <button
                     onClick={() => onChange('')}
                     className="absolute right-3 top-1/2 -translate-y-1/2 
-                   text-[#909090] hover:text-[#f5f5f5] bg-[#242424] pl-2"
+                   text-[var(--text-muted)] hover:text-[var(--foreground)] bg-[var(--card-bg)] pl-2"
                     title="Borrar filtro de fecha"
                 >
                     ✕

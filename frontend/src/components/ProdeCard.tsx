@@ -14,6 +14,62 @@ interface ProdeCardProps {
     onGuardar: (golesLocal: number, golesVisitante: number) => Promise<void>
 }
 
+function GoalStepper({
+    value,
+    onChange,
+    disabled,
+    teamName,
+}: {
+    value: number
+    onChange: (v: number) => void
+    disabled: boolean
+    teamName: string
+}) {
+    return (
+        <div className="flex items-center gap-1">
+            <motion.button
+                type="button"
+                whileTap={{ scale: 0.85 }}
+                disabled={disabled || value <= 0}
+                onClick={() => onChange(Math.max(0, value - 1))}
+                aria-label={`Restar gol ${teamName}`}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg font-bold transition-all
+                    ${disabled
+                        ? 'bg-[var(--card-bg)] text-[var(--text-muted)] cursor-not-allowed opacity-40'
+                        : 'bg-[var(--background)] text-[var(--foreground)] hover:bg-[#ff6b6b]/20 hover:text-[#ff6b6b] active:bg-[#ff6b6b]/30'
+                    }`}
+            >
+                −
+            </motion.button>
+
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold tabular-nums transition-all
+                border-2
+                ${disabled
+                    ? 'bg-[var(--card-bg)] border-[var(--card-border)] text-[var(--text-muted)]'
+                    : 'bg-[var(--input-bg)] border-[#10b981]/30 text-[var(--foreground)]'
+                }`}
+            >
+                {value}
+            </div>
+
+            <motion.button
+                type="button"
+                whileTap={{ scale: 0.85 }}
+                disabled={disabled || value >= 20}
+                onClick={() => onChange(Math.min(20, value + 1))}
+                aria-label={`Sumar gol ${teamName}`}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg font-bold transition-all
+                    ${disabled
+                        ? 'bg-[var(--card-bg)] text-[var(--text-muted)] cursor-not-allowed opacity-40'
+                        : 'bg-[var(--background)] text-[var(--foreground)] hover:bg-[#10b981]/20 hover:text-[#10b981] active:bg-[#10b981]/30'
+                    }`}
+            >
+                +
+            </motion.button>
+        </div>
+    )
+}
+
 export function ProdeCard({ partido, pronosticoExistente, onGuardar }: ProdeCardProps) {
     const [golesLocal, setGolesLocal] = useState(pronosticoExistente?.goles_local_pronostico ?? 0)
     const [golesVisitante, setGolesVisitante] = useState(pronosticoExistente?.goles_visitante_pronostico ?? 0)
@@ -69,9 +125,9 @@ export function ProdeCard({ partido, pronosticoExistente, onGuardar }: ProdeCard
             <div className="p-5">
                 {/* Equipo Local */}
                 <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3 flex-1">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
                         {partido.logo_local && (
-                            <div className="relative w-8 h-8">
+                            <div className="relative w-8 h-8 shrink-0">
                                 <Image
                                     src={partido.logo_local}
                                     alt={partido.equipo_local}
@@ -81,24 +137,14 @@ export function ProdeCard({ partido, pronosticoExistente, onGuardar }: ProdeCard
                                 />
                             </div>
                         )}
-                        <span className="text-sm font-medium">{partido.equipo_local}</span>
+                        <span className="text-sm font-medium truncate">{partido.equipo_local}</span>
                     </div>
 
-                    {/* Input goles local */}
-                    <motion.input
-                        type="number"
-                        min="0"
-                        max="20"
+                    <GoalStepper
                         value={golesLocal}
-                        onChange={(e) => !isPartidoBloqueado && setGolesLocal(Number(e.target.value))}
-                        disabled={isPartidoBloqueado}
-                        whileFocus={{ scale: 1.05 }}
-                        className={`w-16 h-12 text-center text-xl font-bold rounded-lg
-                       border-2 transition-all
-                       ${isPartidoBloqueado
-                                ? 'bg-[var(--card-bg)] border-[var(--card-border)] text-[var(--text-muted)] cursor-not-allowed'
-                                : 'bg-[var(--input-bg)] border-[#10b981]/30 hover:border-[#10b981]/60 focus:border-[#10b981] focus:outline-none'
-                            }`}
+                        onChange={(v) => !isPartidoBloqueado && setGolesLocal(v)}
+                        disabled={!!isPartidoBloqueado}
+                        teamName={partido.equipo_local}
                     />
                 </div>
 
@@ -111,9 +157,9 @@ export function ProdeCard({ partido, pronosticoExistente, onGuardar }: ProdeCard
 
                 {/* Equipo Visitante */}
                 <div className="flex items-center justify-between mt-3">
-                    <div className="flex items-center gap-3 flex-1">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
                         {partido.logo_visitante && (
-                            <div className="relative w-8 h-8">
+                            <div className="relative w-8 h-8 shrink-0">
                                 <Image
                                     src={partido.logo_visitante}
                                     alt={partido.equipo_visitante}
@@ -123,24 +169,14 @@ export function ProdeCard({ partido, pronosticoExistente, onGuardar }: ProdeCard
                                 />
                             </div>
                         )}
-                        <span className="text-sm font-medium">{partido.equipo_visitante}</span>
+                        <span className="text-sm font-medium truncate">{partido.equipo_visitante}</span>
                     </div>
 
-                    {/* Input goles visitante */}
-                    <motion.input
-                        type="number"
-                        min="0"
-                        max="20"
+                    <GoalStepper
                         value={golesVisitante}
-                        onChange={(e) => !isPartidoBloqueado && setGolesVisitante(Number(e.target.value))}
-                        disabled={isPartidoBloqueado}
-                        whileFocus={{ scale: 1.05 }}
-                        className={`w-16 h-12 text-center text-xl font-bold rounded-lg
-                       border-2 transition-all
-                       ${isPartidoBloqueado
-                                ? 'bg-[var(--card-bg)] border-[var(--card-border)] text-[var(--text-muted)] cursor-not-allowed'
-                                : 'bg-[var(--input-bg)] border-[#10b981]/30 hover:border-[#10b981]/60 focus:border-[#10b981] focus:outline-none'
-                            }`}
+                        onChange={(v) => !isPartidoBloqueado && setGolesVisitante(v)}
+                        disabled={!!isPartidoBloqueado}
+                        teamName={partido.equipo_visitante}
                     />
                 </div>
             </div>
