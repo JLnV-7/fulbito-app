@@ -2,11 +2,24 @@
 'use server'
 
 import { getStandings, getTopScorers, getFixtures, getFixtureById, getRounds, getFixturesByRound } from '@/lib/api'
+import { scrapeFixtures, scrapeStandings, scrapeTopScorers, scrapeTodayAllLeagues } from '@/lib/scraper'
 import { LIGAS_MAP, CURRENT_SEASONS } from '@/lib/constants'
 import type { ApiLeagueResponse, ApiFixture } from '@/types/api'
 import type { Partido } from '@/types'
 
 export async function fetchStandingsAction(ligaName: string) {
+    // Try scraper first (current season, free)
+    try {
+        const scraped = await scrapeStandings(ligaName)
+        if (scraped && scraped.length > 0) {
+            console.log(`[Standings] Scraper OK for ${ligaName}: ${scraped.length} teams`)
+            return scraped
+        }
+    } catch (e) {
+        console.warn(`[Standings] Scraper failed for ${ligaName}:`, e)
+    }
+
+    // Fallback to API-Football
     const leagueId = LIGAS_MAP[ligaName]
     if (!leagueId) throw new Error('Liga no soportada')
 
@@ -15,18 +28,26 @@ export async function fetchStandingsAction(ligaName: string) {
 
     const data = await getStandings(leagueId, season) as unknown as ApiLeagueResponse[]
 
-    console.log(`[Standings] League: ${ligaName}, ID: ${leagueId}, Season: ${season}`)
-
     if (Array.isArray(data) && data.length > 0 && data[0]?.league?.standings) {
-        console.log(`[Standings] Returning ${data[0].league.standings[0].length} teams`)
         return data[0].league.standings[0]
     }
 
-    console.warn(`[Standings] Empty response for ${ligaName}`)
     return []
 }
 
 export async function fetchTopScorersAction(ligaName: string) {
+    // Try scraper first
+    try {
+        const scraped = await scrapeTopScorers(ligaName)
+        if (scraped && scraped.length > 0) {
+            console.log(`[Scorers] Scraper OK for ${ligaName}: ${scraped.length} players`)
+            return scraped
+        }
+    } catch (e) {
+        console.warn(`[Scorers] Scraper failed for ${ligaName}:`, e)
+    }
+
+    // Fallback to API-Football
     const leagueId = LIGAS_MAP[ligaName]
     if (!leagueId) return []
 
@@ -38,13 +59,26 @@ export async function fetchTopScorersAction(ligaName: string) {
 }
 
 export async function fetchFixturesAction(ligaName: string) {
+    // Try scraper first (gets today ± 1 day for current season)
+    try {
+        const scraped = await scrapeFixtures(ligaName)
+        if (scraped && scraped.length > 0) {
+            console.log(`[Fixtures] Scraper OK for ${ligaName}: ${scraped.length} matches`)
+            return scraped.sort((a, b) =>
+                new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime()
+            )
+        }
+    } catch (e) {
+        console.warn(`[Fixtures] Scraper failed for ${ligaName}:`, e)
+    }
+
+    // Fallback to API-Football (historical data)
     const leagueId = LIGAS_MAP[ligaName]
     if (!leagueId) return []
 
     const isEuropean = ['La Liga', 'Premier League'].includes(ligaName)
     const season = isEuropean ? CURRENT_SEASONS.EUROPE : CURRENT_SEASONS.ARGENTINA
 
-    // Strategy: try current date range first, then fall back to last rounds
     const today = new Date()
     const past = new Date(today)
     past.setDate(today.getDate() - 15)
@@ -56,14 +90,10 @@ export async function fetchFixturesAction(ligaName: string) {
 
     let data = await getFixtures(leagueId, season, from, to)
 
-    // If no fixtures in current date range (season may be over),
-    // fetch the last 3 rounds of the season
+    // If no fixtures in current date range, fetch last rounds
     if (!data || data.length === 0) {
-        console.log(`[Fixtures] No current fixtures for ${ligaName}, fetching last rounds...`)
-
         const rounds = await getRounds(leagueId, season)
         if (rounds && rounds.length > 0) {
-            // Get last 3 rounds
             const lastRounds = rounds.slice(-3)
             const roundPromises = lastRounds.map(round =>
                 getFixturesByRound(leagueId, season, round).catch(() => null)
@@ -72,8 +102,6 @@ export async function fetchFixturesAction(ligaName: string) {
             data = roundResults
                 .filter((r): r is ApiFixture[] => r !== null)
                 .flat()
-
-            console.log(`[Fixtures] Got ${data.length} fixtures from last ${lastRounds.length} rounds`)
         }
     }
 

@@ -45,6 +45,11 @@ const nextConfig: NextConfig = {
         hostname: 'media.api-sports.io',
         pathname: '/football/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'api.sofascore.com',
+        pathname: '/api/v1/**',
+      },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
