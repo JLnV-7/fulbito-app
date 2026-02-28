@@ -11,7 +11,7 @@ const HEADERS = {
 // Sofascore tournament IDs
 const TOURNAMENT_IDS: Record<string, number> = {
     'Liga Profesional': 155,
-    'Primera Nacional': 105,
+    'Primera Nacional': 703,
     'La Liga': 8,
     'Premier League': 17,
 }
@@ -19,10 +19,43 @@ const TOURNAMENT_IDS: Record<string, number> = {
 // Current Sofascore season IDs (update when new season starts)
 const SEASON_IDS: Record<string, number> = {
     'Liga Profesional': 87913,  // LPF 2026 Apertura
-    'Primera Nacional': 87827,
-    'La Liga': 65910,           // 2025-2026 (update as needed)
-    'Premier League': 63814,    // 2025-2026
+    'Primera Nacional': 87940,  // Primera Nacional 2026
+    'La Liga': 77559,           // LaLiga 25/26
+    'Premier League': 76986,    // Premier League 25/26
 }
+
+// Cache for auto-detected season IDs
+const seasonIdCache: Record<number, number> = {}
+
+// Auto-detect current season ID if hardcoded one fails
+async function getSeasonId(ligaName: string): Promise<number | null> {
+    const tournamentId = TOURNAMENT_IDS[ligaName]
+    if (!tournamentId) return null
+
+    // Try hardcoded first
+    if (SEASON_IDS[ligaName]) return SEASON_IDS[ligaName]
+
+    // Check cache
+    if (seasonIdCache[tournamentId]) return seasonIdCache[tournamentId]
+
+    // Auto-detect from API
+    try {
+        const data = await fetchSofascore<{
+            seasons: { id: number; name: string; year: string }[]
+        }>(`/unique-tournament/${tournamentId}/seasons`)
+
+        if (data?.seasons?.[0]) {
+            seasonIdCache[tournamentId] = data.seasons[0].id
+            console.log(`[Scraper] Auto-detected season for ${ligaName}: ${data.seasons[0].name} (${data.seasons[0].id})`)
+            return data.seasons[0].id
+        }
+    } catch (e) {
+        console.warn(`[Scraper] Failed to auto-detect season for ${ligaName}`)
+    }
+
+    return null
+}
+
 
 interface SofascoreEvent {
     id: number
@@ -194,8 +227,9 @@ export async function scrapeTodayAllLeagues() {
  */
 export async function scrapeStandings(ligaName: string) {
     const tournamentId = TOURNAMENT_IDS[ligaName]
-    const seasonId = SEASON_IDS[ligaName]
-    if (!tournamentId || !seasonId) return []
+    if (!tournamentId) return []
+    const seasonId = await getSeasonId(ligaName)
+    if (!seasonId) return []
 
     const data = await fetchSofascore<{
         standings: { rows: SofascoreStandingRow[] }[]
@@ -237,8 +271,9 @@ export async function scrapeStandings(ligaName: string) {
  */
 export async function scrapeTopScorers(ligaName: string) {
     const tournamentId = TOURNAMENT_IDS[ligaName]
-    const seasonId = SEASON_IDS[ligaName]
-    if (!tournamentId || !seasonId) return []
+    if (!tournamentId) return []
+    const seasonId = await getSeasonId(ligaName)
+    if (!seasonId) return []
 
     const data = await fetchSofascore<{
         topPlayers: {
