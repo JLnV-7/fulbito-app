@@ -10,9 +10,10 @@ import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { PartidoCard } from '@/components/PartidoCard'
 import { LIGAS } from '@/lib/constants'
-import type { Partido, Profile } from '@/types'
+import type { Partido, Profile, MatchLog } from '@/types'
+import { MatchLogCard } from '@/components/MatchLogCard'
 
-type SearchTab = 'partidos' | 'usuarios'
+type SearchTab = 'partidos' | 'usuarios' | 'resenas'
 
 export default function BuscarPage() {
     const router = useRouter()
@@ -21,6 +22,7 @@ export default function BuscarPage() {
     const [filterLiga, setFilterLiga] = useState('')
     const [partidos, setPartidos] = useState<Partido[]>([])
     const [usuarios, setUsuarios] = useState<(Profile & { logs_count?: number })[]>([])
+    const [resenas, setResenas] = useState<MatchLog[]>([])
     const [loading, setLoading] = useState(false)
     const [hasSearched, setHasSearched] = useState(false)
 
@@ -61,6 +63,35 @@ export default function BuscarPage() {
         setUsuarios(data || [])
     }, [])
 
+    const searchResenas = useCallback(async (q: string) => {
+        if (!q || q.length < 2) {
+            setResenas([])
+            return
+        }
+
+        const { data } = await supabase
+            .from('match_logs')
+            .select(`
+                *,
+                profile:profiles!match_logs_user_id_fkey(id, username, avatar_url),
+                tags:match_log_tags(tag),
+                likes_count:match_log_likes(count)
+            `)
+            .or(`review_text.ilike.%${q}%,review_title.ilike.%${q}%`)
+            .eq('is_private', false)
+            .order('created_at', { ascending: false })
+            .limit(20)
+
+        // Process data formatting tags correctly
+        const processedResenas = (data || []).map((log: any) => ({
+            ...log,
+            tags: (log.tags || []).map((t: any) => t.tag),
+            likes_count: log.likes_count?.[0]?.count || 0
+        }))
+
+        setResenas(processedResenas)
+    }, [])
+
     const handleSearch = useCallback(async () => {
         if (!query && !filterLiga) return
         setLoading(true)
@@ -68,12 +99,14 @@ export default function BuscarPage() {
 
         if (tab === 'partidos') {
             await searchPartidos(query)
-        } else {
+        } else if (tab === 'usuarios') {
             await searchUsuarios(query)
+        } else {
+            await searchResenas(query)
         }
 
         setLoading(false)
-    }, [query, tab, filterLiga, searchPartidos, searchUsuarios])
+    }, [query, tab, filterLiga, searchPartidos, searchUsuarios, searchResenas])
 
     // Auto-search on tab/filter change
     useEffect(() => {
@@ -88,6 +121,7 @@ export default function BuscarPage() {
             setHasSearched(false)
             setPartidos([])
             setUsuarios([])
+            setResenas([])
             return
         }
 
@@ -101,6 +135,7 @@ export default function BuscarPage() {
     const tabs = [
         { id: 'partidos' as SearchTab, label: 'Partidos', icon: Trophy },
         { id: 'usuarios' as SearchTab, label: 'Usuarios', icon: Users },
+        { id: 'resenas' as SearchTab, label: 'Reseñas', icon: Film },
     ]
 
     return (
@@ -115,7 +150,11 @@ export default function BuscarPage() {
                             type="text"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder={tab === 'partidos' ? 'Buscar por equipo, liga...' : 'Buscar por nombre de usuario...'}
+                            placeholder={
+                                tab === 'partidos' ? 'Buscar equipo o liga...' :
+                                    tab === 'usuarios' ? 'Buscar usuario...' :
+                                        'Buscar en reseñas o títulos...'
+                            }
                             autoFocus
                             className="w-full pl-10 pr-10 py-3 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl
                        text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] transition-colors
@@ -140,8 +179,8 @@ export default function BuscarPage() {
                                     key={t.id}
                                     onClick={() => setTab(t.id)}
                                     className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${tab === t.id
-                                            ? 'bg-[#ff6b6b]/10 text-[#ff6b6b]'
-                                            : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
+                                        ? 'bg-[#ff6b6b]/10 text-[#ff6b6b]'
+                                        : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                         }`}
                                 >
                                     <Icon size={13} />
@@ -157,8 +196,8 @@ export default function BuscarPage() {
                             <button
                                 onClick={() => setFilterLiga('')}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${!filterLiga
-                                        ? 'bg-[#10b981] text-white'
-                                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--card-border)]'
+                                    ? 'bg-[#10b981] text-white'
+                                    : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--card-border)]'
                                     }`}
                             >
                                 Todas
@@ -168,8 +207,8 @@ export default function BuscarPage() {
                                     key={liga}
                                     onClick={() => setFilterLiga(filterLiga === liga ? '' : liga)}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${filterLiga === liga
-                                            ? 'bg-[#10b981] text-white'
-                                            : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--card-border)]'
+                                        ? 'bg-[#10b981] text-white'
+                                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--card-border)]'
                                         }`}
                                 >
                                     {liga}
@@ -189,7 +228,7 @@ export default function BuscarPage() {
                                 {trendingTags.map(tag => (
                                     <button
                                         key={tag}
-                                        onClick={() => { setQuery(tag); }}
+                                        onClick={() => { setQuery(tag); if (tab === 'usuarios') setTab('resenas'); }}
                                         className="px-3 py-1.5 rounded-full text-xs font-medium bg-[#f59e0b]/10 text-[#f59e0b]
                              border border-[#f59e0b]/20 hover:bg-[#f59e0b]/20 transition-all"
                                     >
@@ -278,6 +317,33 @@ export default function BuscarPage() {
                                             </div>
                                             <span className="text-xs text-[var(--text-muted)]">Ver perfil →</span>
                                         </motion.button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Results: Reseñas */}
+                    {!loading && hasSearched && tab === 'resenas' && (
+                        <div>
+                            {resenas.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <span className="text-3xl mb-3 block">📜</span>
+                                    <p className="text-sm text-[var(--text-muted)]">
+                                        {query.length < 2 ? 'Escribí al menos 2 caracteres para buscar' : 'No se encontraron reseñas con ese texto'}
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {resenas.map((resena, i) => (
+                                        <motion.div
+                                            key={resena.id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.03 }}
+                                        >
+                                            <MatchLogCard log={resena} />
+                                        </motion.div>
                                     ))}
                                 </div>
                             )}
