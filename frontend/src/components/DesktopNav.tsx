@@ -18,14 +18,10 @@ export function DesktopNav() {
     const isActive = (path: string) => pathname === path
 
     const mainItems: NavItem[] = [
-        { label: 'Partidos', path: '/' },
+        { label: 'Partidos', path: '/', icon: <Trophy size={14} /> },
         { label: 'Prode', path: '/prode', icon: <Target size={14} /> },
         { label: 'Ranking', path: '/ranking', icon: <Trophy size={14} /> },
-    ]
-
-    const secondaryItems: NavItem[] = [
-        { label: 'Grupos', path: '/grupos', icon: <Users size={14} /> },
-        { label: 'Historial', path: '/historial', icon: <Clock size={14} /> },
+        { label: 'Comunidad', path: '/comunidad', icon: <Users size={14} /> },
     ]
 
     return (
@@ -59,29 +55,18 @@ export function DesktopNav() {
                             {item.label}
                         </button>
                     ))}
-
-                    {/* Separator */}
-                    <div className="h-4 w-px bg-[var(--card-border)] mx-1.5" />
-
-                    {secondaryItems.map(item => (
-                        <button
-                            key={item.path}
-                            onClick={() => router.push(item.path)}
-                            className={`px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all flex items-center gap-1
-                                ${isActive(item.path)
-                                    ? 'bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm border border-[var(--card-border)]'
-                                    : 'text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-bg)]/50'
-                                }`}
-                        >
-                            {item.icon}
-                            {item.label}
-                        </button>
-                    ))}
                 </div>
             </div>
 
             {/* Right: Actions */}
             <div className="w-48 flex justify-end items-center gap-2">
+                <button
+                    onClick={() => router.push('/buscar')}
+                    className="p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-bg)] transition-all"
+                    title="Buscar"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
                 <button
                     onClick={() => router.push('/log')}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold

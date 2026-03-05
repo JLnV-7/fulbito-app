@@ -154,28 +154,50 @@ function HomeContent() {
       <DesktopNav />
       <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20">
         {/* Header Mobile */}
-        <div className="px-4 py-3 flex justify-between items-center md:hidden">
-          <h1 className="text-lg font-bold tracking-tight">FutLog</h1>
+        <div className="px-4 pt-6 pb-2 flex justify-between items-center md:hidden">
+          <h1 className="text-2xl font-black tracking-tight bg-gradient-to-r from-[var(--accent)] to-[var(--accent-yellow)] bg-clip-text text-transparent">FutLog</h1>
           <ReglasPuntajeModal />
         </div>
 
-        <div className="max-w-5xl mx-auto px-4">
+        <div className="max-w-5xl mx-auto px-4 mt-2">
 
-          {/* Section Tabs */}
-          <div className="flex gap-1 mb-3 p-1 bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)]">
+          {/* Hero Banner CTA */}
+          <div className="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--card-bg)] to-[var(--background)] border border-[var(--card-border)] p-5 shadow-sm card-hover">
+            <div className="absolute top-[-20%] right-[-5%] p-4 opacity-5 pointer-events-none">
+              <span className="text-9xl grayscale">🏟️</span>
+            </div>
+            <h2 className="text-2xl font-black mb-1.5 tracking-tight">Bienvenido a FutLog</h2>
+            <p className="text-sm text-[var(--text-muted)] mb-5 max-w-[85%] leading-relaxed">Tu Letterboxd del fútbol. Rateá partidos, armá tu prode y competí con la comunidad.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { if (liveCount > 0) { setFiltroLiga('Todos'); setActiveTab('partidos'); } else { router.push('/log'); } }}
+                className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-[var(--accent)]/20 flex items-center gap-2"
+              >
+                {liveCount > 0 ? (
+                  <><span className="w-2 h-2 rounded-full bg-white animate-pulse" /> {liveCount} En Vivo</>
+                ) : (
+                  <>Empezar a Puntuar</>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Section Tabs Premium */}
+          <div className="flex gap-2 mb-5 overflow-x-auto no-scrollbar pb-1">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all
+                className={`flex-1 min-w-[80px] flex flex-col items-center justify-center gap-2 py-3.5 rounded-2xl text-[11px] font-bold transition-all border
                   ${activeTab === tab.id
-                    ? 'bg-[#10b981]/10 text-[#10b981] shadow-sm'
-                    : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
+                    ? 'bg-[var(--accent-green)]/10 text-[var(--accent-green)] border-[var(--accent-green)]/30 shadow-sm'
+                    : 'bg-[var(--card-bg)] text-[var(--text-muted)] border-[var(--card-border)] hover:bg-[var(--hover-bg)]'
                   }`}
               >
-                {tab.icon}
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label.slice(0, 4)}{tab.label.length > 4 ? '.' : ''}</span>
+                <div className={`p-2 rounded-full ${activeTab === tab.id ? 'bg-[var(--accent-green)]/20 scale-110' : 'bg-[var(--background)]'} transition-transform`}>
+                  {tab.icon}
+                </div>
+                <span>{tab.label}</span>
               </button>
             ))}
           </div>
@@ -224,16 +246,26 @@ function HomeContent() {
               </div>
 
               {/* League Filters + Search */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className="flex gap-1.5 overflow-x-auto no-scrollbar flex-1 pb-0.5">
-                  {LIGAS.map((liga) => (
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex gap-2 overflow-x-auto no-scrollbar flex-1 pb-1">
+                  <button
+                    onClick={() => setFiltroLiga('Todos')}
+                    className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all whitespace-nowrap border
+                      ${filtroLiga === 'Todos'
+                        ? 'bg-[var(--accent-green)] text-white border-[var(--accent-green)] shadow-md shadow-[var(--accent-green)]/20'
+                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)] border-[var(--card-border)]'
+                      }`}
+                  >
+                    Todos
+                  </button>
+                  {LIGAS.filter(l => l !== 'Todos').map((liga) => (
                     <button
                       key={liga}
                       onClick={() => setFiltroLiga(liga)}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all whitespace-nowrap
+                      className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all whitespace-nowrap border
                         ${filtroLiga === liga
-                          ? 'bg-[#10b981] text-white shadow-sm shadow-[#10b981]/25'
-                          : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)] border border-[var(--card-border)]'
+                          ? 'bg-[var(--accent-green)] text-white border-[var(--accent-green)] shadow-md shadow-[var(--accent-green)]/20'
+                          : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)] border-[var(--card-border)]'
                         }`}
                     >
                       {liga}
@@ -244,14 +276,14 @@ function HomeContent() {
                       if (!user) { router.push('/login'); return }
                       setFiltroLiga('Favoritos')
                     }}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap flex items-center gap-1
+                    className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border
                       ${filtroLiga === 'Favoritos'
-                        ? 'bg-amber-500/15 text-amber-500 border border-amber-500/40'
-                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-amber-500 border border-[var(--card-border)]'
+                        ? 'bg-[var(--accent-yellow)]/10 text-[var(--accent-yellow)] border-[var(--accent-yellow)]/40'
+                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--accent-yellow)] border-[var(--card-border)]'
                       }`}
                   >
-                    <Star size={10} fill={filtroLiga === 'Favoritos' ? 'currentColor' : 'none'} />
-                    Fav
+                    <Star size={12} fill={filtroLiga === 'Favoritos' ? 'currentColor' : 'none'} className={filtroLiga === 'Favoritos' ? "text-[var(--accent-yellow)]" : ""} />
+                    Mis Equipos
                   </button>
                 </div>
 
@@ -277,16 +309,19 @@ function HomeContent() {
                 </div>
               )}
 
-              {/* Live indicator */}
-              {liveCount > 0 && (
-                <div className="flex items-center gap-2 mb-3 px-1">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-                  </span>
-                  <span className="text-xs font-medium text-red-500">
-                    {liveCount} {liveCount === 1 ? 'en vivo' : 'en vivo'}
-                  </span>
+              {/* Live indicator (Ya no es necesario arriba porque está en el Hero, pero lo dejamos sutil si hay búsqueda activa) */}
+              {liveCount > 0 && searchQuery && (
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <span className="text-[11px] text-[var(--text-muted)] font-medium">Buscando...</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent)]" />
+                    </span>
+                    <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wide">
+                      {liveCount} en vivo
+                    </span>
+                  </div>
                 </div>
               )}
 

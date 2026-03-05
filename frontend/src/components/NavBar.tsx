@@ -10,134 +10,61 @@ export function NavBar() {
   const router = useRouter()
   const pathname = usePathname()
   const { user } = useAuth()
-  const [showMore, setShowMore] = useState(false)
 
   const isActive = (path: string) => pathname === path
 
-  const moreOptions = [
-    { path: '/buscar', icon: '🔍', label: 'Buscar', color: '#ff6b6b' },
-    { path: '/grupos', icon: '🤝', label: 'Grupos', color: '#EC4899' },
-    { path: '/historial', icon: '📜', label: 'Historial', color: '#6366f1' },
-    { path: '/feed', icon: '🎬', label: 'Reseñas', color: '#f59e0b' },
+  const navItems = [
+    { path: '/', icon: '🏠', activeIcon: '⚽', label: 'Inicio', defaultColor: 'var(--text-muted)', activeColor: 'var(--accent)' },
+    { path: '/prode', icon: '🎯', activeIcon: '🎯', label: 'Prode', defaultColor: 'var(--text-muted)', activeColor: 'var(--accent-green)' },
+    { path: '/ranking', icon: '🏆', activeIcon: '🏆', label: 'Ranking', defaultColor: 'var(--text-muted)', activeColor: 'var(--accent-yellow)' },
+    { path: '/comunidad', icon: '💬', activeIcon: '🤝', label: 'Comunidad', defaultColor: 'var(--text-muted)', activeColor: '#8b5cf6' },
+    { path: '/perfil', icon: '👤', activeIcon: '👤', label: 'Perfil', defaultColor: 'var(--text-muted)', activeColor: 'var(--accent-blue)', authRequired: true }
   ]
 
   return (
     <>
-      {/* Overlay cuando el menú está abierto */}
-      <AnimatePresence>
-        {showMore && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowMore(false)}
-            className="md:hidden fixed inset-0 bg-black/50 z-40"
-          />
-        )}
-      </AnimatePresence>
 
-      {/* Menú expandido */}
-      <AnimatePresence>
-        {showMore && (
-          <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="md:hidden fixed bottom-20 left-4 right-4 
-                       bg-[var(--card-bg)] border border-[var(--card-border)]
-                       rounded-2xl p-4 z-50 shadow-xl"
-          >
-            <div className="grid grid-cols-3 gap-3">
-              {moreOptions.map((option) => (
-                <button
-                  key={option.path}
-                  onClick={() => {
-                    router.push(option.path)
-                    setShowMore(false)
-                  }}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all
-                    ${isActive(option.path)
-                      ? 'bg-[var(--background)]'
-                      : 'hover:bg-[var(--background)]'
-                    }`}
-                  style={{ color: isActive(option.path) ? option.color : undefined }}
-                >
-                  <span className="text-2xl">{option.icon}</span>
-                  <span className="text-[10px] font-bold">{option.label}</span>
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* NavBar principal */}
+      {/* NavBar principal de 5 tabs */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 
-                      glass
-                      border-t px-2 py-3 flex justify-around items-center z-50">
-        <button
-          onClick={() => router.push('/')}
-          className={`flex flex-col items-center gap-1 transition-all ${isActive('/')
-            ? 'text-[#ff6b6b] scale-105 nav-active-dot'
-            : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
-            }`}
-        >
-          <span className="text-xl">⚽</span>
-          <span className="text-[10px] font-medium">Partidos</span>
-        </button>
-
-        <button
-          onClick={() => router.push('/prode')}
-          className={`flex flex-col items-center gap-1 transition-all ${isActive('/prode')
-            ? 'text-[#10b981] scale-105 nav-active-dot'
-            : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
-            }`}
-        >
-          <span className="text-xl">🎯</span>
-          <span className="text-[10px] font-medium">Prode</span>
-        </button>
-
-        <button
-          onClick={() => router.push('/ranking')}
-          className={`flex flex-col items-center gap-1 transition-all ${isActive('/ranking')
-            ? 'text-[#ffd700] scale-105 nav-active-dot'
-            : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
-            }`}
-        >
-          <span className="text-xl">🏆</span>
-          <span className="text-[10px] font-medium">Ranking</span>
-        </button>
-
-        {/* Botón MÁS */}
-        <button
-          onClick={() => setShowMore(!showMore)}
-          className={`flex flex-col items-center gap-1 transition-all ${showMore
-            ? 'text-[#ff6b6b] scale-105'
-            : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
-            }`}
-        >
-          <motion.span
-            className="text-xl"
-            animate={{ rotate: showMore ? 45 : 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            ➕
-          </motion.span>
-          <span className="text-[10px] font-medium">Más</span>
-        </button>
-
-        <button
-          onClick={() => router.push(user ? '/perfil' : '/login')}
-          className={`flex flex-col items-center gap-1 transition-all ${isActive('/perfil') || isActive('/login')
-            ? 'text-[#ff6b6b] scale-105 nav-active-dot'
-            : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
-            }`}
-        >
-          <span className="text-xl">{user ? '👤' : '🔐'}</span>
-          <span className="text-[10px] font-medium">{user ? 'Perfil' : 'Login'}</span>
-        </button>
+                        glass
+                        px-2 py-3 pb-safe flex justify-around items-center z-50">
+        {navItems.map((item) => {
+          const active = isActive(item.path) || (item.path === '/' && pathname?.startsWith('/partido/'))
+          return (
+            <button
+              key={item.path}
+              onClick={() => router.push(item.authRequired && !user ? '/login' : item.path)}
+              className="flex flex-col items-center gap-1.5 transition-all outline-none w-16"
+              style={{ color: active ? item.activeColor : item.defaultColor }}
+            >
+              <motion.div
+                animate={{ scale: active ? 1.15 : 1, y: active ? -2 : 0 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                className="text-[22px] leading-none"
+              >
+                {active ? item.activeIcon : item.icon}
+              </motion.div>
+              <span className={`text-[10px] font-medium transition-opacity ${active ? 'opacity-100 font-bold' : 'opacity-70'}`}>
+                {item.label}
+              </span>
+              {/* Indicador de activo (Puntito) */}
+              {active && (
+                <motion.div
+                  layoutId="navIndicator"
+                  className="w-1 h-1 rounded-full absolute bottom-1"
+                  style={{ backgroundColor: item.activeColor }}
+                />
+              )}
+            </button>
+          )
+        })}
       </nav>
+
+      {/* Padding for env bottom safe area */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+            .pb-safe { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+        `}} />
     </>
   )
 }
