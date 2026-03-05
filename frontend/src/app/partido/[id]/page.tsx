@@ -20,6 +20,8 @@ import { CommunityRating } from '@/components/CommunityRating'
 import { MatchTimeline } from '@/components/MatchTimeline'
 import { QuickPoll } from '@/components/QuickPoll'
 import { AdvancedStats } from '@/components/AdvancedStats'
+import { MatchLiveChat } from '@/components/MatchLiveChat'
+import { MessageSquare, MessagesSquare } from 'lucide-react'
 import type { Partido, EstadoPartido } from '@/types'
 import { fetchFixtureByIdAction } from '@/app/actions/football'
 import { syncPartidosToSupabase } from '@/app/actions/syncPartidos'
@@ -53,6 +55,7 @@ export default function PartidoPage() {
   const [error, setError] = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
   const [votosGuardados, setVotosGuardados] = useState(false)
+  const [activeTab, setActiveTab] = useState<'reviews' | 'chat'>('reviews')
   const formacionesRef = useRef<HTMLDivElement>(null)
 
   // Determinar si estamos en modo votación (formaciones cargadas)
@@ -460,7 +463,61 @@ export default function PartidoPage() {
             />
           )}
 
-          <CommentSection partidoId={String(partido.id)} />
+          {/* Selector de Pestañas: Reseñas vs Chat */}
+          <div className="mt-8 rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)] p-1.5 flex gap-1">
+            <button
+              onClick={() => setActiveTab('reviews')}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all
+                ${activeTab === 'reviews'
+                  ? 'bg-[var(--accent)] text-white shadow-sm'
+                  : 'text-[var(--text-muted)] hover:bg-[var(--hover-bg)]'
+                }`}
+            >
+              <MessageSquare size={16} />
+              Reseñas largas
+            </button>
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all
+                ${activeTab === 'chat'
+                  ? 'bg-[var(--accent)] text-white shadow-sm'
+                  : 'text-[var(--text-muted)] hover:bg-[var(--hover-bg)]'
+                }`}
+            >
+              <MessagesSquare size={16} />
+              Chat en vivo
+              {estado === 'EN_JUEGO' && (
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse ml-1" />
+              )}
+            </button>
+          </div>
+
+          <div className="mt-4">
+            <AnimatePresence mode="wait">
+              {activeTab === 'reviews' ? (
+                <motion.div
+                  key="reviews"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <CommentSection partidoId={String(partido.id)} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="chat"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <MatchLiveChat partidoId={String(partido.id)} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
         </div>
 
         {/* Solo mostrar NavBar cuando NO estamos votando */}
