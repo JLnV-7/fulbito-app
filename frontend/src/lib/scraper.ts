@@ -10,8 +10,14 @@ const TSDB_LEAGUE_IDS: Record<string, number> = {
     'Primera Nacional': 4616,
     'La Liga': 4335,
     'Premier League': 4328,
+    'Serie A': 4332,
+    'Bundesliga': 4331,
+    'Ligue 1': 4334,
+    'Brasileirão': 4351,
+    'Champions League': 4480,
     'Copa Libertadores': 4480,
     'Copa Sudamericana': 4481,
+    'MLS': 4346,
 }
 
 // Current seasons in TheSportsDB format
@@ -20,28 +26,27 @@ const TSDB_SEASONS: Record<string, string> = {
     'Primera Nacional': '2026',
     'La Liga': '2025-2026',
     'Premier League': '2025-2026',
+    'Serie A': '2025-2026',
+    'Bundesliga': '2025-2026',
+    'Ligue 1': '2025-2026',
+    'Brasileirão': '2026',
+    'Champions League': '2025-2026',
     'Copa Libertadores': '2026',
     'Copa Sudamericana': '2026',
+    'MLS': '2026',
 }
 
 // Leagues where TheSportsDB standings work correctly
-// (Argentine leagues return cumulative data, not single-season)
-const STANDINGS_SUPPORTED = ['La Liga', 'Premier League']
+const STANDINGS_SUPPORTED = ['La Liga', 'Premier League', 'Serie A', 'Bundesliga', 'Ligue 1']
 
 async function fetchTSDB<T>(endpoint: string): Promise<T | null> {
     try {
         const res = await fetch(`${BASE_URL}${endpoint}`, {
-            next: { revalidate: 300 }, // 5 min cache
+            next: { revalidate: 300 },
         })
-
-        if (!res.ok) {
-            console.error(`[TSDB] Error ${res.status}: ${endpoint}`)
-            return null
-        }
-
+        if (!res.ok) return null
         return await res.json()
-    } catch (error) {
-        console.error('[TSDB] Fetch error:', error)
+    } catch {
         return null
     }
 }
@@ -115,18 +120,14 @@ function adaptEvent(event: TSDBEvent) {
 // ============================================
 
 /**
- * Get fixtures for a league using eventsround (the only reliable endpoint)
- * Fetches current round + previous round
+ * Get fixtures for a league — fetches rounds 1-15
  */
 export async function scrapeFixtures(ligaName: string) {
     const leagueId = TSDB_LEAGUE_IDS[ligaName]
     const season = TSDB_SEASONS[ligaName]
     if (!leagueId || !season) return []
 
-    // Find the current round by trying from round 15 down
     const allEvents: TSDBEvent[] = []
-
-    // Try a range of rounds around the current one
     const roundPromises = []
     for (let r = 1; r <= 15; r++) {
         roundPromises.push(
@@ -138,10 +139,6 @@ export async function scrapeFixtures(ligaName: string) {
 
     const results = await Promise.all(roundPromises)
 
-    // Find rounds that have matches near today
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
     for (const { events } of results) {
         if (events.length > 0) {
             allEvents.push(...events)
@@ -150,24 +147,22 @@ export async function scrapeFixtures(ligaName: string) {
 
     if (allEvents.length === 0) return []
 
-    // Sort by date and return the most relevant matches
-    // (near today: 2 weeks before to 2 weeks after)
+    // Sort by date, filter to ±14 days from today
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
     const twoWeeksAgo = new Date(today)
     twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
     const twoWeeksFromNow = new Date(today)
     twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14)
 
-    // De-duplicate
     const uniqueMap = new Map(allEvents.map(e => [e.idEvent, e]))
     const adapted = [...uniqueMap.values()].map(adaptEvent)
 
-    // Filter to recent/upcoming matches
     const relevant = adapted.filter(p => {
         const d = new Date(p.fecha_inicio)
         return d >= twoWeeksAgo && d <= twoWeeksFromNow
     })
 
-    // If we have relevant matches, return those; otherwise return all
     const finalList = relevant.length > 0 ? relevant : adapted
 
     return finalList.sort((a, b) =>
@@ -176,11 +171,9 @@ export async function scrapeFixtures(ligaName: string) {
 }
 
 /**
- * Get standings - only works for European leagues on TheSportsDB
- * Returns null for Argentine leagues to trigger API-Football fallback
+ * Get standings — only works for European leagues on TheSportsDB
  */
 export async function scrapeStandings(ligaName: string) {
-    // Only use TSDB standings for leagues where it's accurate
     if (!STANDINGS_SUPPORTED.includes(ligaName)) return null
 
     const leagueId = TSDB_LEAGUE_IDS[ligaName]
@@ -223,14 +216,14 @@ export async function scrapeStandings(ligaName: string) {
 }
 
 /**
- * Top scorers not available on TheSportsDB free tier
+ * Top scorers — not available on TheSportsDB free tier
  */
 export async function scrapeTopScorers(_ligaName: string): Promise<unknown[] | null> {
     return null
 }
 
 /**
- * Get today's fixtures for all leagues
+ * Get fixtures for ALL leagues
  */
 export async function scrapeTodayAllLeagues() {
     const results = await Promise.all(

@@ -8,16 +8,22 @@ export const LEAGUE_IDS = {
     PRIMERA_NACIONAL: 129,
     LA_LIGA: 140,
     PREMIER_LEAGUE: 39,
+    SERIE_A: 135,
+    BUNDESLIGA: 78,
+    LIGUE_1: 61,
+    BRASILEIRAO: 71,
+    CHAMPIONS_LEAGUE: 2,
     COPA_LIBERTADORES: 13,
     COPA_SUDAMERICANA: 11,
-    SERIE_A: 71,
+    MLS: 253,
 } as const
 
 // Temporadas actuales
-// Free plan: solo accede a seasons 2022-2024
 export const CURRENT_SEASONS = {
-    ARGENTINA: 2024, // Free tier limit — upgrade to Pro for 2025
-    EUROPE: 2024,    // 2024-2025 runs Aug-May
+    ARGENTINA: 2025,
+    EUROPE: 2025,    // 2025-2026 runs Aug-May
+    BRAZIL: 2025,
+    MLS: 2026,
 } as const
 
 // Mapeo de nombres internos a IDs
@@ -26,19 +32,39 @@ export const LIGAS_MAP: Record<string, number> = {
     'Primera Nacional': LEAGUE_IDS.PRIMERA_NACIONAL,
     'La Liga': LEAGUE_IDS.LA_LIGA,
     'Premier League': LEAGUE_IDS.PREMIER_LEAGUE,
+    'Serie A': LEAGUE_IDS.SERIE_A,
+    'Bundesliga': LEAGUE_IDS.BUNDESLIGA,
+    'Ligue 1': LEAGUE_IDS.LIGUE_1,
+    'Brasileirão': LEAGUE_IDS.BRASILEIRAO,
+    'Champions League': LEAGUE_IDS.CHAMPIONS_LEAGUE,
     'Copa Libertadores': LEAGUE_IDS.COPA_LIBERTADORES,
     'Copa Sudamericana': LEAGUE_IDS.COPA_SUDAMERICANA,
+    'MLS': LEAGUE_IDS.MLS,
 }
 
 // Configuración de revalidación (en segundos)
-// Free tier = 100 req/día → ser conservador con cache
 export const REVALIDATE_CONFIG = {
-    STANDINGS: 7200,      // 2 horas
-    FIXTURES: 7200,       // 2 horas
-    LIVE: 120,            // 2 minutos (solo para detalles partido)
-    SCORERS: 86400,       // 24 horas
+    STANDINGS: 3600,      // 1 hora
+    FIXTURES: 1800,       // 30 min
+    LIVE: 60,             // 1 minuto
+    SCORERS: 43200,       // 12 horas
+    STATISTICS: 120,      // 2 min (detalle partido)
 } as const
 
 // Ligas soportadas en la aplicación
-export const LIGAS = ['Todos', 'Liga Profesional', 'Primera Nacional', 'Copa Libertadores', 'Copa Sudamericana', 'La Liga', 'Premier League'] as const
+export const LIGAS = [
+    'Todos',
+    'Liga Profesional',
+    'Primera Nacional',
+    'Copa Libertadores',
+    'Copa Sudamericana',
+    'Champions League',
+    'La Liga',
+    'Premier League',
+    'Serie A',
+    'Bundesliga',
+    'Ligue 1',
+    'Brasileirão',
+    'MLS',
+] as const
 export type Liga = typeof LIGAS[number]

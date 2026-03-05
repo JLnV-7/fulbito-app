@@ -2,30 +2,36 @@
 'use server'
 
 import { getStandings, getTopScorers, getFixtures, getFixtureById, getRounds, getFixturesByRound } from '@/lib/api'
-import { scrapeFixtures, scrapeStandings, scrapeTopScorers, scrapeTodayAllLeagues } from '@/lib/scraper'
+import { scrapeFixtures, scrapeStandings, scrapeTopScorers } from '@/lib/scraper'
 import { LIGAS_MAP, CURRENT_SEASONS } from '@/lib/constants'
 import type { ApiLeagueResponse, ApiFixture } from '@/types/api'
 import type { Partido } from '@/types'
+
+// Determine correct season for API-Football based on league region
+const EUROPEAN_LEAGUES = ['La Liga', 'Premier League', 'Serie A', 'Bundesliga', 'Ligue 1', 'Champions League']
+const SA_LEAGUES = ['Liga Profesional', 'Primera Nacional', 'Copa Libertadores', 'Copa Sudamericana', 'Brasileirão']
+
+function getSeasonForLeague(ligaName: string): number {
+    if (ligaName === 'MLS') return CURRENT_SEASONS.MLS
+    if (ligaName === 'Brasileirão') return CURRENT_SEASONS.BRAZIL
+    if (EUROPEAN_LEAGUES.includes(ligaName)) return CURRENT_SEASONS.EUROPE
+    return CURRENT_SEASONS.ARGENTINA
+}
 
 export async function fetchStandingsAction(ligaName: string) {
     // Try scraper first (current season, free)
     try {
         const scraped = await scrapeStandings(ligaName)
-        if (scraped && scraped.length > 0) {
-            console.log(`[Standings] Scraper OK for ${ligaName}: ${scraped.length} teams`)
-            return scraped
-        }
-    } catch (e) {
-        console.warn(`[Standings] Scraper failed for ${ligaName}:`, e)
+        if (scraped && scraped.length > 0) return scraped
+    } catch {
+        // Silent fallback to API-Football
     }
 
     // Fallback to API-Football
     const leagueId = LIGAS_MAP[ligaName]
     if (!leagueId) throw new Error('Liga no soportada')
 
-    const isEuropean = ['La Liga', 'Premier League'].includes(ligaName)
-    const season = isEuropean ? CURRENT_SEASONS.EUROPE : CURRENT_SEASONS.ARGENTINA
-
+    const season = getSeasonForLeague(ligaName)
     const data = await getStandings(leagueId, season) as unknown as ApiLeagueResponse[]
 
     if (Array.isArray(data) && data.length > 0 && data[0]?.league?.standings) {
@@ -39,45 +45,38 @@ export async function fetchTopScorersAction(ligaName: string) {
     // Try scraper first
     try {
         const scraped = await scrapeTopScorers(ligaName)
-        if (scraped && Array.isArray(scraped) && scraped.length > 0) {
-            console.log(`[Scorers] Scraper OK for ${ligaName}: ${scraped.length} players`)
-            return scraped
-        }
-    } catch (e) {
-        console.warn(`[Scorers] Scraper failed for ${ligaName}:`, e)
+        if (scraped && Array.isArray(scraped) && scraped.length > 0) return scraped
+    } catch {
+        // Silent fallback
     }
 
     // Fallback to API-Football
     const leagueId = LIGAS_MAP[ligaName]
     if (!leagueId) return []
 
-    const isEuropean = ['La Liga', 'Premier League'].includes(ligaName)
-    const season = isEuropean ? CURRENT_SEASONS.EUROPE : CURRENT_SEASONS.ARGENTINA
-
+    const season = getSeasonForLeague(ligaName)
     const data = await getTopScorers(leagueId, season)
     return data || []
 }
 
 export async function fetchFixturesAction(ligaName: string) {
-    // Try scraper first (gets today ± 1 day for current season)
+    // Try scraper first
     try {
         const scraped = await scrapeFixtures(ligaName)
         if (scraped && scraped.length > 0) {
-            console.log(`[Fixtures] Scraper OK for ${ligaName}: ${scraped.length} matches`)
             return scraped.sort((a, b) =>
                 new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime()
             )
         }
-    } catch (e) {
-        console.warn(`[Fixtures] Scraper failed for ${ligaName}:`, e)
+    } catch {
+        // Silent fallback
     }
 
-    // Fallback to API-Football (historical data)
+    // Fallback to API-Football
     const leagueId = LIGAS_MAP[ligaName]
     if (!leagueId) return []
 
-    const isEuropean = ['La Liga', 'Premier League'].includes(ligaName)
-    const season = isEuropean ? CURRENT_SEASONS.EUROPE : CURRENT_SEASONS.ARGENTINA
+    const season = getSeasonForLeague(ligaName)
 
     const today = new Date()
     const past = new Date(today)
@@ -118,7 +117,6 @@ export async function fetchFixtureByIdAction(id: number): Promise<Partido | null
     return adaptApiFixtureToPartido(data)
 }
 
-// Helper para adaptar respuesta API a nuestro tipo Partido
 function adaptApiFixtureToPartido(item: ApiFixture): Partido {
     return {
         id: item.fixture.id,
@@ -135,7 +133,7 @@ function adaptApiFixtureToPartido(item: ApiFixture): Partido {
     }
 }
 
-// Admin: Actualizar resultado manualmente
+// Admin: Update match score
 export async function updateMatchScoreAction(partidoId: number, golesLocal: number, golesVisitante: number) {
     const { createClient } = await import('@supabase/supabase-js')
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -157,17 +155,12 @@ export async function updateMatchScoreAction(partidoId: number, golesLocal: numb
 
 /**
  * Fetch fixtures AND sync them to Supabase (for Prode).
- * Returns partidos with Supabase UUIDs so pronósticos can reference them.
  */
 export async function fetchFixturesWithSyncAction(ligaName: string): Promise<Partido[]> {
     const { syncPartidosToSupabase } = await import('./syncPartidos')
-
-    // Get partidos from scraper (same logic as fetchFixturesAction)
     const scraped = await fetchFixturesAction(ligaName)
-
     if (!scraped || scraped.length === 0) return []
 
-    // Sync to Supabase — returns partidos with real UUIDs
     try {
         const synced = await syncPartidosToSupabase(scraped)
         if (synced && synced.length > 0) {
@@ -175,11 +168,10 @@ export async function fetchFixturesWithSyncAction(ligaName: string): Promise<Par
                 new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime()
             )
         }
-    } catch (e) {
-        console.warn('[FetchWithSync] Sync failed, falling back to scraped data:', e)
+    } catch {
+        // Fallback: return scraped data without Supabase UUIDs
     }
 
-    // Fallback: return scraped data (Prode won't work without UUIDs but at least shows matches)
     return scraped
 }
 

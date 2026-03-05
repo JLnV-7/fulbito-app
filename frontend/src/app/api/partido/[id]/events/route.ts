@@ -53,8 +53,7 @@ export async function GET(
         }))
 
         return NextResponse.json({ events: timeline })
-    } catch (error) {
-        console.error('Error fetching events:', error)
+    } catch {
         return NextResponse.json({ events: [] })
     }
 }

@@ -5,10 +5,6 @@ import type { ApiStanding, ApiFixture, ApiScorer } from '@/types/api'
 
 const API_KEY = process.env.API_FOOTBALL_KEY
 
-if (!API_KEY) {
-    console.warn('⚠️ API_FOOTBALL_KEY is missing in environment variables')
-}
-
 const fetchApi = async <T>(endpoint: string, revalidateTime: number = 3600): Promise<T | null> => {
     if (!API_KEY) return null
 
@@ -21,21 +17,14 @@ const fetchApi = async <T>(endpoint: string, revalidateTime: number = 3600): Pro
             next: { revalidate: revalidateTime },
         })
 
-        if (!res.ok) {
-            console.error(`API Error ${res.status}: ${res.statusText}`)
-            return null
-        }
+        if (!res.ok) return null
 
         const data = await res.json()
 
-        if (data.errors && Object.keys(data.errors).length > 0) {
-            console.error('API-Football Error:', data.errors)
-            return null
-        }
+        if (data.errors && Object.keys(data.errors).length > 0) return null
 
         return data.response
-    } catch (error) {
-        console.error('Fetch Error:', error)
+    } catch {
         return null
     }
 }

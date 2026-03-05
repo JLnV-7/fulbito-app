@@ -84,8 +84,7 @@ export async function GET(
         }
 
         return NextResponse.json({ stats })
-    } catch (error) {
-        console.error('Error fetching statistics:', error)
+    } catch {
         return NextResponse.json({ stats: null })
     }
 }
