@@ -1,7 +1,7 @@
 // src/app/page.tsx
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { usePartidos } from '@/hooks/usePartidos'
 import { supabase } from '@/lib/supabase'
@@ -71,7 +71,7 @@ function generateDateRange(): Date[] {
 // ============================================
 // Component
 // ============================================
-export default function Home() {
+function HomeContent() {
   const { user } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -124,13 +124,13 @@ export default function Home() {
   const partidosFiltrados = useMemo(() => {
     return partidos.filter(partido => {
       const matchesSearch = !searchQuery || (
-        partido.equipo_local.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        partido.equipo_visitante.toLowerCase().includes(searchQuery.toLowerCase())
+        partido?.equipo_local?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
+        partido?.equipo_visitante?.toLowerCase()?.includes(searchQuery.toLowerCase())
       )
-      const matchesDate = !selectedDate || partido.fecha_inicio.startsWith(selectedDate)
+      const matchesDate = !selectedDate || partido?.fecha_inicio?.startsWith(selectedDate)
       const matchesFavorites = filtroLiga !== 'Favoritos' || (
-        favoritos.includes(partido.equipo_local) ||
-        favoritos.includes(partido.equipo_visitante)
+        favoritos.includes(partido?.equipo_local || '') ||
+        favoritos.includes(partido?.equipo_visitante || '')
       )
       return matchesSearch && matchesDate && matchesFavorites
     })
@@ -372,5 +372,13 @@ export default function Home() {
       </main>
       <NavBar />
     </>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[var(--background)] flex items-center justify-center text-[var(--text-muted)]">Cargando...</div>}>
+      <HomeContent />
+    </Suspense>
   )
 }
