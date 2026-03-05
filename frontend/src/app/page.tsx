@@ -16,7 +16,7 @@ import { ReglasPuntajeModal } from '@/components/ReglasPuntajeModal'
 import { TablaContent } from '@/components/TablaContent'
 import { GoleadoresContent } from '@/components/GoleadoresContent'
 import { FixturesContent } from '@/components/FixturesContent'
-import { Hand, MessageCircle, Star, Search, Film, BarChart3, Trophy, Calendar } from 'lucide-react'
+import { Star, Search, BarChart3, Trophy, Calendar } from 'lucide-react'
 import type { Partido } from '@/types'
 
 import { LIGAS, type Liga } from '@/lib/constants'
@@ -136,50 +136,54 @@ export default function Home() {
           {/* === PARTIDOS TAB === */}
           {activeTab === 'partidos' && (
             <>
-              {/* Quick Actions */}
-              <div className="flex gap-2 mb-4">
-                <button
-                  onClick={() => router.push('/votar')}
-                  className="flex items-center gap-2 px-3.5 py-2 bg-[var(--card-bg)] border border-[var(--card-border)]
-                             rounded-xl text-sm font-medium hover:border-[#ff6b6b]/50 hover:bg-[#ff6b6b]/5 transition-all group"
-                >
-                  <Hand size={16} className="text-[#ff6b6b] group-hover:scale-110 transition-transform" />
-                  <span className="text-[var(--foreground)]">Votar Figura</span>
-                </button>
+              {/* League Filters + Actions */}
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex gap-1.5 overflow-x-auto no-scrollbar flex-1 pb-0.5">
+                  {LIGAS.map((liga) => (
+                    <button
+                      key={liga}
+                      onClick={() => setFiltroLiga(liga)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap
+                        ${filtroLiga === liga
+                          ? 'bg-[#10b981] text-white shadow-sm shadow-[#10b981]/25'
+                          : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)] border border-[var(--card-border)]'
+                        }`}
+                    >
+                      {liga}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => {
+                      if (!user) { router.push('/login'); return }
+                      setFiltroLiga('Favoritos')
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1
+                      ${filtroLiga === 'Favoritos'
+                        ? 'bg-amber-500/15 text-amber-500 border border-amber-500/40'
+                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-amber-500 border border-[var(--card-border)]'
+                      }`}
+                  >
+                    <Star size={11} fill={filtroLiga === 'Favoritos' ? 'currentColor' : 'none'} />
+                    Fav
+                  </button>
+                </div>
 
-                <button
-                  onClick={() => router.push('/chat')}
-                  className="flex items-center gap-2 px-3.5 py-2 bg-[var(--card-bg)] border border-[var(--card-border)]
-                             rounded-xl text-sm font-medium hover:border-[#10b981]/50 hover:bg-[#10b981]/5 transition-all group"
-                >
-                  <MessageCircle size={16} className="text-[#10b981] group-hover:scale-110 transition-transform" />
-                  <span className="text-[var(--foreground)]">Chat</span>
-                </button>
-
-                <button
-                  onClick={() => router.push('/log')}
-                  className="flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-[#f59e0b] to-[#d97706] 
-                             rounded-xl text-sm font-semibold text-white hover:shadow-md hover:shadow-[#f59e0b]/20 transition-all group"
-                >
-                  <Film size={16} className="group-hover:scale-110 transition-transform" />
-                  <span>Loguear</span>
-                </button>
-
-                <div className="flex-1" />
-
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`p-2 rounded-xl border transition-all ${showFilters || searchQuery || dateFilter
-                    ? 'bg-[#ff6b6b]/10 border-[#ff6b6b]/30 text-[#ff6b6b]'
-                    : 'bg-[var(--card-bg)] border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)]'
-                    }`}
-                  title="Filtrar"
-                >
-                  <Search size={16} />
-                </button>
+                {/* Compact actions */}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`p-2 rounded-lg border transition-all ${showFilters || searchQuery || dateFilter
+                      ? 'bg-[#10b981]/10 border-[#10b981]/30 text-[#10b981]'
+                      : 'bg-[var(--card-bg)] border-[var(--card-border)] text-[var(--text-muted)]'
+                      }`}
+                    title="Filtrar"
+                  >
+                    <Search size={14} />
+                  </button>
+                </div>
               </div>
 
-              {/* Search & Date Filter */}
+              {/* Search & Date Filter (collapsible) */}
               {showFilters && (
                 <div className="flex flex-col md:flex-row gap-3 mb-4 animate-in slide-in-from-top-2 duration-200">
                   <SearchBar
@@ -196,43 +200,9 @@ export default function Home() {
                 </div>
               )}
 
-              {/* League Filters */}
-              <div className="flex gap-1.5 overflow-x-auto no-scrollbar mb-5 pb-0.5">
-                {LIGAS.map((liga) => (
-                  <button
-                    key={liga}
-                    onClick={() => setFiltroLiga(liga)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap
-                      ${filtroLiga === liga
-                        ? 'bg-[#10b981] text-white shadow-sm shadow-[#10b981]/25'
-                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)] border border-[var(--card-border)]'
-                      }`}
-                  >
-                    {liga}
-                  </button>
-                ))}
-                <button
-                  onClick={() => {
-                    if (!user) {
-                      router.push('/login')
-                      return
-                    }
-                    setFiltroLiga('Favoritos')
-                  }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1
-                    ${filtroLiga === 'Favoritos'
-                      ? 'bg-amber-500/15 text-amber-500 border border-amber-500/40'
-                      : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-amber-500 border border-[var(--card-border)]'
-                    }`}
-                >
-                  <Star size={11} fill={filtroLiga === 'Favoritos' ? 'currentColor' : 'none'} />
-                  Mis Equipos
-                </button>
-              </div>
-
               {/* Live indicator */}
               {liveCount > 0 && (
-                <div className="flex items-center gap-2 mb-4 px-1">
+                <div className="flex items-center gap-2 mb-3 px-1">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
@@ -243,10 +213,10 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Match List */}
+              {/* Match Grid */}
               <div>
                 {loading && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                     {Array(6).fill(0).map((_, idx) => (
                       <PartidoCardSkeleton key={idx} />
                     ))}
@@ -255,11 +225,8 @@ export default function Home() {
 
                 {error && !loading && (
                   <div className="flex flex-col items-center justify-center py-16 px-4">
-                    <div className="w-20 h-20 rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)]
-                                    flex items-center justify-center mb-4">
-                      <span className="text-3xl opacity-60">❌</span>
-                    </div>
-                    <h3 className="text-base font-semibold mb-1 text-[var(--foreground)]">No pudimos cargar los partidos</h3>
+                    <span className="text-3xl mb-3">❌</span>
+                    <h3 className="text-base font-semibold mb-1">No pudimos cargar los partidos</h3>
                     <button
                       onClick={refetch}
                       className="mt-4 px-4 py-2 text-xs font-semibold text-[#ff6b6b] bg-[#ff6b6b]/10 rounded-lg
@@ -272,27 +239,21 @@ export default function Home() {
 
                 {!loading && !error && partidosFiltrados.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-16 px-4">
-                    <div className="w-20 h-20 rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)]
-                                    flex items-center justify-center mb-4">
-                      <span className="text-3xl opacity-60">{searchQuery || dateFilter ? '🔍' : '⚽'}</span>
-                    </div>
-                    <h3 className="text-base font-semibold mb-1 text-[var(--foreground)]">
-                      {searchQuery || dateFilter
-                        ? 'Sin resultados'
-                        : 'No hay partidos'}
+                    <span className="text-3xl mb-3">{searchQuery || dateFilter ? '🔍' : '⚽'}</span>
+                    <h3 className="text-base font-semibold mb-1">
+                      {searchQuery || dateFilter ? 'Sin resultados' : 'No hay partidos'}
                     </h3>
                     <p className="text-sm text-[var(--text-muted)] text-center max-w-xs">
                       {searchQuery || dateFilter
-                        ? 'Probá cambiando los filtros de búsqueda'
+                        ? 'Probá cambiando los filtros'
                         : filtroLiga !== 'Todos'
-                          ? 'No hay partidos para esta liga. Probá seleccionando "Todos".'
-                          : 'No hay partidos programados por el momento'}
+                          ? 'No hay partidos para esta liga'
+                          : 'No hay partidos programados'}
                     </p>
                     {(searchQuery || dateFilter) && (
                       <button
                         onClick={() => { setSearchQuery(''); setDateFilter(''); setShowFilters(false) }}
-                        className="mt-4 px-4 py-2 text-xs font-semibold text-[#ff6b6b] bg-[#ff6b6b]/10 rounded-lg
-                                   hover:bg-[#ff6b6b]/20 transition-colors"
+                        className="mt-4 px-4 py-2 text-xs font-semibold text-[#ff6b6b] bg-[#ff6b6b]/10 rounded-lg"
                       >
                         Limpiar filtros
                       </button>
@@ -301,7 +262,7 @@ export default function Home() {
                 )}
 
                 {!loading && !error && partidosFiltrados.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                     {partidosFiltrados.map((partido: Partido) => (
                       <PartidoCard key={partido.id} partido={partido} />
                     ))}
