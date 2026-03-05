@@ -4,9 +4,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Heart, MessageCircle, Share2, Eye, EyeOff, Tv, MapPin, Users, HelpCircle, Clock } from 'lucide-react'
+import { Heart, MessageCircle, Share2, Eye, EyeOff, Tv, MapPin, Users, HelpCircle, Clock, ListPlus } from 'lucide-react'
 import { StarRatingDisplay } from './StarRating'
 import { TeamLogo } from './TeamLogo'
+import { AddToListModal } from './AddToListModal'
 import type { MatchLog } from '@/types'
 
 const MATCH_TYPE_META: Record<string, { icon: typeof Tv; label: string; color: string }> = {
@@ -40,6 +41,8 @@ interface MatchLogCardProps {
 export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps) {
     const router = useRouter()
     const [spoilerRevealed, setSpoilerRevealed] = useState(false)
+    const [showAddToList, setShowAddToList] = useState(false)
+
     const typeMeta = MATCH_TYPE_META[log.match_type] || MATCH_TYPE_META.other
     const TypeIcon = typeMeta.icon
 
@@ -226,7 +229,7 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
             )}
 
             {/* Action Bar */}
-            <div className="flex items-center gap-1 px-2 py-2 border-t border-[var(--card-border)]">
+            <div className="flex items-center gap-1 px-2 py-2 border-t border-[var(--card-border)] relative z-10">
                 <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onLike?.(log.id) }}
@@ -247,6 +250,15 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                 >
                     <MessageCircle size={14} />
                 </button>
+                <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setShowAddToList(true) }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                   text-[var(--text-muted)] hover:text-[#10b981] hover:bg-[#10b981]/5 transition-all"
+                    title="Añadir a una lista"
+                >
+                    <ListPlus size={14} />
+                </button>
                 <div className="flex-1" />
                 <button
                     type="button"
@@ -257,6 +269,23 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                     <Share2 size={14} />
                 </button>
             </div>
+
+            {/* List Modal - Mounted only when needed so it doesn't cause hydration or bubbling issues */}
+            {showAddToList && (
+                <div onClick={(e) => e.stopPropagation()}>
+                    <AddToListModal
+                        isOpen={showAddToList}
+                        onClose={() => setShowAddToList(false)}
+                        matchData={{
+                            partido_id: log.partido_id?.toString() || log.id,
+                            equipo_local: log.equipo_local,
+                            equipo_visitante: log.equipo_visitante,
+                            logo_local: log.logo_local,
+                            logo_visitante: log.logo_visitante
+                        }}
+                    />
+                </div>
+            )}
         </motion.div>
     )
 }

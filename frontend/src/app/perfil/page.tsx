@@ -18,6 +18,7 @@ import { EquipoSelector } from '@/components/perfil/EquipoSelector'
 import { UserStatsCard } from '@/components/UserStatsCard'
 import { TopPartidos } from '@/components/TopPartidos'
 import { StatsRadar, buildRadarStats } from '@/components/StatsRadar'
+import { UserListsView } from '@/components/UserListsView'
 
 export default function Perfil() {
   const router = useRouter()
@@ -311,6 +312,11 @@ export default function Perfil() {
             <div className="mb-6">
               <TopPartidos userId={user.id} editable />
             </div>
+          )}
+
+          {/* Listas Personalizadas */}
+          {user && (
+            <UserListsView userId={user.id} isOwnProfile={true} />
           )}
 
           {/* Quick Actions */}
