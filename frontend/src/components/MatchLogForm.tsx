@@ -6,11 +6,12 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     Tv, MapPin, Users, HelpCircle, ChevronLeft, ChevronRight,
-    Check, Plus, X, Eye, EyeOff, Lock, Globe, Tag, Loader2
+    Check, Plus, X, Eye, EyeOff, Lock, Globe, Tag, Loader2, ImagePlus
 } from 'lucide-react'
 import { StarRating } from './StarRating'
 import { TeamLogo } from './TeamLogo'
 import { NeutralModeToggle } from './NeutralModeToggle'
+import { GiphyPicker } from './GiphyPicker'
 import { useMatchLogs, type CreateMatchLogData } from '@/hooks/useMatchLogs'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
@@ -88,11 +89,12 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
     const [showPreview, setShowPreview] = useState(false)
     const [isNeutral, setIsNeutral] = useState(false)
 
-    // New: DT rating, estrella/villano, photo
+    // New: DT rating, estrella/villano, photo, giphy
     const [ratingDT, setRatingDT] = useState(0)
     const [jugadorEstrella, setJugadorEstrella] = useState('')
     const [jugadorVillano, setJugadorVillano] = useState('')
     const [fotoUrl, setFotoUrl] = useState('')
+    const [showGiphy, setShowGiphy] = useState(false)
 
     // Search matches from DB
     useEffect(() => {
@@ -663,23 +665,54 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
                                 </div>
                             </div>
 
-                            {/* Photo URL */}
+                            {/* Photo URL & Giphy */}
                             <div>
-                                <label className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-muted)] mb-2">
-                                    📸 Foto del momento (opcional)
-                                </label>
-                                <input
-                                    type="url"
-                                    value={fotoUrl}
-                                    onChange={(e) => setFotoUrl(e.target.value)}
-                                    placeholder="Pegar link de imagen (ej: imgur, drive...)"
-                                    className="w-full px-4 py-2.5 bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl text-sm
-                             focus:outline-none focus:border-[#f59e0b]/50 placeholder:text-[var(--text-muted)]"
-                                />
-                                {fotoUrl && (
-                                    <div className="mt-2 rounded-xl overflow-hidden border border-[var(--card-border)] max-h-40">
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-muted)]">
+                                        📸 Foto o Meme (opcional)
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowGiphy(!showGiphy)}
+                                        className="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded-md flex items-center gap-1 hover:bg-indigo-500/20 transition-colors font-medium border border-indigo-500/20"
+                                    >
+                                        <ImagePlus size={12} />
+                                        Buscar un GIF
+                                    </button>
+                                </div>
+
+                                {showGiphy && (
+                                    <div className="mb-3">
+                                        <GiphyPicker
+                                            onClose={() => setShowGiphy(false)}
+                                            onSelect={(url) => { setFotoUrl(url); setShowGiphy(false); }}
+                                        />
+                                    </div>
+                                )}
+
+                                {!showGiphy && (
+                                    <input
+                                        type="url"
+                                        value={fotoUrl}
+                                        onChange={(e) => setFotoUrl(e.target.value)}
+                                        placeholder="Pegar link de imagen, url de GIF..."
+                                        className="w-full px-4 py-2.5 bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl text-sm
+                                 focus:outline-none focus:border-[#f59e0b]/50 placeholder:text-[var(--text-muted)]"
+                                    />
+                                )}
+
+                                {fotoUrl && !showGiphy && (
+                                    <div className="mt-2 rounded-xl overflow-hidden border border-[var(--card-border)] max-h-40 relative group">
                                         <img src={fotoUrl} alt="Preview" className="w-full h-full object-cover"
-                                            onError={(e) => (e.currentTarget.style.display = 'none')} />
+                                            onError={(e) => (e.currentTarget.style.display = 'none')}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setFotoUrl('')}
+                                            className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <X size={14} />
+                                        </button>
                                     </div>
                                 )}
                             </div>

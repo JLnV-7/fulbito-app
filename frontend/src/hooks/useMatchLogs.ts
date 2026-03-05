@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/contexts/ToastContext'
 import type { MatchLog, MatchLogPlayerRating } from '@/types'
 
 export interface MatchLogFilters {
@@ -46,10 +47,77 @@ export interface CreateMatchLogData {
 
 export function useMatchLogs(filters?: MatchLogFilters) {
     const { user } = useAuth()
+    const { showToast } = useToast()
     const [logs, setLogs] = useState<MatchLog[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [hasMore, setHasMore] = useState(true)
+
+    // Offline Syncing
+    const syncOfflineLogs = useCallback(async () => {
+        if (!user || typeof window === 'undefined' || !navigator.onLine) return
+
+        try {
+            const queueStr = localStorage.getItem('futlog_offline_queue')
+            if (!queueStr) return
+
+            const queue: (CreateMatchLogData & { _queuedAt: string })[] = JSON.parse(queueStr)
+            if (queue.length === 0) return
+
+            let syncedCount = 0
+            for (const item of queue) {
+                const { _queuedAt, ...data } = item
+                try {
+                    const { player_ratings, tags, ...logData } = data
+                    const { data: newLog, error: insertError } = await supabase
+                        .from('match_logs')
+                        .insert({
+                            ...logData,
+                            user_id: user.id,
+                            watched_at: logData.watched_at || new Date().toISOString(),
+                        })
+                        .select()
+                        .single()
+
+                    if (insertError) throw insertError
+
+                    if (player_ratings && player_ratings.length > 0) {
+                        await supabase
+                            .from('match_log_player_ratings')
+                            .insert(player_ratings.map(pr => ({ ...pr, match_log_id: newLog.id })))
+                    }
+
+                    if (tags && tags.length > 0) {
+                        await supabase
+                            .from('match_log_tags')
+                            .insert(tags.map(tag => ({ match_log_id: newLog.id, tag })))
+                    }
+                    syncedCount++
+                } catch (e) {
+                    console.error('Error syncing individual offline log:', e)
+                }
+            }
+
+            localStorage.removeItem('futlog_offline_queue')
+            if (syncedCount > 0) {
+                showToast(`Se sincronizaron ${syncedCount} reseña(s) guardada(s) sin conexión.`, 'success')
+                fetchLogs(true)
+            }
+        } catch (e) {
+            console.error('Error in syncOfflineLogs:', e)
+        }
+    }, [user])
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            window.addEventListener('online', syncOfflineLogs)
+            // Trigger sync on mount in case they are online and there's queue
+            if (navigator.onLine) {
+                syncOfflineLogs()
+            }
+            return () => window.removeEventListener('online', syncOfflineLogs)
+        }
+    }, [syncOfflineLogs])
 
     const fetchLogs = useCallback(async (reset = false) => {
         try {
@@ -135,6 +203,14 @@ export function useMatchLogs(filters?: MatchLogFilters) {
 
     const createMatchLog = async (data: CreateMatchLogData): Promise<MatchLog | null> => {
         if (!user) return null
+
+        if (typeof window !== 'undefined' && !navigator.onLine) {
+            const queue = JSON.parse(localStorage.getItem('futlog_offline_queue') || '[]')
+            queue.push({ ...data, _queuedAt: new Date().toISOString() })
+            localStorage.setItem('futlog_offline_queue', JSON.stringify(queue))
+            showToast('Estás sin conexión. La reseña se guardó y se subirá al conectar.', 'info')
+            return { id: `offline-${Date.now()}`, ...data } as unknown as MatchLog
+        }
 
         try {
             const { player_ratings, tags, ...logData } = data
