@@ -183,18 +183,18 @@ function HomeContent() {
           </div>
 
           {/* Section Tabs Premium */}
-          <div className="flex gap-2 mb-5 overflow-x-auto no-scrollbar pb-1">
+          <div className="flex gap-2 mb-5 overflow-x-auto no-scrollbar pb-2">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
-                className={`flex-1 min-w-[80px] flex flex-col items-center justify-center gap-2 py-3.5 rounded-2xl text-[11px] font-bold transition-all border
+                className={`flex-none min-w-[100px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold transition-all border
                   ${activeTab === tab.id
-                    ? 'bg-[var(--accent-green)]/10 text-[var(--accent-green)] border-[var(--accent-green)]/30 shadow-sm'
+                    ? 'bg-[#00A651] text-white border-[#00A651] shadow-md shadow-[#00A651]/20'
                     : 'bg-[var(--card-bg)] text-[var(--text-muted)] border-[var(--card-border)] hover:bg-[var(--hover-bg)]'
                   }`}
               >
-                <div className={`p-2 rounded-full ${activeTab === tab.id ? 'bg-[var(--accent-green)]/20 scale-110' : 'bg-[var(--background)]'} transition-transform`}>
+                <div className={`${activeTab === tab.id ? 'text-white' : 'text-[var(--text-muted)]'} transition-colors`}>
                   {tab.icon}
                 </div>
                 <span>{tab.label}</span>
@@ -349,22 +349,39 @@ function HomeContent() {
                 )}
 
                 {!loading && !error && partidosFiltrados.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-12 px-4">
-                    <span className="text-3xl mb-3">{searchQuery ? '🔍' : '⚽'}</span>
-                    <h3 className="text-sm font-semibold mb-1">
-                      {searchQuery ? 'Sin resultados' : 'No hay partidos'}
-                    </h3>
-                    <p className="text-xs text-[var(--text-muted)] text-center max-w-xs">
+                  <div className="flex flex-col items-center justify-center py-16 px-4 mb-8 bg-[var(--card-bg)] rounded-3xl border border-[var(--card-border)]/50 border-dashed">
+                    <div className="w-16 h-16 rounded-full bg-[var(--accent-green)]/10 flex items-center justify-center mb-4">
+                      {searchQuery ? (
+                        <Search size={28} className="text-[var(--accent-green)]" />
+                      ) : filtroLiga === 'Favoritos' ? (
+                        <Star size={28} className="text-[var(--accent-yellow)]" />
+                      ) : (
+                        <span className="text-3xl text-[var(--accent-green)]">⚽</span>
+                      )}
+                    </div>
+
+                    <h3 className="text-base font-bold mb-1.5 text-[var(--foreground)]">
                       {searchQuery
-                        ? 'Probá cambiando la búsqueda'
-                        : `No hay partidos para ${formatDateLabel(new Date(selectedDate + 'T12:00:00'))}`}
+                        ? 'No encontramos ese equipo'
+                        : filtroLiga === 'Favoritos'
+                          ? 'Tus equipos descansan hoy'
+                          : 'No hay partidos programados'}
+                    </h3>
+
+                    <p className="text-sm text-[var(--text-muted)] text-center max-w-[250px] leading-relaxed">
+                      {searchQuery
+                        ? 'Revisá si escribiste bien el nombre o probá con otro equipo.'
+                        : filtroLiga === 'Favoritos'
+                          ? 'Añadí equipos a tus favoritos haciendo click en la estrella.'
+                          : `No se encontraron encuentros en ${filtroLiga} para esta fecha.`}
                     </p>
-                    {searchQuery && (
+
+                    {(searchQuery || filtroLiga !== 'Todos') && (
                       <button
-                        onClick={() => { setSearchQuery(''); setShowSearch(false) }}
-                        className="mt-3 px-4 py-2 text-xs font-semibold text-[#ff6b6b] bg-[#ff6b6b]/10 rounded-lg"
+                        onClick={() => { setSearchQuery(''); setFiltroLiga('Todos'); setShowSearch(false); }}
+                        className="mt-5 px-5 py-2.5 text-sm font-bold text-white bg-[var(--accent-green)] rounded-xl shadow-md shadow-[var(--accent-green)]/20 hover:scale-105 transition-all"
                       >
-                        Limpiar
+                        Ver todos los partidos
                       </button>
                     )}
                   </div>
