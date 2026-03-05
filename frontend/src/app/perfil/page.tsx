@@ -19,6 +19,7 @@ import { UserStatsCard } from '@/components/UserStatsCard'
 import { TopPartidos } from '@/components/TopPartidos'
 import { StatsRadar, buildRadarStats } from '@/components/StatsRadar'
 import { UserListsView } from '@/components/UserListsView'
+import { UserBadgesGallery } from '@/components/UserBadgesGallery'
 
 export default function Perfil() {
   const router = useRouter()
@@ -237,6 +238,13 @@ export default function Perfil() {
     return null
   }
 
+  // Cálculos de XP y Nivel
+  const userLevel = profile?.level || 1
+  const userXp = profile?.xp || 0
+  const currentLevelXp = Math.pow(userLevel - 1, 2) * 100
+  const nextLevelXp = Math.pow(userLevel, 2) * 100
+  const xpProgress = Math.min(100, Math.max(0, ((userXp - currentLevelXp) / (nextLevelXp - currentLevelXp)) * 100))
+
   return (
     <>
       <DesktopNav />
@@ -267,16 +275,57 @@ export default function Perfil() {
               </div>
             </div>
 
-            <div className="text-center text-white">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="w-24 h-24 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white/30 text-5xl shadow-xl"
-              >
-                {profile?.avatar_url || '👤'}
-              </motion.div>
+            <div className="text-center text-white relative">
+              <div className="relative inline-block mx-auto mb-4">
+                {/* SVG Progress Ring */}
+                <svg className="absolute -inset-3 w-[calc(100%+1.5rem)] h-[calc(100%+1.5rem)] -rotate-90 pointer-events-none drop-shadow-lg">
+                  <circle
+                    cx="50%"
+                    cy="50%"
+                    r="46%"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.2)"
+                    strokeWidth="6"
+                  />
+                  <circle
+                    cx="50%"
+                    cy="50%"
+                    r="46%"
+                    fill="none"
+                    stroke="#F59E0B" // Amber-500 for gold
+                    strokeWidth="6"
+                    strokeDasharray="100 100"
+                    strokeDashoffset={100 - xpProgress}
+                    strokeLinecap="round"
+                    className="transition-all duration-1000 ease-out"
+                    pathLength="100"
+                  />
+                </svg>
+                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-xs font-black px-2 py-1 rounded-full border-2 border-white shadow-xl z-10 transform rotate-12">
+                  Lvl {userLevel}
+                </div>
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="w-24 h-24 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center relative z-0 border-4 border-white/30 text-5xl shadow-xl overflow-hidden"
+                >
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    '👤'
+                  )}
+                </motion.div>
+              </div>
+
               <h1 className="text-3xl font-black mb-1 drop-shadow-md">{profile?.username || 'Usuario'}</h1>
-              <p className="opacity-80 text-sm mb-4">{user.email}</p>
+
+              <div className="flex flex-col items-center gap-1 opacity-90 text-sm mb-4">
+                <span>{user.email}</span>
+                <span className="text-xs font-bold bg-black/20 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                  {userXp} / {nextLevelXp} XP
+                </span>
+              </div>
+
               {profile?.equipo && (
                 <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-white/10">
                   <span>❤️</span>
@@ -303,8 +352,9 @@ export default function Perfil() {
           </div>
 
           {/* Badges/Logros */}
-          <div className="mb-6">
+          <div className="mb-6 space-y-4">
             <BadgeDisplay stats={badgeStats} />
+            {user && <UserBadgesGallery userId={user.id} isOwnProfile={true} />}
           </div>
 
           {/* Top Partidos Favoritos */}

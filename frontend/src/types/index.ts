@@ -63,6 +63,8 @@ export interface Profile {
   username: string
   equipo: string
   avatar_url?: string
+  xp?: number
+  level?: number
   created_at: string
 }
 
