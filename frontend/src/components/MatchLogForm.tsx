@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { StarRating } from './StarRating'
 import { TeamLogo } from './TeamLogo'
+import { NeutralModeToggle } from './NeutralModeToggle'
 import { useMatchLogs, type CreateMatchLogData } from '@/hooks/useMatchLogs'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
@@ -85,6 +86,13 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
     const [isPrivate, setIsPrivate] = useState(false)
     const [selectedTags, setSelectedTags] = useState<string[]>([])
     const [showPreview, setShowPreview] = useState(false)
+    const [isNeutral, setIsNeutral] = useState(false)
+
+    // New: DT rating, estrella/villano, photo
+    const [ratingDT, setRatingDT] = useState(0)
+    const [jugadorEstrella, setJugadorEstrella] = useState('')
+    const [jugadorVillano, setJugadorVillano] = useState('')
+    const [fotoUrl, setFotoUrl] = useState('')
 
     // Search matches from DB
     useEffect(() => {
@@ -209,6 +217,11 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
                         comment: pr.comment || undefined,
                     })),
                 tags: selectedTags.length > 0 ? selectedTags : undefined,
+                is_neutral: isNeutral || undefined,
+                rating_dt: ratingDT || undefined,
+                jugador_estrella: jugadorEstrella || undefined,
+                jugador_villano: jugadorVillano || undefined,
+                foto_url: fotoUrl || undefined,
             }
 
             await createMatchLog(data)
@@ -464,7 +477,19 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
                                         color="#10b981"
                                     />
                                 </div>
+                                <div className="p-4 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)]">
+                                    <StarRating
+                                        value={ratingDT}
+                                        onChange={setRatingDT}
+                                        label="Director Técnico"
+                                        showValue
+                                        color="#8b5cf6"
+                                    />
+                                </div>
                             </div>
+
+                            {/* Neutral Mode Toggle */}
+                            <NeutralModeToggle enabled={isNeutral} onChange={setIsNeutral} />
                         </div>
                     )}
 
@@ -536,6 +561,35 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
                                         Podés saltear este paso
                                     </div>
                                 )}
+
+                                {/* Estrella y Villano */}
+                                <div className="mt-4 pt-4 border-t border-[var(--card-border)] space-y-3">
+                                    <h3 className="text-sm font-bold flex items-center gap-1.5">⭐ Estrella y 😈 Villano</h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-[10px] text-[var(--text-muted)] font-medium mb-1 block">⭐ Estrella del partido</label>
+                                            <input
+                                                type="text"
+                                                value={jugadorEstrella}
+                                                onChange={(e) => setJugadorEstrella(e.target.value)}
+                                                placeholder="Ej: Messi"
+                                                className="w-full px-3 py-2 bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl text-sm
+                                               focus:outline-none focus:border-[#f59e0b]/50"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] text-[var(--text-muted)] font-medium mb-1 block">😈 Villano del partido</label>
+                                            <input
+                                                type="text"
+                                                value={jugadorVillano}
+                                                onChange={(e) => setJugadorVillano(e.target.value)}
+                                                placeholder="Ej: El Árbitro"
+                                                className="w-full px-3 py-2 bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl text-sm
+                                               focus:outline-none focus:border-[#f59e0b]/50"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -607,6 +661,27 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
                                         </button>
                                     ))}
                                 </div>
+                            </div>
+
+                            {/* Photo URL */}
+                            <div>
+                                <label className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-muted)] mb-2">
+                                    📸 Foto del momento (opcional)
+                                </label>
+                                <input
+                                    type="url"
+                                    value={fotoUrl}
+                                    onChange={(e) => setFotoUrl(e.target.value)}
+                                    placeholder="Pegar link de imagen (ej: imgur, drive...)"
+                                    className="w-full px-4 py-2.5 bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl text-sm
+                             focus:outline-none focus:border-[#f59e0b]/50 placeholder:text-[var(--text-muted)]"
+                                />
+                                {fotoUrl && (
+                                    <div className="mt-2 rounded-xl overflow-hidden border border-[var(--card-border)] max-h-40">
+                                        <img src={fotoUrl} alt="Preview" className="w-full h-full object-cover"
+                                            onError={(e) => (e.currentTarget.style.display = 'none')} />
+                                    </div>
+                                )}
                             </div>
 
                             {/* Privacy & Spoiler toggles */}

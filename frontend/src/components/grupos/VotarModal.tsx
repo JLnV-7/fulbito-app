@@ -35,7 +35,7 @@ export function VotarModal({ jugador, onVotar, onClose }: VotarModalProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4"
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-end sm:items-center justify-center p-4"
                 onClick={onClose}
             >
                 <motion.div
@@ -43,7 +43,7 @@ export function VotarModal({ jugador, onVotar, onClose }: VotarModalProps) {
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: 100, opacity: 0 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    className="bg-[var(--card-bg)] rounded-t-3xl sm:rounded-3xl w-full max-w-md border border-[var(--card-border)] shadow-2xl"
+                    className="bg-[var(--card-bg)] rounded-t-3xl sm:rounded-3xl w-full max-w-md border border-[var(--card-border)] shadow-2xl max-h-[85vh] overflow-y-auto"
                     onClick={e => e.stopPropagation()}
                 >
                     {/* Header */}
@@ -107,7 +107,7 @@ export function VotarModal({ jugador, onVotar, onClose }: VotarModalProps) {
                     </div>
 
                     {/* Footer */}
-                    <div className="p-5 border-t border-[var(--card-border)] flex gap-3">
+                    <div className="p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] border-t border-[var(--card-border)] flex gap-3">
                         <button
                             onClick={onClose}
                             className="flex-1 py-3 rounded-xl text-[var(--text-muted)] font-bold hover:bg-[var(--background)]"

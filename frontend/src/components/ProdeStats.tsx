@@ -47,7 +47,7 @@ export function ProdeStats() {
             }
 
             setStats(rankingData ? { ...rankingData, posicion } : null)
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error fetching stats:', err)
         } finally {
             setLoading(false)

@@ -3,7 +3,7 @@
 
 import { useRouter, usePathname } from 'next/navigation'
 import { ThemeToggle } from './ThemeToggle'
-import { Trophy, Target, BarChart3, Calendar, User, Film, PenLine } from 'lucide-react'
+import { Trophy, Target, User, PenLine, Users, Clock } from 'lucide-react'
 
 interface NavItem {
     label: string
@@ -19,17 +19,13 @@ export function DesktopNav() {
 
     const mainItems: NavItem[] = [
         { label: 'Partidos', path: '/' },
-        { label: 'Reseñas', path: '/feed', icon: <Film size={14} /> },
         { label: 'Prode', path: '/prode', icon: <Target size={14} /> },
         { label: 'Ranking', path: '/ranking', icon: <Trophy size={14} /> },
-        { label: 'Tabla', path: '/posiciones', icon: <BarChart3 size={14} /> },
-        { label: 'Fixtures', path: '/fixtures', icon: <Calendar size={14} /> },
     ]
 
     const secondaryItems: NavItem[] = [
-        { label: 'Goleadores', path: '/goleadores' },
-        { label: 'Grupos', path: '/grupos' },
-        { label: 'Historial', path: '/historial' },
+        { label: 'Grupos', path: '/grupos', icon: <Users size={14} /> },
+        { label: 'Historial', path: '/historial', icon: <Clock size={14} /> },
     ]
 
     return (
@@ -41,7 +37,7 @@ export function DesktopNav() {
             <div className="w-36 flex-shrink-0">
                 <button onClick={() => router.push('/')} className="flex items-center gap-2 group">
                     <span className="text-lg font-black text-[var(--foreground)] tracking-tight group-hover:text-[#10b981] transition-colors">
-                        Fulbito
+                        FutLog
                     </span>
                 </button>
             </div>
@@ -71,12 +67,13 @@ export function DesktopNav() {
                         <button
                             key={item.path}
                             onClick={() => router.push(item.path)}
-                            className={`px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all
+                            className={`px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all flex items-center gap-1
                                 ${isActive(item.path)
                                     ? 'bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm border border-[var(--card-border)]'
                                     : 'text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-bg)]/50'
                                 }`}
                         >
+                            {item.icon}
                             {item.label}
                         </button>
                     ))}

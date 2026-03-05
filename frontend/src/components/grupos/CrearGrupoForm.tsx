@@ -41,7 +41,7 @@ export function CrearGrupoForm({ onCancel, onSuccess }: Props) {
                     <label className="block text-sm text-[var(--text-muted)] mb-1">Nombre del Grupo</label>
                     <input
                         type="text"
-                        placeholder="Ej: Los Pibes del Fulbito"
+                        placeholder="Ej: Los Pibes del FutLog"
                         value={nombre}
                         onChange={(e) => setNombre(e.target.value)}
                         className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-xl px-4 py-3 outline-none focus:border-[#10b981] transition-colors"

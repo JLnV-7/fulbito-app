@@ -39,7 +39,7 @@ export async function fetchTopScorersAction(ligaName: string) {
     // Try scraper first
     try {
         const scraped = await scrapeTopScorers(ligaName)
-        if (scraped && scraped.length > 0) {
+        if (scraped && Array.isArray(scraped) && scraped.length > 0) {
             console.log(`[Scorers] Scraper OK for ${ligaName}: ${scraped.length} players`)
             return scraped
         }
@@ -153,6 +153,34 @@ export async function updateMatchScoreAction(partidoId: number, golesLocal: numb
 
     if (error) throw new Error(error.message)
     return { success: true }
+}
+
+/**
+ * Fetch fixtures AND sync them to Supabase (for Prode).
+ * Returns partidos with Supabase UUIDs so pronósticos can reference them.
+ */
+export async function fetchFixturesWithSyncAction(ligaName: string): Promise<Partido[]> {
+    const { syncPartidosToSupabase } = await import('./syncPartidos')
+
+    // Get partidos from scraper (same logic as fetchFixturesAction)
+    const scraped = await fetchFixturesAction(ligaName)
+
+    if (!scraped || scraped.length === 0) return []
+
+    // Sync to Supabase — returns partidos with real UUIDs
+    try {
+        const synced = await syncPartidosToSupabase(scraped)
+        if (synced && synced.length > 0) {
+            return synced.sort((a, b) =>
+                new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime()
+            )
+        }
+    } catch (e) {
+        console.warn('[FetchWithSync] Sync failed, falling back to scraped data:', e)
+    }
+
+    // Fallback: return scraped data (Prode won't work without UUIDs but at least shows matches)
+    return scraped
 }
 
 function mapStatusToState(status: string): 'PREVIA' | 'EN_JUEGO' | 'FINALIZADO' {

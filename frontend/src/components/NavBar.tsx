@@ -15,11 +15,10 @@ export function NavBar() {
   const isActive = (path: string) => pathname === path
 
   const moreOptions = [
+    { path: '/buscar', icon: '🔍', label: 'Buscar', color: '#ff6b6b' },
     { path: '/grupos', icon: '🤝', label: 'Grupos', color: '#EC4899' },
-    { path: '/posiciones', icon: '📊', label: 'Tabla', color: '#3b82f6' },
-    { path: '/goleadores', icon: '⚽', label: 'Goleadores', color: '#ffd700' },
-    { path: '/fixtures', icon: '📆', label: 'Fixtures', color: '#10b981' },
     { path: '/historial', icon: '📜', label: 'Historial', color: '#6366f1' },
+    { path: '/feed', icon: '🎬', label: 'Reseñas', color: '#f59e0b' },
   ]
 
   return (
@@ -86,17 +85,6 @@ export function NavBar() {
         >
           <span className="text-xl">⚽</span>
           <span className="text-[10px] font-medium">Partidos</span>
-        </button>
-
-        <button
-          onClick={() => router.push('/feed')}
-          className={`flex flex-col items-center gap-1 transition-all ${isActive('/feed')
-            ? 'text-[#f59e0b] scale-105 nav-active-dot'
-            : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
-            }`}
-        >
-          <span className="text-xl">🎬</span>
-          <span className="text-[10px] font-medium">Reseñas</span>
         </button>
 
         <button

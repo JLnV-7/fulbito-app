@@ -86,6 +86,11 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                         <span>{timeAgo(log.created_at)}</span>
                     </div>
                 </div>
+                {log.is_neutral && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#6366f1]/10 text-[#6366f1] font-medium">
+                        📐 Neutral
+                    </span>
+                )}
                 {log.is_private && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-500 font-medium">
                         Privado
@@ -128,8 +133,8 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
             </div>
 
             {/* Secondary Ratings Pills */}
-            {(log.rating_arbitro || log.rating_atmosfera) && (
-                <div className="flex gap-2 px-4 pb-2 justify-center">
+            {(log.rating_arbitro || log.rating_atmosfera || log.rating_dt) && (
+                <div className="flex gap-2 px-4 pb-2 justify-center flex-wrap">
                     {log.rating_arbitro && log.rating_arbitro > 0 && (
                         <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full
                            bg-[var(--hover-bg)] text-[var(--text-muted)]">
@@ -142,6 +147,38 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                             🏟️ Atmósfera {log.rating_atmosfera.toFixed(1)}
                         </span>
                     )}
+                    {log.rating_dt && log.rating_dt > 0 && (
+                        <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full
+                           bg-[var(--hover-bg)] text-[var(--text-muted)]">
+                            🧥 DT {log.rating_dt.toFixed(1)}
+                        </span>
+                    )}
+                </div>
+            )}
+
+            {/* Estrella y Villano */}
+            {(log.jugador_estrella || log.jugador_villano) && (
+                <div className="flex gap-2 px-4 pb-2 justify-center">
+                    {log.jugador_estrella && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#f59e0b]/10 text-[#f59e0b] font-medium">
+                            ⭐ {log.jugador_estrella}
+                        </span>
+                    )}
+                    {log.jugador_villano && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 font-medium">
+                            😈 {log.jugador_villano}
+                        </span>
+                    )}
+                </div>
+            )}
+
+            {/* Photo */}
+            {log.foto_url && !compact && (
+                <div className="px-4 pb-3">
+                    <div className="rounded-xl overflow-hidden border border-[var(--card-border)] max-h-48">
+                        <img src={log.foto_url} alt="Momento del partido" className="w-full h-full object-cover"
+                            onError={(e) => (e.currentTarget.style.display = 'none')} />
+                    </div>
                 </div>
             )}
 

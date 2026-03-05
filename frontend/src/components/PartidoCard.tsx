@@ -11,6 +11,7 @@ import { TeamForm } from './TeamForm'
 import { TeamLogo } from './TeamLogo'
 import type { Partido } from '@/types'
 import { formatearFecha, formatearHora, generateCalendarUrl } from '@/lib/utils'
+import { QuickPoll } from './QuickPoll'
 
 interface PartidoCardProps {
   partido: Partido
@@ -178,6 +179,16 @@ export const PartidoCard = memo(({ partido }: PartidoCardProps) => {
           <span className="text-xs">→</span>
         </div>
       </div>
+
+      {/* Quick Poll — solo para partidos que no comenzaron */}
+      {partido.estado === 'PREVIA' && partido.fixture_id && (
+        <QuickPoll
+          fixtureId={partido.fixture_id}
+          equipoLocal={partido.equipo_local}
+          equipoVisitante={partido.equipo_visitante}
+          compact
+        />
+      )}
     </div>
   )
 })

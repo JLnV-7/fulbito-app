@@ -94,7 +94,7 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
             setGolesJugadores({})
             setAsistenciasJugadores({})
         } catch (err: any) {
-            showToast('Error: ' + err.message, 'error')
+            showToast('Error: ' + (err instanceof Error ? err.message : 'Error desconocido'), 'error')
         } finally {
             setProcesandoCierre(false)
         }

@@ -44,7 +44,7 @@ export default function VotarPage() {
       if (fetchError) throw fetchError
 
       setPartidos(data || [])
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error cargando partidos:', err)
       setError('No pudimos cargar los partidos habilitados para votación.')
     } finally {

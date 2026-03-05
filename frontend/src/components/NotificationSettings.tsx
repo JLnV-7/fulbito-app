@@ -41,7 +41,7 @@ export function NotificationSettings() {
             if (stored) {
                 setPrefs(JSON.parse(stored))
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error loading prefs:', err)
         }
     }

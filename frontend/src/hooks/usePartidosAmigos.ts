@@ -62,7 +62,7 @@ export function usePartidosAmigos(grupoId?: string) {
 
             setPartidos(enriched)
         } catch (err: any) {
-            setError(err.message)
+            setError(err instanceof Error ? err.message : 'Error al cargar partidos')
         } finally {
             setLoading(false)
         }

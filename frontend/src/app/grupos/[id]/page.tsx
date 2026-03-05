@@ -121,7 +121,7 @@ export default function GrupoDetailPage() {
 
     const compartirWhatsApp = () => {
         if (!grupo) return
-        const texto = `¡Unite a mi grupo "${grupo.nombre}" en Fulbito! 🎯⚽\n\nCódigo: ${grupo.codigo_invitacion}`
+        const texto = `¡Unite a mi grupo "${grupo.nombre}" en FutLog! 🎯⚽\n\nCódigo: ${grupo.codigo_invitacion}`
         const url = `https://wa.me/?text=${encodeURIComponent(texto)}`
         window.open(url, '_blank')
     }

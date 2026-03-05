@@ -94,7 +94,7 @@ export function InstallPrompt() {
 
                                 <div className="flex-1 min-w-0 pr-4">
                                     <h3 className="font-bold text-sm text-[var(--foreground)] leading-tight">
-                                        Instalá Fulbito
+                                        Instalá FutLog
                                     </h3>
                                     <p className="text-[11px] text-[var(--text-muted)] mt-0.5 leading-snug">
                                         {isIOS

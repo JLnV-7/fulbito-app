@@ -60,7 +60,7 @@ export function ResultadosPartidoAmigo({ partido, grupoId, onClose }: Resultados
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 bg-[var(--background)] z-40 overflow-y-auto"
+            className="fixed inset-0 bg-[var(--background)] z-[60] overflow-y-auto"
         >
             {/* Header */}
             <div className="bg-gradient-to-b from-[#8b5cf6] to-[#7c3aed] text-white pt-10 pb-6 px-6">

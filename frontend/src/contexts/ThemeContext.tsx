@@ -18,7 +18,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     // Cargar tema desde localStorage al montar
     useEffect(() => {
-        const savedTheme = localStorage.getItem('fulbito-theme') as Theme | null
+        const savedTheme = localStorage.getItem('FutLog-theme') as Theme | null
         if (savedTheme) {
             setTheme(savedTheme)
         } else {
@@ -33,7 +33,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (mounted) {
             document.documentElement.setAttribute('data-theme', theme)
-            localStorage.setItem('fulbito-theme', theme)
+            localStorage.setItem('FutLog-theme', theme)
         }
     }, [theme, mounted])
 

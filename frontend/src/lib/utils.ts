@@ -48,7 +48,7 @@ export const generateCalendarUrl = (partido: {
     }
 
     const title = encodeURIComponent(`⚽ ${partido.equipo_local} vs ${partido.equipo_visitante}`)
-    const details = encodeURIComponent(`Partido de ${partido.liga}\n\nSeguilo en Fulbito 🔥`)
+    const details = encodeURIComponent(`Partido de ${partido.liga}\n\nSeguilo en FutLog 🔥`)
     const location = encodeURIComponent(partido.liga)
 
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatForCalendar(startDate)}/${formatForCalendar(endDate)}&details=${details}&location=${location}`

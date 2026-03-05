@@ -9,11 +9,15 @@ import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { NotificationSettings } from '@/components/NotificationSettings'
+import { BadgeDisplay } from '@/components/BadgeDisplay'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Profile, UserStats } from '@/types'
+import type { BadgeStats } from '@/lib/badges'
 import { AvatarSelector } from '@/components/perfil/AvatarSelector'
 import { EquipoSelector } from '@/components/perfil/EquipoSelector'
 import { UserStatsCard } from '@/components/UserStatsCard'
+import { TopPartidos } from '@/components/TopPartidos'
+import { StatsRadar, buildRadarStats } from '@/components/StatsRadar'
 
 export default function Perfil() {
   const router = useRouter()
@@ -34,6 +38,12 @@ export default function Perfil() {
   const [editAvatar, setEditAvatar] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
+  const [badgeStats, setBadgeStats] = useState<BadgeStats>({
+    total_logs: 0, reviews_with_text: 0, total_votos: 0,
+    grupos_joined: 0, followers_count: 0, total_likes_received: 0,
+    distinct_ligas: 0, prode_aciertos: 0, neutral_reviews: 0,
+    early_logs: 0, late_logs: 0,
+  })
 
   useEffect(() => {
     const cargarPerfil = async () => {
@@ -108,8 +118,48 @@ export default function Perfil() {
               friend_matches_average: promedio
             }))
           }
-        } catch (err) {
+        } catch (err: any) {
           console.error('Error cargando stats de amigos:', err)
+        }
+
+        // Fetch Badge Stats
+        try {
+          const [logsRes, votosRes, gruposRes, followersRes, likesRes] = await Promise.all([
+            supabase.from('match_logs').select('id, review_text, liga, is_neutral, created_at').eq('user_id', user.id),
+            supabase.from('votaciones').select('id').eq('user_id', user.id),
+            supabase.from('miembros_grupo').select('id').eq('user_id', user.id),
+            supabase.from('user_follows').select('id').eq('following_id', user.id),
+            supabase.from('match_log_likes').select('id').eq('match_log_id', user.id),
+          ])
+
+          const logs = logsRes.data || []
+          const distinctLigas = new Set(logs.map(l => l.liga).filter(Boolean)).size
+          const reviewsWithText = logs.filter(l => l.review_text && l.review_text.length > 0).length
+          const neutralReviews = logs.filter(l => l.is_neutral).length
+          const earlyLogs = logs.filter(l => {
+            const h = new Date(l.created_at).getHours()
+            return h < 10
+          }).length
+          const lateLogs = logs.filter(l => {
+            const h = new Date(l.created_at).getHours()
+            return h >= 0 && h < 5
+          }).length
+
+          setBadgeStats({
+            total_logs: logs.length,
+            reviews_with_text: reviewsWithText,
+            total_votos: votosRes.data?.length || 0,
+            grupos_joined: gruposRes.data?.length || 0,
+            followers_count: followersRes.data?.length || 0,
+            total_likes_received: likesRes.data?.length || 0,
+            distinct_ligas: distinctLigas,
+            prode_aciertos: prodeStats ? (prodeStats.aciertos_exactos + (prodeStats.aciertos_parciales || 0)) : 0,
+            neutral_reviews: neutralReviews,
+            early_logs: earlyLogs,
+            late_logs: lateLogs,
+          })
+        } catch (err: any) {
+          console.error('Error cargando badge stats:', err)
         }
       } catch (error) {
         console.error('Error cargando perfil:', error)
@@ -240,6 +290,29 @@ export default function Perfil() {
         <div className="max-w-2xl mx-auto px-6 -mt-12 relative z-10">
           <UserStatsCard stats={stats} prodeStats={prodeStats} />
 
+          {/* Stats Radar Chart */}
+          <div className="mb-6">
+            <StatsRadar stats={buildRadarStats({
+              partidos_vistos: stats.partidos_vistos,
+              total_votos: stats.total_votos,
+              promedio_general: stats.promedio_general,
+              prode_puntos: prodeStats?.puntos_totales || 0,
+              friend_matches_votes: stats.friend_matches_votes || 0,
+            })} />
+          </div>
+
+          {/* Badges/Logros */}
+          <div className="mb-6">
+            <BadgeDisplay stats={badgeStats} />
+          </div>
+
+          {/* Top Partidos Favoritos */}
+          {user && (
+            <div className="mb-6">
+              <TopPartidos userId={user.id} editable />
+            </div>
+          )}
+
           {/* Quick Actions */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <button
@@ -269,7 +342,7 @@ export default function Perfil() {
               <div>
                 <h4 className="font-bold text-sm mb-1 text-[#6366f1]">Instalá la App</h4>
                 <p className="text-xs text-[var(--text-muted)] mb-3">
-                  Agregá Fulbito a tu inicio para que cargue más rápido y funcione sin internet.
+                  Agregá FutLog a tu inicio para que cargue más rápido y funcione sin internet.
                 </p>
                 <div className="flex flex-wrap gap-2 text-[10px]">
                   <span className="bg-[var(--card-bg)] px-2 py-1 rounded-full border border-[var(--card-border)]">✅ Offline</span>

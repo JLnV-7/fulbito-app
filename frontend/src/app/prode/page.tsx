@@ -1,8 +1,7 @@
 // src/app/prode/page.tsx
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
-import { usePartidos } from '@/hooks/usePartidos'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { usePronosticos } from '@/hooks/usePronosticos'
 import { useAuth } from '@/contexts/AuthContext'
 import { ProdeCard } from '@/components/ProdeCard'
@@ -14,6 +13,8 @@ import { PartidoCardSkeleton } from '@/components/skeletons/PartidoCardSkeleton'
 import { ReglasPuntajeModal } from '@/components/ReglasPuntajeModal'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/contexts/ToastContext'
+import { fetchFixturesWithSyncAction } from '@/app/actions/football'
+import type { Partido } from '@/types'
 
 
 import { LIGAS, type Liga } from '@/lib/constants'
@@ -25,9 +26,27 @@ export default function ProdePage() {
     const { showToast } = useToast()
     const [filtroLiga, setFiltroLiga] = useState<Liga>('Todos')
     const [filtroPronostico, setFiltroPronostico] = useState<FiltroPronostico>('todos')
-
-    const { partidos, loading: loadingPartidos } = usePartidos(filtroLiga)
+    const [partidos, setPartidos] = useState<Partido[]>([])
+    const [loadingPartidos, setLoadingPartidos] = useState(true)
     const { pronosticos, loading: loadingPronosticos, guardarPronostico } = usePronosticos()
+
+    // Fetch partidos synced with Supabase (returns UUIDs)
+    const fetchPartidos = useCallback(async () => {
+        try {
+            setLoadingPartidos(true)
+            const ligaName = filtroLiga === 'Todos' ? 'Liga Profesional' : filtroLiga
+            const data = await fetchFixturesWithSyncAction(ligaName)
+            setPartidos(data || [])
+        } catch (err) {
+            console.error('Error fetching synced partidos:', err)
+        } finally {
+            setLoadingPartidos(false)
+        }
+    }, [filtroLiga])
+
+    useEffect(() => {
+        fetchPartidos()
+    }, [fetchPartidos])
 
     // Manejar redirección en useEffect para evitar errores de hooks
     useEffect(() => {

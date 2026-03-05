@@ -270,10 +270,15 @@ export interface MatchLog {
   rating_partido: number       // 0.5-5 estrellas
   rating_arbitro?: number      // 0.5-5
   rating_atmosfera?: number    // 0.5-5
+  rating_dt?: number           // 0.5-5 director técnico
+  jugador_estrella?: string    // MVP / estrella del partido
+  jugador_villano?: string     // Peor jugador / villano
+  foto_url?: string            // URL de foto del momento
   review_title?: string
   review_text?: string
   is_spoiler: boolean
   is_private: boolean
+  is_neutral?: boolean
   watched_at: string
   created_at: string
   updated_at: string

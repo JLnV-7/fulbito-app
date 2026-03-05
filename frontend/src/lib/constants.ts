@@ -10,6 +10,7 @@ export const LEAGUE_IDS = {
     PREMIER_LEAGUE: 39,
     COPA_LIBERTADORES: 13,
     COPA_SUDAMERICANA: 11,
+    SERIE_A: 71,
 } as const
 
 // Temporadas actuales
@@ -25,6 +26,8 @@ export const LIGAS_MAP: Record<string, number> = {
     'Primera Nacional': LEAGUE_IDS.PRIMERA_NACIONAL,
     'La Liga': LEAGUE_IDS.LA_LIGA,
     'Premier League': LEAGUE_IDS.PREMIER_LEAGUE,
+    'Copa Libertadores': LEAGUE_IDS.COPA_LIBERTADORES,
+    'Copa Sudamericana': LEAGUE_IDS.COPA_SUDAMERICANA,
 }
 
 // Configuración de revalidación (en segundos)
@@ -37,5 +40,5 @@ export const REVALIDATE_CONFIG = {
 } as const
 
 // Ligas soportadas en la aplicación
-export const LIGAS = ['Todos', 'Liga Profesional', 'Primera Nacional', 'La Liga', 'Premier League'] as const
+export const LIGAS = ['Todos', 'Liga Profesional', 'Primera Nacional', 'Copa Libertadores', 'Copa Sudamericana', 'La Liga', 'Premier League'] as const
 export type Liga = typeof LIGAS[number]

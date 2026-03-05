@@ -6,6 +6,7 @@ import { ToastProvider } from "@/contexts/ToastContext";
 import { ToastContainer } from "@/components/Toast";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { OnboardingModal } from "@/components/OnboardingModal";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,25 +20,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fulbito - Votá a tus jugadores favoritos",
-  description: "Plataforma de votación para jugadores de fútbol. Pronósticos, ranking, grupos y más.",
+  title: "FutLog - Tu Letterboxd del Fútbol ⚽",
+  description: "Puntuá partidos, logueá tu experiencia, votá figuras, competí en el prode y compartí reseñas con la comunidad.",
   manifest: "/manifest.json",
   openGraph: {
-    title: "Fulbito - Votá a tus jugadores favoritos",
-    description: "Pronósticos de fútbol, votación de figuras, ranking y grupos con amigos.",
+    title: "FutLog - Tu Letterboxd del Fútbol ⚽",
+    description: "Puntuá partidos, logueá tu experiencia, votá figuras y compartí reseñas.",
     type: "website",
     locale: "es_AR",
-    siteName: "Fulbito",
+    siteName: "FutLog",
   },
   twitter: {
     card: "summary",
-    title: "Fulbito - Votá a tus jugadores favoritos",
-    description: "Pronósticos de fútbol, votación de figuras, ranking y grupos con amigos.",
+    title: "FutLog - Tu Letterboxd del Fútbol",
+    description: "Puntuá partidos, logueá tu experiencia, votá figuras y compartí reseñas.",
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Fulbito",
+    title: "FutLog",
   },
   icons: {
     icon: "/icons/icon-192.png",
@@ -73,6 +74,7 @@ export default function RootLayout({
               {children}
               <ToastContainer />
               <InstallPrompt />
+              <OnboardingModal />
               <ServiceWorkerRegistration />
             </ToastProvider>
           </AuthProvider>

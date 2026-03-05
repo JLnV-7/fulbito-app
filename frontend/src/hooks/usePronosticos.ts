@@ -61,7 +61,7 @@ export function usePronosticos(partidoId?: string) {
 
             setPronosticos(data || [])
         } catch (err: any) {
-            setError(err.message)
+            setError(err instanceof Error ? err.message : 'Error al cargar pronósticos')
         } finally {
             setLoading(false)
         }

@@ -9,6 +9,7 @@ import { DesktopNav } from '@/components/DesktopNav'
 import { motion } from 'framer-motion'
 import { SimuladorPuntos } from '@/components/SimuladorPuntos'
 import { ReglasPuntajeModal } from '@/components/ReglasPuntajeModal'
+import { ClubRanking } from '@/components/ClubRanking'
 import type { RankingProde } from '@/types'
 
 type TipoRanking = 'global' | 'liga'
@@ -308,6 +309,13 @@ export default function RankingPage() {
                                 </div>
                             </div>
                         )}
+                    </div>
+                </div>
+
+                {/* Ranking de Clubes por la Comunidad */}
+                <div className="px-6 mt-8">
+                    <div className="max-w-4xl mx-auto">
+                        <ClubRanking />
                     </div>
                 </div>
             </main>

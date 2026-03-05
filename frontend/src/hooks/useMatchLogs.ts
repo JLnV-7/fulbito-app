@@ -37,6 +37,11 @@ export interface CreateMatchLogData {
     watched_at?: string
     player_ratings?: Omit<MatchLogPlayerRating, 'id' | 'match_log_id'>[]
     tags?: string[]
+    is_neutral?: boolean
+    rating_dt?: number
+    jugador_estrella?: string
+    jugador_villano?: string
+    foto_url?: string
 }
 
 export function useMatchLogs(filters?: MatchLogFilters) {
@@ -116,7 +121,7 @@ export function useMatchLogs(filters?: MatchLogFilters) {
                 setLogs(prev => [...prev, ...processedLogs])
             }
             setHasMore(processedLogs.length === limit)
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error fetching match logs:', err)
             setError('Error al cargar las reseñas')
         } finally {
@@ -176,7 +181,7 @@ export function useMatchLogs(filters?: MatchLogFilters) {
             // Refresh the list
             fetchLogs(true)
             return newLog as MatchLog
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error creating match log:', err)
             throw err
         }
@@ -257,7 +262,7 @@ export function useMatchLogs(filters?: MatchLogFilters) {
             }
 
             return processed
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error fetching match log:', err)
             return null
         }

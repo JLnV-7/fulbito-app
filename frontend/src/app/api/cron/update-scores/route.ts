@@ -77,7 +77,7 @@ export async function GET(request: Request) {
                             errors.push(`Error actualizando ${fixture.fixture.id}: ${error.message}`)
                         }
                     }
-                } catch (err) {
+                } catch (err: any) {
                     if (err instanceof Error) {
                         errors.push(`Error procesando fixture ${fixture.fixture.id}: ${err.message}`)
                     }

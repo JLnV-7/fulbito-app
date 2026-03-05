@@ -46,13 +46,13 @@ export function DetalleJugadorAmigo({ jugador, grupoId, onClose }: DetalleJugado
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-end sm:items-center justify-center"
             onClick={onClose}
         >
             <motion.div
                 initial={{ y: 100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="bg-[var(--card-bg)] rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-[var(--card-border)] shadow-2xl"
+                className="bg-[var(--card-bg)] rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] overflow-y-auto border border-[var(--card-border)] shadow-2xl pb-[env(safe-area-inset-bottom)]"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}

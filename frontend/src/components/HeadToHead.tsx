@@ -96,7 +96,7 @@ export function HeadToHead({ equipoLocal, equipoVisitante, logoLocal, logoVisita
                     partidos: []
                 })
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error fetching H2H:', err)
             // Demo data
             setStats({

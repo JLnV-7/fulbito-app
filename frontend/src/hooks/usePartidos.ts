@@ -33,7 +33,7 @@ export function usePartidos(filtroLiga: Liga = 'Todos') {
         loading: false,
         error: null
       })
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error en usePartidos:', err)
       setState({
         data: null,

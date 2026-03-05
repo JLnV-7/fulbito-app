@@ -93,7 +93,7 @@ export function ShareButton({ titulo, texto, url, captureRef }: ShareButtonProps
             ctx.fillStyle = '#ff6b6b'
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'
-            ctx.fillText('⚽ Fulbito', finalCanvas.width / 2, finalCanvas.height - footerHeight / 2)
+            ctx.fillText('⚽ FutLog', finalCanvas.width / 2, finalCanvas.height - footerHeight / 2)
 
             // Convertir a blob y descargar
             const blob = await new Promise<Blob>((resolve, reject) => {
@@ -108,7 +108,7 @@ export function ShareButton({ titulo, texto, url, captureRef }: ShareButtonProps
             const downloadUrl = URL.createObjectURL(blob)
             const link = document.createElement('a')
             link.href = downloadUrl
-            link.download = 'mi-votacion-fulbito.png'
+            link.download = 'mi-votacion-FutLog.png'
             document.body.appendChild(link)
             link.click()
             document.body.removeChild(link)

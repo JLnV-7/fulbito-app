@@ -11,7 +11,7 @@ interface ShareableCardProps {
     filename?: string
 }
 
-export function ShareableCard({ children, title = 'Stats', filename = 'fulbito-stats' }: ShareableCardProps) {
+export function ShareableCard({ children, title = 'Stats', filename = 'FutLog-stats' }: ShareableCardProps) {
     const cardRef = useRef<HTMLDivElement>(null)
     const [isCapturing, setIsCapturing] = useState(false)
     const [showSuccess, setShowSuccess] = useState(false)
@@ -62,8 +62,8 @@ export function ShareableCard({ children, title = 'Stats', filename = 'fulbito-s
                 if (navigator.share) {
                     const file = new File([blob], `${filename}.png`, { type: 'image/png' })
                     await navigator.share({
-                        title: `Fulbito - ${title}`,
-                        text: '¡Mirá las stats en Fulbito! ⚽🔥',
+                        title: `FutLog - ${title}`,
+                        text: '¡Mirá las stats en FutLog! ⚽🔥',
                         files: [file]
                     })
                 } else {
@@ -112,9 +112,9 @@ export function ShareableCard({ children, title = 'Stats', filename = 'fulbito-s
                 <div className="mt-2 flex justify-between items-center px-4 py-2 opacity-60 grayscale">
                     <div className="flex items-center gap-2">
                         <span className="text-xl">⚽</span>
-                        <span className="text-xs font-bold text-[var(--text-muted)]">Fulbito App</span>
+                        <span className="text-xs font-bold text-[var(--text-muted)]">FutLog App</span>
                     </div>
-                    <span className="text-[10px] text-[var(--text-muted)]">fulbito.app</span>
+                    <span className="text-[10px] text-[var(--text-muted)]">FutLog.app</span>
                 </div>
             </div>
 

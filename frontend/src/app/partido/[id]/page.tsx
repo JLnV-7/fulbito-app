@@ -16,8 +16,13 @@ import { DesktopNav } from '@/components/DesktopNav'
 import { ShareButton } from '@/components/ShareButton'
 import { MatchStats } from '@/components/MatchStats'
 import { HeadToHead } from '@/components/HeadToHead'
+import { CommunityRating } from '@/components/CommunityRating'
+import { MatchTimeline } from '@/components/MatchTimeline'
+import { QuickPoll } from '@/components/QuickPoll'
+import { AdvancedStats } from '@/components/AdvancedStats'
 import type { Partido, EstadoPartido } from '@/types'
 import { fetchFixtureByIdAction } from '@/app/actions/football'
+import { syncPartidosToSupabase } from '@/app/actions/syncPartidos'
 import confetti from 'canvas-confetti'
 
 interface JugadorAPI {
@@ -79,13 +84,25 @@ export default function PartidoPage() {
         } else {
           const data = await fetchFixtureByIdAction(matchId)
           if (data) {
-            setPartido(data)
-            setEstado(calcularEstadoPartido(data.fecha_inicio))
+            // Sync to Supabase to get a UUID for this partido
+            try {
+              const synced = await syncPartidosToSupabase([data])
+              if (synced && synced.length > 0) {
+                setPartido(synced[0])
+                setEstado(calcularEstadoPartido(synced[0].fecha_inicio))
+              } else {
+                setPartido(data)
+                setEstado(calcularEstadoPartido(data.fecha_inicio))
+              }
+            } catch {
+              setPartido(data)
+              setEstado(calcularEstadoPartido(data.fecha_inicio))
+            }
           } else {
             throw new Error('Partido no encontrado en API')
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error cargando partido:', err)
         setError('No pudimos cargar el partido. Asegurate de entrar desde la lista de Fixtures.')
       } finally {
@@ -109,7 +126,7 @@ export default function PartidoPage() {
         if (data.equipos && data.equipos.length > 0) {
           setEquipos(data.equipos)
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error cargando alineaciones:', err)
       } finally {
         setLoadingLineups(false)
@@ -137,7 +154,7 @@ export default function PartidoPage() {
 
       const votosArray = Object.entries(votos).map(([jugadorId, nota]) => ({
         user_id: user.id,
-        partido_id: String(id),
+        partido_id: String(partido?.id || id),
         jugador_id: Number(jugadorId),
         nota: nota,
         created_at: new Date().toISOString()
@@ -163,7 +180,7 @@ export default function PartidoPage() {
 
       // Redirect after a short delay
       setTimeout(() => router.push('/'), 1500)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error guardando votos:', err)
     } finally {
       setGuardando(false)
@@ -197,7 +214,7 @@ export default function PartidoPage() {
     <>
       <DesktopNav />
       <main className={`min-h-screen bg-[var(--background)] text-[var(--foreground)] md:pt-20
-                         ${isVotingMode ? 'pb-36' : 'pb-24'}`}>
+                         ${isVotingMode ? 'pb-44' : 'pb-28'}`}>
         {/* Header compacto */}
         <div className="bg-[var(--card-bg)] border-b border-[var(--card-border)]">
           <div className="max-w-4xl mx-auto px-6 py-4">
@@ -211,7 +228,7 @@ export default function PartidoPage() {
 
               <ShareButton
                 titulo={`Partido: ${partido.equipo_local} vs ${partido.equipo_visitante}`}
-                texto={`¡Mirá y votá en este partido en Fulbito! ${partido.equipo_local} vs ${partido.equipo_visitante}`}
+                texto={`¡Mirá y votá en este partido en FutLog! ${partido.equipo_local} vs ${partido.equipo_visitante}`}
                 url={typeof window !== 'undefined' ? window.location.href : ''}
                 captureRef={formacionesRef}
               />
@@ -300,6 +317,20 @@ export default function PartidoPage() {
               <div className="space-y-6">
                 <MatchStats />
 
+                {/* Match Timeline */}
+                {typeof partido.id === 'number' && (
+                  <MatchTimeline
+                    fixtureId={partido.id}
+                    equipoLocal={partido.equipo_local}
+                    equipoVisitante={partido.equipo_visitante}
+                  />
+                )}
+
+                {/* Advanced Stats (xG, possession, shots) */}
+                {typeof partido.id === 'number' && (
+                  <AdvancedStats fixtureId={partido.id} />
+                )}
+
                 <div className="text-center bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] p-4">
                   <p className="text-sm text-[var(--text-muted)]">
                     Hacé click en cada jugador para votarlo (1-10)
@@ -325,7 +356,7 @@ export default function PartidoPage() {
                     initial={{ y: 100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    className="fixed bottom-0 left-0 right-0 glass z-50 border-t border-[var(--card-border)]"
+                    className="fixed bottom-0 left-0 right-0 glass z-[60] border-t border-[var(--card-border)]"
                   >
                     <div className="max-w-6xl mx-auto px-6 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                       {/* Progress bar */}
@@ -394,11 +425,42 @@ export default function PartidoPage() {
                 </p>
               </div>
 
-              {estado === 'EN_JUEGO' && <MatchStats />}
+              {estado === 'EN_JUEGO' && (
+                <>
+                  <MatchStats />
+                  {typeof partido.id === 'number' && (
+                    <MatchTimeline
+                      fixtureId={partido.id}
+                      equipoLocal={partido.equipo_local}
+                      equipoVisitante={partido.equipo_visitante}
+                    />
+                  )}
+                  {typeof partido.id === 'number' && (
+                    <AdvancedStats fixtureId={partido.id} />
+                  )}
+                </>
+              )}
+
+              {/* Quick Poll for PREVIA matches */}
+              {estado === 'PREVIA' && typeof partido.id === 'number' && (
+                <QuickPoll
+                  fixtureId={partido.id}
+                  equipoLocal={partido.equipo_local}
+                  equipoVisitante={partido.equipo_visitante}
+                />
+              )}
             </div>
           )}
 
-          <CommentSection partidoId={String(id)} />
+          {estado === 'FINALIZADO' && (
+            <CommunityRating
+              partidoId={String(partido.id)}
+              equipoLocal={partido.equipo_local}
+              equipoVisitante={partido.equipo_visitante}
+            />
+          )}
+
+          <CommentSection partidoId={String(partido.id)} />
         </div>
 
         {/* Solo mostrar NavBar cuando NO estamos votando */}

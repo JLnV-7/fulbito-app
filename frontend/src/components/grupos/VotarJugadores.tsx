@@ -76,7 +76,7 @@ export function VotarJugadores({ partido, grupoId, onClose }: VotarJugadoresProp
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-[var(--background)] z-40 overflow-y-auto"
+            className="fixed inset-0 bg-[var(--background)] z-[60] overflow-y-auto"
         >
             {/* Header */}
             <div className="bg-gradient-to-b from-[#10b981] to-[#059669] text-white pt-10 pb-6 px-6">

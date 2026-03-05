@@ -10,6 +10,8 @@ const TSDB_LEAGUE_IDS: Record<string, number> = {
     'Primera Nacional': 4616,
     'La Liga': 4335,
     'Premier League': 4328,
+    'Copa Libertadores': 4480,
+    'Copa Sudamericana': 4481,
 }
 
 // Current seasons in TheSportsDB format
@@ -18,6 +20,8 @@ const TSDB_SEASONS: Record<string, string> = {
     'Primera Nacional': '2026',
     'La Liga': '2025-2026',
     'Premier League': '2025-2026',
+    'Copa Libertadores': '2026',
+    'Copa Sudamericana': '2026',
 }
 
 // Leagues where TheSportsDB standings work correctly
@@ -221,7 +225,7 @@ export async function scrapeStandings(ligaName: string) {
 /**
  * Top scorers not available on TheSportsDB free tier
  */
-export async function scrapeTopScorers(_ligaName: string) {
+export async function scrapeTopScorers(_ligaName: string): Promise<unknown[] | null> {
     return null
 }
 

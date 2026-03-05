@@ -57,7 +57,7 @@ export function useGrupos() {
 
             setGrupos(gruposConCount as any)
         } catch (err: any) {
-            setError(err.message)
+            setError(err instanceof Error ? err.message : 'Error al cargar grupos')
         } finally {
             setLoading(false)
         }
