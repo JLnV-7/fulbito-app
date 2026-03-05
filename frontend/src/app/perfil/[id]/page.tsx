@@ -13,6 +13,7 @@ import { MatchLogCard } from '@/components/MatchLogCard'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
 import { useFollows } from '@/hooks/useMatchLogs'
+import { useProfileFollowers } from '@/hooks/useProfileFollowers'
 import type { Profile, MatchLog } from '@/types'
 import type { BadgeStats } from '@/lib/badges'
 
@@ -21,6 +22,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
     const router = useRouter()
     const { user } = useAuth()
     const { isFollowing, toggleFollow } = useFollows()
+    const { followersCount, followingCount } = useProfileFollowers(id)
     const [profile, setProfile] = useState<Profile | null>(null)
     const [logs, setLogs] = useState<MatchLog[]>([])
     const [loading, setLoading] = useState(true)
@@ -174,14 +176,26 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                                     <button
                                         onClick={() => toggleFollow(id)}
                                         className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${isFollowing(id)
-                                                ? 'bg-white/20 text-white border border-white/30'
-                                                : 'bg-white text-[#6366f1] font-semibold'
+                                            ? 'bg-white/20 text-white border border-white/30'
+                                            : 'bg-white text-[#6366f1] font-semibold'
                                             }`}
                                     >
                                         {isFollowing(id) ? <><UserCheck size={15} /> Siguiendo</> : <><UserPlus size={15} /> Seguir</>}
                                     </button>
                                 </div>
                             )}
+
+                            {/* Follower Stats */}
+                            <div className="flex items-center justify-center gap-6 mt-4 opacity-90">
+                                <div className="text-center">
+                                    <div className="font-bold text-lg">{followersCount}</div>
+                                    <div className="text-[10px] uppercase tracking-wider">Seguidores</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="font-bold text-lg">{followingCount}</div>
+                                    <div className="text-[10px] uppercase tracking-wider">Seguidos</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

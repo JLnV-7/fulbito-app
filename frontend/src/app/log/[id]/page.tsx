@@ -164,6 +164,14 @@ export default function LogDetailPage({ params }: { params: Promise<{ id: string
                         )}
                     </div>
 
+                    {log.is_neutral && (
+                        <div className="flex items-center gap-2 mt-[-10px] sm:mt-[-15px] mb-3 opacity-90">
+                            <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#6366f1]/10 text-[#6366f1] font-medium inline-block border border-[#6366f1]/20">
+                                📐 Reseña Neutral
+                            </span>
+                        </div>
+                    )}
+
                     {/* Match Info Card */}
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}

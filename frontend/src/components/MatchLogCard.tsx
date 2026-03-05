@@ -87,15 +87,22 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                     </div>
                 </div>
                 {log.is_neutral && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#6366f1]/10 text-[#6366f1] font-medium">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#6366f1]/10 text-[#6366f1] font-medium hidden sm:inline-block">
                         📐 Neutral
                     </span>
                 )}
-                {log.is_private && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-500 font-medium">
-                        Privado
-                    </span>
-                )}
+                <div className="flex gap-1">
+                    {log.is_neutral && (
+                        <span className="sm:hidden text-[10px] px-1.5 py-0.5 rounded-md bg-[#6366f1]/10 text-[#6366f1] font-medium shrink-0">
+                            📐
+                        </span>
+                    )}
+                    {log.is_private && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-500 font-medium shrink-0">
+                            Privado
+                        </span>
+                    )}
+                </div>
             </div>
 
             {/* Match Info */}
