@@ -16,6 +16,8 @@ import { TablaContent } from '@/components/TablaContent'
 import { GoleadoresContent } from '@/components/GoleadoresContent'
 import { FixturesContent } from '@/components/FixturesContent'
 import { Star, Search, ChevronLeft, ChevronRight, BarChart3, Trophy, Calendar } from 'lucide-react'
+import { OnboardingCarousel } from '@/components/OnboardingCarousel'
+import { TrendingMatchWidget } from '@/components/TrendingMatchWidget'
 import type { Partido } from '@/types'
 
 import { LIGAS, type Liga } from '@/lib/constants'
@@ -161,26 +163,11 @@ function HomeContent() {
 
         <div className="max-w-5xl mx-auto px-4 mt-2">
 
-          {/* Hero Banner CTA */}
-          <div className="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--card-bg)] to-[var(--background)] border border-[var(--card-border)] p-5 shadow-sm card-hover">
-            <div className="absolute top-[-20%] right-[-5%] p-4 opacity-5 pointer-events-none">
-              <span className="text-9xl grayscale">🏟️</span>
-            </div>
-            <h2 className="text-2xl font-black mb-1.5 tracking-tight">Bienvenido a FutLog</h2>
-            <p className="text-sm text-[var(--text-muted)] mb-5 max-w-[85%] leading-relaxed">Tu Letterboxd del fútbol. Rateá partidos, armá tu prode y competí con la comunidad.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => { if (liveCount > 0) { setFiltroLiga('Todos'); setActiveTab('partidos'); } else { router.push('/log'); } }}
-                className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-[var(--accent)]/20 flex items-center gap-2"
-              >
-                {liveCount > 0 ? (
-                  <><span className="w-2 h-2 rounded-full bg-white animate-pulse" /> {liveCount} En Vivo</>
-                ) : (
-                  <>Empezar a Puntuar</>
-                )}
-              </button>
-            </div>
-          </div>
+          {/* Hero Banner CTA / Onboarding */}
+          {!user && <OnboardingCarousel />}
+
+          {/* Trending Match Premium Widget */}
+          <TrendingMatchWidget />
 
           {/* Section Tabs Premium */}
           <div className="flex gap-2 mb-5 overflow-x-auto no-scrollbar pb-2">

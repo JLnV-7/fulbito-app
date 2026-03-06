@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 
+import { LoginTeaserModal } from './LoginTeaserModal'
+
 interface FavoriteButtonProps {
     equipo: string
     compact?: boolean
@@ -14,6 +16,7 @@ export function FavoriteButton({ equipo, compact = false }: FavoriteButtonProps)
     const { user } = useAuth()
     const [isFavorite, setIsFavorite] = useState(false)
     const [loading, setLoading] = useState(true)
+    const [showTeaser, setShowTeaser] = useState(false)
 
     useEffect(() => {
         if (!user) {
@@ -41,7 +44,7 @@ export function FavoriteButton({ equipo, compact = false }: FavoriteButtonProps)
         e.stopPropagation()
 
         if (!user) {
-            alert('Iniciá sesión para guardar tus equipos favoritos ⭐')
+            setShowTeaser(true)
             return
         }
 
@@ -74,19 +77,31 @@ export function FavoriteButton({ equipo, compact = false }: FavoriteButtonProps)
     if (loading) return <div className="w-6 h-6" />
 
     return (
-        <button
-            onClick={toggleFavorite}
-            className={`
-        transition-all duration-200 hover:scale-110 active:scale-95
-        ${isFavorite
-                    ? 'text-yellow-400 opacity-100'
-                    : 'text-gray-600 hover:text-yellow-400 opacity-50 hover:opacity-100'
-                }
-        ${compact ? 'text-xl' : 'text-2xl'}
-      `}
-            title={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-        >
-            {isFavorite ? '⭐' : '☆'}
-        </button>
+        <>
+            <button
+                onClick={toggleFavorite}
+                className={`
+            transition-all duration-200 hover:scale-110 active:scale-95
+            ${isFavorite
+                        ? 'text-yellow-400 opacity-100'
+                        : 'text-gray-600 hover:text-yellow-400 opacity-50 hover:opacity-100'
+                    }
+            ${compact ? 'text-xl' : 'text-2xl'}
+          `}
+                title={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+            >
+                {isFavorite ? '⭐' : '☆'}
+            </button>
+
+            {/* Login Teaser */}
+            {showTeaser && (
+                <LoginTeaserModal
+                    isOpen={showTeaser}
+                    onClose={() => setShowTeaser(false)}
+                    title="¡Guardá tus colores!"
+                    message="Necesitás entrar a la cancha para guardar a este equipo en tus Favoritos."
+                />
+            )}
+        </>
     )
 }
