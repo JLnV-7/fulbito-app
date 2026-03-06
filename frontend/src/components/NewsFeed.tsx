@@ -60,9 +60,9 @@ export function NewsFeed() {
                     if (userTeam) {
                         const personalized = rest.filter((item: any) => item.isPersonalized)
                         const others = rest.filter((item: any) => !item.isPersonalized)
-                        finalNews = [...general, ...personalized, ...others].slice(0, 8)
+                        finalNews = [...general, ...personalized, ...others].slice(0, 15)
                     } else {
-                        finalNews = allItems.slice(0, 8)
+                        finalNews = allItems.slice(0, 15)
                     }
                     setNews(finalNews)
                 } else {

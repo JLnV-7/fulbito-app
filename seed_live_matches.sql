@@ -38,16 +38,22 @@ BEGIN
     END IF;
 END $$;
 
--- 5. Insert Matches for Simulation
--- Using specific UUIDs that the API will recognize as "Live Simulation"
-INSERT INTO partidos (id, equipo_local, equipo_visitante, logo_local, logo_visitante, liga, fecha_inicio, estado, goles_local, goles_visitante)
+-- 3. MOCK MATCHES (Using Simulation IDs for API Fallbacks)
+INSERT INTO partidos (id, fixture_id, equipo_local, equipo_visitante, logo_local, logo_visitante, goles_local, goles_visitante, fecha_inicio, estado, liga, temporada)
 VALUES 
-  ('00000000-0000-0000-0000-000000000001', 'River Plate', 'Boca Juniors', 'https://media.api-sports.io/football/teams/435.png', 'https://media.api-sports.io/football/teams/451.png', 'Liga Profesional', NOW() - INTERVAL '45 minutes', 'EN_JUEGO', 1, 0),
-  ('00000000-0000-0000-0000-000000000002', 'Racing Club', 'Independiente', 'https://media.api-sports.io/football/teams/434.png', 'https://media.api-sports.io/football/teams/453.png', 'Liga Profesional', NOW() + INTERVAL '2 hours', 'PREVIA', 0, 0)
-ON CONFLICT (id) DO UPDATE SET 
-  estado = EXCLUDED.estado,
+-- EN JUEGO (Simulado)
+('00000000-0000-0000-0000-000000000001', 999901, 'River Plate', 'Boca Juniors', 'https://media.api-sports.io/football/teams/435.png', 'https://media.api-sports.io/football/teams/451.png', 2, 1, NOW() - INTERVAL '45 minutes', 'EN_JUEGO', 'Liga Profesional', 2026),
+-- PREVIA (Simulado para hoy más tarde)
+('00000000-0000-0000-0000-000000000002', 999902, 'Racing Club', 'Independiente', 'https://media.api-sports.io/football/teams/436.png', 'https://media.api-sports.io/football/teams/438.png', 0, 0, NOW() + INTERVAL '3 hours', 'PREVIA', 'Liga Profesional', 2026),
+-- FINALIZADO (Simulado de ayer)
+('00000000-0000-0000-0000-000000000003', 999903, 'San Lorenzo', 'Huracán', 'https://media.api-sports.io/football/teams/445.png', 'https://media.api-sports.io/football/teams/448.png', 1, 1, NOW() - INTERVAL '24 hours', 'FINALIZADO', 'Liga Profesional', 2026),
+-- PROXIMO (Simulado de mañana)
+('00000000-0000-0000-0000-000000000004', 999904, 'Talleres', 'Belgrano', 'https://media.api-sports.io/football/teams/456.png', 'https://media.api-sports.io/football/teams/459.png', 0, 0, NOW() + INTERVAL '24 hours', 'PREVIA', 'Liga Profesional', 2026)
+ON CONFLICT (id) DO UPDATE SET
   goles_local = EXCLUDED.goles_local,
-  goles_visitante = EXCLUDED.goles_visitante;
+  goles_visitante = EXCLUDED.goles_visitante,
+  estado = EXCLUDED.estado,
+  fecha_inicio = EXCLUDED.fecha_inicio;
 
 -- 6. Insert Live Polls
 INSERT INTO chat_polls (partido_id, question, options)

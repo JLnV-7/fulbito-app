@@ -39,14 +39,17 @@ export function usePartidos(filtroLiga: Liga = 'Todos') {
           .order('fecha_inicio', { ascending: true })
 
         if (!dbError && dbPartidos) {
-          const todayStr = new Date().toISOString().split('T')[0]
+          console.log(`[usePartidos] Found ${dbPartidos.length} matches in Supabase`);
+          // Borramos los milisegundos y Z para que sea consistente con el startsWith de page.tsx
+          const todayLocal = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local format
 
           // Merge: Overwrite or add
           dbPartidos.forEach((dbMatch: Partido) => {
-            // Force simulation matches to be "Today"
+            // Force simulation matches to be "Today" (local)
             if (dbMatch.id?.toString().startsWith('00000000-0000-0000-0000')) {
-              const [_, time] = dbMatch.fecha_inicio.split('T')
-              dbMatch.fecha_inicio = `${todayStr}T${time}`
+              const timePart = dbMatch.fecha_inicio.split('T')[1] || '20:00:00';
+              dbMatch.fecha_inicio = `${todayLocal}T${timePart}`;
+              console.log(`[usePartidos] Forced simulation match ${dbMatch.equipo_local} to ${dbMatch.fecha_inicio}`);
             }
 
             const index = data.findIndex(p => p.id === dbMatch.id || p.fixture_id === dbMatch.fixture_id)
