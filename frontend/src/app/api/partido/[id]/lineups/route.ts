@@ -57,6 +57,41 @@ export async function GET(
 
         const fixtureId = partido.fixture_id
 
+        // --- MOCK FALLBACK DEMO PARA ALINEACIONES ---
+        if (fixtureId >= 9991 && fixtureId <= 9993) {
+            return NextResponse.json({
+                equipos: [
+                    {
+                        id: 435,
+                        nombre: 'River Plate',
+                        logo: 'https://media.api-sports.io/football/teams/435.png',
+                        titulares: [
+                            { id: 1001, nombre: 'Franco Armani', numero: 1, posicion: 'ARQ' },
+                            { id: 1002, nombre: 'Paulo Díaz', numero: 17, posicion: 'DEF' },
+                            { id: 1003, nombre: 'Enzo Díaz', numero: 13, posicion: 'DEF' },
+                            { id: 1004, nombre: 'Ignacio Fernández', numero: 26, posicion: 'MED' },
+                            { id: 1005, nombre: 'Miguel Borja', numero: 9, posicion: 'DEL' }
+                        ],
+                        suplentes: []
+                    },
+                    {
+                        id: 451,
+                        nombre: 'Boca Juniors',
+                        logo: 'https://media.api-sports.io/football/teams/451.png',
+                        titulares: [
+                            { id: 2001, nombre: 'Sergio Romero', numero: 1, posicion: 'ARQ' },
+                            { id: 2002, nombre: 'Marcos Rojo', numero: 6, posicion: 'DEF' },
+                            { id: 2003, nombre: 'Luis Advíncula', numero: 17, posicion: 'DEF' },
+                            { id: 2004, nombre: 'Kevin Zenón', numero: 22, posicion: 'MED' },
+                            { id: 2005, nombre: 'Edinson Cavani', numero: 10, posicion: 'DEL' }
+                        ],
+                        suplentes: []
+                    }
+                ]
+            })
+        }
+        // ---------------------------------------------
+
         // Paso 2: Consultar alineaciones usando fixture_id
         const response = await fetch(
             `https://v3.football.api-sports.io/fixtures/lineups?fixture=${fixtureId}`,
