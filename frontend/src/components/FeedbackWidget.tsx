@@ -38,6 +38,13 @@ export function FeedbackWidget() {
 
             if (error) throw error
 
+            // Trigger Discord Webhook Notification asynchronously (don't await so UI doesn't block)
+            fetch('/api/webhook/discord', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating, comment: comment.trim(), user_id: user?.id })
+            }).catch(err => console.error('Failed to send discord notification:', err))
+
             // Success feedback
             setIsOpen(false)
             showToast('¡Gracias por tu feedback!', 'success')
@@ -126,8 +133,8 @@ export function FeedbackWidget() {
                                             <Star
                                                 size={36}
                                                 className={`transition-colors duration-200 ${star <= (hoverRating || rating)
-                                                        ? 'fill-amber-400 text-amber-400'
-                                                        : 'text-[var(--card-border)]'
+                                                    ? 'fill-amber-400 text-amber-400'
+                                                    : 'text-[var(--card-border)]'
                                                     }`}
                                             />
                                         </button>
