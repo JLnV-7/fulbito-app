@@ -99,7 +99,28 @@ export function NewsFeed() {
                 {loading ? (
                     Array(3).fill(0).map((_, i) => <NewsSkeleton key={i} />)
                 ) : (
-                    news.map((item, i) => (
+                    (news.length > 0 ? news : [
+                        {
+                            id: 'fb-1',
+                            title: '¡FutLog Beta lanzada! Probá el armador de XI ideal y las encuestas en vivo.',
+                            url: '#',
+                            source: 'FutLog Staff',
+                            time: 'Ahora',
+                            category: 'COMUNIDAD',
+                            imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=500&auto=format&fit=crop',
+                            isPersonalized: true
+                        },
+                        {
+                            id: 'fb-2',
+                            title: 'Simulación de Partidos: Ya podés ver estadísticas en vivo de los clásicos.',
+                            url: '#',
+                            source: 'Sistema',
+                            time: '1h',
+                            category: 'VIVO',
+                            imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=500&auto=format&fit=crop',
+                            isPersonalized: false
+                        }
+                    ]).map((item, i) => (
                         <motion.a
                             key={item.id}
                             href={item.url}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { supabase } from '@/lib/supabase'
 import type { Partido, Liga, AsyncState } from '@/types'
 import { fetchFixturesAction } from '@/app/actions/football'
 import { LIGAS_MAP } from '@/lib/constants'
@@ -18,32 +19,47 @@ export function usePartidos(filtroLiga: Liga = 'Todos') {
 
       let data: Partido[] = []
 
-      if (filtroLiga === 'Todos') {
-        // Free tier: solo traer Liga Profesional por defecto para ahorrar requests
-        data = await fetchFixturesAction('Liga Profesional')
-      } else {
-        data = await fetchFixturesAction(filtroLiga)
+      // 1. Fetch from Scraper/API
+      try {
+        if (filtroLiga === 'Todos') {
+          data = await fetchFixturesAction('Liga Profesional')
+        } else {
+          data = await fetchFixturesAction(filtroLiga)
+        }
+      } catch (e) {
+        console.error('Error fetching API fixtures:', e)
       }
 
-      // Ordenar por fecha
-      data.sort((a, b) => new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime())
+      // 2. Fetch from Supabase (for simulation and user-managed matches)
+      try {
+        const { data: dbPartidos, error: dbError } = await supabase
+          .from('partidos')
+          .select('*')
+          .neq('id', 'demo-match-999') // Ignorar el mock del widget si existe en DB
+          .order('fecha_inicio', { ascending: true })
 
-      // --- MOCK FALLBACK DEMOS PARA PROBAR ESTADOS ---
-      // Si la API no devuelve nada (que últimamente pasa), inyectamos 3 partidos de mentira
+        if (!dbError && dbPartidos) {
+          // Merge: Overwrite or add
+          dbPartidos.forEach((dbMatch: Partido) => {
+            const index = data.findIndex(p => p.id === dbMatch.id || p.fixture_id === dbMatch.fixture_id)
+            if (index !== -1) {
+              data[index] = { ...data[index], ...dbMatch }
+            } else {
+              data.push(dbMatch)
+            }
+          })
+        }
+      } catch (e) {
+        console.error('Error fetching Supabase matches:', e)
+      }
+
+      // 3. Fallback Mocks (si después de todo sigue vacío)
       if (data.length === 0) {
+        // ... (existing fallback logic)
         const now = new Date()
-
-        // 1. Partido Finalizado (Ayer)
-        const ayer = new Date(now)
-        ayer.setDate(ayer.getDate() - 1)
-
-        // 2. Partido En Juego (Hoy, hace una hora)
-        const hoyEnJuego = new Date(now)
-        hoyEnJuego.setHours(hoyEnJuego.getHours() - 1)
-
-        // 3. Partido Previa (Mañana)
-        const manana = new Date(now)
-        manana.setDate(manana.getDate() + 1)
+        const ayer = new Date(now); ayer.setDate(ayer.getDate() - 1)
+        const hoyEnJuego = new Date(now); hoyEnJuego.setHours(hoyEnJuego.getHours() - 1)
+        const manana = new Date(now); manana.setDate(manana.getDate() + 1)
 
         data = [
           {
@@ -51,47 +67,32 @@ export function usePartidos(filtroLiga: Liga = 'Todos') {
             fixture_id: 9991,
             equipo_local: 'River Plate',
             equipo_visitante: 'Boca Juniors',
-            logo_local: 'https://media.api-sports.io/football/teams/435.png', // River
-            logo_visitante: 'https://media.api-sports.io/football/teams/451.png', // Boca
+            logo_local: 'https://media.api-sports.io/football/teams/435.png',
+            logo_visitante: 'https://media.api-sports.io/football/teams/451.png',
             goles_local: 3,
             goles_visitante: 1,
             fecha_inicio: ayer.toISOString(),
             estado: 'FINALIZADO',
-            liga: 'Liga Profesional',
-            temporada: 2026,
-            last_updated: now.toISOString()
+            liga: 'Liga Profesional'
           },
           {
             id: 'mock-live-1',
             fixture_id: 9992,
             equipo_local: 'Racing Club',
             equipo_visitante: 'Independiente',
-            logo_local: 'https://media.api-sports.io/football/teams/436.png', // Racing
-            logo_visitante: 'https://media.api-sports.io/football/teams/438.png', // Indep
+            logo_local: 'https://media.api-sports.io/football/teams/436.png',
+            logo_visitante: 'https://media.api-sports.io/football/teams/438.png',
             goles_local: 0,
             goles_visitante: 0,
             fecha_inicio: hoyEnJuego.toISOString(),
             estado: 'EN_JUEGO',
-            liga: 'Liga Profesional',
-            minuto: 45,
-            temporada: 2026,
-            last_updated: now.toISOString()
-          },
-          {
-            id: 'mock-prev-1',
-            fixture_id: 9993,
-            equipo_local: 'San Lorenzo',
-            equipo_visitante: 'Huracán',
-            logo_local: 'https://media.api-sports.io/football/teams/445.png', // SL
-            logo_visitante: 'https://media.api-sports.io/football/teams/448.png', // Huracan
-            fecha_inicio: manana.toISOString(),
-            estado: 'PREVIA',
-            liga: 'Liga Profesional',
-            temporada: 2026,
-            last_updated: now.toISOString()
+            liga: 'Liga Profesional'
           }
-        ] as unknown as Partido[]
+        ] as any[]
       }
+
+      // Final sort
+      data.sort((a, b) => new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime())
 
       setState({
         data,
