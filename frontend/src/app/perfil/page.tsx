@@ -20,6 +20,7 @@ import { TopPartidos } from '@/components/TopPartidos'
 import { StatsRadar, buildRadarStats } from '@/components/StatsRadar'
 import { UserListsView } from '@/components/UserListsView'
 import { UserBadgesGallery } from '@/components/UserBadgesGallery'
+import { WeeklyChallenges } from '@/components/WeeklyChallenges'
 
 export default function Perfil() {
   const router = useRouter()
@@ -368,6 +369,16 @@ export default function Perfil() {
           {user && (
             <UserListsView userId={user.id} isOwnProfile={true} />
           )}
+
+          <div className="mt-8 space-y-6">
+            {/* Weekly Challenges Widget */}
+            <WeeklyChallenges />
+
+            <UserBadgesGallery
+              userId={user.id}
+              isOwnProfile={true}
+            />
+          </div>
 
           {/* Quick Actions */}
           <div className="grid grid-cols-2 gap-4 mb-6">
