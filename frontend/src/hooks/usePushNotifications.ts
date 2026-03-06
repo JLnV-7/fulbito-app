@@ -1,83 +1,97 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import OneSignal from 'react-onesignal'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 
-// Keys handled inside function to support multiple env var names
-
-function urlBase64ToUint8Array(base64String: string) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4)
-    const base64 = (base64String + padding)
-        .replace(/\-/g, '+')
-        .replace(/_/g, '/')
-
-    const rawData = window.atob(base64)
-    const outputArray = new Uint8Array(rawData.length)
-
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i)
-    }
-    return outputArray
-}
-
 export function usePushNotifications() {
     const { user } = useAuth()
-    const [isSupported, setIsSupported] = useState(false)
-    const [subscription, setSubscription] = useState<PushSubscription | null>(null)
+    const [isSupported, setIsSupported] = useState(true) // OneSignal handles support checks mostly
     const [loading, setLoading] = useState(false)
+    const [isInitialized, setIsInitialized] = useState(false)
+    const [isOptedIn, setIsOptedIn] = useState(false)
 
     useEffect(() => {
-        if ('serviceWorker' in navigator && 'PushManager' in window) {
-            setIsSupported(true)
-            registerServiceWorker()
-        }
-    }, [])
+        const initOneSignal = async () => {
+            try {
+                if (!isInitialized) {
+                    await OneSignal.init({
+                        appId: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '',
+                        allowLocalhostAsSecureOrigin: true, // Para testing local
+                        notifyButton: {
+                            enable: false, // Ocultamos el widget flotante nativo
+                        },
+                    })
+                    setIsInitialized(true)
 
-    const registerServiceWorker = async () => {
-        try {
-            const registration = await navigator.serviceWorker.register('/sw.js')
-            const sub = await registration.pushManager.getSubscription()
-            setSubscription(sub)
-        } catch (error) {
-            console.error('Service Worker registration failed:', error)
+                    // Check opt-in status
+                    const optedIn = OneSignal.User.PushSubscription.optedIn
+                    setIsOptedIn(!!optedIn)
+
+                    OneSignal.User.PushSubscription.addEventListener('change', (event) => {
+                        setIsOptedIn(!!event.current.optedIn)
+                    })
+                }
+            } catch (error) {
+                console.error('Error inicializando OneSignal:', error)
+            }
         }
-    }
+
+        if (typeof window !== 'undefined') {
+            initOneSignal()
+        }
+    }, [isInitialized])
+
+    // Update OneSignal external user ID when user logs in
+    useEffect(() => {
+        if (isInitialized && user) {
+            OneSignal.login(user.id).catch(console.error)
+        } else if (isInitialized && !user) {
+            OneSignal.logout().catch(console.error)
+        }
+    }, [user, isInitialized])
 
     const subscribeToPush = async () => {
-        if (!user) return alert('Debes iniciar sesión para activar notificaciones')
+        if (!user) {
+            alert('Debes iniciar sesión para activar las notificaciones')
+            return
+        }
 
-        // Configurable VAPID key
-        const VAPID_KEY = process.env.NEXT_PUBLIC_VAPID_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-        if (!VAPID_KEY) return console.error('VAPID Key missing')
+        if (!process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID) {
+            console.error('Falta NEXT_PUBLIC_ONESIGNAL_APP_ID en variables de entorno')
+            alert('Configuración de notificaciones incompleta en el servidor.')
+            return
+        }
 
         setLoading(true)
         try {
-            const registration = await navigator.serviceWorker.ready
-            const sub = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_KEY)
-            })
+            await OneSignal.Slidedown.promptPush()
 
-            setSubscription(sub)
+            if (OneSignal.User.PushSubscription.optedIn) {
+                setIsOptedIn(true)
+                const deviceToken = OneSignal.User.PushSubscription.id
 
-            // Save to Supabase directly (RLS protected)
-            const { endpoint, keys } = sub.toJSON()
-            const { error } = await supabase
-                .from('push_subscriptions')
-                .upsert({
-                    user_id: user.id,
-                    endpoint: endpoint!,
-                    p256dh: keys!.p256dh,
-                    auth: keys!.auth
-                }, { onConflict: 'user_id, endpoint' })
+                if (deviceToken) {
+                    const { error } = await supabase
+                        .from('user_notifications')
+                        .upsert({
+                            user_id: user.id,
+                            device_token: deviceToken,
+                            enabled: true
+                        }, { onConflict: 'user_id, device_token' })
 
-            if (error) throw error
+                    if (error) console.error('Error guardando token en DB:', error)
+                }
 
-            alert('✅ Notificaciones activadas!')
+                alert('✅ Notificaciones activadas. ¡No te vas a perder de nada!')
+            } else {
+                alert('Las notificaciones fueron bloqueadas o denegadas. Podés cambiarlo desde los ajustes de tu navegador.')
+            }
+
         } catch (error) {
-            console.error('Failed to subscribe:', error)
-            alert('Error al activar notificaciones. Puede que estén bloqueadas en tu navegador.')
+            console.error('Error al suscribir:', error)
+            alert('Ocurrió un error al intentar activar las notificaciones.')
         } finally {
             setLoading(false)
         }
@@ -85,7 +99,7 @@ export function usePushNotifications() {
 
     return {
         isSupported,
-        subscription,
+        isOptedIn,
         subscribeToPush,
         loading
     }

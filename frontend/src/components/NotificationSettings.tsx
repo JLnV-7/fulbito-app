@@ -19,7 +19,7 @@ export function NotificationSettings() {
         golFavorito: true,
         resultadoProde: true
     })
-    const { isSupported, subscription, subscribeToPush, loading } = usePushNotifications()
+    const { isSupported, isOptedIn, subscribeToPush, loading } = usePushNotifications()
     const [permissionState, setPermissionState] = useState<NotificationPermission>('default')
 
     useEffect(() => {
@@ -29,10 +29,7 @@ export function NotificationSettings() {
     }, [])
 
     useEffect(() => {
-        // Cargar preferencias guardadas
-        if (user) {
-            loadPrefs()
-        }
+        if (user) loadPrefs()
     }, [user])
 
     const loadPrefs = async () => {
@@ -57,12 +54,8 @@ export function NotificationSettings() {
     }
 
     const handleSubscribe = async () => {
-        // En móvil, es crucial pedir permiso dentro de un handler de evento de usuario
-        const result = await Notification.requestPermission()
-        setPermissionState(result)
-        if (result === 'granted') {
-            await subscribeToPush()
-        }
+        await subscribeToPush()
+        setPermissionState(Notification.permission)
     }
 
     if (!isSupported) {
@@ -103,7 +96,7 @@ export function NotificationSettings() {
                             Tenés que habilitarlas desde la configuración de tu navegador o celular.
                         </p>
                     </div>
-                ) : !subscription ? (
+                ) : !isOptedIn ? (
                     <div className="bg-gradient-to-r from-[#10b981]/20 to-[#3b82f6]/20 border border-[#10b981]/30 rounded-xl p-5 text-center shadow-lg relative overflow-hidden">
                         <div className="absolute -top-3 -right-3 text-4xl opacity-20">🔔</div>
                         <p className="text-sm mb-3 font-medium text-[var(--foreground)] relative z-10">
