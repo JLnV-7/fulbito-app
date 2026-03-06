@@ -2,6 +2,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { CollapsibleSection } from './CollapsibleSection'
 
 interface Stat {
     label: string
@@ -43,15 +44,7 @@ export function MatchStats({ stats, loading = false }: MatchStatsProps) {
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] overflow-hidden"
-        >
-            {/* Header */}
-            <div className="px-4 py-3 bg-[var(--background)] border-b border-[var(--card-border)]">
-                <h3 className="text-sm font-bold">📊 Estadísticas del Partido</h3>
-            </div>
+        <CollapsibleSection title="Estadísticas del Partido" icon={<span className="text-xl">📊</span>} defaultOpen={true}>
 
             {/* Stats Grid */}
             <div className="p-4 space-y-4">
@@ -110,6 +103,6 @@ export function MatchStats({ stats, loading = false }: MatchStatsProps) {
                     📡 Stats actualizadas en tiempo real
                 </p>
             </div>
-        </motion.div>
+        </CollapsibleSection>
     )
 }

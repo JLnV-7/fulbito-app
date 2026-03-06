@@ -10,3 +10,13 @@ export function calcularEstadoPartido(fechaInicio: string): EstadoPartido {
   if (ahora >= inicio && ahora < fin) return 'EN_JUEGO'
   return 'FINALIZADO'
 }
+
+export function hapticFeedback(pattern: number | number[] = 50) {
+  if (typeof window !== 'undefined' && navigator && navigator.vibrate) {
+    try {
+      navigator.vibrate(pattern)
+    } catch (e) {
+      // Ignore
+    }
+  }
+}

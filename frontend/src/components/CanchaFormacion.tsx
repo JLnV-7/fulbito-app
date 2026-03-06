@@ -78,22 +78,24 @@ export const CanchaFormacion = memo(({
                 className={`relative flex flex-col items-center group transition-all duration-200
                    ${partidoFinalizado ? 'cursor-pointer hover:scale-110' : 'cursor-default'}`}
             >
-                {/* Círculo del jugador */}
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center
-                        border-2 transition-all duration-300
+                {/* Círculo del jugador (Touch Target 64x64) */}
+                <div className={`w-16 h-16 rounded-full flex flex-col items-center justify-center
+                        border-[3px] transition-all duration-300 relative overflow-hidden
                         ${tieneVoto
-                        ? 'bg-[#ff6b6b] border-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/50'
-                        : 'bg-[var(--card-bg)] border-[var(--card-border)] group-hover:border-[#ff6b6b]/50'
+                        ? 'bg-[#10b981] border-[#10b981] shadow-lg shadow-[#10b981]/50'
+                        : 'bg-[var(--card-bg)] border-[var(--card-border)] group-hover:border-[#10b981]/50'
                     }
-                    ${isAnimating ? 'scale-125 shadow-xl shadow-[#ff6b6b]/70' : ''}`}>
-                    <span className={`font-bold text-sm ${tieneVoto ? 'text-white' : 'text-[var(--foreground)]'}`}>
+                    ${isAnimating ? 'scale-125 shadow-xl shadow-[#10b981]/70' : ''}`}>
+                    {/* Silueta de jugador simulada */}
+                    <div className="absolute bottom-0 w-10 h-10 bg-white/10 rounded-t-full translate-y-2"></div>
+                    <span className={`font-black text-lg relative z-10 ${tieneVoto ? 'text-white' : 'text-[var(--foreground)]'}`}>
                         {jugador.numero}
                     </span>
                 </div>
 
                 {/* Nombre */}
-                <div className="mt-1 bg-black/80 px-2 py-0.5 rounded text-[10px] font-semibold text-white
-                        whitespace-nowrap max-w-[80px] truncate">
+                <div className="mt-1.5 bg-black/80 px-2 py-0.5 rounded text-[11px] font-bold text-white
+                        whitespace-nowrap max-w-[80px] truncate shadow-sm">
                     {jugador.nombre.split(' ').pop()}
                 </div>
 
@@ -217,10 +219,10 @@ export const CanchaFormacion = memo(({
                                             onClick={() => handleVotar(nota)}
                                             whileTap={{ scale: 0.85 }}
                                             whileHover={{ scale: 1.1 }}
-                                            className={`w-12 h-12 rounded-xl font-bold text-base transition-all duration-200
+                                            className={`w-[56px] h-[56px] sm:w-[60px] sm:h-[60px] rounded-2xl font-black text-lg transition-all duration-200
                                                ${votos[jugadorSeleccionado.id] === nota
-                                                    ? `${getNotaColor(nota)} text-white scale-110 shadow-lg`
-                                                    : `bg-[var(--background)] text-[var(--text-muted)] ${getNotaBgHover(nota)} hover:text-white`
+                                                    ? `${getNotaColor(nota)} text-white scale-110 shadow-[0_8px_16px_rgba(0,0,0,0.2)]`
+                                                    : `bg-[var(--background)] text-[var(--text-muted)] ${getNotaBgHover(nota)} hover:text-white border-2 border-[var(--card-border)]`
                                                 }`}
                                         >
                                             {nota}
@@ -236,10 +238,10 @@ export const CanchaFormacion = memo(({
                                             onClick={() => handleVotar(nota)}
                                             whileTap={{ scale: 0.85 }}
                                             whileHover={{ scale: 1.1 }}
-                                            className={`w-12 h-12 rounded-xl font-bold text-base transition-all duration-200
+                                            className={`w-[56px] h-[56px] sm:w-[60px] sm:h-[60px] rounded-2xl font-black text-lg transition-all duration-200
                                                ${votos[jugadorSeleccionado.id] === nota
-                                                    ? `${getNotaColor(nota)} text-white scale-110 shadow-lg`
-                                                    : `bg-[var(--background)] text-[var(--text-muted)] ${getNotaBgHover(nota)} hover:text-white`
+                                                    ? `${getNotaColor(nota)} text-white scale-110 shadow-[0_8px_16px_rgba(0,0,0,0.2)]`
+                                                    : `bg-[var(--background)] text-[var(--text-muted)] ${getNotaBgHover(nota)} hover:text-white border-2 border-[var(--card-border)]`
                                                 }`}
                                         >
                                             {nota}

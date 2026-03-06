@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { motion } from 'framer-motion'
@@ -16,14 +17,14 @@ type TipoRanking = 'global' | 'liga'
 
 export default function RankingPage() {
     const router = useRouter()
+    const { user } = useAuth()
     const [ranking, setRanking] = useState<RankingProde[]>([])
     const [loading, setLoading] = useState(true)
-    const [tipoRanking, setTipoRanking] = useState<TipoRanking>('global')
-    const [ligaSeleccionada, setLigaSeleccionada] = useState<string>('Liga Profesional')
+    const [periodo, setPeriodo] = useState<'semanal' | 'mensual' | 'global'>('global')
 
     useEffect(() => {
         fetchRanking()
-    }, [tipoRanking, ligaSeleccionada])
+    }, [periodo])
 
     const fetchRanking = async () => {
         setLoading(true)
@@ -37,10 +38,6 @@ export default function RankingPage() {
         `)
                 .order('puntos_totales', { ascending: false })
                 .limit(100)
-
-            if (tipoRanking === 'liga') {
-                query = query.eq('liga', ligaSeleccionada)
-            }
 
             const { data, error } = await query
 
@@ -90,47 +87,48 @@ export default function RankingPage() {
                     </div>
                 </div>
 
-                {/* Filtros */}
+                {/* Filtros de Período */}
                 <div className="px-6 mb-6">
-                    <div className="max-w-4xl mx-auto">
+                    <div className="max-w-4xl mx-auto overflow-x-auto no-scrollbar pb-2">
                         <div className="flex gap-2">
-                            <button
-                                onClick={() => setTipoRanking('global')}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
-                           ${tipoRanking === 'global'
-                                        ? 'bg-[#10b981] text-white'
-                                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--card-border)] hover:text-[var(--foreground)]'
-                                    }`}
-                            >
-                                🌍 Global
-                            </button>
-                            <button
-                                onClick={() => setTipoRanking('liga')}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
-                           ${tipoRanking === 'liga'
-                                        ? 'bg-[#10b981] text-white'
-                                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--card-border)] hover:text-[var(--foreground)]'
-                                    }`}
-                            >
-                                ⚽ Por Liga
-                            </button>
+                            {['semanal', 'mensual', 'global'].map(p => (
+                                <button
+                                    key={p}
+                                    onClick={() => setPeriodo(p as any)}
+                                    className={`px-5 py-2 rounded-full text-sm font-bold capitalize transition-all whitespace-nowrap
+                                       ${periodo === p
+                                            ? 'bg-[#10b981] text-white shadow-md'
+                                            : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--card-border)] hover:bg-[var(--hover-bg)]'
+                                        }`}
+                                >
+                                    {p}
+                                </button>
+                            ))}
                         </div>
-
-                        {tipoRanking === 'liga' && (
-                            <select
-                                value={ligaSeleccionada}
-                                onChange={(e) => setLigaSeleccionada(e.target.value)}
-                                className="mt-3 px-4 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] 
-                           rounded-lg text-sm w-full md:w-auto"
-                            >
-                                <option value="Liga Profesional">Liga Profesional</option>
-                                <option value="Primera Nacional">Primera Nacional</option>
-                                <option value="La Liga">La Liga</option>
-                                <option value="Premier League">Premier League</option>
-                            </select>
-                        )}
                     </div>
                 </div>
+
+                {/* Position Teaser */}
+                {user && !loading && (
+                    <div className="px-6 mb-6">
+                        <div className="max-w-4xl mx-auto bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-[#10b981] rounded-full flex items-center justify-center text-xl shadow-lg shadow-[#10b981]/30">
+                                    📈
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-sm text-[#10b981]">Tu posición actual</h4>
+                                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                                        {ranking.findIndex(r => r.user_id === user.id) !== -1
+                                            ? <span className="text-[var(--foreground)]">Estás #{ranking.findIndex(r => r.user_id === user.id) + 1} en el top 100.</span>
+                                            : 'Todavía no estás en el top 100.'}
+                                        <span className="text-[#10b981] font-bold ml-1">Mantuviste tu racha 🔥</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Top 3 Podio */}
                 {!loading && ranking.length > 0 && (
@@ -262,48 +260,51 @@ export default function RankingPage() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {ranking.map((jugador, index) => (
-                                                <motion.tr
-                                                    key={jugador.id}
-                                                    initial={{ opacity: 0, x: -10 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    transition={{ delay: index * 0.05 }}
-                                                    onClick={() => router.push(`/perfil/${jugador.user_id}`)}
-                                                    className="border-b border-[var(--card-border)] hover:bg-[var(--hover-bg)] transition-colors cursor-pointer"
-                                                >
-                                                    <td className="px-4 py-4">
-                                                        <span className={`font-bold ${getPosicionColor(index + 1)}`}>
-                                                            {getPosicionEmoji(index + 1)}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-full bg-[var(--background)] border border-[var(--card-border)] flex items-center justify-center text-lg overflow-hidden">
-                                                                {jugador.profile?.avatar_url || '👤'}
+                                            {ranking.map((jugador, index) => {
+                                                const isMe = user?.id === jugador.user_id
+                                                return (
+                                                    <motion.tr
+                                                        key={jugador.id}
+                                                        initial={{ opacity: 0, x: -10 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        transition={{ delay: index * 0.05 }}
+                                                        onClick={() => router.push(`/perfil/${jugador.user_id}`)}
+                                                        className={`border-b transition-colors cursor-pointer ${isMe ? 'bg-[#10b981]/10 border-[#10b981]/30 hover:bg-[#10b981]/20' : 'border-[var(--card-border)] hover:bg-[var(--hover-bg)]'}`}
+                                                    >
+                                                        <td className="px-4 py-4">
+                                                            <span className={`font-bold ${getPosicionColor(index + 1)}`}>
+                                                                {getPosicionEmoji(index + 1)}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-8 h-8 rounded-full bg-[var(--background)] border border-[var(--card-border)] flex items-center justify-center text-lg overflow-hidden">
+                                                                    {jugador.profile?.avatar_url || '👤'}
+                                                                </div>
+                                                                <div className="font-medium">
+                                                                    {jugador.profile?.username || 'Usuario'}
+                                                                    {jugador.profile?.equipo && (
+                                                                        <span className="text-[10px] text-[var(--text-muted)] block leading-none mt-0.5">
+                                                                            {jugador.profile.equipo}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                            <div className="font-medium">
-                                                                {jugador.profile?.username || 'Usuario'}
-                                                                {jugador.profile?.equipo && (
-                                                                    <span className="text-[10px] text-[var(--text-muted)] block leading-none mt-0.5">
-                                                                        {jugador.profile.equipo}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-4 text-center">
-                                                        <span className="font-bold text-[#10b981]">
-                                                            {jugador.puntos_totales}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-4 text-center text-sm">
-                                                        {jugador.aciertos_exactos}
-                                                    </td>
-                                                    <td className="px-4 py-4 text-center text-sm">
-                                                        {jugador.partidos_jugados}
-                                                    </td>
-                                                </motion.tr>
-                                            ))}
+                                                        </td>
+                                                        <td className="px-4 py-4 text-center">
+                                                            <span className="font-bold text-[#10b981]">
+                                                                {jugador.puntos_totales}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-4 text-center text-sm">
+                                                            {jugador.aciertos_exactos}
+                                                        </td>
+                                                        <td className="px-4 py-4 text-center text-sm">
+                                                            {jugador.partidos_jugados}
+                                                        </td>
+                                                    </motion.tr>
+                                                )
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>

@@ -50,10 +50,7 @@ export default function Perfil() {
 
   useEffect(() => {
     const cargarPerfil = async () => {
-      if (!user) {
-        router.push('/login')
-        return
-      }
+      if (!user) return
 
       try {
         const { data, error } = await supabase
@@ -236,7 +233,51 @@ export default function Perfil() {
   }
 
   if (!user) {
-    return null
+    return (
+      <>
+        <DesktopNav />
+        <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20 flex flex-col items-center justify-center px-6 relative overflow-hidden">
+          {/* Decorative background */}
+          <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <div className="absolute top-10 right-10 text-8xl">⚽</div>
+            <div className="absolute bottom-20 left-10 text-6xl">🏆</div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-9xl blur-sm opacity-50">🌟</div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative z-10 w-full max-w-md bg-[var(--card-bg)]/80 backdrop-blur-xl border border-[var(--card-border)] rounded-3xl p-8 text-center shadow-2xl"
+          >
+            <div className="w-20 h-20 mx-auto bg-gradient-to-tr from-[var(--accent-green)] to-[var(--accent-blue)] rounded-full flex items-center justify-center mb-6 shadow-lg shadow-[var(--accent-green)]/20">
+              <span className="text-4xl text-white">🔒</span>
+            </div>
+
+            <h1 className="text-2xl font-black mb-3 bg-gradient-to-r from-[var(--accent-green)] to-[var(--accent-blue)] bg-clip-text text-transparent">
+              Tu Perfil FutLog
+            </h1>
+
+            <p className="text-[var(--text-muted)] mb-8 text-sm leading-relaxed">
+              Entrá a la cancha para llevar un registro de tus partidos, ganar XP, desbloquear medallas exclusivas y subir de nivel.
+            </p>
+
+            <div className="space-y-4 mb-8 text-left max-w-[250px] mx-auto text-sm">
+              <div className="flex items-center gap-3"><span className="text-xl">📊</span> Stats de tus rateos</div>
+              <div className="flex items-center gap-3"><span className="text-xl">🎖️</span> Grid de Badges</div>
+              <div className="flex items-center gap-3"><span className="text-xl">🏆</span> Rango en el Prode</div>
+            </div>
+
+            <button
+              onClick={() => router.push('/login')}
+              className="w-full bg-[var(--accent-green)] hover:bg-[#008f45] text-white font-black text-lg py-4 rounded-2xl transition-all shadow-lg shadow-[var(--accent-green)]/30 active:scale-95"
+            >
+              Entrar a la cancha
+            </button>
+          </motion.div>
+        </main>
+        <NavBar />
+      </>
+    )
   }
 
   // Cálculos de XP y Nivel
@@ -252,26 +293,43 @@ export default function Perfil() {
       <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20">
 
         {/* Hero Header con gradiente */}
-        <div className="bg-gradient-to-br from-[#ff6b6b] via-[#ee5a5a] to-[#ff8e8e] pt-8 pb-24 px-6 rounded-b-[50px] relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[var(--accent-green)] via-[#008f45] to-[#10b981] pt-8 pb-24 px-6 rounded-b-[50px] relative overflow-hidden shadow-[0_10px_40px_rgba(0,166,81,0.2)]">
           <div className="absolute inset-0 opacity-10 pointer-events-none">
             <div className="absolute top-4 right-4 text-8xl">⚽</div>
             <div className="absolute bottom-8 left-8 text-6xl">🏆</div>
           </div>
 
-          <div className="max-w-2xl mx-auto relative content-center">
+          <div className="max-w-2xl mx-auto relative z-10">
             <div className="flex justify-between items-center mb-8">
-              <button onClick={() => router.push('/')} className="bg-white/20 p-2 rounded-full backdrop-blur-md text-white">
+              <button onClick={() => router.push('/')} className="bg-black/20 p-2.5 rounded-full backdrop-blur-md text-white hover:bg-black/40 transition-all">
                 ←
               </button>
               <div className="flex gap-2">
                 <button
+                  onClick={async () => {
+                    if (navigator.share) {
+                      try {
+                        await navigator.share({
+                          title: `Perfil de ${profile?.username || 'Usuario'} en FutLog`,
+                          text: `Mira mis estadísticas y medallas en FutLog ⚽`,
+                          url: window.location.href,
+                        })
+                      } catch (err) { console.log('User cancelled share') }
+                    }
+                  }}
+                  className="bg-black/20 p-2.5 rounded-full backdrop-blur-md text-white hover:bg-black/40 transition-all"
+                  title="Compartir Perfil"
+                >
+                  📤
+                </button>
+                <button
                   onClick={() => setShowEditor(true)}
-                  className="bg-white/20 px-4 py-2 rounded-xl backdrop-blur-md text-white text-sm font-medium hover:bg-white/30 transition-all"
+                  className="bg-black/20 px-4 py-2 rounded-xl backdrop-blur-md text-white text-sm font-bold hover:bg-black/40 transition-all"
                 >
                   ✏️ Editar
                 </button>
-                <button onClick={handleSignOut} className="bg-white/20 px-4 py-2 rounded-xl backdrop-blur-md text-white text-sm font-medium hover:bg-white/30 transition-all">
-                  Cerrar Sesión
+                <button onClick={handleSignOut} className="bg-black/20 px-4 py-2 rounded-xl backdrop-blur-md text-white text-sm font-bold hover:bg-black/40 transition-all">
+                  Salir
                 </button>
               </div>
             </div>
@@ -374,6 +432,39 @@ export default function Perfil() {
             {/* Weekly Challenges Widget */}
             <WeeklyChallenges />
 
+            {/* Tus Equipos / Notificaciones */}
+            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-sm flex items-center gap-2">
+                  🛡️ Tus Equipos
+                </h3>
+              </div>
+              {profile?.equipo ? (
+                <div className="flex items-center justify-between bg-[var(--background)] p-3 rounded-xl border border-[var(--card-border)]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[var(--hover-bg)] rounded-full flex items-center justify-center text-xl shadow-sm">
+                      🛡️
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">{profile.equipo}</p>
+                      <p className="text-[10px] text-[var(--text-muted)] mt-0.5">Notificaciones activadas</p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" defaultChecked />
+                    <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#10b981]"></div>
+                  </label>
+                </div>
+              ) : (
+                <div className="text-center py-6 bg-[var(--background)] rounded-xl border border-[var(--card-border)] border-dashed">
+                  <p className="text-[var(--text-muted)] text-sm mb-3">No tenés equipo favorito configurado.</p>
+                  <button onClick={() => setShowEditor(true)} className="text-xs font-bold text-[#10b981] hover:underline">
+                    Configurar equipo
+                  </button>
+                </div>
+              )}
+            </div>
+
             <UserBadgesGallery
               userId={user.id}
               isOwnProfile={true}
@@ -381,7 +472,7 @@ export default function Perfil() {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-2 gap-4 mb-6 mt-6">
             <button
               onClick={() => router.push('/historial')}
               className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 text-left hover:border-[#ff6b6b]/50 transition-all shadow-sm hover:shadow-md"

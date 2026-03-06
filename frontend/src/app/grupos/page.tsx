@@ -18,6 +18,9 @@ export default function GruposPage() {
     const { grupos, loading } = useGrupos()
 
     const [view, setView] = useState<'list' | 'create' | 'join'>('list')
+    const [search, setSearch] = useState('')
+
+    const filteredGrupos = grupos.filter(g => g.nombre.toLowerCase().includes(search.toLowerCase()))
 
     if (!user && !loading) {
         router.push('/login')
@@ -79,6 +82,21 @@ export default function GruposPage() {
                                     exit={{ opacity: 0, y: -20 }}
                                     className="space-y-6"
                                 >
+                                    {/* Sticky Search Bar */}
+                                    {grupos.length > 0 && (
+                                        <div className="sticky top-0 z-10 bg-[var(--background)] py-4 backdrop-blur-md bg-opacity-90 -mx-6 px-6 mb-2 mt-4 transition-all">
+                                            <div className="relative">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base">🔍</span>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Buscar grupos, amigos o torneos..."
+                                                    value={search}
+                                                    onChange={(e) => setSearch(e.target.value)}
+                                                    className="w-full bg-[var(--card-bg)] border border-[var(--card-border)] rounded-full py-3.5 pl-11 pr-4 text-sm focus:outline-none focus:border-[#10b981] transition-colors shadow-sm"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
                                     {grupos.length === 0 ? (
                                         <div className="text-center py-16 bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)]">
                                             <div className="text-6xl mb-4">👋</div>
@@ -103,40 +121,60 @@ export default function GruposPage() {
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                            {grupos.map((grupo) => (
+                                            {filteredGrupos.map((grupo) => (
                                                 <motion.div
                                                     key={grupo.id}
                                                     layoutId={grupo.id}
                                                     onClick={() => router.push(`/grupos/${grupo.id}`)}
-                                                    className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-5
-                                                             hover:border-[#10b981]/50 cursor-pointer transition-all hover:scale-[1.02] group"
+                                                    className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5
+                                                             hover:border-[#10b981]/50 cursor-pointer transition-all hover:shadow-md group"
                                                 >
                                                     <div className="flex justify-between items-start mb-3">
-                                                        <h3 className="text-lg font-bold group-hover:text-[#10b981] transition-colors">{grupo.nombre}</h3>
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#10b981] to-emerald-400 flex items-center justify-center text-xl shadow-inner flex-shrink-0">
+                                                                🏆
+                                                            </div>
+                                                            <div>
+                                                                <h3 className="text-base font-bold group-hover:text-[#10b981] transition-colors line-clamp-1">{grupo.nombre}</h3>
+                                                                <span className="text-[10px] text-[var(--text-muted)] flex items-center gap-1 mt-0.5">
+                                                                    👥 {grupo.miembros_count || 0} miembros
+                                                                    {((grupo.miembros_count || 0) > 2) && (
+                                                                        <span className="ml-1 bg-red-500/10 text-red-500 px-1.5 py-0.5 rounded font-bold">🔥 Actividad alta</span>
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                         {(grupo as any).mi_posicion && (
                                                             <span className={`text-xs font-bold px-2 py-1 rounded-lg
-                                                                ${(grupo as any).mi_posicion === 1 ? 'bg-[#ffd700]/20 text-[#ffd700]' :
-                                                                    (grupo as any).mi_posicion === 2 ? 'bg-[#c0c0c0]/20 text-[#c0c0c0]' :
-                                                                        (grupo as any).mi_posicion === 3 ? 'bg-[#cd7f32]/20 text-[#cd7f32]' :
+                                                                ${(grupo as any).mi_posicion === 1 ? 'bg-[#ffd700]/10 text-[#ffd700] border border-[#ffd700]/30' :
+                                                                    (grupo as any).mi_posicion === 2 ? 'bg-[#c0c0c0]/10 text-[#c0c0c0] border border-[#c0c0c0]/30' :
+                                                                        (grupo as any).mi_posicion === 3 ? 'bg-[#cd7f32]/10 text-[#cd7f32] border border-[#cd7f32]/30' :
                                                                             'bg-[var(--background)] text-[var(--text-muted)]'
                                                                 }`}>
                                                                 #{(grupo as any).mi_posicion}
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm text-[var(--text-muted)] mb-4 line-clamp-2 min-h-[40px]">
-                                                        {grupo.descripcion || 'Grupo de amigos'}
-                                                    </p>
-                                                    <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+
+                                                    <div className="flex items-center justify-between text-xs text-[var(--text-muted)] mt-1 mb-3">
                                                         <span className="flex items-center gap-1 font-mono bg-[var(--background)] px-1.5 py-0.5 rounded">
                                                             #{grupo.codigo_invitacion}
-                                                        </span>
-                                                        <span className="flex items-center gap-1">
-                                                            👥 {grupo.miembros_count}
                                                         </span>
                                                         <span className="flex items-center gap-1 font-bold text-[#10b981]">
                                                             ⭐ {(grupo as any).mi_puntos || 0} pts
                                                         </span>
+                                                    </div>
+
+                                                    {/* Last Message Preview */}
+                                                    <div className="mt-4 p-3 bg-[#10b981]/5 rounded-xl border border-[#10b981]/10 flex flex-col gap-1 relative overflow-hidden">
+                                                        <div className="absolute top-0 right-0 w-8 h-full bg-gradient-to-l from-[var(--card-bg)] to-transparent pointer-events-none" />
+                                                        <p className="text-xs text-[var(--text-muted)] line-clamp-1 italic pr-4">
+                                                            <span className="font-bold text-[var(--foreground)] not-italic relative mr-1">
+                                                                <span className="absolute -left-1.5 top-0.5 w-[3px] h-[3px] rounded-full bg-[#10b981]" />
+                                                                Lucas:
+                                                            </span>
+                                                            "Típico que se le escapa en el último minuto..."
+                                                        </p>
                                                     </div>
                                                 </motion.div>
                                             ))}

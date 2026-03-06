@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { CollapsibleSection } from './CollapsibleSection'
 
 interface TimelineEvent {
     minuto: string | number
@@ -89,27 +90,33 @@ export function MatchTimeline({ fixtureId, equipoLocal, equipoVisitante }: Match
     const displayEvents = expanded ? events : keyEvents
 
     return (
-        <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] overflow-hidden">
-            {/* Header */}
-            <div className="px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <span className="text-sm">⏱️</span>
-                    <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase">
-                        Timeline del Partido
-                    </h3>
-                    <span className="text-[10px] text-[var(--text-muted)] bg-[var(--background)] px-2 py-0.5 rounded-full">
-                        {events.length} eventos
-                    </span>
+        <CollapsibleSection
+            title={
+                <div className="flex flex-col gap-1 w-full mr-2">
+                    <div className="flex items-center justify-between">
+                        <span>Timeline del Partido</span>
+                        <div className="flex gap-2 items-center">
+                            <span className="text-[10px] text-[var(--text-muted)] bg-[var(--background)] px-2 py-0.5 rounded-full">
+                                {events.length} eventos
+                            </span>
+                            {events.length > keyEvents.length && (
+                                <button
+                                    onClick={(e: any) => {
+                                        e.stopPropagation()
+                                        setExpanded(!expanded)
+                                    }}
+                                    className="text-[10px] font-bold text-[#10b981] hover:underline"
+                                >
+                                    {expanded ? 'Solo clave' : 'Ver todo'}
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </div>
-                {events.length > keyEvents.length && (
-                    <button
-                        onClick={() => setExpanded(!expanded)}
-                        className="text-[10px] font-bold text-[#10b981] hover:underline"
-                    >
-                        {expanded ? 'Solo clave' : 'Ver todo'}
-                    </button>
-                )}
-            </div>
+            }
+            icon={<span className="text-xl">⏱️</span>}
+            defaultOpen={false}
+        >
 
             {/* Events */}
             <div className="px-4 py-2">
@@ -187,6 +194,6 @@ export function MatchTimeline({ fixtureId, equipoLocal, equipoVisitante }: Match
                     </motion.div>
                 </AnimatePresence>
             </div>
-        </div>
+        </CollapsibleSection>
     )
 }

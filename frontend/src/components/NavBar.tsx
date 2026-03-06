@@ -34,27 +34,23 @@ export function NavBar() {
             <button
               key={item.path}
               onClick={() => router.push(item.authRequired && !user ? '/login' : item.path)}
-              className="flex flex-col items-center gap-1.5 transition-all outline-none w-16"
-              style={{ color: active ? item.activeColor : item.defaultColor }}
+              className="flex flex-col items-center gap-1.5 transition-all outline-none flex-1 py-1"
             >
-              <motion.div
-                animate={{ scale: active ? 1.15 : 1, y: active ? -2 : 0 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                className="text-[22px] leading-none"
+              <div
+                className={`flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${active ? 'bg-[var(--accent-green)]/15' : 'bg-transparent'}`}
+                style={{ color: active ? item.activeColor : item.defaultColor }}
               >
-                {active ? item.activeIcon : item.icon}
-              </motion.div>
-              <span className={`text-[10px] font-medium transition-opacity ${active ? 'opacity-100 font-bold' : 'opacity-70'}`}>
+                <motion.div
+                  animate={{ scale: active ? 1.2 : 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                  className="text-[20px] leading-none"
+                >
+                  {active ? item.activeIcon : item.icon}
+                </motion.div>
+              </div>
+              <span className={`text-[10px] font-bold transition-all ${active ? 'opacity-100' : 'opacity-60'}`} style={{ color: active ? item.activeColor : item.defaultColor }}>
                 {item.label}
               </span>
-              {/* Indicador de activo (Puntito) */}
-              {active && (
-                <motion.div
-                  layoutId="navIndicator"
-                  className="w-1 h-1 rounded-full absolute bottom-1"
-                  style={{ backgroundColor: item.activeColor }}
-                />
-              )}
             </button>
           )
         })}

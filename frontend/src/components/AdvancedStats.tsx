@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { CollapsibleSection } from './CollapsibleSection'
 
 interface TeamStats {
     name: string
@@ -98,16 +99,7 @@ export function AdvancedStats({ fixtureId }: AdvancedStatsProps) {
     if (activeRows.length === 0) return null
 
     return (
-        <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] overflow-hidden">
-            {/* Header */}
-            <div className="px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <span>📊</span>
-                    <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase">
-                        Estadísticas Avanzadas
-                    </h3>
-                </div>
-            </div>
+        <CollapsibleSection title="Estadísticas Avanzadas" icon={<span className="text-xl">📊</span>} defaultOpen={false}>
 
             {/* Team names header */}
             <div className="flex items-center justify-between px-4 py-2 bg-[var(--background)]">
@@ -182,6 +174,6 @@ export function AdvancedStats({ fixtureId }: AdvancedStatsProps) {
                     )
                 })}
             </div>
-        </div>
+        </CollapsibleSection>
     )
 }
