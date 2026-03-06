@@ -1,8 +1,8 @@
-'use client'
-
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Newspaper, ExternalLink, TrendingUp } from 'lucide-react'
+import { Newspaper, ExternalLink, TrendingUp, Sparkles } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface NewsItem {
     id: string
@@ -12,63 +12,71 @@ interface NewsItem {
     url: string
     imageUrl?: string
     category: string
+    isPersonalized?: boolean
 }
 
 export function NewsFeed() {
+    const { user } = useAuth()
     const [news, setNews] = useState<NewsItem[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        // Simulación de fetch de noticias (TyC / Olé / SofaScore)
         const fetchNews = async () => {
             setLoading(true)
-            await new Promise(resolve => setTimeout(resolve, 1500))
 
-            const mockNews: NewsItem[] = [
-                {
-                    id: '1',
-                    title: 'Scaloni confirmó la lista para las Eliminatorias: sorpresas en la delantera',
-                    source: 'TyC Sports',
-                    time: 'Hace 2h',
-                    url: 'https://www.tycsports.com',
-                    category: 'Selección',
-                    imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=200'
-                },
-                {
-                    id: '2',
-                    title: 'Boca negocia por un volante central de jerarquía europea',
-                    source: 'Olé',
-                    time: 'Hace 4h',
-                    url: 'https://www.ole.com.ar',
-                    category: 'Mercado',
-                    imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=200'
-                },
-                {
-                    id: '3',
-                    title: 'River prepara el Monumental para una noche de Copa Libertadores',
-                    source: 'TyC Sports',
-                    time: 'Hace 5h',
-                    url: 'https://www.tycsports.com',
-                    category: 'Libertadores',
-                    imageUrl: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&q=80&w=200'
-                },
-                {
-                    id: '4',
-                    title: 'Racing e Independiente: todo listo para un nuevo Clásico de Avellaneda',
-                    source: 'SofaScore',
-                    time: 'Hace 6h',
-                    url: 'https://www.sofascore.com',
-                    category: 'Lpf',
-                    imageUrl: 'https://images.unsplash.com/photo-1518091043644-c1d445bb523c?auto=format&fit=crop&q=80&w=200'
+            try {
+                // 1. Get user's team
+                let userTeam: string | null = null
+                if (user) {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('equipo')
+                        .eq('id', user.id)
+                        .single()
+                    userTeam = profile?.equipo || null
                 }
-            ]
 
-            setNews(mockNews)
-            setLoading(false)
+                // 2. Fetch RSS feed from proxy
+                const rssUrl = 'https://www.tycsports.com/rss/futbol.xml'
+                const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`)
+                const data = await response.json()
+
+                if (data.items) {
+                    const allItems = data.items.map((item: any, idx: number) => ({
+                        id: String(idx),
+                        title: item.title,
+                        source: 'TyC Sports',
+                        time: 'Reciente',
+                        url: item.link,
+                        imageUrl: item.thumbnail || item.enclosure?.link || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=200',
+                        category: item.categories?.[0] || 'Fútbol',
+                        isPersonalized: userTeam ? item.title.toLowerCase().includes(userTeam.toLowerCase()) : false
+                    }))
+
+                    // 3. Reorder: 2-3 General (Breaking) + Personalized leftovers
+                    const general = allItems.slice(0, 3)
+                    const rest = allItems.slice(3)
+
+                    let finalNews = [...general]
+                    if (userTeam) {
+                        const personalized = rest.filter((item: any) => item.isPersonalized)
+                        const others = rest.filter((item: any) => !item.isPersonalized)
+                        finalNews = [...general, ...personalized, ...others].slice(0, 8)
+                    } else {
+                        finalNews = allItems.slice(0, 8)
+                    }
+
+                    setNews(finalNews)
+                }
+            } catch (err) {
+                console.error('Error fetching news:', err)
+            } finally {
+                setLoading(false)
+            }
         }
 
         fetchNews()
-    }, [])
+    }, [user])
 
     return (
         <div className="my-6">
@@ -110,7 +118,8 @@ export function NewsFeed() {
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
                                 )}
-                                <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-[9px] font-black text-white px-2 py-0.5 rounded-full uppercase">
+                                <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-[9px] font-black text-white px-2 py-0.5 rounded-full uppercase flex items-center gap-1">
+                                    {item.isPersonalized && <Sparkles size={10} className="text-amber-400" />}
                                     {item.category}
                                 </div>
                             </div>
