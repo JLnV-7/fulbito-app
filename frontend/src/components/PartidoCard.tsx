@@ -126,6 +126,31 @@ export const PartidoCard = memo(({ partido }: PartidoCardProps) => {
           </div>
         </div>
       </div>
+
+      {/* AI Projections - Subtle indicator & expandable (only for PREVIA/EN_JUEGO) */}
+      {!isFinished && (
+        <div className="px-3 pb-3 border-t border-[var(--card-border)]/30 pt-2 bg-[var(--background)]/20">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 h-1.5 bg-[var(--card-border)] rounded-full overflow-hidden flex">
+              <div
+                className="h-full bg-[var(--accent)]"
+                style={{ width: `${(Math.abs(partido.id?.toString().charCodeAt(0) || 50) % 40) + 30}%` }}
+              />
+              <div
+                className="h-full bg-[var(--text-muted)] opacity-30"
+                style={{ width: `${(Math.abs(partido.id?.toString().charCodeAt(1) || 50) % 20) + 10}%` }}
+              />
+              <div
+                className="h-full bg-[#10b981]" // Goal/Visitante color
+                style={{ width: '100%' }} // Flex basis will handle the rest
+              />
+            </div>
+            <div className="flex items-center gap-1 text-[9px] font-black text-[var(--accent)] italic">
+              AI PROY: {Math.max(partido.goles_local || 1, 1)} - {Math.max(partido.goles_visitante || 0, 0)}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 })

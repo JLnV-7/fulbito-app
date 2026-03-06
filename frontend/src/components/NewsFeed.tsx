@@ -41,7 +41,7 @@ export function NewsFeed() {
                 const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`)
                 const data = await response.json()
 
-                if (data.items) {
+                if (data.items && data.items.length > 0) {
                     const allItems = data.items.map((item: any, idx: number) => ({
                         id: String(idx),
                         title: item.title,
@@ -53,7 +53,6 @@ export function NewsFeed() {
                         isPersonalized: userTeam ? item.title.toLowerCase().includes(userTeam.toLowerCase()) : false
                     }))
 
-                    // 3. Reorder: 2-3 General (Breaking) + Personalized leftovers
                     const general = allItems.slice(0, 3)
                     const rest = allItems.slice(3)
 
@@ -65,11 +64,13 @@ export function NewsFeed() {
                     } else {
                         finalNews = allItems.slice(0, 8)
                     }
-
                     setNews(finalNews)
+                } else {
+                    throw new Error('No news items found')
                 }
             } catch (err) {
                 console.error('Error fetching news:', err)
+                setNews([]) // Trigger fallback in JSX
             } finally {
                 setLoading(false)
             }

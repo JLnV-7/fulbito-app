@@ -39,8 +39,16 @@ export function usePartidos(filtroLiga: Liga = 'Todos') {
           .order('fecha_inicio', { ascending: true })
 
         if (!dbError && dbPartidos) {
+          const todayStr = new Date().toISOString().split('T')[0]
+
           // Merge: Overwrite or add
           dbPartidos.forEach((dbMatch: Partido) => {
+            // Force simulation matches to be "Today"
+            if (dbMatch.id?.toString().startsWith('00000000-0000-0000-0000')) {
+              const [_, time] = dbMatch.fecha_inicio.split('T')
+              dbMatch.fecha_inicio = `${todayStr}T${time}`
+            }
+
             const index = data.findIndex(p => p.id === dbMatch.id || p.fixture_id === dbMatch.fixture_id)
             if (index !== -1) {
               data[index] = { ...data[index], ...dbMatch }
