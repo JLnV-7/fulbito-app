@@ -15,7 +15,7 @@ import { ReglasPuntajeModal } from '@/components/ReglasPuntajeModal'
 import { TablaContent } from '@/components/TablaContent'
 import { GoleadoresContent } from '@/components/GoleadoresContent'
 import { FixturesContent } from '@/components/FixturesContent'
-import { Star, Search, ChevronLeft, ChevronRight, BarChart3, Trophy, Calendar } from 'lucide-react'
+import { Star, Search, ChevronLeft, ChevronRight, BarChart3, Trophy, Calendar, Globe } from 'lucide-react'
 import { OnboardingCarousel } from '@/components/OnboardingCarousel'
 import { TrendingMatchWidget } from '@/components/TrendingMatchWidget'
 import type { Partido } from '@/types'
@@ -245,24 +245,26 @@ function HomeContent() {
                 <div className="flex gap-2 overflow-x-auto no-scrollbar flex-1 pb-1">
                   <button
                     onClick={() => setFiltroLiga('Todos')}
-                    className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all whitespace-nowrap border
+                    className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap border
                       ${filtroLiga === 'Todos'
                         ? 'bg-[var(--accent-green)] text-white border-[var(--accent-green)] shadow-md shadow-[var(--accent-green)]/20'
                         : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)] border-[var(--card-border)]'
                       }`}
                   >
+                    <Globe size={12} />
                     Todos
                   </button>
                   {LIGAS.filter(l => l !== 'Todos').map((liga) => (
                     <button
                       key={liga}
                       onClick={() => setFiltroLiga(liga)}
-                      className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all whitespace-nowrap border
+                      className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap border
                         ${filtroLiga === liga
                           ? 'bg-[var(--accent-green)] text-white border-[var(--accent-green)] shadow-md shadow-[var(--accent-green)]/20'
                           : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)] border-[var(--card-border)]'
                         }`}
                     >
+                      <Trophy size={12} className={filtroLiga === liga ? 'text-white' : 'text-[var(--accent-yellow)]'} />
                       {liga}
                     </button>
                   ))}
@@ -344,41 +346,72 @@ function HomeContent() {
                 )}
 
                 {!loading && !error && partidosFiltrados.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-16 px-4 mb-8 bg-[var(--card-bg)] rounded-3xl border border-[var(--card-border)]/50 border-dashed">
-                    <div className="w-16 h-16 rounded-full bg-[var(--accent-green)]/10 flex items-center justify-center mb-4">
-                      {searchQuery ? (
-                        <Search size={28} className="text-[var(--accent-green)]" />
-                      ) : filtroLiga === 'Favoritos' ? (
-                        <Star size={28} className="text-[var(--accent-yellow)]" />
-                      ) : (
-                        <span className="text-3xl text-[var(--accent-green)]">⚽</span>
-                      )}
+                  <div className="relative mb-8 rounded-3xl overflow-hidden border border-[var(--card-border)]/50 bg-[var(--card-bg)]/30">
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)] to-transparent z-10" />
+
+                    {/* Mock Blurred Match Background */}
+                    <div className="opacity-20 blur-sm pointer-events-none p-4 pb-12">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-xs font-bold text-[#ff6b6b]">PREVIA</span>
+                        <span className="text-xs font-bold text-[var(--text-muted)]">Liga Profesional</span>
+                      </div>
+                      <div className="flex justify-between items-center bg-[var(--card-bg)] p-4 rounded-xl border border-[var(--card-border)]">
+                        <span className="font-bold">River Plate</span>
+                        <span className="text-[10px] font-black text-[var(--text-muted)]">VS</span>
+                        <span className="font-bold">Boca Juniors</span>
+                      </div>
+                      <div className="mt-4 flex flex-col gap-2">
+                        <div className="h-4 bg-[var(--card-border)] rounded-full w-full"></div>
+                        <div className="h-4 bg-[var(--card-border)] rounded-full w-2/3"></div>
+                      </div>
                     </div>
 
-                    <h3 className="text-base font-bold mb-1.5 text-[var(--foreground)]">
-                      {searchQuery
-                        ? 'No encontramos ese equipo'
-                        : filtroLiga === 'Favoritos'
-                          ? 'Tus equipos descansan hoy'
-                          : 'No hay partidos programados'}
-                    </h3>
+                    {/* Glassmorphism Teaser Overlay */}
+                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center py-6 px-4 bg-[var(--background)]/60 backdrop-blur-md">
+                      <div className="w-16 h-16 rounded-full bg-[var(--accent-green)]/10 flex items-center justify-center mb-4 border border-[var(--accent-green)]/30 shadow-[0_0_20px_rgba(0,166,81,0.2)]">
+                        {searchQuery ? (
+                          <Search size={28} className="text-[var(--accent-green)]" />
+                        ) : filtroLiga === 'Favoritos' ? (
+                          <Star size={28} className="text-[var(--accent-yellow)]" />
+                        ) : (
+                          <span className="text-3xl filter drop-shadow-md">⚽</span>
+                        )}
+                      </div>
 
-                    <p className="text-sm text-[var(--text-muted)] text-center max-w-[250px] leading-relaxed">
-                      {searchQuery
-                        ? 'Revisá si escribiste bien el nombre o probá con otro equipo.'
-                        : filtroLiga === 'Favoritos'
-                          ? 'Añadí equipos a tus favoritos haciendo click en la estrella.'
-                          : `No se encontraron encuentros en ${filtroLiga} para esta fecha.`}
-                    </p>
+                      <h3 className="text-lg font-black mb-1 bg-gradient-to-r from-[var(--accent-green)] to-[var(--accent-blue)] bg-clip-text text-transparent">
+                        {searchQuery
+                          ? 'Sin resultados'
+                          : filtroLiga === 'Favoritos'
+                            ? 'Tus equipos descansan hoy'
+                            : 'No hay partidos programados'}
+                      </h3>
 
-                    {(searchQuery || filtroLiga !== 'Todos') && (
-                      <button
-                        onClick={() => { setSearchQuery(''); setFiltroLiga('Todos'); setShowSearch(false); }}
-                        className="mt-5 px-5 py-2.5 text-sm font-bold text-white bg-[var(--accent-green)] rounded-xl shadow-md shadow-[var(--accent-green)]/20 hover:scale-105 transition-all"
-                      >
-                        Ver todos los partidos
-                      </button>
-                    )}
+                      <p className="text-[var(--text-muted)] text-sm max-w-[280px] text-center mb-5 font-medium leading-relaxed">
+                        {searchQuery
+                          ? `No encontramos "${searchQuery}". Probá con otro equipo.`
+                          : filtroLiga === 'Favoritos'
+                            ? 'Añadí equipos a tus favoritos haciendo click en la estrella.'
+                            : `No hay encuentros de ${filtroLiga} para esta fecha.`}
+                      </p>
+
+                      {!user && !searchQuery && filtroLiga !== 'Favoritos' && (
+                        <button
+                          onClick={() => router.push('/login')}
+                          className="px-6 py-2.5 rounded-full bg-[var(--accent-green)] text-white font-bold text-sm shadow-[0_4px_14px_rgba(0,166,81,0.4)] hover:-translate-y-0.5 transition-all"
+                        >
+                          Iniciá sesión para ver más
+                        </button>
+                      )}
+
+                      {(searchQuery || filtroLiga !== 'Todos') && (
+                        <button
+                          onClick={() => { setSearchQuery(''); setFiltroLiga('Todos'); setShowSearch(false); }}
+                          className="mt-3 px-5 py-2.5 text-xs font-bold text-white bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl hover:bg-[var(--hover-bg)] hover:text-[var(--foreground)] transition-all"
+                        >
+                          Ver todos los partidos
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
 

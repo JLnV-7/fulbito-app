@@ -29,23 +29,30 @@ export function TrendingMatchWidget() {
                     .order('estado', { ascending: false }) // Prioritize EN_JUEGO
                     .limit(10)
 
-                if (error || !partidos || partidos.length === 0) {
-                    setLoading(false)
-                    return
+                let candidate
+                if (!error && partidos && partidos.length > 0) {
+                    const liveMatch = partidos.find(p => p.estado === 'EN_JUEGO')
+                    const finishedMatch = partidos.find(p => p.estado === 'FINALIZADO')
+                    const upcomingMatch = partidos.find(p => p.estado === 'PREVIA')
+                    candidate = liveMatch || finishedMatch || upcomingMatch
                 }
 
-                // Elegimos el mejor candidato (Idealmente EN VIVO o FINALIZADO con rating falso/demo)
-                const liveMatch = partidos.find(p => p.estado === 'EN_JUEGO')
-                const finishedMatch = partidos.find(p => p.estado === 'FINALIZADO')
-                const upcomingMatch = partidos.find(p => p.estado === 'PREVIA')
-
-                const candidate = liveMatch || finishedMatch || upcomingMatch
-
-                if (candidate) {
-                    setTrendingMatch(candidate as Partido)
-                    // If it's a finished match we can query average rating or just mock it for "hype"
-                    setPromedioScore((Math.random() * (5.0 - 3.8) + 3.8).toFixed(1))
+                if (!candidate) {
+                    // MOCK FALLBACK FOR DEMO / PREMIUM FEEL WHEN NO MATCHES ARE LIVE
+                    candidate = {
+                        id: 'demo-match-999',
+                        estado: 'FINALIZADO',
+                        equipo_local: 'River Plate',
+                        equipo_visitante: 'Boca Juniors',
+                        goles_local: 3,
+                        goles_visitante: 1,
+                        liga: 'Superclásico Demo',
+                        fecha_inicio: new Date().toISOString()
+                    } as Partido
                 }
+
+                setTrendingMatch(candidate)
+                setPromedioScore((Math.random() * (5.0 - 4.2) + 4.2).toFixed(1))
 
             } catch (err) {
                 console.error('Error fetching trending match:', err)
