@@ -29,7 +29,7 @@ export function CollapsibleSection({ title, icon, children, defaultOpen = true }
                     animate={{ rotate: isOpen ? 180 : 0 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 >
-                    <ChevronDown size={18} className="text-[var(--text-muted)]" />
+                    <ChevronDown size={18} className="text-[#10b981]" />
                 </motion.div>
             </button>
             <AnimatePresence initial={false}>

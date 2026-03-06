@@ -129,11 +129,15 @@ export function MatchLiveChat({ partidoId }: MatchLiveChatProps) {
                     </div>
 
                     {/* Fake glowing messages */}
-                    <div className="flex flex-col gap-4 opacity-30 blur-[2px] mb-4">
+                    <div className="flex flex-col gap-4 opacity-30 blur-[2px] mb-2 pointer-events-none">
                         <div className="self-end bg-[var(--accent)] h-10 w-48 rounded-2xl rounded-tr-sm" />
                         <div className="self-start bg-[var(--input-bg)] h-12 w-64 rounded-2xl rounded-tl-sm" />
                         <div className="self-end bg-[var(--accent)] h-8 w-32 rounded-2xl rounded-tr-sm" />
                         <div className="self-start bg-[var(--input-bg)] h-16 w-56 rounded-2xl rounded-tl-sm" />
+                    </div>
+
+                    <div className="text-center pb-2 z-20 pointer-events-none opacity-50 blur-[1px]">
+                        <p className="text-xs font-bold text-[#10b981]">Ver más mensajes...</p>
                     </div>
                 </div>
 
