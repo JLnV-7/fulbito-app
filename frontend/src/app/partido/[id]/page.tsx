@@ -351,7 +351,7 @@ export default function PartidoPage() {
                           <BarChart2 size={16} className="text-[#10b981]" />
                           Resumen del Partido
                         </div>
-                        {openAccordion === 'resumen' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        {openAccordion === 'resumen' ? <ChevronUp size={16} className="text-[#10b981]" /> : <ChevronDown size={16} className="text-[#10b981]" />}
                       </button>
                       <AnimatePresence>
                         {openAccordion === 'resumen' && (
@@ -380,7 +380,7 @@ export default function PartidoPage() {
                             <Clock size={16} className="text-[#f59e0b]" />
                             Cronología
                           </div>
-                          {openAccordion === 'cronologia' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          {openAccordion === 'cronologia' ? <ChevronUp size={16} className="text-[#10b981]" /> : <ChevronDown size={16} className="text-[#10b981]" />}
                         </button>
                         <AnimatePresence>
                           {openAccordion === 'cronologia' && (
@@ -414,7 +414,7 @@ export default function PartidoPage() {
                             <Zap size={16} className="text-[#6366f1]" />
                             Estadísticas Avanzadas
                           </div>
-                          {openAccordion === 'avanzadas' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          {openAccordion === 'avanzadas' ? <ChevronUp size={16} className="text-[#10b981]" /> : <ChevronDown size={16} className="text-[#10b981]" />}
                         </button>
                         <AnimatePresence>
                           {openAccordion === 'avanzadas' && (

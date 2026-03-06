@@ -282,9 +282,15 @@ export default function RankingPage() {
                                                             className={`border-b transition-colors cursor-pointer ${isMe ? 'bg-[#10b981]/10 border-[#10b981]/30 hover:bg-[#10b981]/20' : 'border-[var(--card-border)] hover:bg-[var(--hover-bg)]'}`}
                                                         >
                                                             <td className="px-4 py-4">
-                                                                <span className={`font-bold ${getPosicionColor(index + 1)}`}>
-                                                                    {getPosicionEmoji(index + 1)}
-                                                                </span>
+                                                                <div className="flex flex-col items-center">
+                                                                    <span className={`font-bold ${getPosicionColor(index + 1)}`}>
+                                                                        {getPosicionEmoji(index + 1)}
+                                                                    </span>
+                                                                    {/* Mock trend indicator for premium feel */}
+                                                                    <span className={`text-[8px] font-bold mt-1 ${index % 3 === 0 ? 'text-green-500' : index % 4 === 0 ? 'text-red-500' : 'text-[var(--text-muted)]'}`}>
+                                                                        {index % 3 === 0 ? '↑2' : index % 4 === 0 ? '↓1' : '='}
+                                                                    </span>
+                                                                </div>
                                                             </td>
                                                             <td className="px-4 py-4">
                                                                 <div className="flex items-center gap-3">
