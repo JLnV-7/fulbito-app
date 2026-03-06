@@ -25,7 +25,7 @@ export async function GET(
     }
 
     // --- MOCK FALLBACK DEMO PARA ESTADISTICAS ---
-    if (['mock-fin-1', 'mock-live-1', 'mock-prev-1'].includes(id) || (parseInt(id) >= 9991 && parseInt(id) <= 9993)) {
+    if (['mock-fin-1', 'mock-live-1', 'mock-prev-1', '00000000-0000-0000-0000-000000000001'].includes(id) || (parseInt(id) >= 9991 && parseInt(id) <= 9993)) {
         return NextResponse.json({
             stats: {
                 local: {

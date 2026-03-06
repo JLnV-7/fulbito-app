@@ -1,34 +1,57 @@
--- Seed script for simulating live matches (River vs Boca and Racing vs Independiente)
--- Run this in the Supabase SQL Editor
+-- MASTER BETA SETUP SCRIPT
+-- Run this in Supabase SQL Editor to fix missing tables and seed live data
 
--- 1. Insert Matches
+-- 1. Ensure UUID extension exists
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 2. Create chat_polls table if missing
+CREATE TABLE IF NOT EXISTS public.chat_polls (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    partido_id TEXT NOT NULL,
+    created_by UUID REFERENCES auth.users(id),
+    question TEXT NOT NULL,
+    options JSONB NOT NULL, -- Array of strings: ["Opción A", "Opción B"]
+    active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 3. Create chat_poll_votes table if missing
+CREATE TABLE IF NOT EXISTS public.chat_poll_votes (
+    poll_id UUID REFERENCES public.chat_polls(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    option_index INTEGER NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    PRIMARY KEY (poll_id, user_id)
+);
+
+-- 4. Enable RLS and add basic policies (if not already there)
+ALTER TABLE public.chat_polls ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.chat_poll_votes ENABLE ROW LEVEL SECURITY;
+
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can see polls') THEN
+        CREATE POLICY "Anyone can see polls" ON public.chat_polls FOR SELECT USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can see votes') THEN
+        CREATE POLICY "Anyone can see votes" ON public.chat_poll_votes FOR SELECT USING (true);
+    END IF;
+END $$;
+
+-- 5. Insert Matches for Simulation
+-- Using specific UUIDs that the API will recognize as "Live Simulation"
 INSERT INTO partidos (id, equipo_local, equipo_visitante, logo_local, logo_visitante, liga, fecha_inicio, estado, goles_local, goles_visitante)
 VALUES 
-  ('a1b2c3d4-e5f6-4a5b-8c9d-d1e2f3a4b5c6', 'River Plate', 'Boca Juniors', 'https://media.api-sports.io/football/teams/435.png', 'https://media.api-sports.io/football/teams/451.png', 'Liga Profesional', NOW() - INTERVAL '45 minutes', 'EN_JUEGO', 1, 0),
-  ('b2c3d4e5-f6a7-4b5c-9d8e-e2f3a4b5c6d7', 'Racing Club', 'Independiente', 'https://media.api-sports.io/football/teams/434.png', 'https://media.api-sports.io/football/teams/453.png', 'Liga Profesional', NOW() + INTERVAL '2 hours', 'PREVIA', 0, 0)
+  ('00000000-0000-0000-0000-000000000001', 'River Plate', 'Boca Juniors', 'https://media.api-sports.io/football/teams/435.png', 'https://media.api-sports.io/football/teams/451.png', 'Liga Profesional', NOW() - INTERVAL '45 minutes', 'EN_JUEGO', 1, 0),
+  ('00000000-0000-0000-0000-000000000002', 'Racing Club', 'Independiente', 'https://media.api-sports.io/football/teams/434.png', 'https://media.api-sports.io/football/teams/453.png', 'Liga Profesional', NOW() + INTERVAL '2 hours', 'PREVIA', 0, 0)
 ON CONFLICT (id) DO UPDATE SET 
   estado = EXCLUDED.estado,
   goles_local = EXCLUDED.goles_local,
   goles_visitante = EXCLUDED.goles_visitante;
 
--- 2. Insert Polls for those matches (match_id is likely text or uuid)
-INSERT INTO chat_polls (match_id, question, created_at)
+-- 6. Insert Live Polls
+INSERT INTO chat_polls (partido_id, question, options)
 VALUES 
-  ('a1b2c3d4-e5f6-4a5b-8c9d-d1e2f3a4b5c6', '¿Quién fue la figura del primer tiempo?', NOW()),
-  ('b2c3d4e5-f6a7-4b5c-9d8e-e2f3a4b5c6d7', '¿Quién gana el clásico de Avellaneda?', NOW())
-ON CONFLICT DO NOTHING;
-
--- 4. Insert Timeline Events for River vs Boca
-INSERT INTO match_events (match_id, player_name, event_type, minute, team_id, detail)
-VALUES 
-  ('a1b2c3d4-e5f6-4a5b-8c9d-d1e2f3a4b5c6', 'Miguel Borja', 'goal', 22, 435, 'Normal Goal'),
-  ('a1b2c3d4-e5f6-4a5b-8c9d-d1e2f3a4b5c6', 'Nacho Fernández', 'card', 35, 435, 'Yellow Card'),
-  ('a1b2c3d4-e5f6-4a5b-8c9d-d1e2f3a4b5c6', 'Kevin Zenón', 'card', 40, 451, 'Yellow Card')
-ON CONFLICT DO NOTHING;
-
--- 5. Insert Mock Advanced Stats
-INSERT INTO match_stats (match_id, team_id, shots_on_goal, possession, passes, fouls)
-VALUES 
-  ('a1b2c3d4-e5f6-4a5b-8c9d-d1e2f3a4b5c6', 435, 5, 58, 240, 8),
-  ('a1b2c3d4-e5f6-4a5b-8c9d-d1e2f3a4b5c6', 451, 2, 42, 180, 12)
+  ('00000000-0000-0000-0000-000000000001', '¿Quién fue la figura del primer tiempo?', '["Miguel Borja", "Nacho F.", "Paulo Díaz", "Otro"]'::jsonb),
+  ('00000000-0000-0000-0000-000000000001', '¿Cómo sale el partido?', '["Gana River", "Empate", "Lo da vuelta Boca"]'::jsonb)
 ON CONFLICT DO NOTHING;

@@ -20,7 +20,16 @@ export async function GET(
 ) {
     const { id } = await params
 
-    if (!API_KEY) {
+    if (!API_KEY || id === '00000000-0000-0000-0000-000000000001') {
+        if (id === '00000000-0000-0000-0000-000000000001') {
+            return NextResponse.json({
+                events: [
+                    { minuto: 22, tipo: 'gol', jugador: 'Miguel Borja', asistencia: 'Nacho F.', equipo: 'River Plate', detalle: 'Normal Goal' },
+                    { minuto: 35, tipo: 'amarilla', jugador: 'Nacho Fernández', equipo: 'River Plate', detalle: 'Yellow Card' },
+                    { minuto: 40, tipo: 'amarilla', jugador: 'Kevin Zenón', equipo: 'Boca Juniors', detalle: 'Yellow Card' }
+                ]
+            })
+        }
         return NextResponse.json({ events: [] })
     }
 
