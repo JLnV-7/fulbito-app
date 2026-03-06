@@ -30,7 +30,7 @@ export const BADGES: Badge[] = [
     { id: 'prodista', name: 'Prodista', description: '10 pronósticos acertados', icon: '🎯', category: 'especial', requirement: 10, checkField: 'prode_aciertos' },
     { id: 'arbitro', name: 'Árbitro', description: '10 reseñas en modo neutral', icon: '📐', category: 'especial', requirement: 10, checkField: 'neutral_reviews' },
     { id: 'madrugador', name: 'Madrugador', description: 'Logueaste un partido antes de las 10am', icon: '🌅', category: 'especial', requirement: 1, checkField: 'early_logs' },
-    { id: 'noctambulo', name: 'Noctámbulo', description: 'Logueaste un partido después de medianoche', icon: '🌙', category: 'especial', requirement: 1, checkField: 'late_logs' },
+    { id: 'beta_explorer', name: 'Beta Explorer', description: 'Completaste el onboarding inicial', icon: '🚀', category: 'especial', requirement: 1, checkField: 'onboarding_complete' },
 ]
 
 export interface BadgeStats {

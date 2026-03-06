@@ -30,6 +30,7 @@ import { ProfileQRModal } from '@/components/perfil/ProfileQRModal'
 import { ProfileAccordion } from '@/components/perfil/ProfileAccordion'
 import { RatingPieChart } from '@/components/perfil/RatingPieChart'
 import { PushDebug } from '@/components/PushDebug'
+import { Button } from '@/components/ui/Button'
 
 export default function Perfil() {
   const router = useRouter()
@@ -230,7 +231,7 @@ export default function Perfil() {
         ...updates
       }))
 
-      setSaveMessage('✅ Guardado!')
+      setSaveMessage('Cambios guardados correctamente')
 
       setTimeout(() => {
         setShowEditor(false)
@@ -238,7 +239,7 @@ export default function Perfil() {
       }, 1500)
     } catch (error) {
       console.error('Error guardando perfil:', error)
-      setSaveMessage('❌ Error al guardar')
+      setSaveMessage('No pudimos cargar los datos. Intentá de nuevo')
     } finally {
       setSaving(false)
     }
@@ -278,7 +279,7 @@ export default function Perfil() {
             </h1>
 
             <p className="text-[var(--text-muted)] mb-8 text-sm leading-relaxed">
-              Entrá a la cancha para llevar un registro de tus partidos, ganar XP, desbloquear medallas exclusivas y subir de nivel.
+              Iniciá sesión para llevar un registro de tus partidos, ganar XP, desbloquear medallas y subir de nivel.
             </p>
 
             <div className="space-y-4 mb-8 text-left max-w-[250px] mx-auto text-sm">
@@ -287,12 +288,13 @@ export default function Perfil() {
               <div className="flex items-center gap-3"><span className="text-xl">🏆</span> Rango en el Prode</div>
             </div>
 
-            <button
+            <Button
               onClick={() => router.push('/login')}
-              className="w-full bg-[var(--accent-green)] hover:bg-[#008f45] text-white font-black text-lg py-4 rounded-2xl transition-all shadow-lg shadow-[var(--accent-green)]/30 active:scale-95"
+              fullWidth
+              size="lg"
             >
-              Entrar a la cancha
-            </button>
+              Iniciar sesión
+            </Button>
           </motion.div>
         </main>
         <NavBar />
@@ -731,14 +733,13 @@ export default function Perfil() {
 
                 {/* Botón Guardar */}
                 <div className="pt-2">
-                  <button
+                  <Button
                     onClick={handleSaveProfile}
-                    disabled={saving}
-                    className="w-full bg-[#ff6b6b] text-white font-bold py-4 rounded-xl 
-                                hover:bg-[#ee5a5a] transition-all disabled:opacity-50 shadow-lg shadow-[#ff6b6b]/20"
+                    loading={saving}
+                    fullWidth
                   >
-                    {saving ? 'Guardando...' : 'Guardar Cambios'}
-                  </button>
+                    Guardar cambios
+                  </Button>
                 </div>
               </div>
             </motion.div>

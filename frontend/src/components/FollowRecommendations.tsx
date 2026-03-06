@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { UserPlus, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import confetti from 'canvas-confetti'
+import { useRouter } from 'next/navigation'
 
 interface RecommendedUser {
     id: string
@@ -108,13 +108,7 @@ export function FollowRecommendations() {
 
             if (error) throw error
 
-            confetti({
-                particleCount: 50,
-                spread: 40,
-                origin: { y: 0.8 },
-                colors: ['#10b981', '#f59e0b']
-            })
-            showToast(`¡Ahora sigues a ${username}!`, 'success')
+            showToast(`Ahora sigues a ${username}`, 'success')
 
             // Remove from list after a short delay
             setTimeout(() => {
@@ -146,7 +140,7 @@ export function FollowRecommendations() {
     return (
         <div className="py-4">
             <h3 className="text-sm font-bold text-[var(--foreground)] mb-3 flex items-center gap-2">
-                <span>✨</span> Sugerencias para vos
+                Sugerencias para ti
             </h3>
 
             <div className="flex gap-3 overflow-x-auto pb-2 snap-x hide-scrollbar">

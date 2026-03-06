@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Newspaper, ExternalLink, TrendingUp, Sparkles } from 'lucide-react'
+import { Newspaper, ExternalLink, TrendingUp, Sparkles, ArrowRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -155,6 +155,23 @@ export function NewsFeed() {
                             </div>
                         </motion.a>
                     ))
+                )}
+
+                {/* VER MÁS CARD */}
+                {!loading && (
+                    <motion.a
+                        href="https://www.tycsports.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex-shrink-0 w-[140px] flex flex-col items-center justify-center bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl hover:bg-[var(--hover-bg)] transition-all group p-4 gap-3 text-center"
+                    >
+                        <div className="w-12 h-12 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <ArrowRight size={24} />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] group-hover:text-[var(--foreground)]">Ver más noticias</span>
+                    </motion.a>
                 )}
             </div>
 

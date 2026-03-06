@@ -1,47 +1,52 @@
 @import "tailwindcss";
 
-/* Tema Oscuro (default) Premium */
+/* Tema Oscuro (Professional Deep Dark) */
 :root,
 [data-theme="dark"] {
-  --background: #111111;
+  --background: #0A0E17;
   --foreground: #f8fafc;
-  --card-bg: #1e1e1e;
-  --card-border: #2a2a2a;
+  --card-bg: #141925;
+  --card-border: #1f2937;
 
-  /* Nuevos Acentos Futboleros */
-  --accent: #ff6b6b;
-  /* Rojo base / Live */
-  --accent-hover: #ff8787;
-  --accent-green: #00A651;
-  /* Verde Césped Fuerte */
-  --accent-blue: #ADD8E6;
-  /* Celeste Argento */
-  --accent-yellow: #F1C40F;
-  /* Amarillo Stars/Ranking */
+  /* Acentos Maduros */
+  --accent: #FF5252;
+  /* Rojo Error/Live sutil */
+  --accent-hover: #ff6b6b;
+  --accent-green: #10B981;
+  /* Verde esmeralda profesional */
+  --accent-blue: #3b82f6;
+  --accent-yellow: #f59e0b;
 
-  --text-muted: #9ca3af;
-  --input-bg: #222222;
-  --hover-bg: #2d2d2d;
-  --glass-bg: rgba(30, 30, 30, 0.75);
+  --text-muted: #6b7280;
+  --input-bg: #111827;
+  --hover-bg: #1f2937;
+  --glass-bg: rgba(10, 14, 23, 0.8);
+
+  /* Design System Tokens */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --transition-fast: 0.2s ease-out;
+  --transition-medium: 0.3s ease;
 }
 
-/* Tema Claro */
+/* Tema Claro (Clean & Professional) */
 [data-theme="light"] {
-  --background: #f1f5f9;
+  --background: #f8fafc;
   --foreground: #0f172a;
   --card-bg: #ffffff;
   --card-border: #e2e8f0;
 
-  /* Nuevos Acentos Futboleros */
   --accent: #ef4444;
   --accent-hover: #dc2626;
-  --accent-green: #10b981;
-  --accent-blue: #3b82f6;
-  --accent-yellow: #f59e0b;
+  --accent-green: #10B981;
+  --accent-blue: #2563eb;
+  --accent-yellow: #d97706;
 
   --text-muted: #64748b;
   --input-bg: #ffffff;
-  --hover-bg: #f8fafc;
+  --hover-bg: #f1f5f9;
   --glass-bg: rgba(255, 255, 255, 0.85);
 }
 
@@ -118,30 +123,28 @@ body {
 }
 
 /* ============================================
-   ANIMACIONES GLOBALES
+   ANIMACIONES GLOBALES (Sober & Fast)
    ============================================ */
 
 /* Fade In */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
+  animation: fadeIn var(--transition-medium) forwards;
 }
 
-/* Slide Up */
+/* Slide Up (Standard Modal/Overlay) */
 @keyframes slideUp {
   from {
-    transform: translateY(20px);
+    transform: translateY(12px);
     opacity: 0;
   }
 
@@ -152,13 +155,13 @@ body {
 }
 
 .animate-slide-up {
-  animation: slideUp 0.4s ease-out forwards;
+  animation: slideUp var(--transition-medium) forwards;
 }
 
-/* Scale In */
+/* Scale In (Subtle) */
 @keyframes scaleIn {
   from {
-    transform: scale(0.95);
+    transform: scale(0.98);
     opacity: 0;
   }
 
@@ -169,30 +172,47 @@ body {
 }
 
 .animate-scale-in {
-  animation: scaleIn 0.3s ease-out forwards;
+  animation: scaleIn var(--transition-fast) forwards;
 }
 
-/* Pulse Glow */
+/* Pulse (Sober Skeleton) */
+@keyframes pulseSober {
+
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-pulse-sober {
+  animation: pulseSober 2s ease-in-out infinite;
+}
+
+/* Pulse Glow (Reduced intensity) */
 @keyframes pulseGlow {
 
   0%,
   100% {
-    box-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+    box-shadow: 0 0 5px rgba(255, 82, 82, 0.2);
   }
 
   50% {
-    box-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
+    box-shadow: 0 0 15px rgba(255, 82, 82, 0.4);
   }
 }
 
 .animate-pulse-glow {
-  animation: pulseGlow 2s ease-in-out infinite;
+  animation: pulseGlow 3s ease-in-out infinite;
 }
 
 /* Stagger animations for lists */
 .stagger-fade>* {
   opacity: 0;
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn var(--transition-medium) forwards;
 }
 
 .stagger-fade>*:nth-child(1) {
@@ -211,29 +231,20 @@ body {
   animation-delay: 0.2s;
 }
 
-.stagger-fade>*:nth-child(5) {
-  animation-delay: 0.25s;
-}
-
-.stagger-fade>*:nth-child(6) {
-  animation-delay: 0.3s;
-}
-
 /* ============================================
-   GLASSMORPHISM PREMIUM
+   GLASSMORPHISM PROFESSIONAL
    ============================================ */
 
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 -4px 24px -1px rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="light"] .glass {
   border-top: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 -4px 24px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 -1px 12px rgba(0, 0, 0, 0.03);
 }
 
 /* ============================================
@@ -241,23 +252,24 @@ body {
    ============================================ */
 
 .btn-primary {
-  background: var(--accent);
+  background: var(--accent-green);
   color: white;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  font-weight: 600;
 }
 
 .btn-primary:hover {
-  background: var(--accent-hover);
+  filter: brightness(1.1);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
 }
 
 .btn-primary:active {
-  transform: translateY(0);
+  transform: scale(0.97);
 }
 
 /* ============================================
-   SHIMMER LOADING
+   SHIMMER LOADING (Sober)
    ============================================ */
 
 @keyframes shimmer {
@@ -276,35 +288,7 @@ body {
       var(--hover-bg) 50%,
       var(--card-bg) 75%);
   background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-
-/* ============================================
-   BOUNCE IN
-   ============================================ */
-
-@keyframes bounceIn {
-  0% {
-    transform: scale(0.3);
-    opacity: 0;
-  }
-
-  50% {
-    transform: scale(1.05);
-  }
-
-  70% {
-    transform: scale(0.95);
-  }
-
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.animate-bounce-in {
-  animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  animation: shimmer 2s linear infinite;
 }
 
 /* ============================================

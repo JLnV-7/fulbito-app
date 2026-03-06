@@ -64,9 +64,9 @@ export function LoginTeaserModal({
                                 <div className="w-full flex flex-col gap-2">
                                     <button
                                         onClick={() => router.push('/login')}
-                                        className="w-full bg-[var(--accent-green)] text-white font-bold py-3 rounded-xl shadow-md shadow-[var(--accent-green)]/20 hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-2"
+                                        className="w-full bg-[#10b981] text-white font-black py-4 rounded-2xl shadow-lg shadow-[#10b981]/25 active:scale-95 transition-all text-sm uppercase tracking-widest"
                                     >
-                                        Entrar a la cancha
+                                        Iniciar Sesión
                                     </button>
                                     <button
                                         onClick={onClose}

@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
+import { Button } from './ui/Button'
 
 interface CreateGroupModalProps {
     isOpen: boolean
@@ -62,7 +63,7 @@ export function CreateGroupModal({ isOpen, onClose, onSuccess }: CreateGroupModa
             if (memberError) throw memberError
 
             setCreatedGroup(groupData)
-            showToast('¡Grupo creado exitosamente!', 'success')
+            showToast('Grupo creado correctamente', 'success')
 
             if (onSuccess) onSuccess(groupData.id)
 
@@ -108,11 +109,12 @@ export function CreateGroupModal({ isOpen, onClose, onSuccess }: CreateGroupModa
                 className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
             >
                 <motion.div
-                    initial={{ scale: 0.95, y: 20 }}
-                    animate={{ scale: 1, y: 0 }}
-                    exit={{ scale: 0.95, y: 20 }}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 20, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
                     onClick={(e) => e.stopPropagation()}
-                    className="bg-[var(--card-bg)] w-full max-w-sm rounded-[32px] p-6 shadow-2xl border border-[var(--card-border)] relative overflow-hidden"
+                    className="bg-[var(--card-bg)] w-full max-w-sm rounded-[var(--radius-lg)] p-6 shadow-2xl border border-[var(--card-border)] relative overflow-hidden"
                 >
                     <button
                         onClick={onClose}
@@ -186,22 +188,24 @@ export function CreateGroupModal({ isOpen, onClose, onSuccess }: CreateGroupModa
                                     </div>
                                 </div>
 
-                                <button
+                                <Button
                                     type="submit"
-                                    disabled={isSubmitting || !name.trim()}
-                                    className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg hover:shadow-[#10b981]/25 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                                    loading={isSubmitting}
+                                    disabled={!name.trim()}
+                                    fullWidth
+                                    className="mt-2"
                                 >
-                                    {isSubmitting ? 'Creando...' : 'Crear Grupo'}
-                                </button>
+                                    Crear grupo
+                                </Button>
                             </form>
                         </>
                     ) : (
                         // SUCCESS STATE - INVITE QR
                         <div className="flex flex-col items-center text-center">
-                            <div className="w-16 h-16 bg-[#10b981]/20 text-[#10b981] rounded-full flex items-center justify-center mb-4 text-3xl">
+                            <div className="w-16 h-16 bg-[#10b981]/10 text-[#10b981] rounded-full flex items-center justify-center mb-4 text-3xl">
                                 🎉
                             </div>
-                            <h2 className="text-xl font-black mb-1">¡Grupo Creado!</h2>
+                            <h2 className="text-xl font-black mb-1">Grupo creado</h2>
                             <p className="text-sm text-[var(--text-muted)] mb-6">
                                 Ya tenés tu tribuna armada. Invitá a tus amigos para que se sumen al Prode de "{createdGroup.name}".
                             </p>
@@ -217,23 +221,24 @@ export function CreateGroupModal({ isOpen, onClose, onSuccess }: CreateGroupModa
                                 />
                             </div>
 
-                            <div className="w-full flex gap-2">
-                                <button
+                            <div className="w-full grid grid-cols-2 gap-2">
+                                <Button
                                     onClick={handleShare}
-                                    className="flex-1 flex items-center justify-center gap-2 bg-[#10b981] hover:bg-[#059669] text-white font-bold py-3 rounded-xl transition-all shadow-lg active:scale-95 text-sm"
+                                    icon={Share2}
+                                    fullWidth
                                 >
-                                    <Share2 size={16} />
                                     Compartir
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     onClick={() => {
                                         onClose()
                                         router.push(`/grupos/${createdGroup.id}`)
                                     }}
-                                    className="flex-1 bg-[var(--background)] hover:bg-[var(--hover-bg)] border border-[var(--card-border)] text-[var(--foreground)] font-bold py-3 rounded-xl transition-all active:scale-95 text-sm"
+                                    variant="secondary"
+                                    fullWidth
                                 >
-                                    Ir al Grupo
-                                </button>
+                                    Ir al grupo
+                                </Button>
                             </div>
                         </div>
                     )}

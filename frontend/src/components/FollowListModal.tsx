@@ -9,7 +9,6 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { LoadingSpinner } from './LoadingSpinner'
-import confetti from 'canvas-confetti'
 import type { Profile } from '@/types'
 import { FollowRecommendations } from './FollowRecommendations'
 
@@ -144,12 +143,12 @@ export function FollowListModal({ isOpen, onClose, userId, type, title }: Follow
                 onClick={onClose}
             >
                 <motion.div
-                    initial={{ y: '100%', opacity: 0.5 }}
+                    initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: '100%', opacity: 0 }}
-                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    exit={{ y: 20, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
                     onClick={e => e.stopPropagation()}
-                    className="w-full max-w-md bg-[var(--background)] sm:rounded-3xl rounded-t-3xl border border-[var(--card-border)] overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[80vh] shadow-2xl"
+                    className="w-full max-w-md bg-[var(--background)] sm:rounded-[var(--radius-lg)] rounded-t-[var(--radius-lg)] border border-[var(--card-border)] overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[80vh] shadow-2xl"
                 >
                     {/* Header */}
                     <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--card-border)] bg-[var(--card-bg)]">

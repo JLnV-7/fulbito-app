@@ -5,7 +5,6 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { UserPlus, Check } from 'lucide-react'
-import confetti from 'canvas-confetti'
 
 interface FollowButtonProps {
     targetUserId: string
@@ -72,14 +71,7 @@ export function FollowButton({ targetUserId, targetUsername, className = '' }: F
                     .insert({ follower_id: user.id, following_id: targetUserId })
 
                 if (error) throw error
-
-                confetti({
-                    particleCount: 50,
-                    spread: 40,
-                    origin: { y: 0.8 },
-                    colors: ['#10b981', '#f59e0b']
-                })
-                showToast(`¡Ahora sigues a ${targetUsername}!`, 'success')
+                showToast(`Ahora sigues a ${targetUsername}`, 'success')
             }
         } catch (error) {
             console.error('Error toggling follow:', error)
@@ -97,9 +89,9 @@ export function FollowButton({ targetUserId, targetUsername, className = '' }: F
     return (
         <button
             onClick={handleFollowToggle}
-            className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${isFollowing
-                    ? 'bg-[var(--background)] text-[var(--foreground)] border border-[var(--card-border)]'
-                    : 'bg-[#10b981] text-white hover:bg-[#059669] shadow-md hover:shadow-[#10b981]/20'
+            className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1 ${isFollowing
+                ? 'bg-[var(--background)] text-[var(--foreground)] border border-[var(--card-border)]'
+                : 'bg-[var(--accent-green)] text-white hover:brightness-110 shadow-sm'
                 } ${className}`}
         >
             {isFollowing ? (

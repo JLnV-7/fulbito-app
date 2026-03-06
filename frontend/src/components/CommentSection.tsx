@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { LoadingSpinner } from './LoadingSpinner'
 import { Heart, Reply } from 'lucide-react'
 import type { Comentario } from '@/types'
+import { Button } from './ui/Button'
 
 interface CommentSectionProps {
     partidoId: string | number
@@ -205,11 +206,11 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
                     <div className="absolute inset-0 z-10 bg-black/5 backdrop-blur-[3px]" />
                     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none">
                         <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 rounded-2xl shadow-xl max-w-[280px] text-center transform scale-105 pointer-events-auto">
-                            <h4 className="font-black text-lg mb-2 text-[var(--foreground)]">¿Qué opinan los hinchas?</h4>
+                            <h4 className="font-black text-lg mb-2 text-[var(--foreground)]">Análisis de los hinchas</h4>
                             <p className="text-sm text-[var(--text-muted)] mb-4">Iniciá sesión para leer las reseñas y dejar tu propio análisis del partido.</p>
-                            <a href="/login" className="inline-block w-full bg-[var(--accent-green)] text-white font-bold py-2.5 rounded-xl shadow-md cursor-pointer hover:bg-[#009040] transition-colors">
-                                Entrar a la cancha
-                            </a>
+                            <Button fullWidth onClick={() => router.push('/login')}>
+                                Iniciar sesión
+                            </Button>
                         </div>
                     </div>
 
@@ -232,7 +233,7 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
                     <input
                         type="text"
                         disabled
-                        placeholder="Iniciá sesión para comentar..."
+                        placeholder="Inicia sesión para comentar..."
                         className="w-full bg-[var(--input-bg)] border border-[var(--card-border)] rounded-lg pl-4 pr-12 py-3 text-sm focus:outline-none"
                     />
                 </div>

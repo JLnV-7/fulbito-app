@@ -4,7 +4,11 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { ChevronRight, Film, Star, Users, Trophy } from 'lucide-react'
+import { ChevronRight, Film, Star, Users, Trophy, QrCode, UserPlus, Layout, Sparkles } from 'lucide-react'
+import { Button } from './ui/Button'
+import { checkAndAwardBadges } from '@/app/actions/badges'
+import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/contexts/ToastContext'
 
 const ONBOARDING_KEY = 'FutLog_onboarding_done'
 
@@ -37,9 +41,19 @@ const slides = [
         icon: Trophy,
         visual: null
     },
+    {
+        emoji: '🚀',
+        title: '¡Ya estás listo!',
+        description: 'Completá tu perfil para desbloquear tu medalla de "Beta Explorer" y empezar a sumar XP.',
+        color: 'var(--accent-blue)',
+        icon: Sparkles,
+        visual: null
+    },
 ]
 
 export function OnboardingModal() {
+    const { user } = useAuth()
+    const { showToast } = useToast()
     const [isOpen, setIsOpen] = useState(false)
     const [currentSlide, setCurrentSlide] = useState(0)
     const router = useRouter()
@@ -54,10 +68,17 @@ export function OnboardingModal() {
         }
     }, [])
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (currentSlide < slides.length - 1) {
             setCurrentSlide(currentSlide + 1)
         } else {
+            if (user) {
+                try {
+                    await checkAndAwardBadges(user.id)
+                } catch (e) {
+                    console.error("Error awarding beta badge:", e)
+                }
+            }
             handleClose()
         }
     }
@@ -70,7 +91,6 @@ export function OnboardingModal() {
     if (!isOpen) return null
 
     const slide = slides[currentSlide]
-    const SlideIcon = slide.icon
 
     return (
         <AnimatePresence>
@@ -88,14 +108,16 @@ export function OnboardingModal() {
                     transition={{ type: 'spring', damping: 20 }}
                     className="bg-[var(--card-bg)] rounded-3xl p-8 w-full max-w-sm border border-[var(--card-border)] shadow-2xl text-center"
                 >
-                    {/* Skip button */}
-                    <div className="flex justify-end mb-2">
-                        <button
-                            onClick={handleClose}
-                            className="text-xs text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors"
-                        >
-                            Saltar
-                        </button>
+                    {/* Skip button - Hidden on last slide */}
+                    <div className="flex justify-end mb-2 h-4">
+                        {currentSlide < slides.length - 1 && (
+                            <button
+                                onClick={handleClose}
+                                className="text-xs text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors"
+                            >
+                                Saltar
+                            </button>
+                        )}
                     </div>
 
                     {/* Icon/Emoji */}
@@ -117,16 +139,51 @@ export function OnboardingModal() {
                         {slide.description}
                     </p>
 
-                    {/* Visual Extra */}
-                    {slide.visual && (
-                        <motion.div
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: 0.2 }}
-                            className="mb-4"
-                        >
-                            {slide.visual}
-                        </motion.div>
+                    {/* Visual Extra & CTAs on last slide */}
+                    {currentSlide === slides.length - 1 ? (
+                        <div className="space-y-2 mb-6 text-left">
+                            <Button
+                                variant="glass"
+                                size="sm"
+                                fullWidth
+                                onClick={() => { handleClose(); router.push('/perfil'); }}
+                                icon={QrCode}
+                                className="justify-start px-4 py-3"
+                            >
+                                Generar mi QR
+                            </Button>
+                            <Button
+                                variant="glass"
+                                size="sm"
+                                fullWidth
+                                onClick={() => { handleClose(); router.push('/grupos'); }}
+                                icon={UserPlus}
+                                className="justify-start px-4 py-3"
+                            >
+                                Crear mi primer grupo
+                            </Button>
+                            <Button
+                                variant="glass"
+                                size="sm"
+                                fullWidth
+                                onClick={() => { handleClose(); router.push('/build-xi'); }}
+                                icon={Layout}
+                                className="justify-start px-4 py-3"
+                            >
+                                Armar mi XI
+                            </Button>
+                        </div>
+                    ) : (
+                        slide.visual && (
+                            <motion.div
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ delay: 0.2 }}
+                                className="mb-4"
+                            >
+                                {slide.visual}
+                            </motion.div>
+                        )
                     )}
 
                     {/* Dots indicator */}
@@ -142,23 +199,16 @@ export function OnboardingModal() {
                         ))}
                     </div>
 
-                    {/* CTA Button */}
-                    <button
-                        onClick={() => {
-                            if (currentSlide === slides.length - 1) {
-                                handleClose()
-                                router.push('/login')
-                            } else {
-                                handleNext()
-                            }
-                        }}
-                        style={{ background: slide.color }}
-                        className="w-full py-4 rounded-2xl font-black text-[var(--background)] flex items-center justify-center gap-2
-                     hover:brightness-110 transition-all shadow-lg active:scale-[0.98] mt-2"
+                    {/* Main CTA */}
+                    <Button
+                        onClick={handleNext}
+                        variant={currentSlide === slides.length - 1 ? "primary" : "secondary"}
+                        fullWidth
+                        size="lg"
+                        icon={ChevronRight}
                     >
-                        {currentSlide === slides.length - 1 ? 'Loguear para Empezar' : 'Siguiente'}
-                        <ChevronRight size={20} strokeWidth={3} />
-                    </button>
+                        {currentSlide === slides.length - 1 ? '¡Empezar ahora!' : 'Siguiente'}
+                    </Button>
                 </motion.div>
             </motion.div>
         </AnimatePresence>

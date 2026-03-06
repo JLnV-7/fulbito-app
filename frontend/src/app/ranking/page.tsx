@@ -13,6 +13,7 @@ import { ReglasPuntajeModal } from '@/components/ReglasPuntajeModal'
 import { ClubRanking } from '@/components/ClubRanking'
 import { PullToRefresh } from '@/components/PullToRefresh'
 import { MockProde } from '@/components/MockProde'
+import { RankingGoal } from '@/components/ranking/RankingGoal'
 import type { RankingProde } from '@/types'
 
 type TipoRanking = 'global' | 'liga'
@@ -157,6 +158,16 @@ export default function RankingPage() {
 
                             {/* Mock Prode Callout */}
                             <MockProde />
+
+                            {/* Ranking Goal Goal */}
+                            {user && ranking.length > 0 && (
+                                <div className="mt-6">
+                                    <RankingGoal
+                                        currentPoints={ranking.find(r => r.user_id === user.id)?.puntos_totales || 0}
+                                        rank={ranking.findIndex(r => r.user_id === user.id) !== -1 ? ranking.findIndex(r => r.user_id === user.id) + 1 : undefined}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
 

@@ -6,7 +6,6 @@ import { MessageSquarePlus, X, Star } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
-import confetti from 'canvas-confetti'
 
 export function FeedbackWidget() {
     const { user } = useAuth()
@@ -47,15 +46,7 @@ export function FeedbackWidget() {
 
             // Success feedback
             setIsOpen(false)
-            showToast('¡Gracias por tu feedback!', 'success')
-
-            // Celebration confetti!
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#10b981', '#3b82f6', '#f59e0b']
-            })
+            showToast('Feedback enviado correctamente', 'success')
 
             // Reset form
             setTimeout(() => {
@@ -76,9 +67,8 @@ export function FeedbackWidget() {
             {/* Floating Button */}
             <motion.button
                 onClick={() => setIsOpen(true)}
-                whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                className="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-40 bg-[var(--card-bg)]/80 backdrop-blur-md border border-[var(--card-border)] p-3.5 rounded-full shadow-lg text-[var(--foreground)] hover:text-[#10b981] hover:border-[#10b981] transition-colors"
+                className="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-40 bg-[var(--card-bg)]/80 backdrop-blur-md border border-[var(--card-border)] p-3.5 rounded-full shadow-lg text-[var(--foreground)] hover:text-[var(--accent-green)] hover:border-[var(--accent-green)] transition-all"
                 aria-label="Dejar Feedback"
             >
                 <MessageSquarePlus size={24} />

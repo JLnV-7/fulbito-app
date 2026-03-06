@@ -29,7 +29,7 @@ export default function BuscarPage() {
     const [hasSearched, setHasSearched] = useState(false)
 
     // Trending tags
-    const trendingTags = ['clasico', 'remontada', 'goleada', 'final', 'derbi', 'penales']
+    const trendingTags = ['River Plate', 'Boca Juniors', 'clasico', 'remontada', 'goleada', 'final']
 
     const searchPartidos = useCallback(async (q: string) => {
         let queryBuilder = supabase

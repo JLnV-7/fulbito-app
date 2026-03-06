@@ -186,8 +186,8 @@ export function QuickPoll({ fixtureId, equipoLocal, equipoVisitante, compact = f
                                     isSelected={miVoto === 'visitante'}
                                 />
                             </div>
-                            <div className="text-[9px] text-[var(--text-muted)] text-center">
-                                {results.total} {results.total === 1 ? 'voto' : 'votos'}
+                            <div className="text-[10px] font-black text-[var(--accent-green)] text-center bg-[var(--accent-green)]/5 py-1 rounded-full border border-[var(--accent-green)]/10">
+                                {results.total} {results.total === 1 ? 'VOTO' : 'VOTOS TOTALES'} 🗳️
                             </div>
                         </motion.div>
                     )}
@@ -246,9 +246,9 @@ export function QuickPoll({ fixtureId, equipoLocal, equipoVisitante, compact = f
                         <PollBar label={equipoLocal} percent={getPercent('local')} color="#10b981" isSelected={miVoto === 'local'} />
                         <PollBar label="Empate" percent={getPercent('empate')} color="#fbbf24" isSelected={miVoto === 'empate'} />
                         <PollBar label={equipoVisitante} percent={getPercent('visitante')} color="#6366f1" isSelected={miVoto === 'visitante'} />
-                        <p className="text-[10px] text-[var(--text-muted)] text-center pt-1">
-                            {results.total} {results.total === 1 ? 'voto' : 'votos'}
-                        </p>
+                        <div className="text-[11px] font-black text-[var(--accent-green)] text-center bg-[var(--accent-green)]/5 py-2 rounded-xl border border-[var(--accent-green)]/20 mt-2">
+                            {results.total} {results.total === 1 ? 'VOTO REGISTRADO' : 'VOTOS TOTALES'} 🗳️
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

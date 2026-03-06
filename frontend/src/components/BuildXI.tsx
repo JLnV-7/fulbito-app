@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Download, Share2, Save, Trash2, UserPlus, Info } from 'lucide-react'
+import { Download, Share2, Save, Trash2, UserPlus, Info, Sparkles } from 'lucide-react'
 import html2canvas from 'html2canvas'
-import confetti from 'canvas-confetti'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -54,6 +53,52 @@ export function BuildXI() {
     const [lineupName, setLineupName] = useState('Mi XI Ideal')
     const [exporting, setExporting] = useState(false)
     const [saving, setSaving] = useState(false)
+    const [suggestedPlayers, setSuggestedPlayers] = useState<{ name: string, rating: number }[]>([])
+
+    useEffect(() => {
+        fetchSuggestedPlayers()
+    }, [])
+
+    const fetchSuggestedPlayers = async () => {
+        try {
+            // Fetch all ratings and group manually for simplicity without RPC
+            const { data } = await supabase
+                .from('match_log_player_ratings')
+                .select('player_name, rating')
+                .order('rating', { ascending: false })
+                .limit(100)
+
+            if (data) {
+                const grouped: Record<string, { total: number, count: number }> = {}
+                data.forEach(r => {
+                    const name = r.player_name.trim()
+                    if (!grouped[name]) grouped[name] = { total: 0, count: 0 }
+                    grouped[name].total += r.rating
+                    grouped[name].count += 1
+                })
+
+                const sorted = Object.entries(grouped)
+                    .map(([name, stats]) => ({
+                        name,
+                        rating: Number((stats.total / stats.count).toFixed(1))
+                    }))
+                    .sort((a, b) => b.rating - a.rating)
+                    .slice(0, 15)
+
+                setSuggestedPlayers(sorted)
+            }
+        } catch (err) {
+            console.error('Error fetching suggested players:', err)
+        }
+    }
+
+    const selectSuggested = (name: string) => {
+        if (selectedId !== null) {
+            handlePlayerNameChange(selectedId, name)
+            // Auto select next empty slot if possible, or just deselect
+            setSelectedId(null)
+        }
+    }
 
     const handlePlayerNameChange = (id: number, name: string) => {
         setPlayers(prev => prev.map(p => p.id === id ? { ...p, name } : p))
@@ -96,14 +141,7 @@ export function BuildXI() {
 
             if (error) throw error
 
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#00A651', '#ffffff', '#ff6b6b']
-            })
-
-            alert('✅ ¡Formación guardada con éxito!')
+            alert('Formación guardada correctamente')
         } catch (err: any) {
             console.error('Error saving lineup:', err)
             alert('Error al guardar: ' + err.message)
@@ -153,6 +191,42 @@ export function BuildXI() {
                     </div>
                 </div>
             </div>
+
+            {/* Suggested Players Carousel */}
+            {suggestedPlayers.length > 0 && (
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-4 shadow-sm overflow-hidden">
+                    <div className="flex items-center justify-between mb-3 px-1">
+                        <label className="text-[10px] font-black text-[var(--accent-green)] uppercase tracking-widest flex items-center gap-1.5">
+                            <Sparkles size={12} /> Jugadores Sugeridos
+                        </label>
+                        <span className="text-[10px] text-[var(--text-muted)] font-bold italic">Basado en tus ratings</span>
+                    </div>
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 px-1">
+                        {suggestedPlayers.map((p, i) => (
+                            <button
+                                key={i}
+                                onClick={() => selectSuggested(p.name)}
+                                className={`flex flex-col items-center gap-1.5 p-2 rounded-2xl min-w-[80px] transition-all border
+                                    ${selectedId !== null ? 'hover:border-[var(--accent)] hover:bg-[var(--hover-bg)] cursor-pointer' : 'opacity-70 cursor-default'}
+                                    bg-[var(--background)] border-[var(--card-border)]`}
+                            >
+                                <div className="w-10 h-10 bg-[var(--hover-bg)] rounded-full flex items-center justify-center text-lg shadow-inner">
+                                    👤
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-[9px] font-black truncate w-16 uppercase tracking-tighter">{p.name}</p>
+                                    <p className="text-[10px] font-bold text-[var(--accent-yellow)]">★ {p.rating}</p>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                    {selectedId === null && (
+                        <p className="text-[9px] text-[var(--text-muted)] text-center mt-3 opacity-60">
+                            Tocá una posición en la cancha para habilitar las sugerencias.
+                        </p>
+                    )}
+                </div>
+            )}
 
             {/* Pitch */}
             <div className="relative group">
@@ -213,7 +287,7 @@ export function BuildXI() {
                 </div>
 
                 {/* Floating Hint */}
-                <div className="absolute -top-3 -right-3 bg-[var(--accent)] text-white p-2 rounded-full shadow-lg animate-bounce hidden sm:block">
+                <div className="absolute -top-3 -right-3 bg-[var(--accent)] text-white p-2 rounded-full shadow-lg hidden sm:block">
                     <Info size={14} />
                 </div>
             </div>
