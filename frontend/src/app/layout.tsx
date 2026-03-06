@@ -7,6 +7,7 @@ import { ToastContainer } from "@/components/Toast";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { OnboardingModal } from "@/components/OnboardingModal";
+import { XPFeedback } from "@/components/XPFeedback";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -75,6 +76,7 @@ export default function RootLayout({
               <ToastContainer />
               <InstallPrompt />
               <OnboardingModal />
+              <XPFeedback />
               <ServiceWorkerRegistration />
             </ToastProvider>
           </AuthProvider>

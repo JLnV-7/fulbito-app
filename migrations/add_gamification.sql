@@ -109,8 +109,18 @@ ON CONFLICT DO NOTHING;
 
 -- RLS para Badges
 ALTER TABLE badges ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "badges_select" ON badges;
 CREATE POLICY "badges_select" ON badges FOR SELECT USING (true);
 
 ALTER TABLE user_badges ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "user_badges_select" ON user_badges;
 CREATE POLICY "user_badges_select" ON user_badges FOR SELECT USING (true);
 -- Las de insert dependerán del backend o de funciones postgres de admin.
+
+-- Función utilitaria para incrementar XP desde el backend de forma segura
+CREATE OR REPLACE FUNCTION increment_profile_xp(p_user_id UUID, p_amount INTEGER)
+RETURNS void AS $$
+BEGIN
+    UPDATE profiles SET xp = xp + p_amount WHERE id = p_user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

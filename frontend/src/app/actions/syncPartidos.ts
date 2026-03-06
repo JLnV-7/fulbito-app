@@ -3,6 +3,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import type { Partido } from '@/types'
+import { scrapeSofascoreLiveEvents, normalizeTeamName } from '@/lib/scraper_sofascore'
 
 // Use service role to bypass RLS for upserts
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -21,7 +22,6 @@ export async function syncPartidosToSupabase(
 ): Promise<Partido[]> {
     if (!scrapedPartidos || scrapedPartidos.length === 0) return []
 
-    // Prepare rows for upsert — map scraper data to DB columns
     const rows = scrapedPartidos.map(p => ({
         fixture_id: typeof p.id === 'number' ? p.id : parseInt(String(p.id)),
         liga: p.liga,
@@ -35,7 +35,6 @@ export async function syncPartidosToSupabase(
         logo_visitante: p.logo_visitante || '',
     }))
 
-    // Upsert in batches of 50 to avoid payload limits
     const BATCH_SIZE = 50
     const allUpserted: Partido[] = []
 
@@ -49,7 +48,6 @@ export async function syncPartidosToSupabase(
 
         if (error) {
             console.error('[SyncPartidos] Upsert error:', error.message)
-            // Don't throw — return what we have from Supabase as fallback
             break
         }
 
@@ -58,12 +56,10 @@ export async function syncPartidosToSupabase(
         }
     }
 
-    // If upsert worked, return with Supabase UUIDs
     if (allUpserted.length > 0) {
         return allUpserted
     }
 
-    // Fallback: query Supabase for existing partidos by fixture_id
     const fixtureIds = rows.map(r => r.fixture_id)
     const { data: existing } = await supabaseAdmin
         .from('partidos')
@@ -71,4 +67,86 @@ export async function syncPartidosToSupabase(
         .in('fixture_id', fixtureIds)
 
     return (existing as Partido[]) || []
+}
+
+/**
+ * Fetches live scores from SofaScore and updates matches in the database
+ * that are currently 'EN_JUEGO' or 'PREVIA' happening today.
+ */
+export async function syncLivePartidosToSupabase() {
+    const liveEvents = await scrapeSofascoreLiveEvents()
+    if (!liveEvents || liveEvents.length === 0) return { updated: 0 }
+
+    // Get active matches from Supabase
+    const { data: activeMatches } = await supabaseAdmin
+        .from('partidos')
+        .select('id, equipo_local, equipo_visitante, estado, goles_local, goles_visitante')
+        .in('estado', ['PREVIA', 'EN_JUEGO'])
+
+    if (!activeMatches || activeMatches.length === 0) return { updated: 0 }
+
+    const updates: any[] = []
+
+    for (const match of activeMatches) {
+        const normLocalDb = normalizeTeamName(match.equipo_local)
+        const normVisitanteDb = normalizeTeamName(match.equipo_visitante)
+
+        // Find matching live event
+        const liveEvent = liveEvents.find(e => {
+            const normLocalLive = normalizeTeamName(e.homeTeam.name)
+            const normShortLocalLive = normalizeTeamName(e.homeTeam.shortName || '')
+            const normVisitanteLive = normalizeTeamName(e.awayTeam.name)
+            const normShortVisitanteLive = normalizeTeamName(e.awayTeam.shortName || '')
+
+            // Match if either long or short names match
+            const homeMatches = normLocalDb.includes(normLocalLive) || normLocalLive.includes(normLocalDb) ||
+                (normShortLocalLive && (normLocalDb.includes(normShortLocalLive) || normShortLocalLive.includes(normLocalDb)))
+
+            const awayMatches = normVisitanteDb.includes(normVisitanteLive) || normVisitanteLive.includes(normVisitanteDb) ||
+                (normShortVisitanteLive && (normVisitanteDb.includes(normShortVisitanteLive) || normShortVisitanteLive.includes(normVisitanteDb)))
+
+            return homeMatches && awayMatches
+        })
+
+        if (liveEvent) {
+            let newState = match.estado
+            const statusCode = liveEvent.status.code
+
+            // Map SofaScore status codes to Fulbitoo states
+            // > 0 usually means in progress, 100 is ended
+            if (statusCode === 100) newState = 'FINALIZADO'
+            else if (statusCode > 0 && statusCode < 100) newState = 'EN_JUEGO'
+
+            const newGolesLocal = liveEvent.homeScore.current ?? liveEvent.homeScore.display ?? match.goles_local
+            const newGolesVisitante = liveEvent.awayScore.current ?? liveEvent.awayScore.display ?? match.goles_visitante
+
+            if (
+                match.estado !== newState ||
+                match.goles_local !== newGolesLocal ||
+                match.goles_visitante !== newGolesVisitante
+            ) {
+                updates.push({
+                    id: match.id,
+                    estado: newState,
+                    goles_local: newGolesLocal,
+                    goles_visitante: newGolesVisitante,
+                })
+            }
+        }
+    }
+
+    if (updates.length > 0) {
+        for (const update of updates) {
+            await supabaseAdmin
+                .from('partidos')
+                .update({
+                    estado: update.estado,
+                    goles_local: update.goles_local,
+                    goles_visitante: update.goles_visitante
+                })
+                .eq('id', update.id)
+        }
+    }
+
+    return { updated: updates.length }
 }

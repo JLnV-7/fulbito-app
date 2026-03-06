@@ -2,12 +2,13 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Users, MoreVertical, Trash2 } from 'lucide-react'
+import { Send, Users, MoreVertical, Trash2, Smile } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useMatchChat, type ChatMessage } from '@/hooks/useMatchChat'
 import { useToast } from '@/contexts/ToastContext'
+import { GiphySelector } from '@/components/GiphySelector'
 
 interface MatchLiveChatProps {
     partidoId: string
@@ -24,6 +25,20 @@ function timeAgoShort(date: string) {
     return new Date(date).toLocaleDateString()
 }
 
+function renderMessage(content: string) {
+    if (content.includes('giphy.com/media/')) {
+        return (
+            <img
+                src={content}
+                alt="GIF"
+                className="max-w-[200px] w-full h-auto rounded-lg object-cover"
+                loading="lazy"
+            />
+        )
+    }
+    return <p className="break-words">{content}</p>
+}
+
 export function MatchLiveChat({ partidoId }: MatchLiveChatProps) {
     const { user } = useAuth()
     const { showToast } = useToast()
@@ -33,6 +48,7 @@ export function MatchLiveChat({ partidoId }: MatchLiveChatProps) {
     const [newMessage, setNewMessage] = useState('')
     const [isSending, setIsSending] = useState(false)
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
+    const [showGiphy, setShowGiphy] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const chatContainerRef = useRef<HTMLDivElement>(null)
 
@@ -60,6 +76,18 @@ export function MatchLiveChat({ partidoId }: MatchLiveChatProps) {
             // Auto scroll will trigger from effect
         } else {
             showToast('Error al enviar mensaje', 'error')
+        }
+        setIsSending(false)
+    }
+
+    const handleSelectGif = async (gifUrl: string) => {
+        setShowGiphy(false)
+        if (!user || isSending) return
+
+        setIsSending(true)
+        const success = await sendMessage(gifUrl)
+        if (!success) {
+            showToast('Error al enviar GIF', 'error')
         }
         setIsSending(false)
     }
@@ -206,7 +234,7 @@ export function MatchLiveChat({ partidoId }: MatchLiveChatProps) {
                                             : 'bg-[var(--input-bg)] text-[var(--foreground)] border border-[var(--card-border)] rounded-tl-sm'
                                         }
                                     `}>
-                                        {msg.content}
+                                        {renderMessage(msg.content)}
 
                                         {/* Actions Menu Trigger */}
                                         {isOwn && (
@@ -254,13 +282,30 @@ export function MatchLiveChat({ partidoId }: MatchLiveChatProps) {
             </div>
 
             {/* Input Area */}
-            <div className="p-3 bg-[var(--background)] border-t border-[var(--card-border)]">
+            <div className="p-3 bg-[var(--background)] border-t border-[var(--card-border)] relative">
+                {showGiphy && (
+                    <div className="absolute bottom-full right-4 mb-2 z-50">
+                        <GiphySelector
+                            onSelect={handleSelectGif}
+                            onClose={() => setShowGiphy(false)}
+                        />
+                    </div>
+                )}
+
                 <form onSubmit={handleSend} className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setShowGiphy(!showGiphy)}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors
+                            ${showGiphy ? 'bg-[var(--accent)] text-white' : 'bg-[var(--hover-bg)] text-[var(--text-muted)] hover:bg-[var(--card-border)]'}`}
+                    >
+                        <Smile size={18} />
+                    </button>
                     <input
                         type="text"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Escribe un comentario..."
+                        placeholder="Escribe un comentario o envía un GIF..."
                         className="flex-1 bg-[var(--input-bg)] border border-[var(--card-border)] rounded-full px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors"
                         disabled={isSending}
                     />
