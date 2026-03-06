@@ -1,7 +1,7 @@
 -- Migration to create the 'user_feedback' table and set up RLS policies
 -- Execute this using the Supabase SQL editor or CLI
 
-CREATE TABLE user_feedback (
+CREATE TABLE IF NOT EXISTS user_feedback (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES public.profiles(id) DEFAULT NULL, -- Null if not logged in
     rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
