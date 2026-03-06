@@ -113,14 +113,14 @@ export default function GruposPage() {
                                                 >
                                                     <div className="flex justify-between items-start mb-3">
                                                         <h3 className="text-lg font-bold group-hover:text-[#10b981] transition-colors">{grupo.nombre}</h3>
-                                                        {grupo.mi_posicion && (
+                                                        {(grupo as any).mi_posicion && (
                                                             <span className={`text-xs font-bold px-2 py-1 rounded-lg
-                                                                ${grupo.mi_posicion === 1 ? 'bg-[#ffd700]/20 text-[#ffd700]' :
-                                                                    grupo.mi_posicion === 2 ? 'bg-[#c0c0c0]/20 text-[#c0c0c0]' :
-                                                                        grupo.mi_posicion === 3 ? 'bg-[#cd7f32]/20 text-[#cd7f32]' :
+                                                                ${(grupo as any).mi_posicion === 1 ? 'bg-[#ffd700]/20 text-[#ffd700]' :
+                                                                    (grupo as any).mi_posicion === 2 ? 'bg-[#c0c0c0]/20 text-[#c0c0c0]' :
+                                                                        (grupo as any).mi_posicion === 3 ? 'bg-[#cd7f32]/20 text-[#cd7f32]' :
                                                                             'bg-[var(--background)] text-[var(--text-muted)]'
                                                                 }`}>
-                                                                #{grupo.mi_posicion}
+                                                                #{(grupo as any).mi_posicion}
                                                             </span>
                                                         )}
                                                     </div>
@@ -135,7 +135,7 @@ export default function GruposPage() {
                                                             👥 {grupo.miembros_count}
                                                         </span>
                                                         <span className="flex items-center gap-1 font-bold text-[#10b981]">
-                                                            ⭐ {grupo.mi_puntos || 0} pts
+                                                            ⭐ {(grupo as any).mi_puntos || 0} pts
                                                         </span>
                                                     </div>
                                                 </motion.div>
