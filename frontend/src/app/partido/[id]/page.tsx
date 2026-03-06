@@ -21,6 +21,7 @@ import { MatchTimeline } from '@/components/MatchTimeline'
 import { QuickPoll } from '@/components/QuickPoll'
 import { AdvancedStats } from '@/components/AdvancedStats'
 import { MatchLiveChat } from '@/components/MatchLiveChat'
+import { AiPredictionWidget } from '@/components/AiPredictionWidget'
 import { MessageSquare, MessagesSquare } from 'lucide-react'
 import type { Partido, EstadoPartido } from '@/types'
 import { fetchFixtureByIdAction } from '@/app/actions/football'
@@ -407,6 +408,12 @@ export default function PartidoPage() {
             )
           ) : (
             <div className="space-y-6">
+              <AiPredictionWidget
+                partidoId={partido.id}
+                equipoLocal={partido.equipo_local}
+                equipoVisitante={partido.equipo_visitante}
+              />
+
               <HeadToHead
                 equipoLocal={partido.equipo_local}
                 equipoVisitante={partido.equipo_visitante}
