@@ -57,9 +57,11 @@ export function UserListsView({ userId, isOwnProfile }: UserListsViewProps) {
                     )}
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar">
                     {lists.map(list => (
-                        <ListCard key={list.id} list={list} />
+                        <div key={list.id} className="min-w-[260px] md:min-w-[300px] shrink-0 snap-center transition-transform hover:scale-[1.02]">
+                            <ListCard list={list} />
+                        </div>
                     ))}
                 </div>
             )}

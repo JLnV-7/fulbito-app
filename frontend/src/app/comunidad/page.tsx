@@ -1,15 +1,18 @@
 // src/app/comunidad/page.tsx
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Users, MessageCircle, Clock, ChevronRight } from 'lucide-react'
 import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { PullToRefresh } from '@/components/PullToRefresh'
+import { CreateGroupModal } from '@/components/CreateGroupModal'
 
 export default function ComunidadPage() {
     const router = useRouter()
+    const [showCreateModal, setShowCreateModal] = useState(false)
 
     const options = [
         {
@@ -41,18 +44,44 @@ export default function ComunidadPage() {
     return (
         <>
             <DesktopNav />
+            <CreateGroupModal
+                isOpen={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+            />
+
             <PullToRefresh onRefresh={async () => { window.location.reload() }}>
-                <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20">
+                <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20 relative">
+                    {/* Floating Action Button for Mobile */}
+                    <motion.button
+                        onClick={() => setShowCreateModal(true)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="fixed bottom-24 right-4 md:hidden z-40 bg-[#10b981] p-4 rounded-full shadow-[0_8px_30px_rgba(16,185,129,0.3)] text-white hover:bg-[#059669] transition-colors flex items-center justify-center"
+                    >
+                        <Users size={24} />
+                    </motion.button>
+
                     {/* Header */}
-                    <div className="bg-[var(--card-bg)] border-b border-[var(--card-border)] px-4 py-6 md:hidden">
-                        <h1 className="text-2xl font-black mb-1">Comunidad</h1>
-                        <p className="text-sm text-[var(--text-muted)]">Interactuá con otros hinchas y amigos.</p>
+                    <div className="bg-[var(--card-bg)] border-b border-[var(--card-border)] px-4 py-6 md:hidden flex justify-between items-center">
+                        <div>
+                            <h1 className="text-2xl font-black mb-1">Comunidad</h1>
+                            <p className="text-sm text-[var(--text-muted)]">Interactuá con otros hinchas y amigos.</p>
+                        </div>
                     </div>
 
                     <div className="max-w-2xl mx-auto px-4 py-6 md:py-8">
-                        <div className="hidden md:block mb-8 text-center">
-                            <h1 className="text-3xl font-black mb-2">Comunidad</h1>
-                            <p className="text-[var(--text-muted)]">Interactuá con otros hinchas y amigos.</p>
+                        <div className="hidden md:flex mb-8 justify-between items-center">
+                            <div>
+                                <h1 className="text-3xl font-black mb-2">Comunidad</h1>
+                                <p className="text-[var(--text-muted)]">Interactuá con otros hinchas y amigos.</p>
+                            </div>
+                            <button
+                                onClick={() => setShowCreateModal(true)}
+                                className="bg-[#10b981] hover:bg-[#059669] text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg hover:shadow-[#10b981]/25 flex items-center gap-2"
+                            >
+                                <span className="text-xl leading-none">+</span>
+                                Crear Grupo
+                            </button>
                         </div>
 
                         <div className="space-y-4">

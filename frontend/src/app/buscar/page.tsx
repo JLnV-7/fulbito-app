@@ -12,6 +12,7 @@ import { PartidoCard } from '@/components/PartidoCard'
 import { LIGAS } from '@/lib/constants'
 import type { Partido, Profile, MatchLog } from '@/types'
 import { MatchLogCard } from '@/components/MatchLogCard'
+import { SearchSkeleton } from '@/components/SearchSkeleton'
 
 type SearchTab = 'partidos' | 'usuarios' | 'resenas'
 
@@ -251,8 +252,8 @@ export default function BuscarPage() {
 
                     {/* Loading */}
                     {loading && (
-                        <div className="flex justify-center py-16">
-                            <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+                        <div className="pt-4">
+                            <SearchSkeleton tab={tab} />
                         </div>
                     )}
 

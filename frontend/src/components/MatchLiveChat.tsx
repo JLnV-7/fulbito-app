@@ -2,16 +2,19 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Users, MoreVertical, Trash2, Smile } from 'lucide-react'
+import { Send, Users, MoreVertical, Trash2, Smile, AlertTriangle, ShieldAlert } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useMatchChat, type ChatMessage } from '@/hooks/useMatchChat'
 import { useToast } from '@/contexts/ToastContext'
 import { GiphySelector } from '@/components/GiphySelector'
+import { CreateGroupModal } from '@/components/CreateGroupModal'
 
 interface MatchLiveChatProps {
     partidoId: string
+    matchTitle?: string
 }
 
 function timeAgoShort(date: string) {
@@ -39,7 +42,7 @@ function renderMessage(content: string) {
     return <p className="break-words">{content}</p>
 }
 
-export function MatchLiveChat({ partidoId }: MatchLiveChatProps) {
+export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
     const { user } = useAuth()
     const { showToast } = useToast()
     const router = useRouter()
@@ -49,6 +52,7 @@ export function MatchLiveChat({ partidoId }: MatchLiveChatProps) {
     const [isSending, setIsSending] = useState(false)
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
     const [showGiphy, setShowGiphy] = useState(false)
+    const [showCreateGroup, setShowCreateGroup] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const chatContainerRef = useRef<HTMLDivElement>(null)
 
@@ -96,6 +100,34 @@ export function MatchLiveChat({ partidoId }: MatchLiveChatProps) {
         const success = await deleteMessage(msgId)
         if (success) {
             showToast('Mensaje eliminado', 'success')
+            setActiveMenuId(null)
+        }
+    }
+
+    const handleReport = async (msgId: string) => {
+        if (!user) {
+            router.push('/login')
+            return
+        }
+        try {
+            const { error } = await supabase.from('message_reports').insert({
+                reporter_id: user.id,
+                message_id: msgId,
+                reason: 'Reportado por usuario'
+            })
+            if (error) {
+                if (error.code === '23505') { // Unique constraint violation
+                    showToast('Ya reportaste este mensaje', 'error')
+                } else {
+                    throw error
+                }
+            } else {
+                showToast('Mensaje reportado. Nuestro equipo lo revisará.', 'success')
+            }
+        } catch (err) {
+            console.error('Error reporting message:', err)
+            showToast('Error al reportar mensaje', 'error')
+        } finally {
             setActiveMenuId(null)
         }
     }
@@ -172,19 +204,45 @@ export function MatchLiveChat({ partidoId }: MatchLiveChatProps) {
     }
 
     return (
-        <div className="flex flex-col h-[500px] bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl overflow-hidden shadow-sm">
+        <div className="flex flex-col h-[500px] bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl overflow-hidden shadow-sm relative">
+            <CreateGroupModal
+                isOpen={showCreateGroup}
+                onClose={() => setShowCreateGroup(false)}
+            />
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-[var(--background)] border-b border-[var(--card-border)] sticky top-0 z-10">
-                <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-sm">Chat en vivo</h3>
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-[10px] font-bold">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                        LIVE
+            <div className="flex flex-col bg-[var(--background)] border-b border-[var(--card-border)] sticky top-0 z-10">
+                <div className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-sm">Chat en vivo</h3>
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-[10px] font-bold">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                            LIVE
+                        </div>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                        <button
+                            onClick={() => setShowCreateGroup(true)}
+                            className="text-[10px] bg-[#10b981]/10 text-[#10b981] font-bold px-2 py-1 rounded-md hover:bg-[#10b981]/20 transition-colors border border-[#10b981]/20 hidden sm:flex items-center gap-1"
+                            title="Crear grupo privado para este partido"
+                        >
+                            <Users size={12} />
+                            Crear Grupo
+                        </button>
+                        <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] font-medium bg-[var(--hover-bg)] px-2 py-1 rounded-full">
+                            <Users size={12} />
+                            {onlineUsers} {onlineUsers === 1 ? 'espectador' : 'espectadores'}
+                        </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] font-medium bg-[var(--hover-bg)] px-2 py-1 rounded-full">
-                    <Users size={12} />
-                    {onlineUsers} {onlineUsers === 1 ? 'espectador' : 'espectadores'}
+                {/* Mobile Create Group Button */}
+                <div className="sm:hidden px-4 pb-2">
+                    <button
+                        onClick={() => setShowCreateGroup(true)}
+                        className="w-full text-xs bg-[var(--hover-bg)] text-[var(--foreground)] font-bold py-1.5 rounded-md hover:bg-[var(--card-border)] transition-colors border border-[var(--card-border)] flex items-center justify-center gap-1.5"
+                    >
+                        <Users size={14} className="text-[#10b981]" />
+                        Crear Grupo Privado para el Prode
+                    </button>
                 </div>
             </div>
 
@@ -253,14 +311,14 @@ export function MatchLiveChat({ partidoId }: MatchLiveChatProps) {
                                         {renderMessage(msg.content)}
 
                                         {/* Actions Menu Trigger */}
-                                        {isOwn && (
+                                        {user && (
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation()
                                                     setActiveMenuId(isMenuOpen ? null : msg.id)
                                                 }}
                                                 className={`absolute top-1/2 -translate-y-1/2 p-1.5 rounded-full transition-opacity
-                                                    ${isOwn ? '-left-8 text-[var(--text-muted)] hover:bg-[var(--hover-bg)]' : '-right-8'}
+                                                    ${isOwn ? '-left-8 text-[var(--text-muted)] hover:bg-[var(--hover-bg)]' : '-right-8 text-[var(--text-muted)] hover:bg-[var(--hover-bg)]'}
                                                     ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
                                                 `}
                                             >
@@ -271,21 +329,31 @@ export function MatchLiveChat({ partidoId }: MatchLiveChatProps) {
 
                                     {/* Action Context Menu */}
                                     <AnimatePresence>
-                                        {isMenuOpen && isOwn && (
+                                        {isMenuOpen && user && (
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 exit={{ opacity: 0, scale: 0.95 }}
-                                                className={`absolute top-10 ${isOwn ? 'left-auto right-full mr-2' : ''} z-20 
-                                                        bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl shadow-xl overflow-hidden py-1`}
+                                                className={`absolute top-10 ${isOwn ? 'left-auto right-full mr-2' : 'left-full ml-2'} z-20 
+                                                        bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl shadow-xl overflow-hidden py-1 min-w-[120px]`}
                                             >
-                                                <button
-                                                    onClick={() => handleDelete(msg.id)}
-                                                    className="w-full flex items-center gap-2 px-4 py-2 text-xs text-red-500 hover:bg-red-500/10 transition-colors whitespace-nowrap"
-                                                >
-                                                    <Trash2 size={14} />
-                                                    Eliminar
-                                                </button>
+                                                {isOwn ? (
+                                                    <button
+                                                        onClick={() => handleDelete(msg.id)}
+                                                        className="w-full flex items-center gap-2 px-4 py-2 text-xs text-red-500 hover:bg-red-500/10 transition-colors whitespace-nowrap"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                        Eliminar
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleReport(msg.id)}
+                                                        className="w-full flex items-center gap-2 px-4 py-2 text-xs text-[#f59e0b] hover:bg-[#f59e0b]/10 transition-colors whitespace-nowrap"
+                                                    >
+                                                        <ShieldAlert size={14} />
+                                                        Reportar
+                                                    </button>
+                                                )}
                                             </motion.div>
                                         )}
                                     </AnimatePresence>

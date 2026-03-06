@@ -11,6 +11,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { LoadingSpinner } from './LoadingSpinner'
 import confetti from 'canvas-confetti'
 import type { Profile } from '@/types'
+import { FollowRecommendations } from './FollowRecommendations'
 
 export type FollowListType = 'followers' | 'following'
 
@@ -248,6 +249,13 @@ export function FollowListModal({ isOpen, onClose, userId, type, title }: Follow
                             </div>
                         )}
                     </div>
+
+                    {/* Recommendations - Only show when viewing 'following' to encourage more follows */}
+                    {type === 'following' && (
+                        <div className="border-t border-[var(--card-border)] bg-[var(--background)] px-4">
+                            <FollowRecommendations />
+                        </div>
+                    )}
                 </motion.div>
             </motion.div>
         </AnimatePresence>

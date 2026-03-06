@@ -26,6 +26,9 @@ import { UserListsView } from '@/components/UserListsView'
 import { UserBadgesGallery } from '@/components/UserBadgesGallery'
 import { WeeklyChallenges } from '@/components/WeeklyChallenges'
 import { ShareButton } from '@/components/ShareButton'
+import { ProfileQRModal } from '@/components/perfil/ProfileQRModal'
+import { ProfileAccordion } from '@/components/perfil/ProfileAccordion'
+import { RatingPieChart } from '@/components/perfil/RatingPieChart'
 
 export default function Perfil() {
   const router = useRouter()
@@ -44,6 +47,7 @@ export default function Perfil() {
 
   // Estado del editor
   const [showEditor, setShowEditor] = useState(false)
+  const [showQRModal, setShowQRModal] = useState(false)
   const [editUsername, setEditUsername] = useState('')
   const [editEquipo, setEditEquipo] = useState('')
   const [editAvatar, setEditAvatar] = useState('')
@@ -305,6 +309,14 @@ export default function Perfil() {
   return (
     <>
       <DesktopNav />
+      {/* Modals outside the flow */}
+      <ProfileQRModal
+        isOpen={showQRModal}
+        onClose={() => setShowQRModal(false)}
+        userId={user?.id || ''}
+        username={profile?.username || 'Usuario'}
+      />
+
       <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20">
 
         {/* Hero Header con gradiente */}
@@ -320,6 +332,13 @@ export default function Perfil() {
                 ←
               </button>
               <div className="flex gap-2">
+                <button
+                  onClick={() => setShowQRModal(true)}
+                  className="bg-black/20 p-2.5 rounded-xl backdrop-blur-md text-white font-bold hover:bg-black/40 transition-all flex items-center justify-center shadow-lg"
+                  aria-label="Mostrar código QR para compartir"
+                >
+                  <span className="text-sm">📱</span>
+                </button>
                 <button
                   onClick={() => setShowEditor(true)}
                   className="bg-black/20 px-4 py-2 rounded-xl backdrop-blur-md text-white text-sm font-bold hover:bg-black/40 transition-all"
@@ -444,22 +463,41 @@ export default function Perfil() {
         <div className="max-w-2xl mx-auto px-6 -mt-12 relative z-10">
           <UserStatsCard stats={stats} prodeStats={prodeStats} />
 
-          {/* Stats Radar Chart */}
-          <div className="mb-6">
-            <StatsRadar stats={buildRadarStats({
-              partidos_vistos: stats.partidos_vistos,
-              total_votos: stats.total_votos,
-              promedio_general: stats.promedio_general,
-              prode_puntos: prodeStats?.puntos_totales || 0,
-              friend_matches_votes: stats.friend_matches_votes || 0,
-            })} />
-          </div>
+          {/* Estadísticas Detalladas Accordion */}
+          <ProfileAccordion
+            title="Estadísticas Detalladas"
+            icon="📊"
+            defaultOpen={false}
+          >
+            <div className="space-y-6">
+              <StatsRadar stats={buildRadarStats({
+                partidos_vistos: stats.partidos_vistos,
+                total_votos: stats.total_votos,
+                promedio_general: stats.promedio_general,
+                prode_puntos: prodeStats?.puntos_totales || 0,
+                friend_matches_votes: stats.friend_matches_votes || 0,
+              })} />
 
-          {/* Badges/Logros */}
-          <div className="mb-6 space-y-4">
-            <BadgeDisplay stats={badgeStats} />
-            {user && <UserBadgesGallery userId={user.id} isOwnProfile={true} />}
-          </div>
+              {user && (
+                <div className="border-t border-[var(--card-border)] pt-6">
+                  <h4 className="font-bold text-sm mb-4 text-[var(--foreground)] text-center">Distribución de Ratings</h4>
+                  <RatingPieChart userId={user.id} />
+                </div>
+              )}
+            </div>
+          </ProfileAccordion>
+
+          {/* Badges/Logros Accordion */}
+          <ProfileAccordion
+            title="Logros y Títulos"
+            icon="🏆"
+            defaultOpen={true}
+          >
+            <div className="space-y-4">
+              <BadgeDisplay stats={badgeStats} />
+              {user && <UserBadgesGallery userId={user.id} isOwnProfile={true} />}
+            </div>
+          </ProfileAccordion>
 
           {/* Top Partidos Favoritos */}
           {user && (
