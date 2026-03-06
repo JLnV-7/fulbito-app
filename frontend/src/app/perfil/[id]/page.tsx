@@ -9,11 +9,13 @@ import { supabase } from '@/lib/supabase'
 import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { BadgeDisplay } from '@/components/BadgeDisplay'
+import { ShareButton } from '@/components/ShareButton'
 import { MatchLogCard } from '@/components/MatchLogCard'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
 import { useFollows } from '@/hooks/useMatchLogs'
 import { useProfileFollowers } from '@/hooks/useProfileFollowers'
+import { FollowListModal, type FollowListType } from '@/components/FollowListModal'
 import type { Profile, MatchLog } from '@/types'
 import type { BadgeStats } from '@/lib/badges'
 
@@ -33,6 +35,12 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
         distinct_ligas: 0, prode_aciertos: 0, neutral_reviews: 0,
         early_logs: 0, late_logs: 0,
     })
+
+    const [followModalState, setFollowModalState] = useState<{
+        isOpen: boolean;
+        type: FollowListType;
+        title: string;
+    }>({ isOpen: false, type: 'followers', title: '' })
 
     const isOwnProfile = user?.id === id
 
@@ -185,16 +193,39 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                                 </div>
                             )}
 
-                            {/* Follower Stats */}
-                            <div className="flex items-center justify-center gap-6 mt-4 opacity-90">
-                                <div className="text-center">
-                                    <div className="font-bold text-lg">{followersCount}</div>
-                                    <div className="text-[10px] uppercase tracking-wider">Seguidores</div>
+                            {/* Stats Summary */}
+                            <div className="flex items-center justify-center gap-6 mb-6">
+                                <div
+                                    className="text-center cursor-pointer hover:opacity-80 transition-opacity"
+                                    onClick={() => setFollowModalState({
+                                        isOpen: true,
+                                        type: 'followers',
+                                        title: 'Seguidores'
+                                    })}
+                                >
+                                    <div className="font-black text-xl text-white">{followersCount}</div>
+                                    <div className="text-[10px] uppercase font-bold text-white/80 tracking-widest">Seguidores</div>
                                 </div>
-                                <div className="text-center">
-                                    <div className="font-bold text-lg">{followingCount}</div>
-                                    <div className="text-[10px] uppercase tracking-wider">Seguidos</div>
+                                <div
+                                    className="text-center cursor-pointer hover:opacity-80 transition-opacity"
+                                    onClick={() => setFollowModalState({
+                                        isOpen: true,
+                                        type: 'following',
+                                        title: 'Siguiendo'
+                                    })}
+                                >
+                                    <div className="font-black text-xl text-white">{followingCount}</div>
+                                    <div className="text-[10px] uppercase font-bold text-white/80 tracking-widest">Siguiendo</div>
                                 </div>
+                            </div>
+
+                            <div className="max-w-[200px] mx-auto mt-4 mb-2">
+                                <ShareButton
+                                    titulo={`Perfil de ${profile.username || 'Usuario'} en FutLog`}
+                                    texto={`Mirá las reseñas y medallas de ${profile.username || 'Usuario'} en FutLog ⚽`}
+                                    url={typeof window !== 'undefined' ? window.location.href : ''}
+                                    label="Compartir Perfil"
+                                />
                             </div>
                         </div>
                     </div>
@@ -254,6 +285,17 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                 </div>
             </main>
             <NavBar />
+
+            {/* Follow List Modal */}
+            {profile && (
+                <FollowListModal
+                    isOpen={followModalState.isOpen}
+                    onClose={() => setFollowModalState(prev => ({ ...prev, isOpen: false }))}
+                    userId={profile.id}
+                    type={followModalState.type}
+                    title={followModalState.title}
+                />
+            )}
         </>
     )
 }

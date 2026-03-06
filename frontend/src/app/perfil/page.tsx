@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { NavBar } from '@/components/NavBar'
@@ -12,9 +13,11 @@ import { NotificationSettings } from '@/components/NotificationSettings'
 import { BadgeDisplay } from '@/components/BadgeDisplay'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useProfileFollowers } from '@/hooks/useProfileFollowers'
+import { FollowListModal, type FollowListType } from '@/components/FollowListModal'
 import type { Profile, UserStats } from '@/types'
 import type { BadgeStats } from '@/lib/badges'
-import { AvatarSelector } from '@/components/perfil/AvatarSelector'
+import { AvatarUploader } from '@/components/perfil/AvatarUploader'
 import { EquipoSelector } from '@/components/perfil/EquipoSelector'
 import { UserStatsCard } from '@/components/UserStatsCard'
 import { TopPartidos } from '@/components/TopPartidos'
@@ -22,11 +25,14 @@ import { StatsRadar, buildRadarStats } from '@/components/StatsRadar'
 import { UserListsView } from '@/components/UserListsView'
 import { UserBadgesGallery } from '@/components/UserBadgesGallery'
 import { WeeklyChallenges } from '@/components/WeeklyChallenges'
+import { ShareButton } from '@/components/ShareButton'
 
 export default function Perfil() {
   const router = useRouter()
   const { user, signOut, loading: authLoading } = useAuth()
   const { language, setLanguage, t } = useLanguage()
+  const { followersCount, followingCount } = useProfileFollowers(user?.id || '')
+
   const [profile, setProfile] = useState<Profile | null>(null)
   const [stats, setStats] = useState<UserStats>({
     partidos_vistos: 0,
@@ -49,6 +55,13 @@ export default function Perfil() {
     distinct_ligas: 0, prode_aciertos: 0, neutral_reviews: 0,
     early_logs: 0, late_logs: 0,
   })
+
+  // Estado del modal de seguidores
+  const [followModalState, setFollowModalState] = useState<{
+    isOpen: boolean;
+    type: FollowListType;
+    title: string;
+  }>({ isOpen: false, type: 'followers', title: '' })
 
   useEffect(() => {
     const cargarPerfil = async () => {
@@ -308,23 +321,6 @@ export default function Perfil() {
               </button>
               <div className="flex gap-2">
                 <button
-                  onClick={async () => {
-                    if (navigator.share) {
-                      try {
-                        await navigator.share({
-                          title: `Perfil de ${profile?.username || 'Usuario'} en FutLog`,
-                          text: `Mira mis estadísticas y medallas en FutLog ⚽`,
-                          url: window.location.href,
-                        })
-                      } catch (err) { console.log('User cancelled share') }
-                    }
-                  }}
-                  className="bg-black/20 p-2.5 rounded-full backdrop-blur-md text-white hover:bg-black/40 transition-all"
-                  title="Compartir Perfil"
-                >
-                  📤
-                </button>
-                <button
                   onClick={() => setShowEditor(true)}
                   className="bg-black/20 px-4 py-2 rounded-xl backdrop-blur-md text-white text-sm font-bold hover:bg-black/40 transition-all"
                 >
@@ -387,12 +383,59 @@ export default function Perfil() {
                 </span>
               </div>
 
+              {/* Follower Stats */}
+              <div className="flex justify-center gap-6 mb-4">
+                <div
+                  className="text-center cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setFollowModalState({
+                    isOpen: true,
+                    type: 'followers',
+                    title: 'Seguidores'
+                  })}
+                >
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="font-black text-xl text-white"
+                  >
+                    {followersCount}
+                  </motion.div>
+                  <div className="text-[10px] uppercase font-bold text-white/80 tracking-widest">Seguidores</div>
+                </div>
+                <div
+                  className="text-center cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setFollowModalState({
+                    isOpen: true,
+                    type: 'following',
+                    title: 'Siguiendo'
+                  })}
+                >
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="font-black text-xl text-white"
+                  >
+                    {followingCount}
+                  </motion.div>
+                  <div className="text-[10px] uppercase font-bold text-white/80 tracking-widest">Siguiendo</div>
+                </div>
+              </div>
+
               {profile?.equipo && (
-                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-white/10">
+                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-white/10 mb-6">
                   <span>❤️</span>
                   <span className="font-bold">{profile.equipo}</span>
                 </div>
               )}
+
+              <div className="max-w-[200px] mx-auto mt-2">
+                <ShareButton
+                  titulo={`Perfil de ${profile?.username || 'Usuario'} en FutLog`}
+                  texto="Mostrale a tus amigos lo que rateaste"
+                  url={typeof window !== 'undefined' ? window.location.href : ''}
+                  label="Compartir mi Perfil"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -511,6 +554,20 @@ export default function Perfil() {
               </div>
             </div>
           </div>
+
+          {/* Trust & Compliance Footer */}
+          <div className="mt-8 mb-4 border-t border-[var(--card-border)] pt-6 text-center">
+            <div className="flex justify-center flex-wrap gap-3 text-xs font-bold text-[var(--text-muted)]">
+              <Link href="/privacy" className="hover:text-[#10b981] hover:underline transition-colors">Privacidad</Link>
+              <span>•</span>
+              <Link href="/terms" className="hover:text-[#10b981] hover:underline transition-colors">Términos</Link>
+              <span>•</span>
+              <Link href="/sources" className="hover:text-[#10b981] hover:underline transition-colors">Fuentes</Link>
+            </div>
+            <p className="text-[10px] text-[var(--text-muted)] mt-4 opacity-50">
+              FutLog Beta © {new Date().getFullYear()}
+            </p>
+          </div>
         </div>
 
         <NavBar />
@@ -545,19 +602,19 @@ export default function Perfil() {
 
               <div className="space-y-6">
                 {/* Avatar Selection */}
-                <div>
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase mb-3 block">
-                    Elegí tu Avatar
+                <div className="space-y-3 pb-2 pt-2 border-t border-[var(--card-border)]">
+                  <label className="block text-sm font-bold text-[var(--foreground)] opacity-90 mx-1">
+                    Foto de perfil
                   </label>
-                  <div className="flex justify-center mb-4">
-                    <div className="text-6xl p-4 bg-[var(--background)] rounded-full border-2 border-[var(--card-border)]">
-                      {editAvatar || '👤'}
-                    </div>
-                  </div>
-                  <div className="max-h-40 overflow-y-auto bg-[var(--background)] rounded-xl border border-[var(--card-border)] mb-2">
-                    <AvatarSelector selectedAvatar={editAvatar} onSelect={setEditAvatar} />
-                  </div>
-                  <p className="text-[10px] text-[var(--text-muted)] text-center">Seleccioná uno de la lista</p>
+
+                  <AvatarUploader
+                    currentAvatarUrl={editAvatar}
+                    onUploadSuccess={(url) => setEditAvatar(url)}
+                  />
+
+                  <p className="text-[10px] text-center text-[var(--text-muted)] mt-2">
+                    Toca la imagen para subir una foto desde tu galería o cámara. (Máx 5MB)
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -648,6 +705,17 @@ export default function Perfil() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Follow List Modal */}
+      {user && (
+        <FollowListModal
+          isOpen={followModalState.isOpen}
+          onClose={() => setFollowModalState(prev => ({ ...prev, isOpen: false }))}
+          userId={user.id}
+          type={followModalState.type}
+          title={followModalState.title}
+        />
+      )}
     </>
   )
 }

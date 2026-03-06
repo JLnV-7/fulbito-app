@@ -213,7 +213,13 @@ export function MatchLiveChat({ partidoId }: MatchLiveChatProps) {
                                 animate={{ opacity: 1, y: 0 }}
                                 className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}
                             >
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#f59e0b] to-[#ef4444] shrink-0 overflow-hidden flex items-center justify-center text-white text-xs font-bold">
+                                <div
+                                    className="w-8 h-8 rounded-full bg-gradient-to-br from-[#f59e0b] to-[#ef4444] shrink-0 overflow-hidden flex items-center justify-center text-white text-xs font-bold cursor-pointer hover:ring-2 hover:ring-[#10b981]/50 transition-all"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (msg.user_id) window.location.href = `/perfil/${msg.user_id}`
+                                    }}
+                                >
                                     {msg.profile?.avatar_url ? (
                                         <img src={msg.profile.avatar_url} alt="" className="w-full h-full object-cover" />
                                     ) : (
@@ -223,7 +229,13 @@ export function MatchLiveChat({ partidoId }: MatchLiveChatProps) {
 
                                 <div className={`flex flex-col relative group max-w-[80%] ${isOwn ? 'items-end' : 'items-start'}`}>
                                     <div className="flex items-baseline gap-2 mb-1 px-1">
-                                        <span className="text-[10px] font-bold text-[var(--text-muted)]">
+                                        <span
+                                            className="text-[10px] font-bold text-[var(--text-muted)] cursor-pointer hover:text-[#10b981] hover:underline transition-colors"
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                if (msg.user_id) window.location.href = `/perfil/${msg.user_id}`
+                                            }}
+                                        >
                                             {isOwn ? 'Vos' : (msg.profile?.username || 'Anónimo')}
                                         </span>
                                         <span className="text-[9px] text-[var(--text-muted)] opacity-60">

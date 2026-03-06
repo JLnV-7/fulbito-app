@@ -104,17 +104,18 @@ export function NotificationSettings() {
                         </p>
                     </div>
                 ) : !subscription ? (
-                    <div className="bg-[#ff6b6b]/10 border border-[#ff6b6b]/30 rounded-xl p-4 text-center">
-                        <p className="text-sm mb-3 text-[var(--foreground)]">
-                            📢 Activa las notificaciones para recibir alertas de partidos
+                    <div className="bg-gradient-to-r from-[#10b981]/20 to-[#3b82f6]/20 border border-[#10b981]/30 rounded-xl p-5 text-center shadow-lg relative overflow-hidden">
+                        <div className="absolute -top-3 -right-3 text-4xl opacity-20">🔔</div>
+                        <p className="text-sm mb-3 font-medium text-[var(--foreground)] relative z-10">
+                            Activá notifs para no perderte nada 🏆
                         </p>
                         <button
                             onClick={handleSubscribe}
                             disabled={loading}
-                            className="bg-[#ff6b6b] text-white px-4 py-2 rounded-lg font-bold text-sm
-                                        hover:bg-[#ee5a5a] transition-colors disabled:opacity-50 shadow-lg"
+                            className="bg-gradient-to-r from-[#10b981] to-[#047857] text-white px-5 py-2.5 rounded-xl font-bold text-sm
+                                        hover:shadow-lg hover:shadow-emerald-500/25 transition-all disabled:opacity-50 relative z-10 w-full"
                         >
-                            {loading ? 'Activando...' : 'Activar Notificaciones'}
+                            {loading ? 'Activando...' : '¡Activar ahora!'}
                         </button>
                     </div>
                 ) : (

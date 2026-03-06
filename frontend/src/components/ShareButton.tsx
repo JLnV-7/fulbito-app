@@ -2,18 +2,20 @@
 'use client'
 
 import { useState, RefObject } from 'react'
+import { useToast } from '@/contexts/ToastContext'
 
 interface ShareButtonProps {
     titulo: string
     texto: string
     url: string
     captureRef?: RefObject<HTMLDivElement | null>
+    label?: string
 }
 
-export function ShareButton({ titulo, texto, url, captureRef }: ShareButtonProps) {
+export function ShareButton({ titulo, texto, url, captureRef, label = 'Compartir' }: ShareButtonProps) {
     const [showMenu, setShowMenu] = useState(false)
     const [capturing, setCapturing] = useState(false)
-    const [copied, setCopied] = useState(false)
+    const { showToast } = useToast()
 
     const handleShareLink = async () => {
         setShowMenu(false)
@@ -27,14 +29,19 @@ export function ShareButton({ titulo, texto, url, captureRef }: ShareButtonProps
                 })
             } catch (error) {
                 console.log('Error compartiendo:', error)
+                // Fallback si falla
+                try {
+                    await navigator.clipboard.writeText(`${texto}\n${url}`)
+                    showToast('¡Enlace copiado al portapapeles!', 'success')
+                } catch (e) { console.error('Error fallback copiando:', e) }
             }
         } else {
             try {
                 await navigator.clipboard.writeText(`${texto}\n${url}`)
-                setCopied(true)
-                setTimeout(() => setCopied(false), 2000)
+                showToast('¡Enlace copiado al portapapeles!', 'success')
             } catch (error) {
                 console.error('Error copiando:', error)
+                showToast('Error al copiar el enlace.', 'error')
             }
         }
     }
@@ -122,30 +129,21 @@ export function ShareButton({ titulo, texto, url, captureRef }: ShareButtonProps
         }
     }
 
-    if (copied) {
-        return (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#10b981] text-white text-sm font-medium">
-                <span>✅</span>
-                <span>Enlace copiado</span>
-            </div>
-        )
-    }
-
     return (
-        <div className="relative">
+        <div className="relative inline-block w-full">
             <button
                 onClick={() => setShowMenu(!showMenu)}
                 disabled={capturing}
                 className="
-                    flex items-center gap-2 px-4 py-2 rounded-full
+                    flex items-center justify-center gap-2 px-4 py-2 rounded-full w-full
                     bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] border border-[var(--card-border)]
                     text-[var(--foreground)] text-sm font-medium
                     transition-all duration-200
-                    disabled:opacity-50
+                    disabled:opacity-50 shadow-sm
                 "
             >
                 <span>{capturing ? '⏳' : '📤'}</span>
-                <span>{capturing ? 'Generando...' : 'Compartir'}</span>
+                <span>{capturing ? 'Generando...' : label}</span>
             </button>
 
             {showMenu && (

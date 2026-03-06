@@ -21,16 +21,16 @@ export function InstallPrompt() {
         const isIosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
         if (isIosDevice) {
             setIsIOS(true)
-            // Delay showing on iOS so user has time to engage first
-            setTimeout(() => setShowPrompt(true), 5000)
+            // Delay showing on iOS gracefully
+            setTimeout(() => setShowPrompt(true), 1500)
         }
 
         // Detect Android/PC (Chrome/Edge)
         const handleBeforeInstallPrompt = (e: any) => {
             e.preventDefault()
             setDeferredPrompt(e)
-            // Delay on desktop/android too — let user browse first
-            setTimeout(() => setShowPrompt(true), 4000)
+            // Show prompt almost instantly when the browser signals it's ready
+            setTimeout(() => setShowPrompt(true), 1000)
         }
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)

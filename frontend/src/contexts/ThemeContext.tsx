@@ -19,12 +19,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Cargar tema desde localStorage al montar
     useEffect(() => {
         const savedTheme = localStorage.getItem('FutLog-theme') as Theme | null
-        if (savedTheme) {
+        if (savedTheme === 'light' || savedTheme === 'dark') {
             setTheme(savedTheme)
         } else {
-            // Force Dark Mode default
-            setTheme('dark')
+            // Check system preference
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+            setTheme(prefersDark ? 'dark' : 'dark') // Forzamos dark por default como base
         }
+
+        // Force server-side matching by immediately setting attribute
+        document.documentElement.setAttribute('data-theme', 'dark')
         setMounted(true)
     }, [])
 
@@ -40,9 +44,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setTheme(prev => prev === 'dark' ? 'light' : 'dark')
     }
 
-    // Evitar flash de tema incorrecto
+    // Evitar flash dando un render inicial seguro
     if (!mounted) {
-        return null
+        // En SSR o primer render, asume dark
+        return (
+            <ThemeContext.Provider value={{ theme: 'dark', toggleTheme }}>
+                {children}
+            </ThemeContext.Provider>
+        )
     }
 
     return (

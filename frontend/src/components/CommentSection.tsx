@@ -363,7 +363,13 @@ function CommentItem({
     return (
         <div className="flex gap-3 animate-fade-in group">
             {/* Avatar */}
-            <div className={`rounded-full bg-[var(--hover-bg)] border border-[var(--card-border)] flex items-center justify-center flex-shrink-0 text-xs overflow-hidden shadow-sm ${isReply ? 'w-6 h-6' : 'w-8 h-8'}`}>
+            <div
+                className={`rounded-full bg-[var(--hover-bg)] border border-[var(--card-border)] flex items-center justify-center flex-shrink-0 text-xs overflow-hidden shadow-sm cursor-pointer hover:ring-2 hover:ring-[#10b981]/50 transition-all ${isReply ? 'w-6 h-6' : 'w-8 h-8'}`}
+                onClick={(e) => {
+                    e.stopPropagation()
+                    if (comment.user_id) window.location.href = `/perfil/${comment.user_id}`
+                }}
+            >
                 {comment.profile?.avatar_url ? (
                     <img src={comment.profile.avatar_url} alt="" className="w-full h-full object-cover" />
                 ) : (
@@ -373,7 +379,13 @@ function CommentItem({
 
             <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2 mb-0.5">
-                    <span className="text-xs font-bold text-[var(--foreground)]">
+                    <span
+                        className="text-xs font-bold text-[var(--foreground)] cursor-pointer hover:text-[#10b981] hover:underline transition-colors"
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            if (comment.user_id) window.location.href = `/perfil/${comment.user_id}`
+                        }}
+                    >
                         {comment.profile?.username || 'Usuario'}
                     </span>
                     <span className="text-[10px] text-[var(--text-muted)]">

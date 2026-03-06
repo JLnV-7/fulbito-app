@@ -71,8 +71,13 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
         >
             {/* Header: User info + time */}
             <div className="flex items-center gap-3 px-4 pt-3.5 pb-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#f59e0b] to-[#ef4444] flex items-center justify-center
-                       text-white text-xs font-bold shrink-0">
+                <div
+                    className="w-8 h-8 rounded-full bg-gradient-to-br from-[#f59e0b] to-[#ef4444] flex items-center justify-center text-white text-xs font-bold shrink-0 cursor-pointer hover:ring-2 hover:ring-[#f59e0b]/50 transition-all"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        if (log.user_id) router.push(`/perfil/${log.user_id}`)
+                    }}
+                >
                     {log.profile?.avatar_url ? (
                         <img src={log.profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
                     ) : (
@@ -80,7 +85,15 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                     )}
                 </div>
                 <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold truncate block">{log.profile?.username || 'Anónimo'}</span>
+                    <span
+                        className="text-sm font-semibold truncate block cursor-pointer hover:text-[#f59e0b] hover:underline transition-colors w-fit"
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            if (log.user_id) router.push(`/perfil/${log.user_id}`)
+                        }}
+                    >
+                        {log.profile?.username || 'Anónimo'}
+                    </span>
                     <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-muted)]">
                         <TypeIcon size={10} style={{ color: typeMeta.color }} />
                         <span>{typeMeta.label}</span>
