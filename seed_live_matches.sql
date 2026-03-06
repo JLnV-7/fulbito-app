@@ -39,16 +39,16 @@ BEGIN
 END $$;
 
 -- 3. MOCK MATCHES (Using Simulation IDs for API Fallbacks)
-INSERT INTO partidos (id, fixture_id, equipo_local, equipo_visitante, logo_local, logo_visitante, goles_local, goles_visitante, fecha_inicio, estado, liga, temporada)
+INSERT INTO partidos (id, fixture_id, equipo_local, equipo_visitante, logo_local, logo_visitante, goles_local, goles_visitante, fecha_inicio, estado, liga)
 VALUES 
 -- EN JUEGO (Simulado)
-('00000000-0000-0000-0000-000000000001', 999901, 'River Plate', 'Boca Juniors', 'https://media.api-sports.io/football/teams/435.png', 'https://media.api-sports.io/football/teams/451.png', 2, 1, NOW() - INTERVAL '45 minutes', 'EN_JUEGO', 'Liga Profesional', 2026),
+('00000000-0000-0000-0000-000000000001', 999901, 'River Plate', 'Boca Juniors', 'https://media.api-sports.io/football/teams/435.png', 'https://media.api-sports.io/football/teams/451.png', 2, 1, NOW() - INTERVAL '45 minutes', 'EN_JUEGO', 'Liga Profesional'),
 -- PREVIA (Simulado para hoy más tarde)
-('00000000-0000-0000-0000-000000000002', 999902, 'Racing Club', 'Independiente', 'https://media.api-sports.io/football/teams/436.png', 'https://media.api-sports.io/football/teams/438.png', 0, 0, NOW() + INTERVAL '3 hours', 'PREVIA', 'Liga Profesional', 2026),
+('00000000-0000-0000-0000-000000000002', 999902, 'Racing Club', 'Independiente', 'https://media.api-sports.io/football/teams/436.png', 'https://media.api-sports.io/football/teams/438.png', 0, 0, NOW() + INTERVAL '3 hours', 'PREVIA', 'Liga Profesional'),
 -- FINALIZADO (Simulado de ayer)
-('00000000-0000-0000-0000-000000000003', 999903, 'San Lorenzo', 'Huracán', 'https://media.api-sports.io/football/teams/445.png', 'https://media.api-sports.io/football/teams/448.png', 1, 1, NOW() - INTERVAL '24 hours', 'FINALIZADO', 'Liga Profesional', 2026),
+('00000000-0000-0000-0000-000000000003', 999903, 'San Lorenzo', 'Huracán', 'https://media.api-sports.io/football/teams/445.png', 'https://media.api-sports.io/football/teams/448.png', 1, 1, NOW() - INTERVAL '24 hours', 'FINALIZADO', 'Liga Profesional'),
 -- PROXIMO (Simulado de mañana)
-('00000000-0000-0000-0000-000000000004', 999904, 'Talleres', 'Belgrano', 'https://media.api-sports.io/football/teams/456.png', 'https://media.api-sports.io/football/teams/459.png', 0, 0, NOW() + INTERVAL '24 hours', 'PREVIA', 'Liga Profesional', 2026)
+('00000000-0000-0000-0000-000000000004', 999904, 'Talleres', 'Belgrano', 'https://media.api-sports.io/football/teams/456.png', 'https://media.api-sports.io/football/teams/459.png', 0, 0, NOW() + INTERVAL '24 hours', 'PREVIA', 'Liga Profesional')
 ON CONFLICT (id) DO UPDATE SET
   goles_local = EXCLUDED.goles_local,
   goles_visitante = EXCLUDED.goles_visitante,
