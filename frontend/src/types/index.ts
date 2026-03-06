@@ -56,6 +56,9 @@ export interface Comentario {
     username: string
     avatar_url?: string
   }
+  parent_id?: string
+  likes_count?: number
+  is_liked?: boolean
 }
 
 export interface Profile {
@@ -272,6 +275,7 @@ export interface MatchLog {
   rating_partido: number       // 0.5-5 estrellas
   rating_arbitro?: number      // 0.5-5
   rating_atmosfera?: number    // 0.5-5
+  rating_garra?: number        // 0.5-5
   rating_dt?: number           // 0.5-5 director técnico
   jugador_estrella?: string    // MVP / estrella del partido
   jugador_villano?: string     // Peor jugador / villano

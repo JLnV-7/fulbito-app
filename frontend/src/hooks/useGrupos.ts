@@ -32,6 +32,7 @@ export function useGrupos() {
           grupo_id,
           puntos_grupo,
           posicion,
+          last_read_at,
           grupo:grupos_prode (*)
         `)
                 .eq('user_id', user.id)
@@ -46,11 +47,19 @@ export function useGrupos() {
                         .select('*', { count: 'exact', head: true })
                         .eq('grupo_id', m.grupo_id)
 
+                    // Count unread messages in chat
+                    const { count: unreadCount } = await supabase
+                        .from('comentarios')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('partido_id', `grupo-${m.grupo_id}`)
+                        .gt('created_at', m.last_read_at || new Date(0).toISOString())
+
                     return {
                         ...m.grupo,
                         mi_puntos: m.puntos_grupo,
                         mi_posicion: m.posicion,
-                        miembros_count: count || 0
+                        miembros_count: count || 0,
+                        unread_count: unreadCount || 0
                     }
                 })
             )

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { ToastContainer } from "@/components/Toast";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
@@ -77,17 +78,19 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider>
-          <AuthProvider>
-            <ToastProvider>
-              <SplashScreen />
-              {children}
-              <ToastContainer />
-              <InstallPrompt />
-              <OnboardingModal />
-              <XPFeedback />
-              <ServiceWorkerRegistration />
-            </ToastProvider>
-          </AuthProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <ToastProvider>
+                <SplashScreen />
+                {children}
+                <ToastContainer />
+                <InstallPrompt />
+                <OnboardingModal />
+                <XPFeedback />
+                <ServiceWorkerRegistration />
+              </ToastProvider>
+            </AuthProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -68,45 +68,51 @@ export const CanchaFormacion = memo(({
     }
 
     const JugadorBall = ({ jugador }: { jugador: JugadorAPI }) => {
-        const tieneVoto = votos[jugador.id] > 0
+        const tieneVoto = (votos[jugador.id] || 0) > 0
         const isAnimating = animatingVote === jugador.id
 
         return (
             <button
                 onClick={() => handleJugadorClick(jugador)}
                 disabled={!partidoFinalizado}
-                className={`relative flex flex-col items-center group transition-all duration-200
-                   ${partidoFinalizado ? 'cursor-pointer hover:scale-110' : 'cursor-default'}`}
+                className={`relative flex flex-col items-center group transition-all duration-300
+                   ${partidoFinalizado ? 'cursor-pointer hover:scale-110 active:scale-90' : 'cursor-default'}`}
             >
-                {/* Círculo del jugador (Touch Target 64x64) */}
-                <div className={`w-16 h-16 rounded-full flex flex-col items-center justify-center
+                {/* Círculo del jugador (Touch Target 64x64 or 72x72) */}
+                <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex flex-col items-center justify-center
                         border-[3px] transition-all duration-300 relative overflow-hidden
                         ${tieneVoto
-                        ? 'bg-[#10b981] border-[#10b981] shadow-lg shadow-[#10b981]/50'
-                        : 'bg-[var(--card-bg)] border-[var(--card-border)] group-hover:border-[#10b981]/50'
+                        ? 'bg-gradient-to-br from-[#10b981] to-[#059669] border-[#10b981] shadow-lg shadow-[#10b981]/40'
+                        : 'bg-[var(--card-bg)]/80 backdrop-blur-sm border-[var(--card-border)] group-hover:border-[#10b981]/50 shadow-md'
                     }
-                    ${isAnimating ? 'scale-125 shadow-xl shadow-[#10b981]/70' : ''}`}>
+                    ${isAnimating ? 'scale-125 shadow-xl shadow-[#10b981]/60' : ''}`}>
+
                     {/* Silueta de jugador simulada */}
-                    <div className="absolute bottom-0 w-10 h-10 bg-white/10 rounded-t-full translate-y-2"></div>
-                    <span className={`font-black text-lg relative z-10 ${tieneVoto ? 'text-white' : 'text-[var(--foreground)]'}`}>
+                    <div className="absolute bottom-0 w-12 h-12 bg-white/10 rounded-t-full translate-y-3"></div>
+
+                    <span className={`font-black text-xl sm:text-2xl relative z-10 transition-colors
+                        ${tieneVoto ? 'text-white' : 'text-[var(--foreground)]'}`}>
                         {jugador.numero}
                     </span>
                 </div>
 
                 {/* Nombre */}
-                <div className="mt-1.5 bg-black/80 px-2 py-0.5 rounded text-[11px] font-bold text-white
-                        whitespace-nowrap max-w-[80px] truncate shadow-sm">
+                <div className="mt-1.5 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-black text-white
+                        whitespace-nowrap max-w-[90px] truncate shadow-lg border border-white/10">
                     {jugador.nombre.split(' ').pop()}
                 </div>
 
                 {/* Badge de voto */}
                 {tieneVoto && (
-                    <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full
-                          flex items-center justify-center text-[10px] font-bold text-white
-                          transition-all duration-300 ${getNotaColor(votos[jugador.id])}
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className={`absolute -top-1 -right-1 w-7 h-7 rounded-full
+                          flex items-center justify-center text-[11px] font-black text-white
+                          border-2 border-white shadow-lg z-20 transition-all duration-300 ${getNotaColor(votos[jugador.id])}
                           ${isAnimating ? 'scale-150 animate-pulse' : ''}`}>
                         {votos[jugador.id]}
-                    </div>
+                    </motion.div>
                 )}
             </button>
         )
@@ -212,17 +218,17 @@ export const CanchaFormacion = memo(({
                                 </p>
 
                                 {/* Fila 1-5 */}
-                                <div className="flex justify-center gap-2">
+                                <div className="flex justify-center gap-2 sm:gap-3">
                                     {[1, 2, 3, 4, 5].map(nota => (
                                         <motion.button
                                             key={nota}
                                             onClick={() => handleVotar(nota)}
-                                            whileTap={{ scale: 0.85 }}
-                                            whileHover={{ scale: 1.1 }}
-                                            className={`w-[56px] h-[56px] sm:w-[60px] sm:h-[60px] rounded-2xl font-black text-lg transition-all duration-200
+                                            whileTap={{ scale: 0.9 }}
+                                            whileHover={{ scale: 1.05 }}
+                                            className={`w-[60px] h-[60px] sm:w-[64px] sm:h-[64px] rounded-2xl font-black text-xl transition-all duration-200
                                                ${votos[jugadorSeleccionado.id] === nota
-                                                    ? `${getNotaColor(nota)} text-white scale-110 shadow-[0_8px_16px_rgba(0,0,0,0.2)]`
-                                                    : `bg-[var(--background)] text-[var(--text-muted)] ${getNotaBgHover(nota)} hover:text-white border-2 border-[var(--card-border)]`
+                                                    ? `${getNotaColor(nota)} text-white scale-110 shadow-xl border-white/20`
+                                                    : `bg-[var(--background)] text-[var(--text-muted)] border-2 border-[var(--card-border)] hover:border-[#10b981]/30`
                                                 }`}
                                         >
                                             {nota}
@@ -231,17 +237,17 @@ export const CanchaFormacion = memo(({
                                 </div>
 
                                 {/* Fila 6-10 */}
-                                <div className="flex justify-center gap-2">
+                                <div className="flex justify-center gap-2 sm:gap-3">
                                     {[6, 7, 8, 9, 10].map(nota => (
                                         <motion.button
                                             key={nota}
                                             onClick={() => handleVotar(nota)}
-                                            whileTap={{ scale: 0.85 }}
-                                            whileHover={{ scale: 1.1 }}
-                                            className={`w-[56px] h-[56px] sm:w-[60px] sm:h-[60px] rounded-2xl font-black text-lg transition-all duration-200
+                                            whileTap={{ scale: 0.9 }}
+                                            whileHover={{ scale: 1.05 }}
+                                            className={`w-[60px] h-[60px] sm:w-[64px] sm:h-[64px] rounded-2xl font-black text-xl transition-all duration-200
                                                ${votos[jugadorSeleccionado.id] === nota
-                                                    ? `${getNotaColor(nota)} text-white scale-110 shadow-[0_8px_16px_rgba(0,0,0,0.2)]`
-                                                    : `bg-[var(--background)] text-[var(--text-muted)] ${getNotaBgHover(nota)} hover:text-white border-2 border-[var(--card-border)]`
+                                                    ? `${getNotaColor(nota)} text-white scale-110 shadow-xl border-white/20`
+                                                    : `bg-[var(--background)] text-[var(--text-muted)] border-2 border-[var(--card-border)] hover:border-[#10b981]/30`
                                                 }`}
                                         >
                                             {nota}

@@ -163,6 +163,12 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                             🧥 DT {log.rating_dt.toFixed(1)}
                         </span>
                     )}
+                    {log.rating_garra && log.rating_garra > 0 && (
+                        <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full
+                           bg-red-500/10 text-red-500 font-bold border border-red-500/20">
+                            🔥 Garra {log.rating_garra.toFixed(1)}
+                        </span>
+                    )}
                 </div>
             )}
 

@@ -242,6 +242,15 @@ export default function LogDetailPage({ params }: { params: Promise<{ id: string
                                         </div>
                                     </div>
                                 )}
+                                {log.rating_garra && log.rating_garra > 0 && (
+                                    <div className="text-center">
+                                        <div className="text-[10px] text-[var(--text-muted)] mb-1">🔥 Garra</div>
+                                        <div className="flex items-center justify-center gap-1.5">
+                                            <StarRatingDisplay value={log.rating_garra} size="sm" color="#ef4444" />
+                                            <span className="text-xs font-bold">{log.rating_garra.toFixed(1)}</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </motion.div>

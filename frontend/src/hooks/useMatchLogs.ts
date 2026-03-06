@@ -31,6 +31,7 @@ export interface CreateMatchLogData {
     rating_partido: number
     rating_arbitro?: number
     rating_atmosfera?: number
+    rating_garra?: number
     review_title?: string
     review_text?: string
     is_spoiler?: boolean
@@ -136,8 +137,33 @@ export function useMatchLogs(filters?: MatchLogFilters) {
           tags:match_log_tags(tag),
           likes_count:match_log_likes(count)
         `)
-                .order('created_at', { ascending: false })
-                .range(offset, offset + limit - 1)
+
+            // Feed Type logic
+            if (filters?.feedType === 'popular') {
+                query = query.order('likes_count(count)', { ascending: false })
+            } else if (filters?.feedType === 'following' && user) {
+                // Get followed user IDs
+                const { data: followed } = await supabase
+                    .from('user_follows')
+                    .select('following_id')
+                    .eq('follower_id', user.id)
+
+                const followedIds = (followed || []).map(f => f.following_id)
+                if (followedIds.length > 0) {
+                    query = query.in('user_id', followedIds)
+                } else {
+                    // If not following anyone, return empty (or we could return empty data later)
+                    setLogs([])
+                    setHasMore(false)
+                    setLoading(false)
+                    return
+                }
+                query = query.order('created_at', { ascending: false })
+            } else {
+                query = query.order('created_at', { ascending: false })
+            }
+
+            query = query.range(offset, offset + limit - 1)
 
             // Apply filters
             if (filters?.liga) {

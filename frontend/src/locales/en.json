@@ -1,0 +1,52 @@
+{
+    "common": {
+        "loading": "Loading the stands...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "back": "Back"
+    },
+    "nav": {
+        "home": "Home",
+        "prode": "Predictor",
+        "ranking": "Ranking",
+        "community": "Community",
+        "profile": "Profile"
+    },
+    "profile": {
+        "title": "Player Profile",
+        "gamification": {
+            "level": "Level",
+            "xp": "XP",
+            "nextLevel": "To next level"
+        },
+        "stats": {
+            "title": "Your Stats",
+            "matchesRated": "Matches Rated",
+            "averageScore": "Avg Score"
+        },
+        "badges": {
+            "title": "Your Badges",
+            "locked": "Locked"
+        },
+        "history": {
+            "title": "Recent History",
+            "noMatches": "No matches rated yet."
+        },
+        "teams": {
+            "title": "Your Teams",
+            "notifications": "Match notifications"
+        },
+        "settings": {
+            "title": "Settings",
+            "language": "Language",
+            "logout": "Logout"
+        }
+    },
+    "ratings": {
+        "subratings": {
+            "referee": "Referee",
+            "atmosphere": "Atmosphere",
+            "garra": "Grit"
+        }
+    }
+}

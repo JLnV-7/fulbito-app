@@ -11,6 +11,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { NotificationSettings } from '@/components/NotificationSettings'
 import { BadgeDisplay } from '@/components/BadgeDisplay'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useLanguage } from '@/contexts/LanguageContext'
 import type { Profile, UserStats } from '@/types'
 import type { BadgeStats } from '@/lib/badges'
 import { AvatarSelector } from '@/components/perfil/AvatarSelector'
@@ -25,6 +26,7 @@ import { WeeklyChallenges } from '@/components/WeeklyChallenges'
 export default function Perfil() {
   const router = useRouter()
   const { user, signOut, loading: authLoading } = useAuth()
+  const { language, setLanguage, t } = useLanguage()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [stats, setStats] = useState<UserStats>({
     partidos_vistos: 0,
@@ -254,7 +256,7 @@ export default function Perfil() {
             </div>
 
             <h1 className="text-2xl font-black mb-3 bg-gradient-to-r from-[var(--accent-green)] to-[var(--accent-blue)] bg-clip-text text-transparent">
-              Tu Perfil FutLog
+              {t('profile.title')}
             </h1>
 
             <p className="text-[var(--text-muted)] mb-8 text-sm leading-relaxed">
@@ -594,9 +596,33 @@ export default function Perfil() {
                 </div>
 
                 {/* Team Selector Component */}
-                <div className="bg-[var(--background)] p-4 rounded-xl border border-[var(--card-border)] text-sm">
+                <div className="bg-[var(--background)] p-4 rounded-xl border border-[var(--card-border)] text-sm mb-4">
                   <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-2">Buscar Equipo</p>
                   <EquipoSelector selectedEquipo={editEquipo} onSelect={setEditEquipo} />
+                </div>
+
+                {/* Idioma Selector */}
+                <div>
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase mb-2 block">
+                    {t('profile.settings.language')}
+                  </label>
+                  <div className="flex gap-2">
+                    {(['es', 'en', 'pt'] as const).map(lang => (
+                      <button
+                        key={lang}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          setLanguage(lang)
+                        }}
+                        className={`flex-1 py-3 px-4 rounded-xl border transition-all text-sm font-bold uppercase
+                          ${language === lang
+                            ? 'bg-[#10b981]/10 border-[#10b981] text-[#10b981]'
+                            : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'}`}
+                      >
+                        {lang === 'es' ? '🇪🇸 ES' : lang === 'en' ? '🇺🇸 EN' : '🇧🇷 PT'}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Mensaje de guardado */}

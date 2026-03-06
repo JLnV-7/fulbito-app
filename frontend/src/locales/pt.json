@@ -1,0 +1,52 @@
+{
+    "common": {
+        "loading": "Carregando a arquibancada...",
+        "save": "Salvar",
+        "cancel": "Cancelar",
+        "back": "Voltar"
+    },
+    "nav": {
+        "home": "Início",
+        "prode": "Palpites",
+        "ranking": "Ranking",
+        "community": "Comunidade",
+        "profile": "Perfil"
+    },
+    "profile": {
+        "title": "Perfil do Jogador",
+        "gamification": {
+            "level": "Nível",
+            "xp": "XP",
+            "nextLevel": "Para o próximo nível"
+        },
+        "stats": {
+            "title": "Suas Estatísticas",
+            "matchesRated": "Partidas Avaliadas",
+            "averageScore": "Nota Média"
+        },
+        "badges": {
+            "title": "Suas Insígnias",
+            "locked": "Bloqueada"
+        },
+        "history": {
+            "title": "Histórico Recente",
+            "noMatches": "Nenhuma partida avaliada ainda."
+        },
+        "teams": {
+            "title": "Seus Times",
+            "notifications": "Notificações de partidas"
+        },
+        "settings": {
+            "title": "Configurações",
+            "language": "Idioma",
+            "logout": "Sair"
+        }
+    },
+    "ratings": {
+        "subratings": {
+            "referee": "Árbitro",
+            "atmosphere": "Clima",
+            "garra": "Raça"
+        }
+    }
+}

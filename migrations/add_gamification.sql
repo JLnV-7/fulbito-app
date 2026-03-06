@@ -102,9 +102,21 @@ EXECUTE FUNCTION add_xp_on_vote();
 
 INSERT INTO badges (name, description, icon, condition, xp_reward) 
 VALUES 
-  ('Hincha Fundador', 'Estuvo presente en la Beta de FutLog', '🎯', 'beta_tester', 100),
-  ('10 Partidos', 'Bancó 10 partidos en la tribuna', '🔟', '10_reviews', 50),
-  ('Voz de la Hinchada', 'Chatteó más de 50 veces en vivo', '📢', '50_live_chat', 200)
+  ('Debut', 'Logueaste tu primer partido', '🌟', 'debut', 10),
+  ('Hincha', '10 partidos logueados', '💚', '10_reviews', 50),
+  ('Fanático', '50 partidos logueados', '🔥', '50_reviews', 200),
+  ('Leyenda', '100 partidos logueados', '👑', '100_reviews', 500),
+  ('Crítico', '20 reseñas con texto', '✍️', '20_text_reviews', 100),
+  ('Palometa', 'Votaste en 25 partidos', '🗳️', '25_votes', 150),
+  ('Socio', 'Te uniste a un grupo', '🤝', 'join_group', 50),
+  ('Influencer', '10 seguidores', '📢', '10_followers', 200),
+  ('Popular', '50 likes en tus reseñas', '❤️', '50_likes', 300),
+  ('Globetrotter', 'Logueaste partidos de 3+ ligas', '🌍', '3_ligas', 150),
+  ('Prodista', '10 pronósticos acertados', '🎯', '10_prode', 200),
+  ('Árbitro', '10 reseñas en modo neutral', '📐', '10_neutral', 100),
+  ('Madrugador', 'Logueaste un partido antes de las 10am', '🌅', 'early_log', 50),
+  ('Noctámbulo', 'Logueaste un partido después de medianoche', '🌙', 'late_log', 50),
+  ('Hincha Fundador', 'Estuvo presente en la Beta de FutLog', '🎯', 'beta_tester', 1000)
 ON CONFLICT DO NOTHING;
 
 -- RLS para Badges

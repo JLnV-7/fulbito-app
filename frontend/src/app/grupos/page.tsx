@@ -137,7 +137,14 @@ export default function GruposPage() {
                                                                     🏆
                                                                 </div>
                                                                 <div>
-                                                                    <h3 className="text-base font-bold group-hover:text-[#10b981] transition-colors line-clamp-1">{grupo.nombre}</h3>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <h3 className="text-base font-bold group-hover:text-[#10b981] transition-colors line-clamp-1">{grupo.nombre}</h3>
+                                                                        {(grupo as any).unread_count > 0 && (
+                                                                            <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full animate-pulse">
+                                                                                {(grupo as any).unread_count}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                     <span className="text-[10px] text-[var(--text-muted)] flex items-center gap-1 mt-0.5">
                                                                         👥 {grupo.miembros_count || 0} miembros
                                                                         {((grupo.miembros_count || 0) > 2) && (

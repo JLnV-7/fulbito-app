@@ -23,7 +23,7 @@ import { AdvancedStats } from '@/components/AdvancedStats'
 import { MatchLiveChat } from '@/components/MatchLiveChat'
 import { AiPredictionWidget } from '@/components/AiPredictionWidget'
 import { PullToRefresh } from '@/components/PullToRefresh'
-import { MessageSquare, MessagesSquare } from 'lucide-react'
+import { MessageSquare, MessagesSquare, ChevronDown, ChevronUp, BarChart2, Clock, Zap } from 'lucide-react'
 import type { Partido, EstadoPartido } from '@/types'
 import { fetchFixtureByIdAction } from '@/app/actions/football'
 import { syncPartidosToSupabase } from '@/app/actions/syncPartidos'
@@ -58,6 +58,7 @@ export default function PartidoPage() {
   const [guardando, setGuardando] = useState(false)
   const [votosGuardados, setVotosGuardados] = useState(false)
   const [activeTab, setActiveTab] = useState<'reviews' | 'chat'>('reviews')
+  const [openAccordion, setOpenAccordion] = useState<string | null>('resumen')
   const formacionesRef = useRef<HTMLDivElement>(null)
   const chatRef = useRef<HTMLDivElement>(null)
   const pollRef = useRef<HTMLDivElement>(null)
@@ -339,21 +340,99 @@ export default function PartidoPage() {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <MatchStats />
+                  <div className="space-y-4">
+                    {/* Accordion: Resumen Stats */}
+                    <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] overflow-hidden shadow-sm">
+                      <button
+                        onClick={() => setOpenAccordion(openAccordion === 'resumen' ? null : 'resumen')}
+                        className="w-full flex items-center justify-between p-4 hover:bg-[var(--hover-bg)] transition-colors"
+                      >
+                        <div className="flex items-center gap-2 font-bold text-sm">
+                          <BarChart2 size={16} className="text-[#10b981]" />
+                          Resumen del Partido
+                        </div>
+                        {openAccordion === 'resumen' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </button>
+                      <AnimatePresence>
+                        {openAccordion === 'resumen' && (
+                          <motion.div
+                            initial={{ height: 0 }}
+                            animate={{ height: 'auto' }}
+                            exit={{ height: 0 }}
+                            className="overflow-hidden border-t border-[var(--card-border)]"
+                          >
+                            <div className="p-4">
+                              <MatchStats />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
 
-                  {/* Match Timeline */}
-                  {typeof partido.id === 'number' && (
-                    <MatchTimeline
-                      fixtureId={partido.id}
-                      equipoLocal={partido.equipo_local}
-                      equipoVisitante={partido.equipo_visitante}
-                    />
-                  )}
+                    {/* Accordion: Cronología */}
+                    {typeof partido.id === 'number' && (
+                      <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] overflow-hidden shadow-sm">
+                        <button
+                          onClick={() => setOpenAccordion(openAccordion === 'cronologia' ? null : 'cronologia')}
+                          className="w-full flex items-center justify-between p-4 hover:bg-[var(--hover-bg)] transition-colors"
+                        >
+                          <div className="flex items-center gap-2 font-bold text-sm">
+                            <Clock size={16} className="text-[#f59e0b]" />
+                            Cronología
+                          </div>
+                          {openAccordion === 'cronologia' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+                        <AnimatePresence>
+                          {openAccordion === 'cronologia' && (
+                            <motion.div
+                              initial={{ height: 0 }}
+                              animate={{ height: 'auto' }}
+                              exit={{ height: 0 }}
+                              className="overflow-hidden border-t border-[var(--card-border)]"
+                            >
+                              <div className="p-4">
+                                <MatchTimeline
+                                  fixtureId={partido.id}
+                                  equipoLocal={partido.equipo_local}
+                                  equipoVisitante={partido.equipo_visitante}
+                                />
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
 
-                  {/* Advanced Stats (xG, possession, shots) */}
-                  {typeof partido.id === 'number' && (
-                    <AdvancedStats fixtureId={partido.id} />
-                  )}
+                    {/* Accordion: Stats Avanzadas */}
+                    {typeof partido.id === 'number' && (
+                      <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] overflow-hidden shadow-sm">
+                        <button
+                          onClick={() => setOpenAccordion(openAccordion === 'avanzadas' ? null : 'avanzadas')}
+                          className="w-full flex items-center justify-between p-4 hover:bg-[var(--hover-bg)] transition-colors"
+                        >
+                          <div className="flex items-center gap-2 font-bold text-sm">
+                            <Zap size={16} className="text-[#6366f1]" />
+                            Estadísticas Avanzadas
+                          </div>
+                          {openAccordion === 'avanzadas' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+                        <AnimatePresence>
+                          {openAccordion === 'avanzadas' && (
+                            <motion.div
+                              initial={{ height: 0 }}
+                              animate={{ height: 'auto' }}
+                              exit={{ height: 0 }}
+                              className="overflow-hidden border-t border-[var(--card-border)]"
+                            >
+                              <div className="p-4">
+                                <AdvancedStats fixtureId={partido.id} />
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
+                  </div>
 
                   <div className="text-center bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] p-4">
                     <p className="text-sm text-[var(--text-muted)]">

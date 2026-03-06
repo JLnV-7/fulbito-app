@@ -13,7 +13,7 @@ import { useMatchLogs, type MatchLogFilters } from '@/hooks/useMatchLogs'
 import { useAuth } from '@/contexts/AuthContext'
 import { LIGAS } from '@/lib/constants'
 
-type FeedTab = 'recent' | 'popular' | 'myteams'
+type FeedTab = 'recent' | 'popular' | 'following' | 'myteams'
 
 export default function FeedPage() {
     const router = useRouter()
@@ -28,7 +28,7 @@ export default function FeedPage() {
         liga: filterLiga || undefined,
         equipo: filterEquipo || undefined,
         matchType: filterType || undefined,
-        feedType: activeTab === 'popular' ? 'popular' : 'recent',
+        feedType: activeTab === 'popular' ? 'popular' : activeTab === 'following' ? 'following' : 'recent',
         limit: 20,
     }
 
@@ -49,8 +49,8 @@ export default function FeedPage() {
 
     const tabs = [
         { id: 'recent' as FeedTab, label: 'Recientes', icon: Clock },
-        { id: 'popular' as FeedTab, label: 'Popular', icon: TrendingUp },
-        { id: 'myteams' as FeedTab, label: 'Mis Equipos', icon: Star },
+        { id: 'popular' as FeedTab, label: 'Populares', icon: TrendingUp },
+        { id: 'following' as FeedTab, label: 'Siguiendo', icon: Star },
     ]
 
     return (
@@ -83,8 +83,8 @@ export default function FeedPage() {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${activeTab === tab.id
-                                            ? 'bg-[#f59e0b]/10 text-[#f59e0b]'
-                                            : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
+                                        ? 'bg-[#f59e0b]/10 text-[#f59e0b]'
+                                        : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                         }`}
                                 >
                                     <Icon size={13} />
@@ -99,8 +99,8 @@ export default function FeedPage() {
                         <button
                             onClick={() => setShowFilters(!showFilters)}
                             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${showFilters || activeFiltersCount > 0
-                                    ? 'border-[#f59e0b]/30 bg-[#f59e0b]/5 text-[#f59e0b]'
-                                    : 'border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)]'
+                                ? 'border-[#f59e0b]/30 bg-[#f59e0b]/5 text-[#f59e0b]'
+                                : 'border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                 }`}
                         >
                             <Filter size={13} />
@@ -138,8 +138,8 @@ export default function FeedPage() {
                                             key={liga}
                                             onClick={() => setFilterLiga(filterLiga === liga ? '' : liga)}
                                             className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${filterLiga === liga
-                                                    ? 'bg-[#f59e0b]/15 text-[#f59e0b] border border-[#f59e0b]/30'
-                                                    : 'bg-[var(--hover-bg)] text-[var(--text-muted)] border border-transparent'
+                                                ? 'bg-[#f59e0b]/15 text-[#f59e0b] border border-[#f59e0b]/30'
+                                                : 'bg-[var(--hover-bg)] text-[var(--text-muted)] border border-transparent'
                                                 }`}
                                         >
                                             {liga}
@@ -171,8 +171,8 @@ export default function FeedPage() {
                                             key={t.value}
                                             onClick={() => setFilterType(filterType === t.value ? '' : t.value)}
                                             className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${filterType === t.value
-                                                    ? 'bg-[#f59e0b]/15 text-[#f59e0b] border border-[#f59e0b]/30'
-                                                    : 'bg-[var(--hover-bg)] text-[var(--text-muted)] border border-transparent'
+                                                ? 'bg-[#f59e0b]/15 text-[#f59e0b] border border-[#f59e0b]/30'
+                                                : 'bg-[var(--hover-bg)] text-[var(--text-muted)] border border-transparent'
                                                 }`}
                                         >
                                             {t.label}

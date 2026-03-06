@@ -1,0 +1,52 @@
+{
+    "common": {
+        "loading": "Cargando la tribuna...",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "back": "Volver"
+    },
+    "nav": {
+        "home": "Inicio",
+        "prode": "Prode",
+        "ranking": "Ranking",
+        "community": "Comunidad",
+        "profile": "Perfil"
+    },
+    "profile": {
+        "title": "Perfil del Jugador",
+        "gamification": {
+            "level": "Nivel",
+            "xp": "XP",
+            "nextLevel": "Para el próximo nivel"
+        },
+        "stats": {
+            "title": "Tus Estadísticas",
+            "matchesRated": "Partidos Puntuados",
+            "averageScore": "Nota Promedio"
+        },
+        "badges": {
+            "title": "Tus Insignias",
+            "locked": "Bloqueada"
+        },
+        "history": {
+            "title": "Historial Reciente",
+            "noMatches": "Aún no puntuaste partidos."
+        },
+        "teams": {
+            "title": "Tus Equipos",
+            "notifications": "Notificaciones de partidos"
+        },
+        "settings": {
+            "title": "Configuración",
+            "language": "Idioma",
+            "logout": "Cerrar Sesión"
+        }
+    },
+    "ratings": {
+        "subratings": {
+            "referee": "Árbitro",
+            "atmosphere": "Atmósfera",
+            "garra": "Garra"
+        }
+    }
+}

@@ -1,7 +1,7 @@
 // src/components/MatchLogForm.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -12,6 +12,7 @@ import { StarRating } from './StarRating'
 import { TeamLogo } from './TeamLogo'
 import { NeutralModeToggle } from './NeutralModeToggle'
 import { GiphyPicker } from './GiphyPicker'
+import { SubRatings } from './SubRatings'
 import { useMatchLogs, type CreateMatchLogData } from '@/hooks/useMatchLogs'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
@@ -74,6 +75,7 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
     const [ratingPartido, setRatingPartido] = useState(0)
     const [ratingArbitro, setRatingArbitro] = useState(0)
     const [ratingAtmosfera, setRatingAtmosfera] = useState(0)
+    const [ratingGarra, setRatingGarra] = useState(0)
 
     // Step 4 - Player ratings
     const [playerRatings, setPlayerRatings] = useState<PlayerRatingInput[]>([])
@@ -95,6 +97,8 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
     const [jugadorVillano, setJugadorVillano] = useState('')
     const [fotoUrl, setFotoUrl] = useState('')
     const [showGiphy, setShowGiphy] = useState(false)
+    const [uploadingPhoto, setUploadingPhoto] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Search matches from DB
     useEffect(() => {
@@ -206,6 +210,7 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
                 rating_partido: ratingPartido,
                 rating_arbitro: ratingArbitro || undefined,
                 rating_atmosfera: ratingAtmosfera || undefined,
+                rating_garra: ratingGarra || undefined,
                 review_title: reviewTitle || undefined,
                 review_text: reviewText || undefined,
                 is_spoiler: isSpoiler,
@@ -233,6 +238,34 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
             showToast('Error al publicar la reseña', 'error')
         } finally {
             setSubmitting(false)
+        }
+    }
+
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0 || !user) return
+        const file = e.target.files[0]
+
+        setUploadingPhoto(true)
+        try {
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${user.id}-${Date.now()}.${fileExt}`
+            const filePath = `matches/${fileName}`
+
+            const { error: uploadError } = await supabase.storage
+                .from('match_photos')
+                .upload(filePath, file)
+
+            if (uploadError) throw uploadError
+
+            const { data } = supabase.storage.from('match_photos').getPublicUrl(filePath)
+            setFotoUrl(data.publicUrl)
+            showToast('✅ Foto subida con éxito', 'success')
+        } catch (error) {
+            console.error('Error uploading photo:', error)
+            showToast('❌ Error al subir la foto', 'error')
+        } finally {
+            setUploadingPhoto(false)
+            if (fileInputRef.current) fileInputRef.current.value = ''
         }
     }
 
@@ -462,23 +495,14 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
 
                             {/* Secondary ratings */}
                             <div className="space-y-4">
-                                <div className="p-4 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)]">
-                                    <StarRating
-                                        value={ratingArbitro}
-                                        onChange={setRatingArbitro}
-                                        label="Árbitro"
-                                        showValue
-                                    />
-                                </div>
-                                <div className="p-4 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)]">
-                                    <StarRating
-                                        value={ratingAtmosfera}
-                                        onChange={setRatingAtmosfera}
-                                        label="Atmósfera"
-                                        showValue
-                                        color="#10b981"
-                                    />
-                                </div>
+                                <SubRatings
+                                    ratings={{ arbitro: ratingArbitro, atmosfera: ratingAtmosfera, garra: ratingGarra }}
+                                    onChange={(field, val) => {
+                                        if (field === 'arbitro') setRatingArbitro(val)
+                                        if (field === 'atmosfera') setRatingAtmosfera(val)
+                                        if (field === 'garra') setRatingGarra(val)
+                                    }}
+                                />
                                 <div className="p-4 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)]">
                                     <StarRating
                                         value={ratingDT}
@@ -691,14 +715,33 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
                                 )}
 
                                 {!showGiphy && (
-                                    <input
-                                        type="url"
-                                        value={fotoUrl}
-                                        onChange={(e) => setFotoUrl(e.target.value)}
-                                        placeholder="Pegar link de imagen, url de GIF..."
-                                        className="w-full px-4 py-2.5 bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl text-sm
-                                 focus:outline-none focus:border-[#f59e0b]/50 placeholder:text-[var(--text-muted)]"
-                                    />
+                                    <div className="space-y-2">
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="url"
+                                                value={fotoUrl}
+                                                onChange={(e) => setFotoUrl(e.target.value)}
+                                                placeholder="Pegar link de imagen, url de GIF..."
+                                                className="flex-1 px-4 py-2.5 bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl text-sm
+                                                focus:outline-none focus:border-[#f59e0b]/50 placeholder:text-[var(--text-muted)]"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                disabled={uploadingPhoto}
+                                                className="px-4 py-2 bg-[#10b981] text-white rounded-xl hover:bg-[#0ea5e9] transition-colors disabled:opacity-50 flex items-center justify-center shrink-0"
+                                            >
+                                                {uploadingPhoto ? <Loader2 size={16} className="animate-spin" /> : <ImagePlus size={18} />}
+                                            </button>
+                                            <input
+                                                type="file"
+                                                ref={fileInputRef}
+                                                onChange={handlePhotoUpload}
+                                                accept="image/*"
+                                                className="hidden"
+                                            />
+                                        </div>
+                                    </div>
                                 )}
 
                                 {fotoUrl && !showGiphy && (

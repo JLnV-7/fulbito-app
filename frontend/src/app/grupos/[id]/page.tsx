@@ -48,6 +48,18 @@ export default function GrupoDetailPage() {
         if (id && user) fetchGrupoData()
     }, [id, user])
 
+    // Update last_read_at when in Chat tab
+    useEffect(() => {
+        if (activeTab === 'chat' && user && id) {
+            supabase.rpc('mark_group_chat_as_read', {
+                p_grupo_id: id,
+                p_user_id: user.id
+            }).then(({ error }) => {
+                if (error) console.error('Error marking as read:', error)
+            })
+        }
+    }, [activeTab, id, user])
+
     const fetchGrupoData = async () => {
         try {
             const { data: grupoData, error: errorGrupo } = await supabase

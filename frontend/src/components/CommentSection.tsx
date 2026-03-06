@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { LoadingSpinner } from './LoadingSpinner'
+import { Heart, Reply } from 'lucide-react'
 import type { Comentario } from '@/types'
 
 interface CommentSectionProps {
@@ -32,16 +33,32 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
                 const { data, error } = await supabase
                     .from('comentarios')
                     .select(`
-          *,
-          profile:profiles(username, avatar_url)
-        `)
+                        *,
+                        profile:profiles(username, avatar_url),
+                        likes_count:comentario_likes(count)
+                    `)
                     .eq('partido_id', partidoIdStr)
                     .order('created_at', { ascending: true })
 
                 if (error) {
                     console.error('Error fetching comments:', error)
                 } else if (data) {
-                    setComments(data)
+                    const processedComments = data.map((c: any) => ({
+                        ...c,
+                        likes_count: c.likes_count[0]?.count || 0,
+                    }))
+
+                    if (user) {
+                        const { data: userLikes } = await supabase
+                            .from('comentario_likes')
+                            .select('comentario_id')
+                            .eq('user_id', user.id)
+
+                        const likedIds = new Set(userLikes?.map(l => l.comentario_id) || [])
+                        processedComments.forEach(c => c.is_liked = likedIds.has(c.id))
+                    }
+
+                    setComments(processedComments)
                     scrollToBottom()
                 }
             } catch (err: any) {
@@ -107,7 +124,8 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
                 .insert({
                     partido_id: partidoIdStr,
                     user_id: user.id,
-                    mensaje
+                    mensaje: newComment.trim(),
+                    parent_id: replyTo?.id || null
                 })
 
             if (error) throw error
@@ -120,6 +138,43 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
         }
     }
 
+    const toggleCommentLike = async (commentId: string) => {
+        if (!user) return
+
+        const comment = comments.find(c => c.id === commentId)
+        if (!comment) return
+
+        const wasLiked = comment.is_liked
+
+        // Optimistic update
+        setComments(prev => prev.map(c =>
+            c.id === commentId
+                ? { ...c, is_liked: !wasLiked, likes_count: (c.likes_count || 0) + (wasLiked ? -1 : 1) }
+                : c
+        ))
+
+        try {
+            if (wasLiked) {
+                await supabase
+                    .from('comentario_likes')
+                    .delete()
+                    .eq('comentario_id', commentId)
+                    .eq('user_id', user.id)
+            } else {
+                await supabase
+                    .from('comentario_likes')
+                    .insert({ comentario_id: commentId, user_id: user.id })
+            }
+        } catch {
+            // Revert
+            setComments(prev => prev.map(c =>
+                c.id === commentId
+                    ? { ...c, is_liked: wasLiked, likes_count: (c.likes_count || 0) + (wasLiked ? 1 : -1) }
+                    : c
+            ))
+        }
+    }
+
     const formatTime = (dateStr: string) => {
         const date = new Date(dateStr)
         const now = new Date()
@@ -129,15 +184,6 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
         if (diff < 60) return `Hace ${diff} min`
         if (diff < 1440) return `Hace ${Math.floor(diff / 60)} h`
         return date.toLocaleDateString()
-    }
-
-    // Check if message is a reply (starts with @username)
-    const parseMessage = (mensaje: string) => {
-        const match = mensaje.match(/^@(\S+)\s(.*)/)
-        if (match) {
-            return { replyToUser: match[1], text: match[2] }
-        }
-        return { replyToUser: null, text: mensaje }
     }
 
     // Render UI (Teaser for Unauthenticated Users)
@@ -175,19 +221,9 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
                             <div className="h-4 w-48 bg-[var(--border)] rounded" />
                         </div>
                     </div>
-                    <div className="flex gap-3 opacity-30 blur-[2px]">
-                        <div className="w-8 h-8 rounded-full bg-red-500/20" />
-                        <div>
-                            <div className="h-3 w-32 bg-[var(--border)] rounded mb-2" />
-                            <div className="h-4 w-56 bg-[var(--border)] rounded" />
-                        </div>
-                    </div>
-                    <div className="flex gap-3 opacity-20 blur-[2px]">
-                        <div className="w-8 h-8 rounded-full bg-yellow-500/20" />
-                        <div>
-                            <div className="h-3 w-20 bg-[var(--border)] rounded mb-2" />
-                            <div className="h-4 w-40 bg-[var(--border)] rounded" />
-                        </div>
+
+                    <div className="text-center absolute bottom-4 left-0 right-0 z-20 pointer-events-none opacity-50 blur-[1px]">
+                        <p className="text-xs font-bold text-[#10b981]">Ver más mensajes...</p>
                     </div>
                 </div>
 
@@ -199,12 +235,6 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
                         placeholder="Iniciá sesión para comentar..."
                         className="w-full bg-[var(--input-bg)] border border-[var(--card-border)] rounded-lg pl-4 pr-12 py-3 text-sm focus:outline-none"
                     />
-                    <button
-                        disabled
-                        className="absolute right-6 top-1/2 -translate-y-1/2 p-1.5 text-[var(--text-muted)]"
-                    >
-                        ➤
-                    </button>
                 </div>
             </div>
         )
@@ -233,54 +263,40 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
                         <p>Sé el primero en comentar 👇</p>
                     </div>
                 ) : (
-                    comments.map((comment) => {
-                        const { replyToUser, text } = parseMessage(comment.mensaje)
+                    comments
+                        .filter(c => !c.parent_id) // Root comments
+                        .map((comment) => {
+                            const replies = comments.filter(r => r.parent_id === comment.id)
 
-                        return (
-                            <div key={comment.id} className="flex gap-3 animate-fade-in group">
-                                {/* Avatar */}
-                                <div className="w-8 h-8 rounded-full bg-[var(--hover-bg)] border border-[var(--card-border)] flex items-center justify-center flex-shrink-0 text-xs overflow-hidden shadow-sm">
-                                    {comment.profile?.avatar_url || '👤'}
-                                </div>
+                            return (
+                                <div key={comment.id} className="space-y-3">
+                                    <CommentItem
+                                        comment={comment}
+                                        user={user}
+                                        onReply={handleReply}
+                                        onLike={toggleCommentLike}
+                                        formatTime={formatTime}
+                                    />
 
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-baseline gap-2 mb-0.5">
-                                        <span className="text-xs font-bold text-[var(--foreground)]">
-                                            {comment.profile?.username || 'Usuario'}
-                                        </span>
-                                        <span className="text-[10px] text-[var(--text-muted)]">
-                                            {formatTime(comment.created_at)}
-                                        </span>
-                                    </div>
-
-                                    {/* Reply indicator */}
-                                    {replyToUser && (
-                                        <span className="text-[10px] text-[#10b981] font-medium">
-                                            ↩ @{replyToUser}{' '}
-                                        </span>
-                                    )}
-
-                                    <p className="text-sm text-[var(--foreground)] break-words leading-relaxed opacity-90 inline">
-                                        {text}
-                                    </p>
-
-                                    {/* Reply button */}
-                                    {user && (
-                                        <button
-                                            onClick={() => handleReply(
-                                                comment.profile?.username || 'Usuario',
-                                                comment.id
-                                            )}
-                                            className="block text-[10px] text-[var(--text-muted)] hover:text-[#10b981] 
-                                                       mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity font-medium"
-                                        >
-                                            Responder
-                                        </button>
+                                    {/* Replies */}
+                                    {replies.length > 0 && (
+                                        <div className="ml-8 space-y-3 border-l-2 border-[var(--hover-bg)] pl-4">
+                                            {replies.map(reply => (
+                                                <CommentItem
+                                                    key={reply.id}
+                                                    comment={reply}
+                                                    user={user}
+                                                    onReply={handleReply}
+                                                    onLike={toggleCommentLike}
+                                                    formatTime={formatTime}
+                                                    isReply
+                                                />
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
-                            </div>
-                        )
-                    })
+                            )
+                        })
                 )}
                 <div ref={scrollRef} />
             </div>
@@ -324,6 +340,72 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
                         ➤
                     </button>
                 </form>
+            </div>
+        </div>
+    )
+}
+
+function CommentItem({
+    comment,
+    user,
+    onReply,
+    onLike,
+    formatTime,
+    isReply = false
+}: {
+    comment: Comentario
+    user: any
+    onReply: (username: string, id: string) => void
+    onLike: (id: string) => void
+    formatTime: (date: string) => string
+    isReply?: boolean
+}) {
+    return (
+        <div className="flex gap-3 animate-fade-in group">
+            {/* Avatar */}
+            <div className={`rounded-full bg-[var(--hover-bg)] border border-[var(--card-border)] flex items-center justify-center flex-shrink-0 text-xs overflow-hidden shadow-sm ${isReply ? 'w-6 h-6' : 'w-8 h-8'}`}>
+                {comment.profile?.avatar_url ? (
+                    <img src={comment.profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                    '👤'
+                )}
+            </div>
+
+            <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-2 mb-0.5">
+                    <span className="text-xs font-bold text-[var(--foreground)]">
+                        {comment.profile?.username || 'Usuario'}
+                    </span>
+                    <span className="text-[10px] text-[var(--text-muted)]">
+                        {formatTime(comment.created_at)}
+                    </span>
+                </div>
+
+                <p className="text-sm text-[var(--foreground)] break-words leading-relaxed opacity-90">
+                    {comment.mensaje}
+                </p>
+
+                <div className="flex items-center gap-3 mt-1.5">
+                    {/* Reply button */}
+                    {user && !isReply && (
+                        <button
+                            onClick={() => onReply(comment.profile?.username || 'Usuario', comment.id)}
+                            className="text-[10px] text-[var(--text-muted)] hover:text-[#10b981] flex items-center gap-1 transition-colors font-medium"
+                        >
+                            <Reply size={10} />
+                            Responder
+                        </button>
+                    )}
+
+                    {/* Like button */}
+                    <button
+                        onClick={() => onLike(comment.id)}
+                        className={`text-[10px] flex items-center gap-1 transition-all ${comment.is_liked ? 'text-red-500 font-bold' : 'text-[var(--text-muted)] hover:text-red-500'}`}
+                    >
+                        <Heart size={10} fill={comment.is_liked ? 'currentColor' : 'none'} />
+                        {comment.likes_count || 0}
+                    </button>
+                </div>
             </div>
         </div>
     )
