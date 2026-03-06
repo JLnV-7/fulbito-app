@@ -24,6 +24,25 @@ export async function GET(
         return NextResponse.json({ stats: null })
     }
 
+    // --- MOCK FALLBACK DEMO PARA ESTADISTICAS ---
+    if (['mock-fin-1', 'mock-live-1', 'mock-prev-1'].includes(id) || (parseInt(id) >= 9991 && parseInt(id) <= 9993)) {
+        return NextResponse.json({
+            stats: {
+                local: {
+                    name: "River Plate",
+                    logo: "https://media.api-sports.io/football/teams/435.png",
+                    possession: "65%", shots: 15, shots_on_target: 7, corners: 6, fouls: 12, yellow_cards: 2, red_cards: 0, offsides: 3, passes_total: 540, passes_accurate: 490, expected_goals: "2.3"
+                },
+                visitante: {
+                    name: "Boca Juniors",
+                    logo: "https://media.api-sports.io/football/teams/451.png",
+                    possession: "35%", shots: 6, shots_on_target: 2, corners: 2, fouls: 18, yellow_cards: 4, red_cards: 1, offsides: 1, passes_total: 290, passes_accurate: 210, expected_goals: "0.8"
+                }
+            }
+        })
+    }
+    // ---------------------------------------------
+
     try {
         const res = await fetch(`${API_URL}/fixtures/statistics?fixture=${id}`, {
             headers: {
