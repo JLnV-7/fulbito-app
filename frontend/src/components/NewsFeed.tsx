@@ -95,7 +95,7 @@ export function NewsFeed() {
                 </a>
             </div>
 
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 px-1">
+            <div className="flex gap-4 overflow-x-auto pb-4 px-1 scroll-smooth custom-scrollbar">
                 {loading ? (
                     Array(3).fill(0).map((_, i) => <NewsSkeleton key={i} />)
                 ) : (
@@ -110,7 +110,7 @@ export function NewsFeed() {
                             transition={{ delay: i * 0.1 }}
                             className="flex-shrink-0 w-[280px] group"
                         >
-                            <div className="relative aspect-video rounded-2xl overflow-hidden mb-2 border border-[var(--card-border)] bg-[var(--card-bg)]">
+                            <div className="relative aspect-video rounded-2xl overflow-hidden mb-2 border border-[var(--card-border)] bg-[var(--card-bg)] shadow-sm">
                                 {item.imageUrl && (
                                     <img
                                         src={item.imageUrl}
@@ -135,6 +135,23 @@ export function NewsFeed() {
                     ))
                 )}
             </div>
+
+            <style jsx>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    height: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: var(--card-bg);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: var(--card-border);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: var(--accent);
+                }
+            `}</style>
         </div>
     )
 }
