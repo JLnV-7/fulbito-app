@@ -19,6 +19,7 @@ import { Star, Search, ChevronLeft, ChevronRight, BarChart3, Trophy, Calendar, G
 import { OnboardingCarousel } from '@/components/OnboardingCarousel'
 import { TrendingMatchWidget } from '@/components/TrendingMatchWidget'
 import { PullToRefresh } from '@/components/PullToRefresh'
+import { NewsFeed } from '@/components/NewsFeed'
 import type { Partido } from '@/types'
 
 import { LIGAS, type Liga } from '@/lib/constants'
@@ -178,6 +179,9 @@ function HomeContent() {
 
             {/* Trending Match Premium Widget */}
             <TrendingMatchWidget />
+
+            {/* News Feed */}
+            <NewsFeed />
 
             {/* Section Tabs Premium */}
             <div className="flex gap-2 mb-5 overflow-x-auto no-scrollbar pb-2">

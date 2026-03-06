@@ -35,32 +35,54 @@ export function FollowRecommendations() {
         try {
             setLoading(true)
 
-            // 1. Get users that the current user is already following to exclude them
+            if (!user) return
+
+            // 1. Get current user's team
+            const { data: currentUserProfile } = await supabase
+                .from('profiles')
+                .select('equipo')
+                .eq('id', user.id)
+                .single()
+
+            const myTeam = currentUserProfile?.equipo
+
+            // 2. Get users that the current user is already following
             const { data: followingData } = await supabase
                 .from('user_follows')
                 .select('following_id')
-                .eq('follower_id', user?.id)
+                .eq('follower_id', user.id)
 
             const followedIds = new Set(followingData?.map(f => f.following_id) || [])
-            followedIds.add(user?.id) // Exclude self
+            followedIds.add(user.id) // Exclude self
 
-            // 2. Fetch some general active users for recommendations (In a real app, this would be a complex matching algorithm or edge function)
-            // Here we just grab recent active users or high level users that we don't follow
+            // 3. Fetch potential matches
+            // We prioritize same team, then high level
             const { data: potentialUsers, error } = await supabase
                 .from('profiles')
                 .select('id, username, avatar_url, level, equipo')
+                .neq('id', user.id)
                 .order('xp', { ascending: false })
-                .limit(10)
+                .limit(20)
 
             if (error) throw error
 
             const validRecommendations = potentialUsers
                 .filter(u => !followedIds.has(u.id))
-                .slice(0, 3) // Show max 3 recommendations at a time
-                .map(u => ({
-                    ...u,
-                    reason: u.equipo ? `Hincha de ${u.equipo}` : 'Usuario popular'
-                }))
+                .map(u => {
+                    let reason = 'Usuario popular'
+                    let weight = u.level || 0
+
+                    if (myTeam && u.equipo === myTeam) {
+                        reason = `También de ${myTeam} ⚪🔴`
+                        weight += 100 // Boost same team
+                    } else if (u.equipo) {
+                        reason = `Hincha de ${u.equipo}`
+                    }
+
+                    return { ...u, reason, weight }
+                })
+                .sort((a, b) => b.weight - a.weight)
+                .slice(0, 5) // Show max 5 in horizontal scroll
 
             setRecommendations(validRecommendations)
         } catch (error) {
@@ -160,8 +182,8 @@ export function FollowRecommendations() {
                                 onClick={() => handleFollow(profile.id, profile.username)}
                                 disabled={isFollowing}
                                 className={`w-full py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${isFollowing
-                                        ? 'bg-[var(--background)] text-[var(--foreground)] border border-[var(--card-border)]'
-                                        : 'bg-[#10b981] text-white hover:bg-[#059669] shadow-md hover:shadow-[#10b981]/20'
+                                    ? 'bg-[var(--background)] text-[var(--foreground)] border border-[var(--card-border)]'
+                                    : 'bg-[#10b981] text-white hover:bg-[#059669] shadow-md hover:shadow-[#10b981]/20'
                                     }`}
                             >
                                 {isFollowing ? (

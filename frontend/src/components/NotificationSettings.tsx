@@ -10,6 +10,8 @@ interface NotificationPrefs {
     partidoInicio: boolean
     golFavorito: boolean
     resultadoProde: boolean
+    nuevosSeguidores: boolean
+    insignias: boolean
 }
 
 export function NotificationSettings() {
@@ -17,7 +19,9 @@ export function NotificationSettings() {
     const [prefs, setPrefs] = useState<NotificationPrefs>({
         partidoInicio: true,
         golFavorito: true,
-        resultadoProde: true
+        resultadoProde: true,
+        nuevosSeguidores: true,
+        insignias: true
     })
     const { isSupported, isOptedIn, subscribeToPush, loading } = usePushNotifications()
     const [permissionState, setPermissionState] = useState<NotificationPermission>('default')
@@ -124,10 +128,24 @@ export function NotificationSettings() {
                             />
                             <ToggleOption
                                 icon="❤️"
-                                label="Gol de tu equipo favorito"
-                                description="Notificación instantánea cuando tu equipo hace un gol"
+                                label="Goles en vivo"
+                                description="Notificación instantánea cuando hay un gol de tus equipos"
                                 enabled={prefs.golFavorito}
                                 onToggle={() => togglePref('golFavorito')}
+                            />
+                            <ToggleOption
+                                icon="👤"
+                                label="Nuevos seguidores"
+                                description="Avisarte cuando alguien empieza a seguirte"
+                                enabled={prefs.nuevosSeguidores}
+                                onToggle={() => togglePref('nuevosSeguidores')}
+                            />
+                            <ToggleOption
+                                icon="🎖️"
+                                label="Insignias y Logros"
+                                description="Notificarte cuando desbloqueás una nueva medalla"
+                                enabled={prefs.insignias}
+                                onToggle={() => togglePref('insignias')}
                             />
                             <ToggleOption
                                 icon="🎯"

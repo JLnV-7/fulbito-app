@@ -29,6 +29,7 @@ import { ShareButton } from '@/components/ShareButton'
 import { ProfileQRModal } from '@/components/perfil/ProfileQRModal'
 import { ProfileAccordion } from '@/components/perfil/ProfileAccordion'
 import { RatingPieChart } from '@/components/perfil/RatingPieChart'
+import { PushDebug } from '@/components/PushDebug'
 
 export default function Perfil() {
   const router = useRouter()
@@ -575,6 +576,7 @@ export default function Perfil() {
           </div>
 
           <NotificationSettings />
+          <PushDebug />
 
           {/* PWA Widget Info */}
           <div className="mt-6 bg-gradient-to-r from-[#6366f1]/10 to-[#8b5cf6]/10 border border-[#6366f1]/30 rounded-2xl p-5">

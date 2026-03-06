@@ -1,9 +1,10 @@
 // src/components/BadgeDisplay.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Lock, ChevronDown, ChevronUp } from 'lucide-react'
+import { Lock, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
+import confetti from 'canvas-confetti'
 import { BADGES, getUnlockedBadges, getBadgeProgress, getNextBadges, type Badge, type BadgeStats } from '@/lib/badges'
 
 interface BadgeDisplayProps {
@@ -13,9 +14,23 @@ interface BadgeDisplayProps {
 
 export function BadgeDisplay({ stats, compact = false }: BadgeDisplayProps) {
     const [showAll, setShowAll] = useState(false)
+    const [lastUnlockedCount, setLastUnlockedCount] = useState<number | null>(null)
     const unlocked = getUnlockedBadges(stats)
     const nextBadges = getNextBadges(stats)
     const unlockedIds = new Set(unlocked.map(b => b.id))
+
+    useEffect(() => {
+        if (lastUnlockedCount !== null && unlocked.length > lastUnlockedCount) {
+            // New badge unlocked!
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#f59e0b', '#10b981', '#3b82f6']
+            })
+        }
+        setLastUnlockedCount(unlocked.length)
+    }, [unlocked.length])
 
     if (compact) {
         // Compact mode: just show unlocked badge icons in a row
@@ -73,8 +88,8 @@ export function BadgeDisplay({ stats, compact = false }: BadgeDisplayProps) {
                                 exit={{ opacity: 0, scale: 0.9 }}
                                 transition={{ delay: i * 0.03 }}
                                 className={`relative flex items-center gap-2.5 p-3 rounded-xl border transition-all ${isUnlocked
-                                        ? 'bg-[#f59e0b]/5 border-[#f59e0b]/20'
-                                        : 'bg-[var(--background)] border-[var(--card-border)] opacity-60'
+                                    ? 'bg-[#f59e0b]/5 border-[#f59e0b]/20'
+                                    : 'bg-[var(--background)] border-[var(--card-border)] opacity-60'
                                     }`}
                             >
                                 <div className={`text-2xl shrink-0 ${!isUnlocked ? 'grayscale' : ''}`}>

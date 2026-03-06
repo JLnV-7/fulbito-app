@@ -11,6 +11,7 @@ import { useMatchChat, type ChatMessage } from '@/hooks/useMatchChat'
 import { useToast } from '@/contexts/ToastContext'
 import { GiphySelector } from '@/components/GiphySelector'
 import { CreateGroupModal } from '@/components/CreateGroupModal'
+import { ChatPoll } from '@/components/ChatPoll'
 
 interface MatchLiveChatProps {
     partidoId: string
@@ -253,6 +254,7 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
                 style={{ scrollBehavior: 'smooth' }}
                 onClick={() => setActiveMenuId(null)} // Close menus when clicking outside
             >
+                <ChatPoll partidoId={partidoId} />
                 {messages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-center text-[var(--text-muted)] opacity-70">
                         <span className="text-4xl mb-3">💬</span>

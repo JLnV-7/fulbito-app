@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Users, MessageCircle, Clock, ChevronRight } from 'lucide-react'
+import { Users, MessageCircle, Clock, ChevronRight, Layout } from 'lucide-react'
 import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { PullToRefresh } from '@/components/PullToRefresh'
@@ -22,6 +22,14 @@ export default function ComunidadPage() {
             color: 'text-pink-500',
             bg: 'bg-pink-500/10',
             path: '/grupos'
+        },
+        {
+            title: 'Armá tu XI',
+            description: 'Diseñá tu equipo ideal y compartilo en redes.',
+            icon: Layout,
+            color: 'text-[#10b981]',
+            bg: 'bg-[#10b981]/10',
+            path: '/lineup'
         },
         {
             title: 'Chat Global',

@@ -23,6 +23,7 @@ import { AdvancedStats } from '@/components/AdvancedStats'
 import { MatchLiveChat } from '@/components/MatchLiveChat'
 import { AiPredictionWidget } from '@/components/AiPredictionWidget'
 import { PullToRefresh } from '@/components/PullToRefresh'
+import { Heatmap } from '@/components/Heatmap'
 import { MessageSquare, MessagesSquare, ChevronDown, ChevronUp, BarChart2, Clock, Zap } from 'lucide-react'
 import type { Partido, EstadoPartido } from '@/types'
 import { fetchFixtureByIdAction } from '@/app/actions/football'
@@ -535,8 +536,14 @@ export default function PartidoPage() {
                 </div>
 
                 {estado === 'EN_JUEGO' && (
-                  <>
+                  <div className="space-y-6">
                     <MatchStats />
+                    <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-6 shadow-sm">
+                      <h3 className="text-sm font-black mb-4 flex items-center gap-2 uppercase tracking-tighter">
+                        <Zap size={16} className="text-amber-500" /> Rendimiento en Campo
+                      </h3>
+                      <Heatmap />
+                    </div>
                     {typeof partido.id === 'number' && (
                       <MatchTimeline
                         fixtureId={partido.id}
@@ -547,7 +554,7 @@ export default function PartidoPage() {
                     {typeof partido.id === 'number' && (
                       <AdvancedStats fixtureId={partido.id} />
                     )}
-                  </>
+                  </div>
                 )}
 
                 {/* Quick Poll for PREVIA matches */}
