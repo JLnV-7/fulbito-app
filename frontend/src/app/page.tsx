@@ -158,7 +158,15 @@ function HomeContent() {
         {/* Header Mobile */}
         <div className="px-4 pt-6 pb-2 flex justify-between items-center md:hidden">
           <h1 className="text-2xl font-black tracking-tight bg-gradient-to-r from-[var(--accent)] to-[var(--accent-yellow)] bg-clip-text text-transparent">FutLog</h1>
-          <ReglasPuntajeModal />
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push('/buscar')}
+              className="p-1.5 rounded-full bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)]"
+            >
+              <Search size={18} />
+            </button>
+            <ReglasPuntajeModal />
+          </div>
         </div>
 
         <div className="max-w-5xl mx-auto px-4 mt-2">
