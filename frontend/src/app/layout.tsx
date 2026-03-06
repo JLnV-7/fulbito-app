@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
@@ -90,6 +91,16 @@ export default function RootLayout({
                 <XPFeedback />
                 <FeedbackWidget />
                 <ServiceWorkerRegistration />
+                <footer className="text-center py-6 text-[var(--text-muted)] text-sm pb-28 md:pb-8 border-t border-[var(--card-border)] mt-8 bg-[var(--background)]">
+                  <div className="flex justify-center flex-wrap gap-4 font-bold">
+                    <Link href="/privacy" className="hover:text-[#10b981] hover:underline transition-colors">Privacidad</Link>
+                    <span>•</span>
+                    <Link href="/terms" className="hover:text-[#10b981] hover:underline transition-colors">Términos</Link>
+                    <span>•</span>
+                    <Link href="/sources" className="hover:text-[#10b981] hover:underline transition-colors">Fuentes de datos</Link>
+                  </div>
+                  <p className="text-[10px] mt-4 opacity-50">FutLog Beta © {new Date().getFullYear()}</p>
+                </footer>
               </ToastProvider>
             </AuthProvider>
           </LanguageProvider>
