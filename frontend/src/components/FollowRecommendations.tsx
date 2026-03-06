@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { UserPlus, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useRouter } from 'next/navigation'
 
 interface RecommendedUser {
     id: string
