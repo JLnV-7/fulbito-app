@@ -103,14 +103,6 @@ export function XPFeedback() {
                     // Check Level Up
                     if (newData.level !== undefined && levelRef.current !== null) {
                         if (newData.level > levelRef.current) {
-                            // Trigger Confetti
-                            confetti({
-                                particleCount: 150,
-                                spread: 70,
-                                origin: { y: 0.6 },
-                                colors: ['#ffc107', '#ff6b6b', '#4ade80', '#3b82f6']
-                            })
-
                             // Show Level Up Message
                             const popupId = ++popupIdCounter.current
                             setLevelUpPopups(prev => [...prev, { id: popupId, level: newData.level! }])
@@ -154,7 +146,7 @@ export function XPFeedback() {
                                 🏆
                             </motion.div>
                             <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#ffc107] to-[var(--accent)] mb-2">
-                                ¡SUBISTE DE NIVEL!
+                                SUBISTE DE NIVEL
                             </h2>
                             <p className="text-[var(--text-muted)] text-lg mb-6">
                                 Alcanzaste el <strong className="text-white">Nivel {popup.level}</strong>
@@ -163,7 +155,7 @@ export function XPFeedback() {
                                 onClick={() => setLevelUpPopups(prev => prev.filter(p => p.id !== popup.id))}
                                 className="bg-[var(--accent)] text-white px-8 py-3 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg"
                             >
-                                ¡A festejar! 🎉
+                                Continuar
                             </button>
                         </div>
                     </motion.div>
@@ -187,7 +179,7 @@ export function XPFeedback() {
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] items-center text-purple-400 font-bold uppercase tracking-wider mb-0.5">
-                                ¡Insignia Desbloqueada!
+                                Insignia Desbloqueada
                             </span>
                             <span className="font-black text-lg text-[var(--foreground)] leading-none">
                                 {badge.name}

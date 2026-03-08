@@ -185,14 +185,6 @@ export default function PartidoPage() {
 
       if (insertError) throw insertError
 
-      // Confetti celebration
-      hapticFeedback([30, 50, 30])
-      confetti({
-        particleCount: 80,
-        spread: 100,
-        origin: { y: 0.7 },
-        colors: ['#10b981', '#ffd700', '#ff6b6b']
-      })
 
       setVotosGuardados(true)
 
@@ -481,7 +473,7 @@ export default function PartidoPage() {
                         <div className="flex items-center justify-between gap-4">
                           <p className="text-xs text-[var(--text-muted)]">
                             {votosGuardados
-                              ? '✅ ¡Votos guardados!'
+                              ? '✅ Votos guardados'
                               : totalVotados === 0
                                 ? 'Tocá un jugador para calificarlo'
                                 : `${totalVotados} jugador${totalVotados > 1 ? 'es' : ''} votado${totalVotados > 1 ? 's' : ''}`

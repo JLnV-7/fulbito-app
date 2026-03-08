@@ -18,13 +18,6 @@ export const JugadorVotacion = memo(({ jugador, voto, onVotar }: JugadorVotacion
   const handleVote = (nota: number) => {
     setIsVoting(true)
 
-    // Confetti effect
-    confetti({
-      particleCount: 30,
-      spread: 50,
-      origin: { y: 0.7 },
-      colors: ['#ff6b6b', '#ffd700', '#ffffff']
-    })
 
     onVotar(jugador.id, nota)
 

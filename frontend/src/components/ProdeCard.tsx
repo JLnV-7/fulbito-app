@@ -84,13 +84,6 @@ export function ProdeCard({ partido, pronosticoExistente, onGuardar }: ProdeCard
         try {
             await onGuardar(golesLocal, golesVisitante)
 
-            // Confetti success
-            confetti({
-                particleCount: 50,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#10b981', '#ffd700', '#ffffff']
-            })
 
             setGuardado(true)
         } catch (error) {

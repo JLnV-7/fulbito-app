@@ -17,6 +17,12 @@ import { FollowButton } from '@/components/FollowButton'
 
 type SearchTab = 'partidos' | 'usuarios' | 'resenas'
 
+const COMMON_TEAMS = [
+    'River Plate', 'Boca Juniors', 'Racing Club', 'Independiente', 'San Lorenzo',
+    'Talleres', 'Belgrano', 'Estudiantes', 'Gimnasia', 'Rosario Central',
+    "Newell's Old Boys", 'Argentinos Juniors', 'Velez Sarsfield', 'Huracán'
+]
+
 export default function BuscarPage() {
     const router = useRouter()
     const [query, setQuery] = useState('')
@@ -27,6 +33,15 @@ export default function BuscarPage() {
     const [resenas, setResenas] = useState<MatchLog[]>([])
     const [loading, setLoading] = useState(false)
     const [hasSearched, setHasSearched] = useState(false)
+    const [showSuggestions, setShowSuggestions] = useState(false)
+
+    const autocompleteSuggestions = (() => {
+        if (!query || query.length < 2 || tab !== 'partidos') return []
+        const lowerQ = query.toLowerCase()
+        const ligasMatch = LIGAS.filter(l => l !== 'Todos' && l.toLowerCase().includes(lowerQ))
+        const equiposMatch = COMMON_TEAMS.filter(t => t.toLowerCase().includes(lowerQ))
+        return [...ligasMatch, ...equiposMatch].slice(0, 5)
+    })()
 
     const [trendingTags, setTrendingTags] = useState<string[]>([])
 
@@ -182,7 +197,12 @@ export default function BuscarPage() {
                         <input
                             type="text"
                             value={query}
-                            onChange={(e) => setQuery(e.target.value)}
+                            onChange={(e) => {
+                                setQuery(e.target.value)
+                                setShowSuggestions(true)
+                            }}
+                            onFocus={() => setShowSuggestions(true)}
+                            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                             placeholder={
                                 tab === 'partidos' ? 'Buscar equipo o liga...' :
                                     tab === 'usuarios' ? 'Buscar usuario...' :
@@ -195,11 +215,35 @@ export default function BuscarPage() {
                         />
                         {query && (
                             <button
-                                onClick={() => { setQuery(''); setHasSearched(false) }}
+                                onClick={() => { setQuery(''); setHasSearched(false); setShowSuggestions(false); }}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--foreground)]"
                             >
                                 <X size={16} />
                             </button>
+                        )}
+
+                        {/* Autocomplete Dropdown */}
+                        {showSuggestions && autocompleteSuggestions.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.2)] z-50 overflow-hidden">
+                                {autocompleteSuggestions.map(sug => (
+                                    <button
+                                        key={sug}
+                                        onClick={() => {
+                                            if (LIGAS.includes(sug as any)) {
+                                                setFilterLiga(sug)
+                                                setQuery('')
+                                            } else {
+                                                setQuery(sug)
+                                            }
+                                            setShowSuggestions(false)
+                                        }}
+                                        className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--hover-bg)] focus:bg-[var(--hover-bg)] transition-colors border-b border-[var(--card-border)] last:border-b-0 flex items-center"
+                                    >
+                                        <Search size={14} className="mr-3 text-[var(--text-muted)]" />
+                                        {sug}
+                                    </button>
+                                ))}
+                            </div>
                         )}
                     </div>
 

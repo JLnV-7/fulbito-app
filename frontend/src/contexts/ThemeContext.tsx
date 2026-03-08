@@ -32,6 +32,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setTheme(initialTheme)
         document.documentElement.setAttribute('data-theme', initialTheme)
         setMounted(true)
+
+        // Setup listener for system theme changes if user hasn't forced a theme
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+        const handleChange = (e: MediaQueryListEvent) => {
+            if (!localStorage.getItem('FutLog-theme-forced')) {
+                setTheme(e.matches ? 'dark' : 'light')
+            }
+        }
+
+        mediaQuery.addEventListener('change', handleChange)
+        return () => mediaQuery.removeEventListener('change', handleChange)
     }, [])
 
     // Aplicar tema al documento
@@ -43,7 +54,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }, [theme, mounted])
 
     const toggleTheme = () => {
-        setTheme(prev => prev === 'dark' ? 'light' : 'dark')
+        setTheme(prev => {
+            const newTheme = prev === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('FutLog-theme-forced', 'true');
+            return newTheme;
+        })
     }
 
     // Evitar flash dando un render inicial seguro

@@ -35,15 +35,7 @@ export function RankingGoal({ currentPoints, rank }: RankingGoalProps) {
             const p = (currentPoints / nextTier.max) * 100
             setProgress(Math.min(100, p))
 
-            // Confetti if close to next tier (>90%)
-            if (p > 90 && p < 100) {
-                confetti({
-                    particleCount: 20,
-                    spread: 40,
-                    origin: { y: 0.8 },
-                    colors: ['#10b981', '#f59e0b']
-                })
-            }
+
         } else {
             // Already at highest tier
             setTargetPoints(5000)

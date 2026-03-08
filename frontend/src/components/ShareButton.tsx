@@ -32,13 +32,13 @@ export function ShareButton({ titulo, texto, url, captureRef, label = 'Compartir
                 // Fallback si falla
                 try {
                     await navigator.clipboard.writeText(`${texto}\n${url}`)
-                    showToast('¡Enlace copiado al portapapeles!', 'success')
+                    showToast('Enlace copiado al portapapeles', 'success')
                 } catch (e) { console.error('Error fallback copiando:', e) }
             }
         } else {
             try {
                 await navigator.clipboard.writeText(`${texto}\n${url}`)
-                showToast('¡Enlace copiado al portapapeles!', 'success')
+                showToast('Enlace copiado al portapapeles', 'success')
             } catch (error) {
                 console.error('Error copiando:', error)
                 showToast('Error al copiar el enlace.', 'error')

@@ -70,7 +70,7 @@ export function AvatarUploader({ currentAvatarUrl, onUploadSuccess }: AvatarUplo
 
             // 5. Success callback
             onUploadSuccess(avatarUrl)
-            showToast('¡Foto de perfil actualizada!', 'success')
+            showToast('Foto de perfil actualizada', 'success')
 
         } catch (error: any) {
             console.error('Error uploading avatar:', error.message)

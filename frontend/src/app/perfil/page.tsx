@@ -31,6 +31,7 @@ import { ProfileAccordion } from '@/components/perfil/ProfileAccordion'
 import { RatingPieChart } from '@/components/perfil/RatingPieChart'
 import { PushDebug } from '@/components/PushDebug'
 import { Button } from '@/components/ui/Button'
+import { BuildXI } from '@/components/perfil/BuildXI'
 
 export default function Perfil() {
   const router = useRouter()
@@ -506,6 +507,13 @@ export default function Perfil() {
           {user && (
             <div className="mb-6">
               <TopPartidos userId={user.id} editable />
+            </div>
+          )}
+
+          {/* Build Your Own XI */}
+          {user && (
+            <div className="mb-6">
+              <BuildXI />
             </div>
           )}
 

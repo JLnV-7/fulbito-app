@@ -20,6 +20,7 @@ import { OnboardingCarousel } from '@/components/OnboardingCarousel'
 import { TrendingMatchWidget } from '@/components/TrendingMatchWidget'
 import { PullToRefresh } from '@/components/PullToRefresh'
 import { NewsFeed } from '@/components/NewsFeed'
+import { DailyContestWidget } from '@/components/DailyContestWidget'
 import type { Partido } from '@/types'
 
 import { LIGAS, type Liga } from '@/lib/constants'
@@ -181,7 +182,10 @@ function HomeContent() {
             <TrendingMatchWidget />
 
             {/* News Feed */}
-            <NewsFeed />
+            <NewsFeed userTeams={favoritos} />
+
+            {/* Daily Contests */}
+            <DailyContestWidget />
 
             {/* Section Tabs Premium */}
             <div className="flex gap-2 mb-5 overflow-x-auto no-scrollbar pb-2">
