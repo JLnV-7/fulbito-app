@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
+import { hapticFeedback } from '@/lib/helpers'
 
 export function NavBar() {
   const router = useRouter()
@@ -33,7 +34,10 @@ export function NavBar() {
           return (
             <button
               key={item.path}
-              onClick={() => router.push(item.authRequired && !user ? '/login' : item.path)}
+              onClick={() => {
+                hapticFeedback(10) // Light native vibration tap
+                router.push(item.authRequired && !user ? '/login' : item.path)
+              }}
               className="relative flex items-center justify-center transition-all outline-none py-1.5 px-3 rounded-full"
               style={{
                 backgroundColor: active ? 'var(--card-bg)' : 'transparent',
@@ -46,7 +50,7 @@ export function NavBar() {
               >
                 <motion.div
                   animate={{ scale: active ? 1.15 : 1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
                   className="text-[20px] leading-none drop-shadow-sm"
                 >
                   {active ? item.activeIcon : item.icon}

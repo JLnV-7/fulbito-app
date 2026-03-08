@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ExternalLink, Flame, Newspaper } from 'lucide-react'
+import { GlassCard } from './ui/GlassCard'
 
 interface NewsItem {
     title: string
@@ -72,17 +73,17 @@ export function NewsFeed({ userTeams }: NewsFeedProps) {
 
     if (loading) {
         return (
-            <div className="mb-6 px-6">
+            <GlassCard className="mb-6">
                 <div className="flex items-center gap-2 mb-4">
                     <Newspaper size={18} className="text-[#10b981]" />
                     <h2 className="text-lg font-black tracking-tight">Últimas Noticias</h2>
                 </div>
                 <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 hide-scrollbar">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="min-w-[260px] md:min-w-[300px] h-[120px] bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl animate-pulse shrink-0 snap-start" />
+                        <div key={i} className="min-w-[260px] md:min-w-[300px] h-[120px] bg-white/5 border border-white/10 rounded-2xl animate-pulse shrink-0 snap-start" />
                     ))}
                 </div>
-            </div>
+            </GlassCard>
         )
     }
 
@@ -91,22 +92,22 @@ export function NewsFeed({ userTeams }: NewsFeedProps) {
     }
 
     return (
-        <div className="mb-6 px-0 md:px-6">
-            <div className="flex items-center gap-2 mb-4 px-6 md:px-0">
+        <GlassCard noPadding className="mb-6 p-5 border-[#10b981]/10 shadow-[0_4px_24px_rgba(0,0,0,0.1)]">
+            <div className="flex items-center gap-2 mb-4">
                 <Flame size={18} className="text-[#ff6b6b]" />
                 <h2 className="text-lg font-black tracking-tight">
                     {userTeams.length > 0 ? 'Noticias para vos' : 'Últimas Noticias'}
                 </h2>
             </div>
 
-            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-6 md:px-0 pb-4 hide-scrollbar">
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 hide-scrollbar">
                 {news.map((item, idx) => (
                     <motion.a
                         key={idx}
                         href={item.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group relative min-w-[280px] md:min-w-[320px] h-[140px] rounded-2xl overflow-hidden shrink-0 snap-center border border-[var(--card-border)]"
+                        className="group relative min-w-[280px] md:min-w-[320px] h-[140px] rounded-[18px] overflow-hidden shrink-0 snap-center border border-white/10"
                         whileHover={{ y: -2 }}
                         whileTap={{ scale: 0.98 }}
                     >
@@ -115,7 +116,7 @@ export function NewsFeed({ userTeams }: NewsFeedProps) {
                         ) : (
                             <div className="absolute inset-0 bg-[#1a1a1a]" />
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0E17] via-[#0A0E17]/80 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)] via-[var(--background)]/80 to-transparent" />
 
                         <div className="absolute inset-x-0 bottom-0 p-4">
                             <div className="flex justify-between items-start gap-2 mb-2">
@@ -135,13 +136,13 @@ export function NewsFeed({ userTeams }: NewsFeedProps) {
 
                 <div className="min-w-[150px] flex items-center justify-center shrink-0 snap-center">
                     <a href="https://www.tycsports.com/futbol.html" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-[var(--text-muted)] hover:text-[#10b981] transition-colors">
-                        <div className="w-12 h-12 rounded-full border border-dashed border-[var(--card-border)] flex items-center justify-center bg-[var(--card-bg)] hover:bg-[#10b981]/10">
+                        <div className="w-12 h-12 rounded-full border border-dashed border-white/20 flex items-center justify-center bg-white/5 hover:bg-[#10b981]/10">
                             <ExternalLink size={18} />
                         </div>
                         <span className="text-xs font-bold">Ver más noticias</span>
                     </a>
                 </div>
             </div>
-        </div>
+        </GlassCard>
     )
 }

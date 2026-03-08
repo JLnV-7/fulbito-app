@@ -15,6 +15,12 @@ interface PartidoCardProps {
 
 export const PartidoCard = memo(({ partido }: PartidoCardProps) => {
   const router = useRouter()
+  // Utilidad para extraer color "glow" semialeatorio según el nombre
+  const getGlowColor = (teamName: string) => {
+    let hash = 0
+    for (let i = 0; i < teamName.length; i++) hash = teamName.charCodeAt(i) + ((hash << 5) - hash)
+    return `hsl(${Math.abs(hash % 360)}, 70%, 50%)`
+  }
   const prevGolesLocal = useRef(partido.goles_local)
   const prevGolesVisitante = useRef(partido.goles_visitante)
 
@@ -78,51 +84,60 @@ export const PartidoCard = memo(({ partido }: PartidoCardProps) => {
         </div>
       </div>
 
-      {/* Equipos — layout compacto horizontal */}
-      <div className="px-3 py-3">
-        {/* Local */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <TeamLogo src={partido.logo_local} teamName={partido.equipo_local} size={24} />
-            <span className={`text-[13px] font-bold truncate ${flashLocal ? 'text-[#ff6b6b]' : ''}`}>
+      {/* Equipos — layout Inmersivo Centrado (Escudos Gigantes) */}
+      <div className="px-4 py-6 relative">
+        <div className="flex items-center justify-between relative z-10 w-full">
+          {/* Local */}
+          <div className="flex flex-col items-center flex-1 gap-2 cursor-pointer group">
+            <div className="relative">
+              <div
+                className="absolute inset-0 blur-xl opacity-30 scale-125 group-hover:opacity-50 transition-opacity"
+                style={{ backgroundColor: getGlowColor(partido.equipo_local) }}
+              />
+              <TeamLogo src={partido.logo_local} teamName={partido.equipo_local} size={48} className="relative z-10 drop-shadow-md" />
+            </div>
+            <span className={`text-[12px] md:text-sm font-bold text-center leading-tight line-clamp-2 px-1 ${flashLocal ? 'text-[#ff6b6b]' : ''}`}>
               {partido.equipo_local}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <div onClick={(e) => e.stopPropagation()}>
-              <FavoriteButton equipo={partido.equipo_local} compact />
-            </div>
-            <motion.span
-              animate={flashLocal ? { scale: [1, 1.3, 1], color: ['#ff6b6b', '#ff6b6b', 'var(--foreground)'] } : {}}
-              transition={{ duration: 0.6 }}
-              className={`w-7 h-7 flex items-center justify-center rounded-md text-sm font-bold
-                ${isLive ? 'bg-[#ff6b6b]/10 text-[#ff6b6b]' : 'bg-[var(--background)] text-[var(--foreground)]'}`}
-            >
-              {showScore && partido.goles_local !== undefined ? partido.goles_local : '-'}
-            </motion.span>
-          </div>
-        </div>
 
-        {/* Visitante */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <TeamLogo src={partido.logo_visitante} teamName={partido.equipo_visitante} size={24} />
-            <span className={`text-[13px] font-bold truncate ${flashVisitante ? 'text-[#ff6b6b]' : ''}`}>
-              {partido.equipo_visitante}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div onClick={(e) => e.stopPropagation()}>
+          {/* VS / Score Divider */}
+          <div className="flex flex-col items-center justify-center px-2 shrink-0 w-[80px]">
+            {showScore ? (
+              <div className="flex items-center gap-2 font-black text-2xl md:text-3xl tracking-tighter">
+                <motion.span animate={flashLocal ? { scale: [1, 1.3, 1], color: ['#ff6b6b', '#ff6b6b', 'var(--foreground)'] } : {}} transition={{ duration: 0.6 }}>
+                  {partido.goles_local ?? '-'}
+                </motion.span>
+                <span className="text-[var(--text-muted)] text-lg">-</span>
+                <motion.span animate={flashVisitante ? { scale: [1, 1.3, 1], color: ['#ff6b6b', '#ff6b6b', 'var(--foreground)'] } : {}} transition={{ duration: 0.6 }}>
+                  {partido.goles_visitante ?? '-'}
+                </motion.span>
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center shadow-lg backdrop-blur-md">
+                <span className="text-[10px] font-black text-[var(--text-muted)] italic">VS</span>
+              </div>
+            )}
+
+            {/* Quick Favorite actions centered below score */}
+            <div className="flex justify-center gap-4 mt-2" onClick={(e) => e.stopPropagation()}>
+              <FavoriteButton equipo={partido.equipo_local} compact />
               <FavoriteButton equipo={partido.equipo_visitante} compact />
             </div>
-            <motion.span
-              animate={flashVisitante ? { scale: [1, 1.3, 1], color: ['#ff6b6b', '#ff6b6b', 'var(--foreground)'] } : {}}
-              transition={{ duration: 0.6 }}
-              className={`w-7 h-7 flex items-center justify-center rounded-md text-sm font-bold
-                ${isLive ? 'bg-[#ff6b6b]/10 text-[#ff6b6b]' : 'bg-[var(--background)] text-[var(--foreground)]'}`}
-            >
-              {showScore && partido.goles_visitante !== undefined ? partido.goles_visitante : '-'}
-            </motion.span>
+          </div>
+
+          {/* Visitante */}
+          <div className="flex flex-col items-center flex-1 gap-2 cursor-pointer group">
+            <div className="relative">
+              <div
+                className="absolute inset-0 blur-xl opacity-30 scale-125 group-hover:opacity-50 transition-opacity"
+                style={{ backgroundColor: getGlowColor(partido.equipo_visitante) }}
+              />
+              <TeamLogo src={partido.logo_visitante} teamName={partido.equipo_visitante} size={48} className="relative z-10 drop-shadow-md" />
+            </div>
+            <span className={`text-[12px] md:text-sm font-bold text-center leading-tight line-clamp-2 px-1 ${flashVisitante ? 'text-[#ff6b6b]' : ''}`}>
+              {partido.equipo_visitante}
+            </span>
           </div>
         </div>
       </div>

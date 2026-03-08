@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Trophy, Gift, Target, Clock } from 'lucide-react'
+import { GlassCard } from './ui/GlassCard'
 
 const LIVE_CONTESTS = [
     { id: 101, local: 'Boca Juniors', visitante: 'River Plate', hora: 'Hoy, 21:00' },
@@ -10,8 +12,8 @@ const LIVE_CONTESTS = [
 ]
 
 const PICKEM_OPTIONS = [
-    { id: 'p1', name: 'M. Borja', team: 'River', img: '🇨🇴' },
-    { id: 'p2', name: 'E. Cavani', team: 'Boca', img: '🇺🇾' }
+    { id: 'p1', name: 'M. Borja', team: 'River', imgUrl: 'https://api.sofascore.app/api/v1/player/345464/image' },
+    { id: 'p2', name: 'E. Cavani', team: 'Boca', imgUrl: 'https://api.sofascore.app/api/v1/player/16362/image' }
 ]
 
 const BESTBALL_OPTIONS = [
@@ -38,10 +40,10 @@ export function DailyContestWidget() {
             </div>
 
             <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 hide-scrollbar">
-                <div className="min-w-[320px] max-w-sm rounded-[24px] bg-gradient-to-br from-[#10b981] to-[#059669] p-6 shrink-0 snap-center relative overflow-hidden shadow-lg border border-white/10 flex flex-col justify-center">
-                    <div className="absolute -right-6 -top-6 text-8xl opacity-10 pointer-events-none">⭐</div>
+                <GlassCard noPadding className="min-w-[320px] max-w-sm p-6 shrink-0 snap-center relative border border-[#10b981]/30 bg-gradient-to-br from-[#10b981]/20 to-[var(--card-bg)] flex flex-col justify-center">
+                    <div className="absolute -right-6 -top-6 text-8xl opacity-10 pointer-events-none filter blur-sm">⭐</div>
 
-                    <h3 className="font-black text-xl text-white mb-2 leading-tight">Reto de clásicos</h3>
+                    <h3 className="font-black text-xl text-[var(--foreground)] mb-2 leading-tight">Reto de clásicos</h3>
                     <p className="text-sm text-white/90 mb-6 leading-relaxed">
                         Predecí el resultado de los 5 clásicos de la fecha. Si acertás 3 o más ganás el <span className="font-bold whitespace-nowrap bg-black/20 px-2 py-0.5 rounded-md">Badge Oráculo</span> y +500 XP.
                     </p>
@@ -60,14 +62,15 @@ export function DailyContestWidget() {
                             />
                         </div>
                     </div>
-                </div>
+                </GlassCard>
 
                 {LIVE_CONTESTS.map(match => {
                     const currentPred = predictions[match.id]
                     return (
-                        <div
+                        <GlassCard
                             key={match.id}
-                            className="min-w-[280px] rounded-[24px] p-5 shrink-0 snap-center border border-[var(--card-border)] bg-[var(--card-bg)] flex flex-col shadow-sm"
+                            noPadding
+                            className="min-w-[280px] p-5 shrink-0 snap-center flex flex-col"
                         >
                             <div className="flex justify-between items-center mb-4">
                                 <span className="text-[10px] font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
@@ -101,12 +104,12 @@ export function DailyContestWidget() {
                                     `}
                                 >V</button>
                             </div>
-                        </div>
+                        </GlassCard>
                     )
                 })}
 
                 {/* PICK'EM RAPIDO CARD */}
-                <div className="min-w-[280px] rounded-[24px] p-5 shrink-0 snap-center border border-[#8b5cf6]/30 bg-gradient-to-b from-[#8b5cf6]/10 to-[var(--card-bg)] flex flex-col relative overflow-hidden">
+                <GlassCard noPadding className="min-w-[280px] p-5 shrink-0 snap-center border border-[#8b5cf6]/30 bg-gradient-to-b from-[#8b5cf6]/10 to-[var(--card-bg)] flex flex-col relative overflow-visible mt-8">
                     <div className="absolute top-0 right-0 p-3 opacity-20"><Target size={40} /></div>
                     <div className="flex justify-between items-center mb-2">
                         <span className="text-[10px] font-bold text-[#8b5cf6] bg-[#8b5cf6]/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
@@ -116,24 +119,35 @@ export function DailyContestWidget() {
                     <h4 className="font-black text-sm mb-1 leading-tight">¿Quién será la Figura?</h4>
                     <p className="text-[11px] text-[var(--text-muted)] mb-4">Elegí al jugador con mejor SofaScore de la fecha.</p>
 
-                    <div className="flex gap-2 h-14 mt-auto z-10">
+                    <div className="flex gap-2 h-20 mt-auto z-10 pt-4 relative">
                         {PICKEM_OPTIONS.map(opt => (
                             <button
                                 key={opt.id}
                                 onClick={() => setPickem(opt.id)}
-                                className={`flex flex-col items-center justify-center flex-1 rounded-xl text-xs font-bold transition-all border
-                                    ${pickem === opt.id ? 'bg-[#8b5cf6] text-white border-[#8b5cf6] scale-105 shadow-md shadow-[#8b5cf6]/20' : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[#8b5cf6]/30'}
+                                className={`flex flex-col items-center justify-end flex-1 rounded-xl text-xs font-bold transition-all border relative pb-1
+                                    ${pickem === opt.id ? 'bg-[#8b5cf6]/20 border-[#8b5cf6] shadow-[0_0_15px_rgba(139,92,246,0.2)]' : 'bg-white/5 border-white/10 text-[var(--text-muted)] hover:border-[#8b5cf6]/30 hover:bg-white/10'}
                                 `}
                             >
-                                <span className="text-xl mb-0.5">{opt.img}</span>
-                                <span className="text-[9px] truncate w-full px-1">{opt.name}</span>
+                                {/* Img out of bounds top overlay */}
+                                <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 w-[70px] h-[70px] transition-transform duration-300 origin-bottom 
+                                                ${pickem === opt.id ? 'scale-[1.3]' : 'scale-110 hover:scale-[1.2]'}`}>
+                                    <Image
+                                        src={opt.imgUrl}
+                                        alt={opt.name}
+                                        fill
+                                        className="object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]"
+                                        sizes="70px"
+                                        unoptimized
+                                    />
+                                </div>
+                                <span className={`text-[10px] truncate w-full px-1 text-center font-bold z-10 relative ${pickem === opt.id ? 'text-[#8b5cf6]' : 'text-[var(--text-muted)]'}`}>{opt.name}</span>
                             </button>
                         ))}
                     </div>
-                </div>
+                </GlassCard>
 
                 {/* BEST BALL SEMANAL CARD */}
-                <div className="min-w-[280px] rounded-[24px] p-5 shrink-0 snap-center border border-[#ec4899]/30 bg-gradient-to-b from-[#ec4899]/10 to-[var(--card-bg)] flex flex-col relative overflow-hidden">
+                <GlassCard noPadding className="min-w-[280px] p-5 shrink-0 snap-center border border-[#ec4899]/30 bg-gradient-to-b from-[#ec4899]/10 to-[var(--card-bg)] flex flex-col relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-3 opacity-20"><Trophy size={40} /></div>
                     <div className="flex justify-between items-center mb-2">
                         <span className="text-[10px] font-bold text-[#ec4899] bg-[#ec4899]/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
@@ -157,7 +171,7 @@ export function DailyContestWidget() {
                             </button>
                         ))}
                     </div>
-                </div>
+                </GlassCard>
 
             </div>
         </div>

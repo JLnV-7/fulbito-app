@@ -12,6 +12,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { NotificationSettings } from '@/components/NotificationSettings'
 import { BadgeDisplay } from '@/components/BadgeDisplay'
 import { motion, AnimatePresence } from 'framer-motion'
+import { hapticFeedback } from '@/lib/helpers'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useProfileFollowers } from '@/hooks/useProfileFollowers'
 import { FollowListModal, type FollowListType } from '@/components/FollowListModal'
@@ -469,7 +470,10 @@ export default function Perfil() {
         {/* Profile Tabs Navigation */}
         <div className="max-w-2xl mx-auto px-6 mt-4 relative z-10 flex gap-2">
           <button
-            onClick={() => setActiveTab('social')}
+            onClick={() => {
+              hapticFeedback(10)
+              setActiveTab('social')
+            }}
             className={`flex-1 py-3 px-2 rounded-2xl text-xs font-bold transition-all border shadow-sm flex flex-col items-center gap-1
                 ${activeTab === 'social'
                 ? 'bg-[#10b981] text-white border-[#10b981] shadow-md shadow-[#10b981]/20'
@@ -480,7 +484,10 @@ export default function Perfil() {
             Social
           </button>
           <button
-            onClick={() => setActiveTab('stats')}
+            onClick={() => {
+              hapticFeedback(10)
+              setActiveTab('stats')
+            }}
             className={`flex-1 py-3 px-2 rounded-2xl text-xs font-bold transition-all border shadow-sm flex flex-col items-center gap-1
                 ${activeTab === 'stats'
                 ? 'bg-[#3b82f6] text-white border-[#3b82f6] shadow-md shadow-[#3b82f6]/20'
@@ -491,7 +498,10 @@ export default function Perfil() {
             Stats
           </button>
           <button
-            onClick={() => setActiveTab('ajustes')}
+            onClick={() => {
+              hapticFeedback(10)
+              setActiveTab('ajustes')
+            }}
             className={`flex-1 py-3 px-2 rounded-2xl text-xs font-bold transition-all border shadow-sm flex flex-col items-center gap-1
                 ${activeTab === 'ajustes'
                 ? 'bg-[var(--card-bg)] text-[var(--foreground)] border-[var(--card-border)] bg-opacity-100 shadow-md'

@@ -1,12 +1,13 @@
 @import "tailwindcss";
 
-/* Tema Oscuro (Professional Deep Dark) */
+/* Tema Oscuro (FutLog 2.0 Inmersive Dark / Bento) */
 :root,
 [data-theme="dark"] {
-  --background: #0A0E17;
+  --background: #06090e;
   --foreground: #f8fafc;
-  --card-bg: #141925;
+  --card-bg: #0e141f;
   --card-border: #1f2937;
+  --glass-border: rgba(255, 255, 255, 0.08);
 
   /* Acentos Maduros */
   --accent: #FF5252;
@@ -19,13 +20,14 @@
 
   --text-muted: #6b7280;
   --input-bg: #111827;
-  --hover-bg: #1f2937;
-  --glass-bg: rgba(10, 14, 23, 0.8);
+  --hover-bg: #1e293b;
+  --glass-bg: rgba(14, 20, 31, 0.65);
 
-  /* Design System Tokens */
+  /* Design System Tokens (Rounded Bento Box) */
   --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
 
   --transition-fast: 0.2s ease-out;
   --transition-medium: 0.3s ease;
@@ -237,9 +239,10 @@ body {
 
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="light"] .glass {

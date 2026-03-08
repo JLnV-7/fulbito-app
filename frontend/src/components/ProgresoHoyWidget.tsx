@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { GlassCard } from './ui/GlassCard'
 
 export function ProgresoHoyWidget() {
     const { user } = useAuth()
@@ -71,11 +72,10 @@ export function ProgresoHoyWidget() {
     if (!user) return null
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-4 flex items-center justify-between shadow-sm cursor-pointer hover:border-[var(--card-border-hover)] transition-all"
+        <GlassCard
+            className="flex items-center justify-between cursor-pointer hover:border-white/10 transition-all border border-transparent shadow-[0_4px_24px_rgba(0,0,0,0.2)]"
             onClick={() => router.push('/perfil')}
+        // no padding needed if we want custom inside, or we use default 
         >
             <div className="flex flex-col">
                 <span className="text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Tu Progreso Hoy</span>
@@ -97,9 +97,9 @@ export function ProgresoHoyWidget() {
                 </div>
             </div>
 
-            <div className="w-8 h-8 rounded-full bg-[var(--background)] flex items-center justify-center text-[var(--text-muted)]">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-[var(--foreground)] backdrop-blur-md">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </div>
-        </motion.div>
+        </GlassCard>
     )
 }

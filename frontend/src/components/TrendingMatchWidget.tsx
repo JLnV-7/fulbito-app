@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { Flame, Star } from 'lucide-react'
 import { TeamLogo } from './TeamLogo'
+import { GlassCard } from './ui/GlassCard'
 import type { Partido } from '@/types'
 import { formatearHora } from '@/lib/utils'
 
@@ -75,18 +76,17 @@ export function TrendingMatchWidget() {
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.01 }}
-            className="mb-8 cursor-pointer active:scale-95 transition-transform"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileTap={{ scale: 0.98 }}
+            className="cursor-pointer transition-transform group"
             onClick={handleClick}
         >
-            <div className="relative overflow-hidden rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] shadow-[0_4px_20px_rgba(0,166,81,0.06)] group">
-                {/* Background Accent Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[var(--accent-green)]/10 via-[var(--background)] to-[var(--background)] opacity-50 pointer-events-none" />
-                <div className="absolute -top-12 -right-12 w-32 h-32 bg-[var(--accent-green)]/20 blur-3xl rounded-full pointer-events-none group-hover:bg-[var(--accent-green)]/30 transition-colors" />
+            <GlassCard noPadding className="relative border-t border-white/10 overflow-hidden shadow-[0_8px_32px_rgba(0,166,81,0.08)] bg-gradient-to-br from-white/5 to-transparent">
+                {/* Background Accent Glow */}
+                <div className="absolute -top-12 -right-12 w-40 h-40 bg-[var(--accent-green)]/30 blur-3xl rounded-full pointer-events-none group-hover:bg-[var(--accent-green)]/40 transition-colors" />
 
-                <div className="relative p-4 md:p-5">
+                <div className="relative p-5">
                     {/* Header Tag */}
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[var(--accent-green)]/10 text-[var(--accent-green)] rounded-full text-[10px] font-black uppercase tracking-wider border border-[var(--accent-green)]/20 shadow-[0_0_10px_rgba(0,166,81,0.1)]">
@@ -109,14 +109,14 @@ export function TrendingMatchWidget() {
                         {/* Teams */}
                         <div className="flex-1 space-y-2.5">
                             <div className="flex items-center gap-3">
-                                <TeamLogo src={trendingMatch.logo_local} teamName={trendingMatch.equipo_local} size={28} />
-                                <span className="font-bold text-sm md:text-base text-[var(--foreground)] truncate">{trendingMatch.equipo_local}</span>
-                                {isLive || isFinished ? <span className="ml-auto pr-4 font-black text-lg">{trendingMatch.goles_local}</span> : null}
+                                <TeamLogo src={trendingMatch?.logo_local || undefined} teamName={trendingMatch?.equipo_local || ''} size={28} />
+                                <span className="font-bold text-sm md:text-base text-[var(--foreground)] truncate">{trendingMatch?.equipo_local}</span>
+                                {isLive || isFinished ? <span className="ml-auto pr-4 font-black text-lg">{trendingMatch?.goles_local}</span> : null}
                             </div>
                             <div className="flex items-center gap-3">
-                                <TeamLogo src={trendingMatch.logo_visitante} teamName={trendingMatch.equipo_visitante} size={28} />
-                                <span className="font-bold text-sm md:text-base text-[var(--foreground)] truncate">{trendingMatch.equipo_visitante}</span>
-                                {isLive || isFinished ? <span className="ml-auto pr-4 font-black text-lg">{trendingMatch.goles_visitante}</span> : null}
+                                <TeamLogo src={trendingMatch?.logo_visitante || undefined} teamName={trendingMatch?.equipo_visitante || ''} size={28} />
+                                <span className="font-bold text-sm md:text-base text-[var(--foreground)] truncate">{trendingMatch?.equipo_visitante}</span>
+                                {isLive || isFinished ? <span className="ml-auto pr-4 font-black text-lg">{trendingMatch?.goles_visitante}</span> : null}
                             </div>
                         </div>
 
@@ -146,14 +146,14 @@ export function TrendingMatchWidget() {
                                 </>
                             ) : (
                                 <>
-                                    <span className="font-black text-lg">{formatearHora(trendingMatch.fecha_inicio)}</span>
+                                    <span className="font-black text-lg">{trendingMatch?.fecha_inicio ? formatearHora(trendingMatch.fecha_inicio) : ''}</span>
                                     <span className="text-[9px] font-semibold text-[var(--text-muted)] uppercase">Previa</span>
                                 </>
                             )}
                         </div>
                     </div>
                 </div>
-            </div>
+            </GlassCard>
         </motion.div>
     )
 }

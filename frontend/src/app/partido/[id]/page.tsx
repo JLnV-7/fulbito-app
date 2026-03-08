@@ -24,6 +24,7 @@ import { MatchLiveChat } from '@/components/MatchLiveChat'
 import { AiPredictionWidget } from '@/components/AiPredictionWidget'
 import { PullToRefresh } from '@/components/PullToRefresh'
 import { Heatmap } from '@/components/Heatmap'
+import { TeamLogo } from '@/components/TeamLogo'
 import { MessageSquare, MessagesSquare, ChevronDown, ChevronUp, BarChart2, Clock, Zap } from 'lucide-react'
 import type { Partido, EstadoPartido } from '@/types'
 import { fetchFixtureByIdAction } from '@/app/actions/football'
@@ -252,69 +253,61 @@ export default function PartidoPage() {
                 />
               </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#ff6b6b] uppercase tracking-wide">
-                    {partido.liga}
-                  </span>
-                  <span className={`text-xs font-semibold uppercase px-2 py-1 rounded ${estado === 'PREVIA'
-                    ? 'bg-[#fbbf24]/20 text-[#fbbf24]'
-                    : estado === 'EN_JUEGO'
-                      ? 'bg-[#ff6b6b]/20 text-[#ff6b6b]'
-                      : 'bg-[#10b981]/20 text-[#10b981]'
-                    }`}>
-                    {estado === 'PREVIA' && 'Próximo'}
-                    {estado === 'EN_JUEGO' && 'En vivo'}
-                    {estado === 'FINALIZADO' && 'Finalizado'}
-                  </span>
+              {/* Status and League Tags */}
+              <div className="flex items-center justify-between mt-2 mb-6">
+                <span className="text-xs font-black text-[#10b981] uppercase tracking-wider bg-[#10b981]/10 px-2.5 py-1 rounded-full border border-[#10b981]/20">
+                  {partido.liga}
+                </span>
+                <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full border shadow-sm ${estado === 'PREVIA'
+                  ? 'bg-[#fbbf24]/10 text-[#fbbf24] border-[#fbbf24]/20'
+                  : estado === 'EN_JUEGO'
+                    ? 'bg-[#ff6b6b]/10 text-[#ff6b6b] border-[#ff6b6b]/20 animate-pulse'
+                    : 'bg-white/5 text-[var(--text-muted)] border-white/10'
+                  }`}>
+                  {estado === 'PREVIA' && 'Próximo'}
+                  {estado === 'EN_JUEGO' && 'En vivo'}
+                  {estado === 'FINALIZADO' && 'Finalizado'}
+                </span>
+              </div>
+
+              {/* Giant Logos Matchup Layout */}
+              <div className="flex items-center justify-between max-w-lg mx-auto py-4 relative">
+                {/* Local */}
+                <div className="flex flex-col items-center flex-1 gap-3 relative z-10 w-[120px]">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-[#10b981]/30 blur-2xl rounded-full scale-110" />
+                    <TeamLogo src={partido.logo_local || undefined} teamName={partido.equipo_local} size={72} className="relative z-10 shadow-2xl drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
+                  </div>
+                  <h3 className="font-black text-sm md:text-base text-center leading-tight">
+                    {partido.equipo_local}
+                  </h3>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 flex-1">
-                      {partido.logo_local && (
-                        <div className="relative w-10 h-10 flex-shrink-0">
-                          <Image
-                            src={partido.logo_local}
-                            alt={partido.equipo_local}
-                            fill
-                            className="object-contain"
-                            sizes="40px"
-                          />
-                        </div>
-                      )}
-                      <span className="font-semibold text-lg">{partido.equipo_local}</span>
+                {/* Score or VS Centered */}
+                <div className="flex flex-col items-center justify-center shrink-0 w-[100px] z-20">
+                  {estado === 'PREVIA' ? (
+                    <div className="w-12 h-12 rounded-full border border-white/10 bg-white/5 flex items-center justify-center shadow-lg backdrop-blur-md">
+                      <span className="font-black text-[var(--text-muted)] italic">VS</span>
                     </div>
-                    <span className="text-2xl font-bold">
-                      {estado === 'FINALIZADO' && partido.goles_local !== undefined
-                        ? partido.goles_local
-                        : <span className="text-[var(--text-muted)] opacity-50">-</span>
-                      }
-                    </span>
-                  </div>
+                  ) : (
+                    <div className="flex items-center gap-2 font-black text-4xl md:text-5xl tracking-tighter shadow-sm text-center">
+                      <span>{partido.goles_local ?? '-'}</span>
+                      <span className="text-[var(--text-muted)] text-3xl font-light opacity-50 px-1">-</span>
+                      <span>{partido.goles_visitante ?? '-'}</span>
+                    </div>
+                  )}
+                </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 flex-1">
-                      {partido.logo_visitante && (
-                        <div className="relative w-10 h-10 flex-shrink-0">
-                          <Image
-                            src={partido.logo_visitante}
-                            alt={partido.equipo_visitante}
-                            fill
-                            className="object-contain"
-                            sizes="40px"
-                          />
-                        </div>
-                      )}
-                      <span className="font-semibold text-lg">{partido.equipo_visitante}</span>
-                    </div>
-                    <span className="text-2xl font-bold">
-                      {estado === 'FINALIZADO' && partido.goles_visitante !== undefined
-                        ? partido.goles_visitante
-                        : <span className="text-[var(--text-muted)] opacity-50">-</span>
-                      }
-                    </span>
+                {/* Visitante */}
+                <div className="flex flex-col items-center flex-1 gap-3 relative z-10 w-[120px]">
+                  <div className="relative">
+                    {/* Temporary distinct color for visitante glow */}
+                    <div className="absolute inset-0 bg-[#3b82f6]/30 blur-2xl rounded-full scale-110" />
+                    <TeamLogo src={partido.logo_visitante || undefined} teamName={partido.equipo_visitante} size={72} className="relative z-10 shadow-2xl drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
                   </div>
+                  <h3 className="font-black text-sm md:text-base text-center leading-tight">
+                    {partido.equipo_visitante}
+                  </h3>
                 </div>
               </div>
             </div>
