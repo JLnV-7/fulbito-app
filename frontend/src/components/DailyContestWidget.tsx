@@ -6,14 +6,24 @@ import { Trophy, Gift, Target, Clock } from 'lucide-react'
 
 const LIVE_CONTESTS = [
     { id: 101, local: 'Boca Juniors', visitante: 'River Plate', hora: 'Hoy, 21:00' },
-    { id: 102, local: 'Racing Club', visitante: 'Independiente', hora: 'Hoy, 19:30' },
-    { id: 103, local: 'San Lorenzo', visitante: 'Huracán', hora: 'Mañana, 17:00' },
-    { id: 104, local: 'Estudiantes', visitante: 'Gimnasia', hora: 'Mañana, 19:00' },
-    { id: 105, local: 'Rosario Central', visitante: 'Newell\'s', hora: 'Dom, 16:30' }
+    { id: 102, local: 'Racing Club', visitante: 'Independiente', hora: 'Hoy, 19:30' }
+]
+
+const PICKEM_OPTIONS = [
+    { id: 'p1', name: 'M. Borja', team: 'River', img: '🇨🇴' },
+    { id: 'p2', name: 'E. Cavani', team: 'Boca', img: '🇺🇾' }
+]
+
+const BESTBALL_OPTIONS = [
+    { id: 't1', name: 'Talleres', odds: '+3.5', color: '#002244' },
+    { id: 't2', name: 'Vélez', odds: '+2.5', color: '#00529F' }
 ]
 
 export function DailyContestWidget() {
     const [predictions, setPredictions] = useState<Record<number, 'L' | 'E' | 'V'>>({})
+    const [pickem, setPickem] = useState<string | null>(null)
+    const [bestBall, setBestBall] = useState<string | null>(null)
+
     const predictedCount = Object.keys(predictions).length
 
     const handlePredict = (matchId: number, result: 'L' | 'E' | 'V') => {
@@ -94,6 +104,61 @@ export function DailyContestWidget() {
                         </div>
                     )
                 })}
+
+                {/* PICK'EM RAPIDO CARD */}
+                <div className="min-w-[280px] rounded-[24px] p-5 shrink-0 snap-center border border-[#8b5cf6]/30 bg-gradient-to-b from-[#8b5cf6]/10 to-[var(--card-bg)] flex flex-col relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-3 opacity-20"><Target size={40} /></div>
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-[10px] font-bold text-[#8b5cf6] bg-[#8b5cf6]/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            Pick'em Rápido
+                        </span>
+                    </div>
+                    <h4 className="font-black text-sm mb-1 leading-tight">¿Quién será la Figura?</h4>
+                    <p className="text-[11px] text-[var(--text-muted)] mb-4">Elegí al jugador con mejor SofaScore de la fecha.</p>
+
+                    <div className="flex gap-2 h-14 mt-auto z-10">
+                        {PICKEM_OPTIONS.map(opt => (
+                            <button
+                                key={opt.id}
+                                onClick={() => setPickem(opt.id)}
+                                className={`flex flex-col items-center justify-center flex-1 rounded-xl text-xs font-bold transition-all border
+                                    ${pickem === opt.id ? 'bg-[#8b5cf6] text-white border-[#8b5cf6] scale-105 shadow-md shadow-[#8b5cf6]/20' : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[#8b5cf6]/30'}
+                                `}
+                            >
+                                <span className="text-xl mb-0.5">{opt.img}</span>
+                                <span className="text-[9px] truncate w-full px-1">{opt.name}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* BEST BALL SEMANAL CARD */}
+                <div className="min-w-[280px] rounded-[24px] p-5 shrink-0 snap-center border border-[#ec4899]/30 bg-gradient-to-b from-[#ec4899]/10 to-[var(--card-bg)] flex flex-col relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-3 opacity-20"><Trophy size={40} /></div>
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-[10px] font-bold text-[#ec4899] bg-[#ec4899]/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            Best Ball Semanal
+                        </span>
+                    </div>
+                    <h4 className="font-black text-sm mb-1 leading-tight">Goleada de la Fecha</h4>
+                    <p className="text-[11px] text-[var(--text-muted)] mb-4">¿Qué equipo marcará más goles este finde?</p>
+
+                    <div className="flex flex-col gap-2 mt-auto z-10 w-full">
+                        {BESTBALL_OPTIONS.map(team => (
+                            <button
+                                key={team.id}
+                                onClick={() => setBestBall(team.id)}
+                                className={`flex items-center justify-between w-full h-10 px-4 rounded-xl text-xs font-bold transition-all border
+                                    ${bestBall === team.id ? 'bg-[#ec4899] text-white border-[#ec4899] shadow-md shadow-[#ec4899]/20' : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[#ec4899]/30'}
+                                `}
+                            >
+                                <span>{team.name}</span>
+                                <span className={`text-[10px] font-black opacity-60 ${bestBall === team.id ? 'text-white' : 'text-[#ec4899]'}`}>{team.odds}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
             </div>
         </div>
     )
