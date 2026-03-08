@@ -1,9 +1,11 @@
 // src/components/ProdeCard.tsx
 'use client'
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import confetti from 'canvas-confetti'
 import type { Partido, Pronostico } from '@/types'
 import { formatearHora, formatearFecha } from '@/lib/utils'
@@ -71,10 +73,25 @@ function GoalStepper({
 }
 
 export function ProdeCard({ partido, pronosticoExistente, onGuardar }: ProdeCardProps) {
+    const { user } = useAuth()
     const [golesLocal, setGolesLocal] = useState(pronosticoExistente?.goles_local_pronostico ?? 0)
     const [golesVisitante, setGolesVisitante] = useState(pronosticoExistente?.goles_visitante_pronostico ?? 0)
     const [guardando, setGuardando] = useState(false)
     const [guardado, setGuardado] = useState(!!pronosticoExistente)
+    const [hasLineup, setHasLineup] = useState(false)
+
+    useEffect(() => {
+        const checkLineup = async () => {
+            if (!user) return
+            const { data } = await supabase
+                .from('user_lineups')
+                .select('id')
+                .eq('user_id', user.id)
+                .maybeSingle()
+            if (data) setHasLineup(true)
+        }
+        checkLineup()
+    }, [user])
 
     const isPartidoBloqueado = partido.estado !== 'PREVIA' || pronosticoExistente?.bloqueado
 
@@ -93,6 +110,16 @@ export function ProdeCard({ partido, pronosticoExistente, onGuardar }: ProdeCard
         }
     }
 
+    const handleUsarXI = () => {
+        // Some rudimentary fun logic to simulate a score
+        const posiblesResultados = [
+            [2, 1], [1, 2], [1, 1], [0, 0], [3, 1], [1, 0], [0, 1]
+        ]
+        const idx = Math.floor(Math.random() * posiblesResultados.length)
+        setGolesLocal(posiblesResultados[idx][0])
+        setGolesVisitante(posiblesResultados[idx][1])
+        setGuardado(false)
+    }
 
     return (
         <motion.div
@@ -173,6 +200,18 @@ export function ProdeCard({ partido, pronosticoExistente, onGuardar }: ProdeCard
                     />
                 </div>
             </div>
+
+            {/* Use My XI Button */}
+            {!isPartidoBloqueado && hasLineup && !guardado && (
+                <div className="px-5 pb-2">
+                    <button
+                        onClick={handleUsarXI}
+                        className="w-full py-2 rounded-lg text-[11px] font-bold bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 transition-all flex items-center justify-center gap-2"
+                    >
+                        <span>⚡</span> Usar mi XI Ideal para pronosticar
+                    </button>
+                </div>
+            )}
 
             {/* Footer con botón */}
             <div className="px-5 py-3 bg-[var(--background)]/50 border-t border-[var(--card-border)]">

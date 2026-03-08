@@ -24,42 +24,57 @@ export function NavBar() {
   return (
     <>
 
-      {/* NavBar principal de 5 tabs */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 
-                        glass
-                        px-2 py-3 pb-safe flex justify-around items-center z-50">
+      {/* NavBar flotante tipo Píldora (iOS Tab Bar Style) */}
+      <nav className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[360px]
+                        bg-[var(--card-bg)]/80 backdrop-blur-3xl border border-[var(--card-border)]/50 shadow-2xl
+                        rounded-full px-2 py-2 flex justify-around items-center z-50">
         {navItems.map((item) => {
           const active = isActive(item.path) || (item.path === '/' && pathname?.startsWith('/partido/'))
           return (
             <button
               key={item.path}
               onClick={() => router.push(item.authRequired && !user ? '/login' : item.path)}
-              className="flex flex-col items-center gap-1.5 transition-all outline-none flex-1 py-1"
+              className="relative flex items-center justify-center transition-all outline-none py-1.5 px-3 rounded-full"
+              style={{
+                backgroundColor: active ? 'var(--card-bg)' : 'transparent',
+                boxShadow: active ? '0 4px 12px rgba(0,0,0,0.1)' : 'none'
+              }}
             >
               <div
-                className={`flex items-center justify-center w-12 h-8 rounded-full transition-all duration-300 ${active ? 'bg-[var(--accent-green)]/15' : 'bg-transparent'}`}
+                className="flex items-center gap-2 transition-all duration-300"
                 style={{ color: active ? item.activeColor : item.defaultColor }}
               >
                 <motion.div
-                  animate={{ scale: active ? 1.2 : 1 }}
+                  animate={{ scale: active ? 1.15 : 1 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                  className="text-[20px] leading-none"
+                  className="text-[20px] leading-none drop-shadow-sm"
                 >
                   {active ? item.activeIcon : item.icon}
                 </motion.div>
+
+                {/* Etiqueta solo visible si está activa */}
+                <AnimatePresence>
+                  {active && (
+                    <motion.span
+                      initial={{ opacity: 0, width: 0, marginLeft: 0 }}
+                      animate={{ opacity: 1, width: 'auto', marginLeft: 4 }}
+                      exit={{ opacity: 0, width: 0, marginLeft: 0 }}
+                      className="text-[11px] font-black tracking-tight overflow-hidden whitespace-nowrap"
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </div>
-              <span className={`text-[10px] font-bold transition-all ${active ? 'opacity-100' : 'opacity-60'}`} style={{ color: active ? item.activeColor : item.defaultColor }}>
-                {item.label}
-              </span>
             </button>
           )
         })}
       </nav>
 
-      {/* Padding for env bottom safe area */}
+      {/* Padding for env bottom safe area + pill offset */}
       <style dangerouslySetInnerHTML={{
         __html: `
-            .pb-safe { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+            .pb-safe { padding-bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 5rem); }
         `}} />
     </>
   )

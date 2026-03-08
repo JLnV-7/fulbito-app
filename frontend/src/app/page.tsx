@@ -21,6 +21,7 @@ import { TrendingMatchWidget } from '@/components/TrendingMatchWidget'
 import { PullToRefresh } from '@/components/PullToRefresh'
 import { NewsFeed } from '@/components/NewsFeed'
 import { DailyContestWidget } from '@/components/DailyContestWidget'
+import { ProgresoHoyWidget } from '@/components/ProgresoHoyWidget'
 import type { Partido } from '@/types'
 
 import { LIGAS, type Liga } from '@/lib/constants'
@@ -158,7 +159,7 @@ function HomeContent() {
     <>
       <DesktopNav />
       <PullToRefresh onRefresh={async () => { await refetch() }}>
-        <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20">
+        <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-28 md:pt-20">
           {/* Header Mobile */}
           <div className="px-4 pt-6 pb-2 flex justify-between items-center md:hidden">
             <h1 className="text-2xl font-black tracking-tight bg-gradient-to-r from-[var(--accent)] to-[var(--accent-yellow)] bg-clip-text text-transparent">FutLog</h1>
@@ -178,14 +179,27 @@ function HomeContent() {
             {/* Hero Banner CTA / Onboarding */}
             {!user && <OnboardingCarousel />}
 
+            {/* Quick Progress Dashboard */}
+            {user && (
+              <div className="mb-4">
+                <ProgresoHoyWidget />
+              </div>
+            )}
+
             {/* Trending Match Premium Widget */}
-            <TrendingMatchWidget />
+            <div className="mb-4">
+              <TrendingMatchWidget />
+            </div>
 
             {/* News Feed */}
-            <NewsFeed userTeams={favoritos} />
+            <div className="mb-4">
+              <NewsFeed userTeams={favoritos} />
+            </div>
 
             {/* Daily Contests */}
-            <DailyContestWidget />
+            <div className="mb-6">
+              <DailyContestWidget />
+            </div>
 
             {/* Section Tabs Premium */}
             <div className="flex gap-2 mb-5 overflow-x-auto no-scrollbar pb-2">

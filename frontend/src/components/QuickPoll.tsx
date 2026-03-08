@@ -28,6 +28,7 @@ export function QuickPoll({ fixtureId, equipoLocal, equipoVisitante, compact = f
     const [results, setResults] = useState<PollResults>({ local: 0, empate: 0, visitante: 0, total: 0 })
     const [loading, setLoading] = useState(false)
     const [showResults, setShowResults] = useState(false)
+    const [hasLineup, setHasLineup] = useState(false)
 
     const fId = typeof fixtureId === 'string' ? parseInt(fixtureId) : fixtureId
 
@@ -63,6 +64,17 @@ export function QuickPoll({ fixtureId, equipoLocal, equipoVisitante, compact = f
                 if (myVote) {
                     setMiVoto(myVote.prediccion as Prediccion)
                     setShowResults(true)
+                }
+
+                // Check if user has a custom XI
+                const { data: myLineup } = await supabase
+                    .from('user_lineups')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .maybeSingle()
+
+                if (myLineup) {
+                    setHasLineup(true)
                 }
             }
         }
@@ -110,6 +122,13 @@ export function QuickPoll({ fixtureId, equipoLocal, equipoVisitante, compact = f
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleVoteWithXI = async () => {
+        // A fun random/simulated choice, favoring the user's likely team logic, but kept simple here:
+        const options: Prediccion[] = ['local', 'empate', 'visitante', 'local', 'visitante'] // slightly less chance for draw
+        const randomChoice = options[Math.floor(Math.random() * options.length)]
+        await handleVote(randomChoice)
     }
 
     const getPercent = (type: Prediccion) => {
@@ -249,6 +268,26 @@ export function QuickPoll({ fixtureId, equipoLocal, equipoVisitante, compact = f
                         <div className="text-[11px] font-black text-[var(--accent-green)] text-center bg-[var(--accent-green)]/5 py-2 rounded-xl border border-[var(--accent-green)]/20 mt-2">
                             {results.total} {results.total === 1 ? 'VOTO REGISTRADO' : 'VOTOS TOTALES'} 🗳️
                         </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Use My XI Button */}
+            <AnimatePresence>
+                {!showResults && hasLineup && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mt-3 overflow-hidden"
+                    >
+                        <button
+                            onClick={handleVoteWithXI}
+                            disabled={loading || !user}
+                            className="w-full py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 transition-all flex items-center justify-center gap-2"
+                        >
+                            <span>⚡</span> Usar mi XI Ideal para pronosticar
+                        </button>
                     </motion.div>
                 )}
             </AnimatePresence>

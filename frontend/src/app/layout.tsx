@@ -12,6 +12,7 @@ import { OnboardingModal } from "@/components/OnboardingModal";
 import { XPFeedback } from "@/components/XPFeedback";
 import { SplashScreen } from "@/components/SplashScreen";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
+import { AutoShareListener } from "@/components/AutoShareListener";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -80,6 +81,7 @@ export default function RootLayout({
                 <SplashScreen />
                 {children}
                 <ToastContainer />
+                <AutoShareListener />
                 <InstallPrompt />
                 <OnboardingModal />
                 <XPFeedback />

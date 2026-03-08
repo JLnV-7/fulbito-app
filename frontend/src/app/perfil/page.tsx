@@ -33,6 +33,8 @@ import { PushDebug } from '@/components/PushDebug'
 import { Button } from '@/components/ui/Button'
 import { BuildXI } from '@/components/perfil/BuildXI'
 
+type ProfileTab = 'social' | 'stats' | 'ajustes'
+
 export default function Perfil() {
   const router = useRouter()
   const { user, signOut, loading: authLoading } = useAuth()
@@ -56,6 +58,7 @@ export default function Perfil() {
   const [editAvatar, setEditAvatar] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
+  const [activeTab, setActiveTab] = useState<ProfileTab>('social')
   const [badgeStats, setBadgeStats] = useState<BadgeStats>({
     total_logs: 0, reviews_with_text: 0, total_votos: 0,
     grupos_joined: 0, followers_count: 0, total_likes_received: 0,
@@ -463,161 +466,221 @@ export default function Perfil() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="max-w-2xl mx-auto px-6 -mt-12 relative z-10">
-          <UserStatsCard stats={stats} prodeStats={prodeStats} />
-
-          {/* Estadísticas Detalladas Accordion */}
-          <ProfileAccordion
-            title="Estadísticas Detalladas"
-            icon="📊"
-            defaultOpen={false}
+        {/* Profile Tabs Navigation */}
+        <div className="max-w-2xl mx-auto px-6 mt-4 relative z-10 flex gap-2">
+          <button
+            onClick={() => setActiveTab('social')}
+            className={`flex-1 py-3 px-2 rounded-2xl text-xs font-bold transition-all border shadow-sm flex flex-col items-center gap-1
+                ${activeTab === 'social'
+                ? 'bg-[#10b981] text-white border-[#10b981] shadow-md shadow-[#10b981]/20'
+                : 'bg-[var(--card-bg)] text-[var(--text-muted)] border-[var(--card-border)] hover:bg-[var(--hover-bg)]'
+              }`}
           >
-            <div className="space-y-6">
-              <StatsRadar stats={buildRadarStats({
-                partidos_vistos: stats.partidos_vistos,
-                total_votos: stats.total_votos,
-                promedio_general: stats.promedio_general,
-                prode_puntos: prodeStats?.puntos_totales || 0,
-                friend_matches_votes: stats.friend_matches_votes || 0,
-              })} />
-
-              {user && (
-                <div className="border-t border-[var(--card-border)] pt-6">
-                  <h4 className="font-bold text-sm mb-4 text-[var(--foreground)] text-center">Distribución de Ratings</h4>
-                  <RatingPieChart userId={user.id} />
-                </div>
-              )}
-            </div>
-          </ProfileAccordion>
-
-          {/* Badges/Logros Accordion */}
-          <ProfileAccordion
-            title="Logros y Títulos"
-            icon="🏆"
-            defaultOpen={true}
+            <span className="text-lg">🏆</span>
+            Social
+          </button>
+          <button
+            onClick={() => setActiveTab('stats')}
+            className={`flex-1 py-3 px-2 rounded-2xl text-xs font-bold transition-all border shadow-sm flex flex-col items-center gap-1
+                ${activeTab === 'stats'
+                ? 'bg-[#3b82f6] text-white border-[#3b82f6] shadow-md shadow-[#3b82f6]/20'
+                : 'bg-[var(--card-bg)] text-[var(--text-muted)] border-[var(--card-border)] hover:bg-[var(--hover-bg)]'
+              }`}
           >
-            <div className="space-y-4">
-              <BadgeDisplay stats={badgeStats} />
-              {user && <UserBadgesGallery userId={user.id} isOwnProfile={true} />}
-            </div>
-          </ProfileAccordion>
+            <span className="text-lg">📊</span>
+            Stats
+          </button>
+          <button
+            onClick={() => setActiveTab('ajustes')}
+            className={`flex-1 py-3 px-2 rounded-2xl text-xs font-bold transition-all border shadow-sm flex flex-col items-center gap-1
+                ${activeTab === 'ajustes'
+                ? 'bg-[var(--card-bg)] text-[var(--foreground)] border-[var(--card-border)] bg-opacity-100 shadow-md'
+                : 'bg-[var(--card-bg)] text-[var(--text-muted)] border-[var(--card-border)] hover:bg-[var(--hover-bg)]'
+              }`}
+          >
+            <span className="text-lg">⚙️</span>
+            Ajustes
+          </button>
+        </div>
 
-          {/* Top Partidos Favoritos */}
-          {user && (
-            <div className="mb-6">
-              <TopPartidos userId={user.id} editable />
-            </div>
-          )}
+        {/* Tab Content Area */}
+        <div className="max-w-2xl mx-auto px-6 mt-6 pb-8 relative z-10">
 
-          {/* Build Your Own XI */}
-          {user && (
-            <div className="mb-6">
-              <BuildXI />
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {/* ===================== TAB: SOCIAL ===================== */}
+            {activeTab === 'social' && user && (
+              <motion.div
+                key="social"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                {/* Build Your Own XI */}
+                <BuildXI />
 
-          {/* Listas Personalizadas */}
-          {user && (
-            <UserListsView userId={user.id} isOwnProfile={true} />
-          )}
+                {/* Top Partidos Favoritos */}
+                <TopPartidos userId={user.id} editable />
 
-          <div className="mt-8 space-y-6">
-            {/* Weekly Challenges Widget */}
-            <WeeklyChallenges />
+                {/* Listas Personalizadas */}
+                <UserListsView userId={user.id} isOwnProfile={true} />
 
-            {/* Tus Equipos / Notificaciones */}
-            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-sm flex items-center gap-2">
-                  🛡️ Tus Equipos
-                </h3>
-              </div>
-              {profile?.equipo ? (
-                <div className="flex items-center justify-between bg-[var(--background)] p-3 rounded-xl border border-[var(--card-border)]">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[var(--hover-bg)] rounded-full flex items-center justify-center text-xl shadow-sm">
-                      🛡️
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm">{profile.equipo}</p>
-                      <p className="text-[10px] text-[var(--text-muted)] mt-0.5">Notificaciones activadas</p>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                    <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#10b981]"></div>
-                  </label>
-                </div>
-              ) : (
-                <div className="text-center py-6 bg-[var(--background)] rounded-xl border border-[var(--card-border)] border-dashed">
-                  <p className="text-[var(--text-muted)] text-sm mb-3">No tenés equipo favorito configurado.</p>
-                  <button onClick={() => setShowEditor(true)} className="text-xs font-bold text-[#10b981] hover:underline">
-                    Configurar equipo
+                {/* Quick Actions (Grupos & Historial) */}
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() => router.push('/historial')}
+                    className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 text-left hover:border-[#ff6b6b]/50 transition-all shadow-sm hover:shadow-md"
+                  >
+                    <span className="text-2xl mb-2 block">📜</span>
+                    <span className="font-bold text-sm block">Mi Historial</span>
+                    <span className="text-[10px] text-[var(--text-muted)] block mt-1">Ver todos mis pronósticos</span>
+                  </button>
+                  <button
+                    onClick={() => router.push('/grupos')}
+                    className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 text-left hover:border-[#10b981]/50 transition-all shadow-sm hover:shadow-md"
+                  >
+                    <span className="text-2xl mb-2 block">👥</span>
+                    <span className="font-bold text-sm block">Mis Grupos</span>
+                    <span className="text-[10px] text-[var(--text-muted)] block mt-1">Competí con amigos</span>
                   </button>
                 </div>
-              )}
-            </div>
+              </motion.div>
+            )}
 
-            <UserBadgesGallery
-              userId={user.id}
-              isOwnProfile={true}
-            />
-          </div>
+            {/* ===================== TAB: STATS ===================== */}
+            {activeTab === 'stats' && (
+              <motion.div
+                key="stats"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                {/* Overview Stats Cards */}
+                <UserStatsCard stats={stats} prodeStats={prodeStats} />
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-2 gap-4 mb-6 mt-6">
-            <button
-              onClick={() => router.push('/historial')}
-              className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 text-left hover:border-[#ff6b6b]/50 transition-all shadow-sm hover:shadow-md"
-            >
-              <span className="text-2xl mb-2 block">📜</span>
-              <span className="font-bold text-sm block">Mi Historial</span>
-              <span className="text-[10px] text-[var(--text-muted)] block mt-1">Ver todos mis pronósticos</span>
-            </button>
-            <button
-              onClick={() => router.push('/grupos')}
-              className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 text-left hover:border-[#10b981]/50 transition-all shadow-sm hover:shadow-md"
-            >
-              <span className="text-2xl mb-2 block">👥</span>
-              <span className="font-bold text-sm block">Mis Grupos</span>
-              <span className="text-[10px] text-[var(--text-muted)] block mt-1">Competí con amigos</span>
-            </button>
-          </div>
-
-          <NotificationSettings />
-          <PushDebug />
-
-          {/* PWA Widget Info */}
-          <div className="mt-6 bg-gradient-to-r from-[#6366f1]/10 to-[#8b5cf6]/10 border border-[#6366f1]/30 rounded-2xl p-5">
-            <div className="flex items-start gap-4">
-              <span className="text-3xl">📱</span>
-              <div>
-                <h4 className="font-bold text-sm mb-1 text-[#6366f1]">Instalá la App</h4>
-                <p className="text-xs text-[var(--text-muted)] mb-3">
-                  Agregá FutLog a tu inicio para que cargue más rápido y funcione sin internet.
-                </p>
-                <div className="flex flex-wrap gap-2 text-[10px]">
-                  <span className="bg-[var(--card-bg)] px-2 py-1 rounded-full border border-[var(--card-border)]">✅ Offline</span>
-                  <span className="bg-[var(--card-bg)] px-2 py-1 rounded-full border border-[var(--card-border)]">⚡ Rápida</span>
+                {/* Radar Chart */}
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-4 shadow-sm">
+                  <h3 className="font-bold text-sm flex items-center gap-2 mb-4">Radar de Rendimiento</h3>
+                  <StatsRadar stats={buildRadarStats({
+                    partidos_vistos: stats.partidos_vistos,
+                    total_votos: stats.total_votos,
+                    promedio_general: stats.promedio_general,
+                    prode_puntos: prodeStats?.puntos_totales || 0,
+                    friend_matches_votes: stats.friend_matches_votes || 0,
+                  })} />
                 </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Trust & Compliance Footer */}
-          <div className="mt-8 mb-4 border-t border-[var(--card-border)] pt-6 text-center">
-            <div className="flex justify-center flex-wrap gap-3 text-xs font-bold text-[var(--text-muted)]">
-              <Link href="/privacy" className="hover:text-[#10b981] hover:underline transition-colors">Privacidad</Link>
-              <span>•</span>
-              <Link href="/terms" className="hover:text-[#10b981] hover:underline transition-colors">Términos</Link>
-              <span>•</span>
-              <Link href="/sources" className="hover:text-[#10b981] hover:underline transition-colors">Fuentes</Link>
-            </div>
-            <p className="text-[10px] text-[var(--text-muted)] mt-4 opacity-50">
-              FutLog Beta © {new Date().getFullYear()}
-            </p>
-          </div>
+                {/* Logros (Badges) Summary y Gallery combinados */}
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-4 shadow-sm">
+                  <h3 className="font-bold text-sm flex items-center gap-2 mb-4">Logros y Títulos</h3>
+                  <BadgeDisplay stats={badgeStats} />
+                  {user && (
+                    <div className="mt-6 border-t border-[var(--card-border)] pt-4">
+                      <UserBadgesGallery userId={user.id} isOwnProfile={true} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Rating Distribution */}
+                {user && (
+                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-4 shadow-sm">
+                    <h3 className="font-bold text-sm flex items-center gap-2 mb-4">Distribución de Ratings</h3>
+                    <RatingPieChart userId={user.id} />
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* ===================== TAB: AJUSTES ===================== */}
+            {activeTab === 'ajustes' && (
+              <motion.div
+                key="ajustes"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                {/* Tus Equipos / Notificaciones básicas */}
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-sm flex items-center gap-2">
+                      🛡️ Tu Equipo Favorito
+                    </h3>
+                  </div>
+                  {profile?.equipo ? (
+                    <div className="flex items-center justify-between bg-[var(--background)] p-3 rounded-xl border border-[var(--card-border)]">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-[var(--hover-bg)] rounded-full flex items-center justify-center text-xl shadow-sm">
+                          🛡️
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm">{profile.equipo}</p>
+                          <p className="text-[10px] text-[var(--text-muted)] mt-0.5">Suscrito a alertas</p>
+                        </div>
+                      </div>
+                      <button onClick={() => setShowEditor(true)} className="text-xs font-bold text-[var(--accent)] hover:underline">
+                        Cambiar
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 bg-[var(--background)] rounded-xl border border-[var(--card-border)] border-dashed">
+                      <p className="text-[var(--text-muted)] text-sm mb-3">No tenés equipo favorito configurado.</p>
+                      <button onClick={() => setShowEditor(true)} className="text-xs font-bold text-[#10b981] hover:underline">
+                        Configurar equipo
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Preferencias Push Granulares */}
+                <NotificationSettings />
+
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
+                  <h3 className="font-bold text-sm flex items-center gap-2 mb-4 text-[#ff6b6b]">
+                    Peligro
+                  </h3>
+                  <Button variant="destructive" fullWidth onClick={handleSignOut}>
+                    Cerrar Sesión
+                  </Button>
+                </div>
+
+                {/* PWA Widget Info */}
+                <div className="bg-gradient-to-r from-[#6366f1]/10 to-[#8b5cf6]/10 border border-[#6366f1]/30 rounded-2xl p-5 shadow-sm mt-8">
+                  <div className="flex items-start gap-4">
+                    <span className="text-3xl">📱</span>
+                    <div>
+                      <h4 className="font-bold text-sm mb-1 text-[#6366f1]">Instalá la App</h4>
+                      <p className="text-xs text-[var(--text-muted)] mb-3">
+                        Agregá FutLog a tu inicio para que cargue más rápido y funcione sin internet.
+                      </p>
+                      <div className="flex flex-wrap gap-2 text-[10px]">
+                        <span className="bg-[var(--card-bg)] px-2 py-1 rounded-full border border-[var(--card-border)]">✅ Offline</span>
+                        <span className="bg-[var(--card-bg)] px-2 py-1 rounded-full border border-[var(--card-border)]">⚡ Rápida</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Trust & Compliance Footer */}
+                <div className="mt-8 mb-4 border-t border-[var(--card-border)] pt-6 text-center">
+                  <div className="flex justify-center flex-wrap gap-3 text-xs font-bold text-[var(--text-muted)]">
+                    <Link href="/privacy" className="hover:text-[#10b981] hover:underline transition-colors">Privacidad</Link>
+                    <span>•</span>
+                    <Link href="/terms" className="hover:text-[#10b981] hover:underline transition-colors">Términos</Link>
+                    <span>•</span>
+                    <Link href="/sources" className="hover:text-[#10b981] hover:underline transition-colors">Fuentes</Link>
+                  </div>
+                  <p className="text-[10px] text-[var(--text-muted)] mt-4 opacity-50">
+                    FutLog Beta © {new Date().getFullYear()}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <NavBar />
