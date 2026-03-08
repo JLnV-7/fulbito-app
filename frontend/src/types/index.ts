@@ -69,6 +69,7 @@ export interface Profile {
   xp?: number
   level?: number
   created_at: string
+  notification_prefs?: Record<string, boolean>
 }
 
 export interface UserStats {

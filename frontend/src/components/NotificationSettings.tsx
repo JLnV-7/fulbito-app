@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
+import { supabase } from '@/lib/supabase'
 
 interface NotificationPrefs {
     partidoInicio: boolean
@@ -37,10 +38,16 @@ export function NotificationSettings() {
     }, [user])
 
     const loadPrefs = async () => {
+        if (!user) return
         try {
-            const stored = localStorage.getItem(`notif_prefs_${user?.id}`)
-            if (stored) {
-                setPrefs(JSON.parse(stored))
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('notification_prefs')
+                .eq('id', user.id)
+                .single()
+
+            if (data?.notification_prefs) {
+                setPrefs({ ...prefs, ...data.notification_prefs })
             }
         } catch (err: any) {
             console.error('Error loading prefs:', err)
@@ -49,12 +56,19 @@ export function NotificationSettings() {
 
     const savePrefs = async (newPrefs: NotificationPrefs) => {
         setPrefs(newPrefs)
-        localStorage.setItem(`notif_prefs_${user?.id}`, JSON.stringify(newPrefs))
+        if (!user) return
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({ notification_prefs: newPrefs })
+            .eq('id', user.id)
+
+        if (error) console.error('Error saving prefs:', error)
     }
 
-    const togglePref = (key: keyof NotificationPrefs) => {
+    const togglePref = async (key: keyof NotificationPrefs) => {
         const newPrefs = { ...prefs, [key]: !prefs[key] }
-        savePrefs(newPrefs)
+        await savePrefs(newPrefs)
     }
 
     const handleSubscribe = async () => {

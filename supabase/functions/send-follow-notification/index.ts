@@ -25,13 +25,15 @@ Deno.serve(async (req) => {
         .single()
 
     // 2. Check if the "following" user has notifications enabled for follows
-    const { data: settings } = await supabase
-        .from('user_notifications')
-        .select('nuevos_seguidores')
-        .eq('user_id', following_id)
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('notification_prefs')
+        .eq('id', following_id)
         .single()
 
-    if (settings?.nuevos_seguidores === false) {
+    // notification_prefs might be { "nuevosSeguidores": true }
+    // If undefined or null, we default to sending it (or up to business logic, here we send if it's not explicitly false)
+    if (profile?.notification_prefs && profile.notification_prefs.nuevosSeguidores === false) {
         return new Response(JSON.stringify({ message: 'User disabled follow notifications' }), { status: 200 })
     }
 
@@ -47,7 +49,7 @@ Deno.serve(async (req) => {
             include_external_user_ids: [following_id],
             contents: { en: `¡${follower?.username || 'Alguien'} te empezó a seguir! 👟⚽` },
             headings: { en: 'Nuevo seguidor' },
-            url: `https://fulbitoo-delta.vercel.app/perfil/${follower_id}`
+            data: { url: `/perfil/${follower_id}` }
         })
     })
 
