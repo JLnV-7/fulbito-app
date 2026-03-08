@@ -37,7 +37,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
         const handleChange = (e: MediaQueryListEvent) => {
             if (!localStorage.getItem('FutLog-theme-forced')) {
-                setTheme(e.matches ? 'dark' : 'light')
+                const newTheme = e.matches ? 'dark' : 'light'
+                setTheme(newTheme)
+                document.documentElement.setAttribute('data-theme', newTheme)
+                localStorage.setItem('FutLog-theme', newTheme)
             }
         }
 

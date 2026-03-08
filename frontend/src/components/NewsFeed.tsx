@@ -53,7 +53,7 @@ export function NewsFeed({ userTeams }: NewsFeedProps) {
                         pubDate: new Date(item.pubDate).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' }),
                         thumbnail: item.enclosure?.link || '',
                         source: 'TyC Sports'
-                    })).slice(0, 10)
+                    })).slice(0, 15)
 
                     setNews(mappedNews)
                 } else {
@@ -134,12 +134,12 @@ export function NewsFeed({ userTeams }: NewsFeedProps) {
                 ))}
 
                 <div className="min-w-[150px] flex items-center justify-center shrink-0 snap-center">
-                    <button className="flex flex-col items-center gap-2 text-[var(--text-muted)] hover:text-[#10b981] transition-colors">
-                        <div className="w-12 h-12 rounded-full border border-dashed border-[var(--card-border)] flex items-center justify-center bg-[var(--card-bg)]">
+                    <a href="https://www.tycsports.com/futbol.html" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-[var(--text-muted)] hover:text-[#10b981] transition-colors">
+                        <div className="w-12 h-12 rounded-full border border-dashed border-[var(--card-border)] flex items-center justify-center bg-[var(--card-bg)] hover:bg-[#10b981]/10">
                             <ExternalLink size={18} />
                         </div>
                         <span className="text-xs font-bold">Ver más noticias</span>
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>

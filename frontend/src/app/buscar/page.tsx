@@ -20,7 +20,8 @@ type SearchTab = 'partidos' | 'usuarios' | 'resenas'
 const COMMON_TEAMS = [
     'River Plate', 'Boca Juniors', 'Racing Club', 'Independiente', 'San Lorenzo',
     'Talleres', 'Belgrano', 'Estudiantes', 'Gimnasia', 'Rosario Central',
-    "Newell's Old Boys", 'Argentinos Juniors', 'Velez Sarsfield', 'Huracán'
+    "Newell's Old Boys", 'Argentinos Juniors', 'Velez Sarsfield', 'Huracán',
+    'River', 'Boca', 'Racing', 'Ciclón', 'Lanús', 'Banfield', 'Godoy Cruz', 'Unión'
 ]
 
 export default function BuscarPage() {

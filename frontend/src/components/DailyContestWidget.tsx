@@ -4,36 +4,20 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Trophy, Gift, Target, Clock } from 'lucide-react'
 
-// Simulamos los contests (en real iría a Supabase)
-const DAILY_CONTESTS = [
-    {
-        id: 1,
-        title: "Experto en Clásicos",
-        description: "Acertá el resultado exacto del Superclásico",
-        reward: "500 XP + Insignia 'Oráculo'",
-        participants: 12450,
-        timeLeft: "04:22:10",
-        type: "score"
-    },
-    {
-        id: 2,
-        title: "Cazatalentos",
-        description: "Votá a 3 jugadores Sub-20 con nota > 8",
-        reward: "200 XP",
-        participants: 5320,
-        timeLeft: "12:00:00",
-        type: "voting"
-    }
+const LIVE_CONTESTS = [
+    { id: 101, local: 'Boca Juniors', visitante: 'River Plate', hora: 'Hoy, 21:00' },
+    { id: 102, local: 'Racing Club', visitante: 'Independiente', hora: 'Hoy, 19:30' },
+    { id: 103, local: 'San Lorenzo', visitante: 'Huracán', hora: 'Mañana, 17:00' },
+    { id: 104, local: 'Estudiantes', visitante: 'Gimnasia', hora: 'Mañana, 19:00' },
+    { id: 105, local: 'Rosario Central', visitante: 'Newell\'s', hora: 'Dom, 16:30' }
 ]
 
 export function DailyContestWidget() {
-    const [joined, setJoined] = useState<number[]>([])
+    const [predictions, setPredictions] = useState<Record<number, 'L' | 'E' | 'V'>>({})
+    const predictedCount = Object.keys(predictions).length
 
-    const handleJoin = (id: number) => {
-        if (!joined.includes(id)) {
-            setJoined([...joined, id])
-            // Acá habría llamada a api para unirse
-        }
+    const handlePredict = (matchId: number, result: 'L' | 'E' | 'V') => {
+        setPredictions(prev => ({ ...prev, [matchId]: result }))
     }
 
     return (
@@ -44,57 +28,70 @@ export function DailyContestWidget() {
             </div>
 
             <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 hide-scrollbar">
-                {DAILY_CONTESTS.map(contest => {
-                    const isJoined = joined.includes(contest.id)
+                <div className="min-w-[320px] max-w-sm rounded-[24px] bg-gradient-to-br from-[#10b981] to-[#059669] p-6 shrink-0 snap-center relative overflow-hidden shadow-lg border border-white/10 flex flex-col justify-center">
+                    <div className="absolute -right-6 -top-6 text-8xl opacity-10 pointer-events-none">⭐</div>
+
+                    <h3 className="font-black text-xl text-white mb-2 leading-tight">Reto de clásicos</h3>
+                    <p className="text-sm text-white/90 mb-6 leading-relaxed">
+                        Predecí el resultado de los 5 clásicos de la fecha. Si acertás 3 o más ganás el <span className="font-bold whitespace-nowrap bg-black/20 px-2 py-0.5 rounded-md">Badge Oráculo</span> y +500 XP.
+                    </p>
+
+                    <div className="space-y-3">
+                        <div className="flex justify-between text-xs font-bold text-white mb-1">
+                            <span>{predictedCount} de 5 listos</span>
+                            <span>{Math.round((predictedCount / 5) * 100)}%</span>
+                        </div>
+                        <div className="w-full bg-black/40 h-2.5 rounded-full overflow-hidden">
+                            <motion.div
+                                className="h-full bg-amber-400"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${(predictedCount / 5) * 100}%` }}
+                                transition={{ type: 'spring', bounce: 0, duration: 0.5 }}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {LIVE_CONTESTS.map(match => {
+                    const currentPred = predictions[match.id]
                     return (
-                        <motion.div
-                            key={contest.id}
-                            className={`min-w-[280px] md:min-w-[320px] rounded-2xl p-4 shrink-0 snap-center border relative overflow-hidden transition-all
-                                ${isJoined
-                                    ? 'bg-[#10b981]/10 border-[#10b981]/40'
-                                    : 'bg-gradient-to-br from-[var(--card-bg)] to-[var(--background)] border-[var(--card-border)]'}
-                            `}
-                            whileHover={{ y: -2 }}
+                        <div
+                            key={match.id}
+                            className="min-w-[280px] rounded-[24px] p-5 shrink-0 snap-center border border-[var(--card-border)] bg-[var(--card-bg)] flex flex-col shadow-sm"
                         >
-                            {/* Bg decoration */}
-                            <div className="absolute -right-6 -top-6 text-6xl opacity-5 pointer-events-none">
-                                {contest.type === 'score' ? '🎯' : '⭐'}
-                            </div>
-
-                            <div className="flex justify-between items-start mb-2 relative z-10">
-                                <h3 className="font-black text-sm text-[var(--foreground)] pr-8">{contest.title}</h3>
-                                <div className="flex items-center gap-1 text-[10px] font-bold text-[#ff6b6b] bg-[#ff6b6b]/10 px-2 py-1 rounded-md">
-                                    <Clock size={10} />
-                                    {contest.timeLeft}
-                                </div>
-                            </div>
-
-                            <p className="text-xs text-[var(--text-muted)] mb-4 h-8 leading-snug">
-                                {contest.description}
-                            </p>
-
-                            <div className="flex items-center justify-between mt-auto">
-                                <div className="flex items-center gap-1.5 text-xs font-bold text-[#fbbf24]">
-                                    <Gift size={14} />
-                                    {contest.reward}
-                                </div>
-                                <span className="text-[10px] text-[var(--text-muted)]">
-                                    {contest.participants.toLocaleString()} anotados
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-[10px] font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                    {match.hora}
                                 </span>
                             </div>
 
-                            <button
-                                onClick={() => handleJoin(contest.id)}
-                                disabled={isJoined}
-                                className={`w-full mt-4 py-2 rounded-xl text-xs font-bold transition-all
-                                    ${isJoined
-                                        ? 'bg-[#10b981] text-white'
-                                        : 'bg-[var(--foreground)] text-[var(--background)] hover:opacity-90'}
-                                `}
-                            >
-                                {isJoined ? 'Participando ✅' : 'Unirse al Contest'}
-                            </button>
-                        </motion.div>
+                            <div className="flex items-center justify-between mb-6 px-2 text-sm font-black">
+                                <span className="w-[40%] text-right truncate">{match.local}</span>
+                                <span className="text-[10px] text-[var(--text-muted)]">VS</span>
+                                <span className="w-[40%] text-left truncate">{match.visitante}</span>
+                            </div>
+
+                            <div className="flex gap-2 h-11 mt-auto">
+                                <button
+                                    onClick={() => handlePredict(match.id, 'L')}
+                                    className={`flex-1 rounded-xl text-xs font-bold transition-all border
+                                        ${currentPred === 'L' ? 'bg-[#10b981] text-white border-[#10b981]' : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-white/20'}
+                                    `}
+                                >L</button>
+                                <button
+                                    onClick={() => handlePredict(match.id, 'E')}
+                                    className={`flex-1 rounded-xl text-xs font-bold transition-all border
+                                        ${currentPred === 'E' ? 'bg-[#ffb020] text-black border-[#ffb020]' : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-white/20'}
+                                    `}
+                                >E</button>
+                                <button
+                                    onClick={() => handlePredict(match.id, 'V')}
+                                    className={`flex-1 rounded-xl text-xs font-bold transition-all border
+                                        ${currentPred === 'V' ? 'bg-[#ff6b6b] text-white border-[#ff6b6b]' : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-white/20'}
+                                    `}
+                                >V</button>
+                            </div>
+                        </div>
                     )
                 })}
             </div>
