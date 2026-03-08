@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Target, CheckCircle2, Zap, Flame, Trophy } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 
 interface Challenge {
     id: string
@@ -20,9 +21,9 @@ export function WeeklyChallenges() {
     const { user } = useAuth()
     const [challenges, setChallenges] = useState<Challenge[]>([])
 
+    const [loading, setLoading] = useState(true)
+
     useEffect(() => {
-        // Simulated weekly challenges based on pseudo-random weekly seed
-        // In a real app, 'current' progress would be derived from the database
         const getWeekNumber = () => {
             const d = new Date()
             d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7))
@@ -30,40 +31,88 @@ export function WeeklyChallenges() {
             return Math.ceil((((Number(d) - Number(yearStart)) / 86400000) + 1) / 7)
         }
 
-        const weekNum = getWeekNumber()
+        const fetchProgress = async () => {
+            const weekNum = getWeekNumber()
+            let c1Progress = 0
+            let c2Progress = 0
+            let c3Progress = 0
 
-        // Procedurally generated challenges for the week
-        const mockChallenges: Challenge[] = [
-            {
-                id: `c1-${weekNum}`,
-                title: 'Tribunero Fiel',
-                description: 'Votá el rating de la comunidad en 3 partidos distintos.',
-                target: 3,
-                current: user ? 2 : 0, // Mock progress
-                xpReward: 150,
-                icon: Flame
-            },
-            {
-                id: `c2-${weekNum}`,
-                title: 'Analista Táctico',
-                description: 'Loguear 1 partido con una reseña escrita completa.',
-                target: 1,
-                current: user ? 1 : 0,
-                xpReward: 300,
-                icon: PenLineIcon
-            },
-            {
-                id: `c3-${weekNum}`,
-                title: 'Gurú del Prode',
-                description: 'Agregá 5 predicciones al Prode de esta fecha.',
-                target: 5,
-                current: user ? 1 : 0,
-                xpReward: 200,
-                icon: Target
+            if (user) {
+                try {
+                    // Check start of current week
+                    const d = new Date()
+                    const day = d.getDay()
+                    const diff = d.getDate() - day + (day === 0 ? -6 : 1) // adjust when day is sunday
+                    const startOfWeek = new Date(d.setDate(diff))
+                    startOfWeek.setHours(0, 0, 0, 0)
+                    const isoStart = startOfWeek.toISOString()
+
+                    // Challenge 1: Votar el rating en 3 partidos distintos (votaciones)
+                    const { count: c1Count } = await supabase
+                        .from('votaciones')
+                        .select('partido_id', { count: 'exact', head: true })
+                        .eq('user_id', user.id)
+                        .gte('created_at', isoStart)
+
+                    // Challenge 2: Loguear 1 partido con reseña escrita (match_logs)
+                    const { count: c2Count } = await supabase
+                        .from('match_logs')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('user_id', user.id)
+                        .gte('created_at', isoStart)
+                        .neq('review_text', '')
+                        .not('review_text', 'is', null)
+
+                    // Challenge 3: Agregar 5 predicciones al Prode (pronosticos)
+                    const { count: c3Count } = await supabase
+                        .from('pronosticos')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('user_id', user.id)
+                        .gte('created_at', isoStart)
+
+                    c1Progress = c1Count || 0
+                    c2Progress = c2Count || 0
+                    c3Progress = c3Count || 0
+                } catch (error) {
+                    console.error("Error fetching challenges progress", error)
+                }
             }
-        ]
 
-        setChallenges(mockChallenges)
+            const realChallenges: Challenge[] = [
+                {
+                    id: `c1-${weekNum}`,
+                    title: 'Tribunero Fiel',
+                    description: 'Votá el rating de la comunidad en 3 partidos distintos.',
+                    target: 3,
+                    current: c1Progress,
+                    xpReward: 150,
+                    icon: Flame
+                },
+                {
+                    id: `c2-${weekNum}`,
+                    title: 'Analista Táctico',
+                    description: 'Loguear 1 partido con una reseña escrita completa.',
+                    target: 1,
+                    current: c2Progress,
+                    xpReward: 300,
+                    icon: PenLineIcon
+                },
+                {
+                    id: `c3-${weekNum}`,
+                    title: 'Gurú del Prode',
+                    description: 'Agregá 5 predicciones al Prode de esta fecha.',
+                    target: 5,
+                    current: c3Progress,
+                    xpReward: 200,
+                    icon: Target
+                }
+            ]
+
+            setChallenges(realChallenges)
+            setLoading(false)
+        }
+
+        fetchProgress()
     }, [user])
 
     function PenLineIcon(props: any) {
@@ -111,11 +160,20 @@ export function WeeklyChallenges() {
                 </div>
                 <div>
                     <h4 className="font-bold text-sm">Progreso de la Semana</h4>
-                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                        {completedCount === challenges.length
-                            ? '¡Completaste todos los desafíos! Volvé el Lunes.'
-                            : 'Ganá XP extra para subir de nivel más rápido.'}
-                    </p>
+                    <div className="text-xs mt-1">
+                        {completedCount === challenges.length && challenges.length > 0
+                            ? <span className="text-[var(--text-muted)]">Completaste todos los desafíos de la semana.</span>
+                            : user && completedCount === 0 && challenges.some(c => c.current === 0)
+                                ? (
+                                    <div className="mt-2 text-left">
+                                        <p className="text-[var(--text-muted)] mb-2">Todavía no completaste desafíos esta semana. Empezá ahora: rateá un partido o hacé un prode para desbloquear tu primer badge.</p>
+                                        <a href="/" className="inline-block px-3 py-1.5 bg-[#ff6b6b] text-white rounded-lg font-bold text-[10px] hover:bg-[#ff5252] transition-colors">
+                                            Ir a partidos recientes →
+                                        </a>
+                                    </div>
+                                )
+                                : <span className="text-[var(--text-muted)]">Ganá XP extra para subir de nivel más rápido.</span>}
+                    </div>
                 </div>
             </div>
 

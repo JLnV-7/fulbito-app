@@ -28,8 +28,39 @@ export default function BuscarPage() {
     const [loading, setLoading] = useState(false)
     const [hasSearched, setHasSearched] = useState(false)
 
-    // Trending tags
-    const trendingTags = ['River Plate', 'Boca Juniors', 'clasico', 'remontada', 'goleada', 'final']
+    const [trendingTags, setTrendingTags] = useState<string[]>([])
+
+    useEffect(() => {
+        // Fetch real trending tags from Supabase
+        const fetchTrendingTags = async () => {
+            const { data, error } = await supabase
+                .from('match_log_tags')
+                .select('tag')
+
+            if (data && data.length > 0) {
+                // Count tag occurrences
+                const tagCounts = data.reduce((acc, curr) => {
+                    acc[curr.tag] = (acc[curr.tag] || 0) + 1
+                    return acc
+                }, {} as Record<string, number>)
+
+                // Sort by occurrence and take top 6
+                const sortedTags = Object.entries(tagCounts)
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 6)
+                    .map(([tag]) => tag)
+
+                if (sortedTags.length >= 3) {
+                    setTrendingTags(sortedTags)
+                } else {
+                    setTrendingTags(['clasico', 'goles', 'Libertadores'])
+                }
+            } else {
+                setTrendingTags(['clasico', 'goles', 'Libertadores'])
+            }
+        }
+        fetchTrendingTags()
+    }, [])
 
     const searchPartidos = useCallback(async (q: string) => {
         let queryBuilder = supabase
@@ -238,6 +269,19 @@ export default function BuscarPage() {
                                     </button>
                                 ))}
                             </div>
+                            {trendingTags.includes('clasico') && trendingTags.includes('goles') && (
+                                <div className="mt-6 p-4 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-center">
+                                    <p className="text-xs font-medium text-[var(--text-muted)] mb-3">
+                                        Los tags más usados aparecerán aquí cuando haya más actividad.
+                                    </p>
+                                    <button
+                                        onClick={() => router.push('/')}
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#ff6b6b] text-white rounded-xl text-xs font-bold hover:bg-[#ff5252] transition-colors"
+                                    >
+                                        ⭐ Ratear un partido ahora
+                                    </button>
+                                </div>
+                            )}
 
                             <div className="mt-8 text-center">
                                 <div className="w-16 h-16 rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)]

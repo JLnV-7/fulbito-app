@@ -10,11 +10,10 @@ import { DesktopNav } from '@/components/DesktopNav'
 import { motion } from 'framer-motion'
 import { SimuladorPuntos } from '@/components/SimuladorPuntos'
 import { ReglasPuntajeModal } from '@/components/ReglasPuntajeModal'
-import { ClubRanking } from '@/components/ClubRanking'
 import { PullToRefresh } from '@/components/PullToRefresh'
-import { MockProde } from '@/components/MockProde'
-import { RankingGoal } from '@/components/ranking/RankingGoal'
+import { ClubRanking } from '@/components/ClubRanking'
 import type { RankingProde } from '@/types'
+import { RankingGoal } from '@/components/ranking/RankingGoal'
 
 type TipoRanking = 'global' | 'liga'
 
@@ -156,8 +155,7 @@ export default function RankingPage() {
                                 </button>
                             </div>
 
-                            {/* Mock Prode Callout */}
-                            <MockProde />
+
 
                             {/* Ranking Goal Goal */}
                             {user && ranking.length > 0 && (
@@ -174,33 +172,27 @@ export default function RankingPage() {
                     {/* Position Teaser */}
                     {user && !loading && (
                         <div className="px-6 mb-6">
-                            <div className="max-w-4xl mx-auto bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 flex items-center justify-between shadow-sm relative overflow-hidden group">
+                            <div className="max-w-4xl mx-auto bg-[#10b981]/10 border border-[#10b981]/30 rounded-2xl p-5 flex items-center justify-between shadow-sm relative overflow-hidden group">
                                 <div className="absolute inset-0 bg-gradient-to-r from-[var(--accent)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <div className="flex items-center gap-4 relative z-10">
-                                    <div className="w-12 h-12 bg-[var(--accent)]/10 text-[var(--accent)] rounded-2xl flex items-center justify-center text-2xl shadow-inner">
-                                        📈
+                                    <div className="w-12 h-12 bg-[#10b981] text-white rounded-2xl flex items-center justify-center text-xl font-black shadow-inner">
+                                        {ranking.findIndex(r => r.user_id === user.id) !== -1 ? `${ranking.findIndex(r => r.user_id === user.id) + 1}°` : '-'}
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-sm text-[var(--foreground)]">Tu progresión semanal</h4>
+                                        <h4 className="font-bold text-sm text-[var(--foreground)]">Tu posición actual</h4>
                                         <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-xs text-[var(--text-muted)]">
+                                            <span className="text-xs text-[var(--text-muted)] font-medium">
                                                 {ranking.findIndex(r => r.user_id === user.id) !== -1
-                                                    ? `Posición #${ranking.findIndex(r => r.user_id === user.id) + 1}`
-                                                    : 'Fuera del Top 100'}
-                                            </span>
-                                            <span className="flex items-center gap-0.5 px-2 py-0.5 bg-green-500/10 text-green-500 text-[10px] font-black rounded-full">
-                                                <motion.span
-                                                    animate={{ y: [0, -2, 0] }}
-                                                    transition={{ repeat: Infinity, duration: 1, ease: "easeInOut" }}
-                                                >
-                                                    ↑
-                                                </motion.span>
-                                                14 PUESTOS
+                                                    ? `Basado en ${ranking.find(r => r.user_id === user.id)?.partidos_jugados || 0} prodes completados`
+                                                    : 'Aún no estás en el Top 100'}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
-                                <button className="relative z-10 px-3 py-1.5 bg-[var(--background)] border border-[var(--card-border)] rounded-lg text-[10px] font-bold hover:bg-[var(--hover-bg)] transition-colors">
+                                <button
+                                    onClick={() => router.push(`/perfil/${user.id}`)}
+                                    className="relative z-10 px-3 py-1.5 bg-[var(--background)] border border-[#10b981]/30 text-[#10b981] rounded-lg text-[10px] font-bold hover:bg-[#10b981]/10 transition-colors"
+                                >
                                     VER ANALYTICS
                                 </button>
                             </div>
@@ -377,9 +369,8 @@ export default function RankingPage() {
                                                                     <span className={`font-bold ${getPosicionColor(index + 1)}`}>
                                                                         {getPosicionEmoji(index + 1)}
                                                                     </span>
-                                                                    {/* Mock trend indicator for premium feel */}
-                                                                    <span className={`text-[8px] font-bold mt-1 ${index % 3 === 0 ? 'text-green-500' : index % 4 === 0 ? 'text-red-500' : 'text-[var(--text-muted)]'}`}>
-                                                                        {index % 3 === 0 ? '↑2' : index % 4 === 0 ? '↓1' : '='}
+                                                                    <span className="text-[10px] font-bold mt-1 text-[var(--text-muted)] uppercase tracking-wider">
+                                                                        Global
                                                                     </span>
                                                                 </div>
                                                             </td>

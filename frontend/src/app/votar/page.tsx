@@ -34,6 +34,7 @@ export default function VotarPage() {
         // Solo partidos en juego o finalizados recientemente para votar
         .in('estado', ['EN_JUEGO', 'FINALIZADO'])
         .order('fecha_inicio', { ascending: false })
+        .limit(20) // Evitar historial infinito
 
       if (filtroLiga !== 'Todos') {
         query = query.eq('liga', filtroLiga)
@@ -85,6 +86,14 @@ export default function VotarPage() {
           <p className="text-sm text-[var(--text-muted)]">
             Elegí el partido y votá a la figura. Solo partidos en vivo o terminados.
           </p>
+          <div className="mt-3 flex items-start gap-2 px-4 py-3 bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-xl">
+            <span className="text-[var(--accent)] text-sm">ℹ️</span>
+            <p className="text-xs text-[var(--text-muted)] leading-tight">
+              Mostrando los últimos 20 partidos finalizados.
+              <br />
+              Usá la <strong>búsqueda</strong> para encontrar encuentros anteriores.
+            </p>
+          </div>
         </div>
       </div>
 
