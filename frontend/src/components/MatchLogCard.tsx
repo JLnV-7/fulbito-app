@@ -3,18 +3,21 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { Heart, MessageCircle, Share2, Eye, EyeOff, Tv, MapPin, Users, HelpCircle, Clock, ListPlus } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Heart, MessageCircle, Share2, Eye, EyeOff, Tv, MapPin, Users, HelpCircle, Clock, ListPlus, Flag } from 'lucide-react'
 import { StarRatingDisplay } from './StarRating'
 import { TeamLogo } from './TeamLogo'
 import { AddToListModal } from './AddToListModal'
+import { hapticFeedback } from '@/lib/helpers'
+import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 import type { MatchLog } from '@/types'
 
 const MATCH_TYPE_META: Record<string, { icon: typeof Tv; label: string; color: string }> = {
-    tv: { icon: Tv, label: 'TV', color: '#3b82f6' },
-    stadium: { icon: MapPin, label: 'Cancha', color: '#10b981' },
-    friend: { icon: Users, label: 'Amigos', color: '#f59e0b' },
-    other: { icon: HelpCircle, label: 'Otro', color: '#8b5cf6' },
+    tv: { icon: Tv, label: 'TV', color: '#2563eb' },
+    stadium: { icon: MapPin, label: 'Cancha', color: '#16a34a' },
+    friend: { icon: Users, label: 'Amigos', color: '#d97706' },
+    other: { icon: HelpCircle, label: 'Otro', color: '#7c3aed' },
 }
 
 function timeAgo(date: string): string {
@@ -34,14 +37,24 @@ function timeAgo(date: string): string {
 
 interface MatchLogCardProps {
     log: MatchLog
-    onLike?: (id: string) => void
+    onLike?: (id: string, type?: string) => void
     compact?: boolean
 }
+
+const REACTIONS = [
+    { type: 'like', emoji: '❤️', label: 'Like' },
+    { type: 'fuego', emoji: '🔥', label: 'Fuego' },
+    { type: 'termo', emoji: '🧉', label: 'Termo' },
+    { type: 'roja', emoji: '🟥', label: 'Roja' },
+]
 
 export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps) {
     const router = useRouter()
     const [spoilerRevealed, setSpoilerRevealed] = useState(false)
     const [showAddToList, setShowAddToList] = useState(false)
+    const [reporting, setReporting] = useState(false)
+    const [showReactions, setShowReactions] = useState(false)
+    const { user } = useAuth()
 
     const typeMeta = MATCH_TYPE_META[log.match_type] || MATCH_TYPE_META.other
     const TypeIcon = typeMeta.icon
@@ -61,32 +74,64 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
         }
     }
 
+    const handleReport = async (e: React.MouseEvent) => {
+        e.stopPropagation()
+        if (!user) {
+            router.push('/login')
+            return
+        }
+
+        if (confirm('¿Estás seguro que deseas reportar esta reseña por contenido inapropiado?')) {
+            setReporting(true)
+            try {
+                const { error } = await supabase
+                    .from('match_log_reports')
+                    .insert({
+                        match_log_id: log.id,
+                        reporter_id: user.id,
+                        reason: 'Contenido Inapropiado',
+                        details: 'Reportado desde la card de reseña.'
+                    })
+
+                if (error) throw error
+                alert('Gracias por tu reporte. Lo revisaremos a la brevedad.')
+            } catch (err) {
+                console.error('Error reporting:', err)
+                alert('Hubo un error al enviar el reporte.')
+            } finally {
+                setReporting(false)
+            }
+        }
+    }
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden
-                 hover:border-[var(--text-muted)]/30 transition-all duration-300 cursor-pointer group"
+            className="bg-[var(--card-bg)] border border-[var(--card-border)] overflow-hidden
+                 hover:border-[var(--foreground)] transition-all duration-300 cursor-pointer group"
+            style={{ borderRadius: 'var(--radius)' }}
             onClick={() => router.push(`/log/${log.id}`)}
         >
             {/* Header: User info + time */}
             <div className="flex items-center gap-3 px-4 pt-3.5 pb-2">
                 <div
-                    className="w-8 h-8 rounded-full bg-gradient-to-br from-[#f59e0b] to-[#ef4444] flex items-center justify-center text-white text-xs font-bold shrink-0 cursor-pointer hover:ring-2 hover:ring-[#f59e0b]/50 transition-all"
+                    className="w-8 h-8 bg-[var(--foreground)] flex items-center justify-center text-[var(--background)] text-xs font-black shrink-0 cursor-pointer hover:ring-2 hover:ring-[var(--foreground)]/50 transition-all"
+                    style={{ borderRadius: 'var(--radius)' }}
                     onClick={(e) => {
                         e.stopPropagation()
                         if (log.user_id) router.push(`/perfil/${log.user_id}`)
                     }}
                 >
                     {log.profile?.avatar_url ? (
-                        <img src={log.profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                        <img src={log.profile.avatar_url} alt="" className="w-full h-full object-cover" style={{ borderRadius: 'var(--radius)' }} />
                     ) : (
                         log.profile?.username?.charAt(0)?.toUpperCase() || '?'
                     )}
                 </div>
                 <div className="flex-1 min-w-0">
                     <span
-                        className="text-sm font-semibold truncate block cursor-pointer hover:text-[#f59e0b] hover:underline transition-colors w-fit"
+                        className="text-sm font-black capitalize italic tracking-tighter truncate block cursor-pointer hover:underline transition-colors w-fit"
                         onClick={(e) => {
                             e.stopPropagation()
                             if (log.user_id) router.push(`/perfil/${log.user_id}`)
@@ -103,18 +148,18 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                     </div>
                 </div>
                 {log.is_neutral && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#6366f1]/10 text-[#6366f1] font-medium hidden sm:inline-block">
+                    <span className="text-[10px] px-1.5 py-0.5 border border-[var(--card-border)] bg-[var(--background)] text-[var(--foreground)] font-black capitalize tracking-widest hidden sm:inline-block">
                         📐 Neutral
                     </span>
                 )}
                 <div className="flex gap-1">
                     {log.is_neutral && (
-                        <span className="sm:hidden text-[10px] px-1.5 py-0.5 rounded-md bg-[#6366f1]/10 text-[#6366f1] font-medium shrink-0">
+                        <span className="sm:hidden text-[10px] px-1.5 py-0.5 border border-[var(--card-border)] bg-[var(--background)] text-[var(--foreground)] font-black shrink-0">
                             📐
                         </span>
                     )}
                     {log.is_private && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-500 font-medium shrink-0">
+                        <span className="text-[10px] px-1.5 py-0.5 border border-amber-500/30 bg-amber-500/10 text-amber-600 font-bold capitalize shrink-0">
                             Privado
                         </span>
                     )}
@@ -150,35 +195,35 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
             </div>
 
             {/* Rating Stars - prominent */}
-            <div className="flex items-center justify-center gap-3 px-4 py-2">
+            <div className="flex items-center justify-center gap-3 px-4 py-2 border-y border-[var(--card-border)] bg-[var(--background)]/30">
                 <StarRatingDisplay value={log.rating_partido} size="md" />
-                <span className="text-sm font-bold text-[#f59e0b] tabular-nums">{log.rating_partido.toFixed(1)}</span>
+                <span className="text-xl font-black text-[var(--foreground)] italic tracking-tighter tabular-nums">{log.rating_partido.toFixed(1)}</span>
             </div>
 
             {/* Secondary Ratings Pills */}
             {(log.rating_arbitro || log.rating_atmosfera || log.rating_dt) && (
                 <div className="flex gap-2 px-4 pb-2 justify-center flex-wrap">
                     {log.rating_arbitro && log.rating_arbitro > 0 && (
-                        <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full
-                           bg-[var(--hover-bg)] text-[var(--text-muted)]">
-                            🟨 Árbitro {log.rating_arbitro.toFixed(1)}
+                        <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 font-black capitalize tracking-widest
+                           bg-[var(--hover-bg)] text-[var(--text-muted)] border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}>
+                            🟨 Arb {log.rating_arbitro.toFixed(1)}
                         </span>
                     )}
                     {log.rating_atmosfera && log.rating_atmosfera > 0 && (
-                        <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full
-                           bg-[var(--hover-bg)] text-[var(--text-muted)]">
-                            🏟️ Atmósfera {log.rating_atmosfera.toFixed(1)}
+                        <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 font-black capitalize tracking-widest
+                           bg-[var(--hover-bg)] text-[var(--text-muted)] border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}>
+                            🏟️ Atm {log.rating_atmosfera.toFixed(1)}
                         </span>
                     )}
                     {log.rating_dt && log.rating_dt > 0 && (
-                        <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full
-                           bg-[var(--hover-bg)] text-[var(--text-muted)]">
+                        <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 font-black capitalize tracking-widest
+                           bg-[var(--hover-bg)] text-[var(--text-muted)] border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}>
                             🧥 DT {log.rating_dt.toFixed(1)}
                         </span>
                     )}
                     {log.rating_garra && log.rating_garra > 0 && (
-                        <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full
-                           bg-red-500/10 text-red-500 font-bold border border-red-500/20">
+                        <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 font-black capitalize tracking-widest
+                           bg-red-600 text-white border border-red-700" style={{ borderRadius: 'var(--radius)' }}>
                             🔥 Garra {log.rating_garra.toFixed(1)}
                         </span>
                     )}
@@ -189,12 +234,12 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
             {(log.jugador_estrella || log.jugador_villano) && (
                 <div className="flex gap-2 px-4 pb-2 justify-center">
                     {log.jugador_estrella && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#f59e0b]/10 text-[#f59e0b] font-medium">
+                        <span className="text-[10px] px-2 py-0.5 font-black capitalize tracking-widest bg-[var(--foreground)] text-[var(--background)] border border-[var(--foreground)]" style={{ borderRadius: 'var(--radius)' }}>
                             ⭐ {log.jugador_estrella}
                         </span>
                     )}
                     {log.jugador_villano && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 font-medium">
+                        <span className="text-[10px] px-2 py-0.5 font-black capitalize tracking-widest bg-red-600 text-white border border-red-700" style={{ borderRadius: 'var(--radius)' }}>
                             😈 {log.jugador_villano}
                         </span>
                     )}
@@ -204,7 +249,7 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
             {/* Photo */}
             {log.foto_url && !compact && (
                 <div className="px-4 pb-3">
-                    <div className="rounded-xl overflow-hidden border border-[var(--card-border)] max-h-48">
+                    <div className="overflow-hidden border border-[var(--card-border)] max-h-48 grayscale hover:grayscale-0 transition-all" style={{ borderRadius: 'var(--radius)' }}>
                         <img src={log.foto_url} alt="Momento del partido" className="w-full h-full object-cover"
                             onError={(e) => (e.currentTarget.style.display = 'none')} />
                     </div>
@@ -240,7 +285,7 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
             {log.tags && log.tags.length > 0 && !compact && (
                 <div className="flex gap-1 px-4 pb-3 flex-wrap">
                     {log.tags.map(tag => (
-                        <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-[#f59e0b]/10 text-[#f59e0b] font-medium">
+                        <span key={tag} className="text-[10px] px-2 py-0.5 font-black capitalize tracking-widest border border-[var(--card-border)] bg-[var(--background)] text-[var(--text-muted)]" style={{ borderRadius: 'var(--radius)' }}>
                             #{tag}
                         </span>
                     ))}
@@ -249,31 +294,99 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
 
             {/* Action Bar */}
             <div className="flex items-center gap-1 px-2 py-2 border-t border-[var(--card-border)] relative z-10">
-                <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onLike?.(log.id) }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${log.is_liked
-                        ? 'text-red-500 bg-red-500/10'
-                        : 'text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/5'
-                        }`}
-                >
-                    <Heart size={14} fill={log.is_liked ? 'currentColor' : 'none'}
-                        className={log.is_liked ? 'animate-bounce-in' : ''} />
-                    {(log.likes_count || 0) > 0 && <span>{log.likes_count}</span>}
-                </button>
+                <div className="relative">
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            hapticFeedback(15);
+                            if (log.is_liked) {
+                                onLike?.(log.id, log.my_reaction);
+                            } else {
+                                setShowReactions(!showReactions);
+                            }
+                        }}
+                        onMouseEnter={() => setShowReactions(true)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-black transition-all group/heart
+                            ${log.is_liked
+                                ? 'text-red-600 bg-red-600/10'
+                                : 'text-[var(--text-muted)] hover:text-red-600 hover:bg-black/5'
+                            }`}
+                        style={{ borderRadius: 'var(--radius)' }}
+                    >
+                        <motion.div
+                            animate={log.is_liked ? { scale: [1, 1.2, 1] } : {}}
+                            transition={{ duration: 0.3 }}
+                        >
+                            {log.is_liked ? (
+                                <span className="text-sm">
+                                    {REACTIONS.find(r => r.type === log.my_reaction)?.emoji || '❤️'}
+                                </span>
+                            ) : (
+                                <Heart
+                                    size={16}
+                                    className={`${log.is_liked ? 'drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]' : ''}`}
+                                />
+                            )}
+                        </motion.div>
+                        {(log.likes_count || 0) > 0 && (
+                            <motion.span
+                                key={log.likes_count}
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="tabular-nums"
+                            >
+                                {log.likes_count}
+                            </motion.span>
+                        )}
+                    </button>
+
+                    <AnimatePresence>
+                        {showReactions && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                                onMouseLeave={() => setShowReactions(false)}
+                                className="absolute bottom-full left-0 mb-2 p-1 bg-[var(--card-bg)] border border-[var(--card-border)] shadow-xl flex gap-1 z-[60]"
+                                style={{ borderRadius: '20px' }}
+                            >
+                                {REACTIONS.map((r) => (
+                                    <button
+                                        key={r.type}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            hapticFeedback(20);
+                                            onLike?.(log.id, r.type);
+                                            setShowReactions(false);
+                                        }}
+                                        className={`w-10 h-10 flex items-center justify-center text-lg hover:bg-[var(--hover-bg)] transition-colors
+                                            ${log.my_reaction === r.type ? 'bg-[var(--accent)]/10' : ''}`}
+                                        style={{ borderRadius: 'full' }}
+                                        title={r.label}
+                                    >
+                                        {r.emoji}
+                                    </button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
                 <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); router.push(`/log/${log.id}`) }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                   text-[var(--text-muted)] hover:text-[#3b82f6] hover:bg-[#3b82f6]/5 transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black
+                   text-[var(--text-muted)] hover:text-blue-600 hover:bg-blue-600/5 transition-all"
+                    style={{ borderRadius: 'var(--radius)' }}
                 >
                     <MessageCircle size={14} />
                 </button>
                 <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); setShowAddToList(true) }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                   text-[var(--text-muted)] hover:text-[#10b981] hover:bg-[#10b981]/5 transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black
+                   text-[var(--text-muted)] hover:text-[#16a34a] hover:bg-[#16a34a]/5 transition-all"
+                    style={{ borderRadius: 'var(--radius)' }}
                     title="Añadir a una lista"
                 >
                     <ListPlus size={14} />
@@ -282,10 +395,22 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                 <button
                     type="button"
                     onClick={handleShare}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black
                    text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-all"
+                    style={{ borderRadius: 'var(--radius)' }}
                 >
                     <Share2 size={14} />
+                </button>
+                <button
+                    type="button"
+                    onClick={handleReport}
+                    disabled={reporting}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black
+                   text-[var(--text-muted)] hover:text-red-600 hover:bg-red-600/5 transition-all disabled:opacity-50"
+                    style={{ borderRadius: 'var(--radius)' }}
+                    title="Reportar contenido"
+                >
+                    <Flag size={14} className={reporting ? 'animate-pulse' : ''} />
                 </button>
             </div>
 

@@ -17,6 +17,7 @@
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "framer-motion": "^12.33.0",
+    "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
     "lucide-react": "^0.563.0",
     "modern-screenshot": "^4.6.8",

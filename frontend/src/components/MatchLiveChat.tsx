@@ -136,13 +136,13 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
     // Blurred Teaser for Unauthenticated Users
     if (!user) {
         return (
-            <div className="flex flex-col h-[500px] bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl overflow-hidden shadow-sm relative">
+            <div className="flex flex-col h-[500px] bg-[var(--card-bg)] border border-[var(--card-border)] overflow-hidden relative" style={{ borderRadius: 'var(--radius)' }}>
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 bg-[var(--background)] border-b border-[var(--card-border)] sticky top-0 z-10">
+                <div className="flex items-center justify-between px-4 py-3 bg-[var(--background)] border-b border-[var(--card-border)] border-dashed sticky top-0 z-10">
                     <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-sm">Chat en vivo</h3>
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-[10px] font-bold">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                        <h3 className="font-black text-[10px] capitalize tracking-widest">Chat en vivo</h3>
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 border border-[#16a34a] text-[#16a34a] text-[8px] font-black capitalize">
+                            <div className="w-1.5 h-1.5 bg-[#16a34a]" />
                             LIVE
                         </div>
                     </div>
@@ -150,13 +150,13 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
 
                 {/* Blurred Chat Area */}
                 <div className="flex-1 relative overflow-hidden bg-[var(--background)] p-4 flex flex-col justify-end cursor-pointer" onClick={() => router.push('/login')}>
-                    <div className="absolute inset-0 z-10 bg-black/10 backdrop-blur-[4px]" />
+                    <div className="absolute inset-0 z-10 bg-black/5 backdrop-blur-[2px]" />
                     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none">
-                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 rounded-2xl shadow-xl max-w-[280px] text-center transform scale-105 pointer-events-auto">
-                            <h4 className="font-black text-lg mb-2 text-[var(--foreground)]">¡Sumate a la tribuna!</h4>
-                            <p className="text-sm text-[var(--text-muted)] mb-4">Iniciá sesión para leer los mensajes en vivo y debatir con otros hinchas.</p>
-                            <a href="/login" className="inline-block w-full bg-[var(--accent-green)] text-white font-bold py-2.5 rounded-xl shadow-md cursor-pointer hover:bg-[#009040] transition-colors">
-                                Entrar a la cancha
+                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 shadow-xl max-w-[280px] text-center transform scale-105 pointer-events-auto" style={{ borderRadius: 'var(--radius)' }}>
+                            <h4 className="font-black text-sm mb-2 text-[var(--foreground)] capitalize">¡Sumate a la tribuna!</h4>
+                            <p className="text-[10px] text-[var(--text-muted)] font-bold capitalize mb-4 leading-tight">Iniciá sesión para leer los mensajes y debatir.</p>
+                            <a href="/login" className="inline-block w-full bg-[var(--foreground)] text-[var(--background)] font-black py-2.5 text-[10px] capitalize tracking-widest hover:bg-[var(--foreground)] transition-colors" style={{ borderRadius: 'var(--radius)' }}>
+                                ENTRAR A LA CANCHA
                             </a>
                         </div>
                     </div>
@@ -170,7 +170,7 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
                     </div>
 
                     <div className="text-center pb-2 z-20 pointer-events-none opacity-50 blur-[1px]">
-                        <p className="text-xs font-bold text-[#10b981]">Ver más mensajes...</p>
+                        <p className="text-[9px] font-black capitalize text-[var(--foreground)]">Ver más mensajes...</p>
                     </div>
                 </div>
 
@@ -223,10 +223,11 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
                     <div className="flex gap-2 items-center">
                         <button
                             onClick={() => setShowCreateGroup(true)}
-                            className="text-[10px] bg-[#10b981]/10 text-[#10b981] font-bold px-2 py-1 rounded-md hover:bg-[#10b981]/20 transition-colors border border-[#10b981]/20 hidden sm:flex items-center gap-1"
+                            className="text-[8px] bg-[var(--background)] text-[var(--foreground)] font-black px-2 py-1 hover:bg-[var(--hover-bg)] transition-colors border border-[var(--card-border)] hidden sm:flex items-center gap-1 capitalize"
+                            style={{ borderRadius: 'var(--radius)' }}
                             title="Crear grupo privado para este partido"
                         >
-                            <Users size={12} />
+                            <Users size={10} />
                             Crear Grupo
                         </button>
                         <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] font-medium bg-[var(--hover-bg)] px-2 py-1 rounded-full">
@@ -239,10 +240,11 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
                 <div className="sm:hidden px-4 pb-2">
                     <button
                         onClick={() => setShowCreateGroup(true)}
-                        className="w-full text-xs bg-[var(--hover-bg)] text-[var(--foreground)] font-bold py-1.5 rounded-md hover:bg-[var(--card-border)] transition-colors border border-[var(--card-border)] flex items-center justify-center gap-1.5"
+                        className="w-full text-[9px] bg-[var(--background)] text-[var(--foreground)] font-black py-1.5 hover:bg-[var(--hover-bg)] transition-colors border border-[var(--card-border)] flex items-center justify-center gap-1.5 capitalize"
+                        style={{ borderRadius: 'var(--radius)' }}
                     >
-                        <Users size={14} className="text-[#10b981]" />
-                        Crear Grupo Privado para el Prode
+                        <Users size={12} className="text-[var(--text-muted)]" />
+                        Crear Grupo Privado
                     </button>
                 </div>
             </div>
@@ -274,7 +276,8 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
                                 className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}
                             >
                                 <div
-                                    className="w-8 h-8 rounded-full bg-gradient-to-br from-[#f59e0b] to-[#ef4444] shrink-0 overflow-hidden flex items-center justify-center text-white text-xs font-bold cursor-pointer hover:ring-2 hover:ring-[#10b981]/50 transition-all"
+                                    className="w-8 h-8 bg-[var(--background)] border border-[var(--card-border)] shrink-0 overflow-hidden flex items-center justify-center text-[var(--foreground)] text-[10px] font-black cursor-pointer hover:border-[var(--foreground)] transition-all"
+                                    style={{ borderRadius: 'var(--radius)' }}
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         if (msg.user_id) window.location.href = `/perfil/${msg.user_id}`
@@ -290,7 +293,7 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
                                 <div className={`flex flex-col relative group max-w-[80%] ${isOwn ? 'items-end' : 'items-start'}`}>
                                     <div className="flex items-baseline gap-2 mb-1 px-1">
                                         <span
-                                            className="text-[10px] font-bold text-[var(--text-muted)] cursor-pointer hover:text-[#10b981] hover:underline transition-colors"
+                                            className="text-[9px] font-black capitalize text-[var(--text-muted)] cursor-pointer hover:text-[var(--foreground)] hover:underline transition-colors"
                                             onClick={(e) => {
                                                 e.stopPropagation()
                                                 if (msg.user_id) window.location.href = `/perfil/${msg.user_id}`
@@ -304,12 +307,12 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
                                     </div>
 
                                     <div className={`
-                                        relative px-4 py-2.5 rounded-2xl text-sm leading-relaxed
+                                        relative px-4 py-2.5 text-sm leading-relaxed border border-[var(--card-border)]
                                         ${isOwn
-                                            ? 'bg-[var(--accent)] text-white rounded-tr-sm shadow-[0_2px_10px_var(--accent-glow)]'
-                                            : 'bg-[var(--input-bg)] text-[var(--foreground)] border border-[var(--card-border)] rounded-tl-sm'
+                                            ? 'bg-[var(--foreground)] text-[var(--background)]'
+                                            : 'bg-[var(--background)] text-[var(--foreground)]'
                                         }
-                                    `}>
+                                    `} style={{ borderRadius: 'var(--radius)' }}>
                                         {renderMessage(msg.content)}
 
                                         {/* Actions Menu Trigger */}
@@ -337,7 +340,8 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 exit={{ opacity: 0, scale: 0.95 }}
                                                 className={`absolute top-10 ${isOwn ? 'left-auto right-full mr-2' : 'left-full ml-2'} z-20 
-                                                        bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl shadow-xl overflow-hidden py-1 min-w-[120px]`}
+                                                        bg-[var(--card-bg)] border border-[var(--card-border)] shadow-xl overflow-hidden py-1 min-w-[120px]`}
+                                                style={{ borderRadius: 'var(--radius)' }}
                                             >
                                                 {isOwn ? (
                                                     <button
@@ -391,16 +395,18 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
                         type="text"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Escribe un comentario o envía un GIF..."
-                        className="flex-1 bg-[var(--input-bg)] border border-[var(--card-border)] rounded-full px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors"
+                        placeholder="Comentá algo..."
+                        className="flex-1 bg-[var(--background)] border border-[var(--card-border)] px-4 py-2.5 text-[10px] font-bold capitalize focus:outline-none focus:border-[var(--foreground)] transition-colors"
+                        style={{ borderRadius: 'var(--radius)' }}
                         disabled={isSending}
                     />
                     <button
                         type="submit"
                         disabled={!newMessage.trim() || isSending}
-                        className="w-10 h-10 rounded-full bg-[var(--accent)] text-white flex items-center justify-center shrink-0 hover:brightness-110 disabled:opacity-50 transition-all shadow-sm"
+                        className="w-10 h-10 border border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)] flex items-center justify-center shrink-0 hover:bg-[var(--foreground)] disabled:opacity-50 transition-all font-black"
+                        style={{ borderRadius: 'var(--radius)' }}
                     >
-                        <Send size={16} className={isSending ? 'animate-pulse' : ''} style={{ marginLeft: 2 }} />
+                        <Send size={14} className={isSending ? 'animate-pulse' : ''} style={{ marginLeft: 2 }} />
                     </button>
                 </form>
             </div>

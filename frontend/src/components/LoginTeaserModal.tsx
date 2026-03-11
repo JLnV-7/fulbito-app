@@ -36,10 +36,9 @@ export function LoginTeaserModal({
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
                             onClick={e => e.stopPropagation()}
-                            className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-6 w-full max-w-sm shadow-xl cursor-default relative overflow-hidden"
+                            className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 w-full max-w-sm cursor-default relative overflow-hidden"
+                            style={{ borderRadius: 'var(--radius)' }}
                         >
-                            {/* Accents / Glow */}
-                            <div className="absolute -top-10 -right-10 w-32 h-32 bg-[var(--accent-green)]/20 blur-3xl rounded-full pointer-events-none" />
 
                             <button
                                 onClick={onClose}
@@ -49,28 +48,29 @@ export function LoginTeaserModal({
                             </button>
 
                             <div className="flex flex-col items-center text-center mt-2">
-                                <div className="w-16 h-16 rounded-full bg-[var(--accent-green)]/10 flex items-center justify-center mb-4 border border-[var(--accent-green)]/30">
-                                    <Lock size={28} className="text-[var(--accent-green)] pr-1" />
+                                <div className="w-16 h-16 bg-[var(--background)] border border-[var(--card-border)] flex items-center justify-center mb-4" style={{ borderRadius: 'var(--radius)' }}>
+                                    <Lock size={28} className="text-[var(--foreground)] pr-1" />
                                 </div>
 
-                                <h3 className="text-xl font-black mb-2 tracking-tight text-[var(--foreground)]">
+                                <h3 className="text-xl font-black mb-2 tracking-tighter italic text-[var(--foreground)] capitalize">
                                     {title}
                                 </h3>
 
-                                <p className="text-sm text-[var(--text-muted)] mb-6 leading-relaxed">
+                                <p className="text-[10px] font-black capitalize tracking-widest text-[var(--text-muted)] mb-6 leading-relaxed px-4">
                                     {message}
                                 </p>
 
                                 <div className="w-full flex flex-col gap-2">
                                     <button
                                         onClick={() => router.push('/login')}
-                                        className="w-full bg-[#10b981] text-white font-black py-4 rounded-2xl shadow-lg shadow-[#10b981]/25 active:scale-95 transition-all text-sm uppercase tracking-widest"
+                                        className="w-full bg-[#16a34a] text-white font-black py-4 tracking-widest italic active:scale-95 transition-all text-sm capitalize"
+                                        style={{ borderRadius: 'var(--radius)' }}
                                     >
                                         Iniciar Sesión
                                     </button>
                                     <button
                                         onClick={onClose}
-                                        className="w-full py-2.5 rounded-xl font-semibold text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-colors active:scale-95"
+                                        className="w-full py-2.5 font-black capitalize tracking-widest text-[9px] text-[var(--text-muted)] hover:text-[var(--foreground)] active:scale-95"
                                     >
                                         Quizás más tarde
                                     </button>

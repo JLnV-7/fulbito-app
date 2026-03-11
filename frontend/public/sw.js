@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fulbito-v1'
+const CACHE_NAME = 'futlog-v2'
 const STATIC_ASSETS = [
     '/',
     '/offline',

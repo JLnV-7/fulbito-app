@@ -131,7 +131,7 @@ export default function FeedPage() {
                             className="mb-4 p-4 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl space-y-3"
                         >
                             <div>
-                                <label className="text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Liga</label>
+                                <label className="text-[10px] font-medium text-[var(--text-muted)] capitalize tracking-wider mb-1 block">Liga</label>
                                 <div className="flex gap-1.5 flex-wrap">
                                     {LIGAS.filter(l => l !== 'Todos').map(liga => (
                                         <button
@@ -148,7 +148,7 @@ export default function FeedPage() {
                                 </div>
                             </div>
                             <div>
-                                <label className="text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Equipo</label>
+                                <label className="text-[10px] font-medium text-[var(--text-muted)] capitalize tracking-wider mb-1 block">Equipo</label>
                                 <input
                                     type="text"
                                     value={filterEquipo}
@@ -159,7 +159,7 @@ export default function FeedPage() {
                                 />
                             </div>
                             <div>
-                                <label className="text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Tipo</label>
+                                <label className="text-[10px] font-medium text-[var(--text-muted)] capitalize tracking-wider mb-1 block">Tipo</label>
                                 <div className="flex gap-1.5">
                                     {[
                                         { value: 'tv', label: '📺 TV' },

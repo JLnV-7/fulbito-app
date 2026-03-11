@@ -30,6 +30,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user ?? null)
+
+            // Sync with cookie for middleware
+            if (session) {
+                document.cookie = `sb-session-exists=true; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+            } else {
+                document.cookie = `sb-session-exists=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+            }
         })
 
         return () => subscription.unsubscribe()

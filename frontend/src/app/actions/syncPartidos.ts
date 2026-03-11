@@ -22,18 +22,30 @@ export async function syncPartidosToSupabase(
 ): Promise<Partido[]> {
     if (!scrapedPartidos || scrapedPartidos.length === 0) return []
 
-    const rows = scrapedPartidos.map(p => ({
-        fixture_id: typeof p.id === 'number' ? p.id : parseInt(String(p.id)),
-        liga: p.liga,
-        equipo_local: p.equipo_local,
-        equipo_visitante: p.equipo_visitante,
-        fecha_inicio: p.fecha_inicio,
-        estado: p.estado || 'PREVIA',
-        goles_local: p.goles_local ?? null,
-        goles_visitante: p.goles_visitante ?? null,
-        logo_local: p.logo_local || '',
-        logo_visitante: p.logo_visitante || '',
-    }))
+    const rows = scrapedPartidos
+        .map(p => {
+            // Prefer fixture_id if explicit, otherwise try to parse id as a number
+            const fixtureId = p.fixture_id
+                ? (typeof p.fixture_id === 'number' ? p.fixture_id : parseInt(String(p.fixture_id)))
+                : (typeof p.id === 'number' ? p.id : parseInt(String(p.id)))
+
+            // Skip entries where we can't get a valid numeric fixture_id
+            if (isNaN(fixtureId) || fixtureId <= 0) return null
+
+            return {
+                fixture_id: fixtureId,
+                liga: p.liga,
+                equipo_local: p.equipo_local,
+                equipo_visitante: p.equipo_visitante,
+                fecha_inicio: p.fecha_inicio,
+                estado: p.estado || 'PREVIA',
+                goles_local: p.goles_local ?? null,
+                goles_visitante: p.goles_visitante ?? null,
+                logo_local: p.logo_local || '',
+                logo_visitante: p.logo_visitante || '',
+            }
+        })
+        .filter((r): r is NonNullable<typeof r> => r !== null)
 
     const BATCH_SIZE = 50
     const allUpserted: Partido[] = []
@@ -112,7 +124,7 @@ export async function syncLivePartidosToSupabase() {
             let newState = match.estado
             const statusCode = liveEvent.status.code
 
-            // Map SofaScore status codes to Fulbitoo states
+            // Map SofaScore status codes to FutLog states
             // > 0 usually means in progress, 100 is ended
             if (statusCode === 100) newState = 'FINALIZADO'
             else if (statusCode > 0 && statusCode < 100) newState = 'EN_JUEGO'

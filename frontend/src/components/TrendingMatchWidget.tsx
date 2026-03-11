@@ -89,7 +89,7 @@ export function TrendingMatchWidget() {
                 <div className="relative p-5">
                     {/* Header Tag */}
                     <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[var(--accent-green)]/10 text-[var(--accent-green)] rounded-full text-[10px] font-black uppercase tracking-wider border border-[var(--accent-green)]/20 shadow-[0_0_10px_rgba(0,166,81,0.1)]">
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[var(--accent-green)]/10 text-[var(--accent-green)] rounded-full text-[10px] font-black capitalize tracking-wider border border-[var(--accent-green)]/20 shadow-[0_0_10px_rgba(0,166,81,0.1)]">
                             <Flame size={12} className={isLive ? 'animate-pulse' : ''} />
                             El partido más caliente
                         </div>
@@ -98,7 +98,7 @@ export function TrendingMatchWidget() {
                                 <span className="w-1.5 h-1.5 bg-[#ff6b6b] rounded-full animate-pulse" /> VIVO
                             </span>
                         ) : (
-                            <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase">
+                            <span className="text-[10px] font-semibold text-[var(--text-muted)] capitalize">
                                 {trendingMatch.liga}
                             </span>
                         )}
@@ -135,19 +135,19 @@ export function TrendingMatchWidget() {
                                         <Star size={16} fill="currentColor" />
                                         <span className="font-black text-lg">{promedioScore}</span>
                                     </div>
-                                    <span className="text-[9px] font-semibold text-[var(--text-muted)] uppercase">Comunidad</span>
+                                    <span className="text-[9px] font-semibold text-[var(--text-muted)] capitalize">Comunidad</span>
                                 </>
                             ) : isLive ? (
                                 <>
                                     <div className="w-8 h-8 rounded-full bg-[#ff6b6b]/10 flex items-center justify-center text-[#ff6b6b]">
                                         <Flame size={18} className="animate-pulse" />
                                     </div>
-                                    <span className="text-[10px] font-bold text-[#ff6b6b] uppercase">Entrar</span>
+                                    <span className="text-[10px] font-bold text-[#ff6b6b] capitalize">Entrar</span>
                                 </>
                             ) : (
                                 <>
                                     <span className="font-black text-lg">{trendingMatch?.fecha_inicio ? formatearHora(trendingMatch.fecha_inicio) : ''}</span>
-                                    <span className="text-[9px] font-semibold text-[var(--text-muted)] uppercase">Previa</span>
+                                    <span className="text-[9px] font-semibold text-[var(--text-muted)] capitalize">Previa</span>
                                 </>
                             )}
                         </div>

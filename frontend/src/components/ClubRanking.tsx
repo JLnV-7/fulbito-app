@@ -91,7 +91,7 @@ export function ClubRanking() {
 
     if (loading) {
         return (
-            <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] p-6">
+            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-6">
                 <div className="animate-pulse space-y-3">
                     {[1, 2, 3, 4, 5].map(i => (
                         <div key={i} className="h-12 bg-[var(--background)] rounded-xl" />
@@ -103,67 +103,62 @@ export function ClubRanking() {
 
     if (clubs.length === 0) {
         return (
-            <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] p-8 text-center">
+            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-8 text-center">
                 <p className="text-3xl mb-2">🏆</p>
-                <p className="text-sm text-[var(--text-muted)]">
-                    Todavía no hay suficientes reseñas para armar el ranking
+                <p className="text-xs text-[var(--text-muted)] italic">
+                    Todavía no hay suficientes reseñas
                 </p>
             </div>
         )
     }
 
     return (
-        <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] overflow-hidden">
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
             <div className="p-4 border-b border-[var(--card-border)]">
-                <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-2">
-                    🏆 Ranking de Clubes
-                    <span className="text-[10px] bg-[var(--background)] px-2 py-0.5 rounded-full font-normal">
-                        por la comunidad
-                    </span>
+                <h3 className="text-sm font-bold text-[var(--foreground)] flex items-center justify-between">
+                    Ranking de Clubes
+                    <span className="text-[10px] text-[var(--text-muted)] font-normal">Top 20</span>
                 </h3>
             </div>
 
-            <div className="divide-y divide-[var(--card-border)]">
-                {clubs.map((club, idx) => (
-                    <motion.div
-                        key={club.equipo}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.04 }}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--background)] transition-colors"
-                    >
-                        {/* Rank */}
-                        <span className={`text-sm font-bold w-7 text-center ${idx < 3 ? 'text-lg' : 'text-[var(--text-muted)]'}`}>
-                            {getMedal(idx)}
-                        </span>
-
-                        {/* Logo */}
-                        {club.logo ? (
-                            <img src={club.logo} alt={club.equipo} className="w-7 h-7 object-contain" />
-                        ) : (
-                            <div className="w-7 h-7 bg-[var(--background)] rounded-full flex items-center justify-center text-xs">
-                                ⚽
-                            </div>
-                        )}
-
-                        {/* Team name */}
-                        <span className="flex-1 text-sm font-bold truncate">{club.equipo}</span>
-
-                        {/* Stats */}
-                        <div className="flex items-center gap-3">
-                            <span className="text-[10px] text-[var(--text-muted)]">
-                                {club.total_logs} {club.total_logs === 1 ? 'log' : 'logs'}
-                            </span>
-                            <div
-                                className="px-2.5 py-1 rounded-lg text-xs font-bold text-white min-w-[40px] text-center"
-                                style={{ backgroundColor: getRatingColor(club.avg_rating) }}
-                            >
-                                {club.avg_rating.toFixed(1)}
-                            </div>
-                        </div>
-                    </motion.div>
-                ))}
-            </div>
+            <table className="w-full text-left border-collapse">
+                <thead className="bg-[var(--background)]">
+                    <tr className="border-b border-[var(--card-border)]">
+                        <th className="px-4 py-2 text-[10px] font-bold capitalize text-[var(--text-muted)] w-10 text-center">#</th>
+                        <th className="px-4 py-2 text-[10px] font-bold capitalize text-[var(--text-muted)]">Equipo</th>
+                        <th className="px-4 py-2 text-[10px] font-bold capitalize text-[var(--text-muted)] text-right">Logs</th>
+                        <th className="px-4 py-2 text-[10px] font-bold capitalize text-[var(--text-muted)] text-center">Rating</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--card-border)]">
+                    {clubs.map((club, idx) => (
+                        <tr key={club.equipo} className="hover:bg-[var(--background)] transition-colors">
+                            <td className="px-4 py-3 text-sm font-medium text-center text-[var(--text-muted)] w-10">
+                                {idx + 1}
+                            </td>
+                            <td className="px-4 py-3">
+                                <div className="flex items-center gap-3">
+                                    {club.logo && (
+                                        <img src={club.logo} alt="" className="w-6 h-6 object-contain" />
+                                    )}
+                                    <span className="text-sm font-semibold truncate max-w-[120px]">{club.equipo}</span>
+                                </div>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-[var(--text-muted)] text-right">
+                                {club.total_logs}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                                <span
+                                    className="inline-block px-2 py-1 text-xs font-bold text-white rounded-lg shadow-sm"
+                                    style={{ backgroundColor: getRatingColor(club.avg_rating) }}
+                                >
+                                    {club.avg_rating.toFixed(1)}
+                                </span>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     )
 }

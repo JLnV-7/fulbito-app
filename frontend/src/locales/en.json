@@ -3,7 +3,10 @@
         "loading": "Loading the stands...",
         "save": "Save",
         "cancel": "Cancel",
-        "back": "Back"
+        "back": "Back",
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "tomorrow": "Tomorrow"
     },
     "nav": {
         "home": "Home",
@@ -34,12 +37,37 @@
         },
         "teams": {
             "title": "Your Teams",
+            "favorite": "Your Favorite Team",
+            "noTeam": "You don't have a favorite team.",
+            "configure": "Configure team",
+            "change": "Change",
             "notifications": "Match notifications"
         },
         "settings": {
             "title": "Settings",
             "language": "Language",
-            "logout": "Logout"
+            "logout": "Logout",
+            "sync": {
+                "title": "Offline Sync",
+                "desc": "If you saved reviews offline, you can manually upload them here.",
+                "action": "SYNC"
+            },
+            "appearance": {
+                "title": "Appearance",
+                "classic": "Classic Mode",
+                "classicDesc": "Arial, neutral, long scroll",
+                "dark": "Dark Theme",
+                "darkDesc": "Protect your eyes"
+            },
+            "danger": {
+                "title": "Danger"
+            },
+            "pwa": {
+                "title": "Install App",
+                "desc": "Add FutLog to your home screen to load faster.",
+                "offline": "OFFLINE",
+                "fast": "FAST"
+            }
         }
     },
     "ratings": {
@@ -48,5 +76,10 @@
             "atmosphere": "Atmosphere",
             "garra": "Grit"
         }
+    },
+    "footer": {
+        "privacy": "Privacy",
+        "terms": "Terms",
+        "sources": "Sources"
     }
 }

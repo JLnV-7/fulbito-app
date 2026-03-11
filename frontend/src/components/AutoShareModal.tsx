@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/Button'
-import html2canvas from 'html2canvas'
+import { toPng } from 'html-to-image'
 
 interface AutoShareModalProps {
     isOpen: boolean
@@ -39,14 +39,12 @@ export function AutoShareModal({ isOpen, onClose, type, title, subtitle, achieve
 
         try {
             setIsGenerating(true)
-            const canvas = await html2canvas(cardRef.current, {
-                scale: 2, // High resolution
-                useCORS: true,
+            const imgData = await toPng(cardRef.current, {
+                pixelRatio: 2, // High resolution
                 backgroundColor: '#0f172a', // force dark background for consistent share cards
-                logging: false
+                style: { margin: '0' }
             })
 
-            const imgData = canvas.toDataURL('image/png')
             setGeneratedImage(imgData)
         } catch (error) {
             console.error('Error generating share preview:', error)
@@ -134,7 +132,7 @@ export function AutoShareModal({ isOpen, onClose, type, title, subtitle, achieve
                                 <div className="bg-black/30 backdrop-blur-md rounded-2xl p-6 w-full border border-white/10">
                                     {type === 'prode_exact' && (
                                         <>
-                                            <p className="text-sm font-bold opacity-60 uppercase mb-2">Partido</p>
+                                            <p className="text-sm font-bold opacity-60 capitalize mb-2">Partido</p>
                                             <p className="font-bold text-xl">{achievementData.matchDetails}</p>
                                             <div className="mt-4 flex justify-center items-center gap-2 text-emerald-400 font-bold bg-emerald-400/10 py-2 rounded-xl">
                                                 <span>+</span>{achievementData.pointsText} PTS
@@ -143,7 +141,7 @@ export function AutoShareModal({ isOpen, onClose, type, title, subtitle, achieve
                                     )}
                                     {type === 'badge_unlock' && (
                                         <>
-                                            <p className="text-sm font-bold opacity-60 uppercase mb-2">Nueva Insignia</p>
+                                            <p className="text-sm font-bold opacity-60 capitalize mb-2">Nueva Insignia</p>
                                             <p className="font-bold text-2xl text-amber-400">{achievementData.badgeName}</p>
                                         </>
                                     )}

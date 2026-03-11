@@ -44,7 +44,7 @@ export function UnirseGrupoForm({ onCancel, onSuccess }: Props) {
                         placeholder="Ej: FULBO-123"
                         value={codigo}
                         onChange={(e) => setCodigo(e.target.value.toUpperCase())}
-                        className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-xl px-4 py-3 outline-none focus:border-[#ffd700] text-center font-mono text-xl tracking-widest uppercase transition-colors"
+                        className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-xl px-4 py-3 outline-none focus:border-[#ffd700] text-center font-mono text-xl tracking-widest capitalize transition-colors"
                         maxLength={8}
                         autoFocus
                     />

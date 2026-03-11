@@ -27,8 +27,9 @@ export const JugadorVotacion = memo(({ jugador, voto, onVotar }: JugadorVotacion
 
   return (
     <motion.div
-      className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] relative mt-4
-                  hover:border-[#10b981]/40 border-b-4 border-b-transparent hover:border-b-[#10b981] transition-all shadow-sm"
+      className="bg-[var(--card-bg)] border border-[var(--card-border)] relative mt-4
+                  hover:border-[var(--foreground)] border-b-2 border-b-transparent hover:border-b-[var(--foreground)] transition-all shadow-sm"
+      style={{ borderRadius: 'var(--radius)' }}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -51,8 +52,7 @@ export const JugadorVotacion = memo(({ jugador, voto, onVotar }: JugadorVotacion
       </div>
 
       {/* Jugador info */}
-      <div className="px-4 py-3 flex items-center justify-between gap-3 relative z-20 overflow-hidden rounded-t-xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-[var(--card-bg)] via-[var(--card-bg)] to-transparent z-0" />
+      <div className="px-4 py-3 flex items-center justify-between gap-3 relative z-20 overflow-hidden bg-[var(--background)]/50" style={{ borderTopLeftRadius: 'var(--radius)', borderTopRightRadius: 'var(--radius)' }}>
 
         <div className="flex items-center gap-3 flex-1 min-w-0 pr-16 relative z-10">
           {/* Número */}
@@ -63,8 +63,8 @@ export const JugadorVotacion = memo(({ jugador, voto, onVotar }: JugadorVotacion
 
           {/* Nombre y posición */}
           <div className="min-w-0 flex-1">
-            <p className="font-bold text-sm truncate">{jugador.nombre}</p>
-            <p className="text-[10px] text-[#10b981] uppercase font-bold tracking-wide">
+            <p className="font-black text-xs capitalize italic tracking-tight truncate">{jugador.nombre}</p>
+            <p className="text-[9px] text-[var(--foreground)] capitalize font-black tracking-widest border-t border-[var(--card-border)] border-dashed mt-1 pt-1 opacity-70">
               {jugador.posicion}
             </p>
           </div>
@@ -84,8 +84,8 @@ export const JugadorVotacion = memo(({ jugador, voto, onVotar }: JugadorVotacion
       </div>
 
       {/* Votación con estrellas */}
-      <div className="px-4 py-2 bg-[var(--background)]/50 flex items-center justify-between border-t border-[var(--card-border)] rounded-b-xl relative z-20">
-        <span className="text-[10px] text-[var(--text-muted)] uppercase font-bold">Calificación</span>
+      <div className="px-4 py-2 bg-[var(--background)] flex items-center justify-between border-t border-[var(--card-border)] relative z-20" style={{ borderBottomLeftRadius: 'var(--radius)', borderBottomRightRadius: 'var(--radius)' }}>
+        <span className="text-[9px] text-[var(--text-muted)] capitalize font-black italic tracking-widest">Ratear</span>
         <div className="flex gap-0.5">
           {[1, 2, 3, 4, 5].map(estrella => (
             <motion.button

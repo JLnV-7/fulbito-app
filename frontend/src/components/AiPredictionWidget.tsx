@@ -74,18 +74,18 @@ export function AiPredictionWidget({ partidoId, equipoLocal, equipoVisitante }: 
     }, [partidoId, equipoLocal, equipoVisitante])
 
     return (
-        <div className="bg-[var(--card-bg)] rounded-xl border border-[#8b5cf6]/30 shadow-[0_4px_24px_rgba(139,92,246,0.06)] overflow-hidden relative">
+        <div className="bg-[var(--card-bg)] rounded-xl border border-[#2563eb]/30 shadow-[0_4px_24px_rgba(139,92,246,0.06)] overflow-hidden relative">
             {/* Premium Glow effect behind the widget */}
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#8b5cf6]/10 blur-3xl rounded-full pointer-events-none" />
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#2563eb]/10 blur-3xl rounded-full pointer-events-none" />
 
             <div className="px-5 py-4 border-b border-[var(--card-border)] flex items-center justify-between relative z-10">
-                <div className="flex items-center gap-2 text-[#8b5cf6]">
-                    <div className="p-1.5 bg-[#8b5cf6]/10 rounded-lg">
+                <div className="flex items-center gap-2 text-[#2563eb]">
+                    <div className="p-1.5 bg-[#2563eb]/10 rounded-lg">
                         <Sparkles size={18} />
                     </div>
                     <span className="font-black tracking-wide text-sm">PREDICCIÓN IA</span>
                 </div>
-                <span className="text-[10px] uppercase font-bold text-[var(--text-muted)] bg-[var(--background)] px-2 py-0.5 rounded-full border border-[var(--card-border)]">
+                <span className="text-[10px] capitalize font-bold text-[var(--text-muted)] bg-[var(--background)] px-2 py-0.5 rounded-full border border-[var(--card-border)]">
                     BETA V1.2
                 </span>
             </div>
@@ -101,8 +101,8 @@ export function AiPredictionWidget({ partidoId, equipoLocal, equipoVisitante }: 
                             className="flex flex-col items-center justify-center py-6 gap-3"
                         >
                             <div className="relative">
-                                <Sparkles className="text-[#8b5cf6] animate-pulse" size={28} />
-                                <div className="absolute inset-0 bg-[#8b5cf6] blur-xl opacity-20 animate-pulse" />
+                                <Sparkles className="text-[#2563eb] animate-pulse" size={28} />
+                                <div className="absolute inset-0 bg-[#2563eb] blur-xl opacity-20 animate-pulse" />
                             </div>
                             <p className="text-sm text-[var(--text-muted)] font-medium animate-pulse">
                                 Analizando estadísticas históricas y rachas...
@@ -116,19 +116,19 @@ export function AiPredictionWidget({ partidoId, equipoLocal, equipoVisitante }: 
                             className="space-y-6"
                         >
                             {/* Text Analysis */}
-                            <div className="bg-[#8b5cf6]/5 rounded-xl p-4 border border-[#8b5cf6]/10">
+                            <div className="bg-[#2563eb]/5 rounded-xl p-4 border border-[#2563eb]/10">
                                 <p className="text-sm leading-relaxed text-[var(--foreground)] font-medium">
                                     {prediction.text}
                                 </p>
                                 <div className="mt-3 flex items-center gap-2 text-xs text-[var(--text-muted)]">
-                                    <AlertCircle size={14} className="text-[#8b5cf6]" />
+                                    <AlertCircle size={14} className="text-[#2563eb]" />
                                     <span>Factor clave: <strong className="text-[var(--foreground)]">{prediction.keyFactor}</strong></span>
                                 </div>
                             </div>
 
                             {/* Probabilities Bar */}
                             <div>
-                                <div className="flex justify-between text-xs font-bold mb-2 uppercase tracking-wide">
+                                <div className="flex justify-between text-xs font-bold mb-2 capitalize tracking-wide">
                                     <div className="flex items-center gap-1.5 w-1/3">
                                         <Shield size={12} className="text-[var(--accent-blue)]" />
                                         <span className="truncate">{equipoLocal}</span>

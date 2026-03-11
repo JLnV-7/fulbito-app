@@ -53,9 +53,9 @@ export function TeamForm({ equipo, compact = false }: TeamFormProps) {
 
     const getColor = (result: FormResult) => {
         switch (result) {
-            case 'V': return 'bg-[#10b981] text-white'
+            case 'V': return 'bg-[#16a34a] text-white'
             case 'E': return 'bg-[#6b7280] text-white'
-            case 'D': return 'bg-[#ef4444] text-white'
+            case 'D': return 'bg-[#dc2626] text-white'
         }
     }
 

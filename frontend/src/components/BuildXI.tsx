@@ -109,17 +109,29 @@ export function BuildXI() {
         setExporting(true)
         try {
             const canvas = await html2canvas(pitchRef.current, {
-                scale: 2,
+                scale: window.devicePixelRatio || 2,
                 useCORS: true,
-                backgroundColor: '#0a0a0a'
+                allowTaint: true,
+                backgroundColor: '#1a4d1a',
+                logging: false,
+                onclone: (clonedDoc) => {
+                    const el = clonedDoc.body.querySelector('[ref="pitchRef"]') as HTMLElement
+                    if (el) el.style.borderRadius = '0'
+                }
             })
+
             const image = canvas.toDataURL('image/png')
             const link = document.createElement('a')
             link.href = image
             link.download = `futlog-lineup-${Date.now()}.png`
+            document.body.appendChild(link)
             link.click()
+            document.body.removeChild(link)
+
+            alert('¡Imagen generada! Si no se descarga automáticamente, probá manteniendo presionada la imagen para guardarla.')
         } catch (err) {
             console.error('Error exporting image:', err)
+            alert('Error al generar la imagen. Intentá tomar una captura de pantalla.')
         } finally {
             setExporting(false)
         }
@@ -156,7 +168,7 @@ export function BuildXI() {
             <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-6 shadow-sm">
                 <div className="flex flex-col gap-4">
                     <div>
-                        <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-2 block">
+                        <label className="text-[10px] font-black text-[var(--text-muted)] capitalize tracking-widest mb-2 block">
                             NOMBRE DEL EQUIPO
                         </label>
                         <input
@@ -169,7 +181,7 @@ export function BuildXI() {
 
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
-                            <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-2 block">
+                            <label className="text-[10px] font-black text-[var(--text-muted)] capitalize tracking-widest mb-2 block">
                                 TÁCTICA
                             </label>
                             <div className="flex gap-2">
@@ -196,7 +208,7 @@ export function BuildXI() {
             {suggestedPlayers.length > 0 && (
                 <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-4 shadow-sm overflow-hidden">
                     <div className="flex items-center justify-between mb-3 px-1">
-                        <label className="text-[10px] font-black text-[var(--accent-green)] uppercase tracking-widest flex items-center gap-1.5">
+                        <label className="text-[10px] font-black text-[var(--accent-green)] capitalize tracking-widest flex items-center gap-1.5">
                             <Sparkles size={12} /> Jugadores Sugeridos
                         </label>
                         <span className="text-[10px] text-[var(--text-muted)] font-bold italic">Basado en tus ratings</span>
@@ -214,7 +226,7 @@ export function BuildXI() {
                                     👤
                                 </div>
                                 <div className="text-center">
-                                    <p className="text-[9px] font-black truncate w-16 uppercase tracking-tighter">{p.name}</p>
+                                    <p className="text-[9px] font-black truncate w-16 capitalize tracking-tighter">{p.name}</p>
                                     <p className="text-[10px] font-bold text-[var(--accent-yellow)]">★ {p.rating}</p>
                                 </div>
                             </button>
@@ -282,7 +294,7 @@ export function BuildXI() {
                     ))}
 
                     <div className="absolute bottom-6 right-6 opacity-30 pointer-events-none flex items-center gap-2">
-                        <span className="text-[8px] font-black text-white tracking-widest uppercase">Diseñado en FutLog.app</span>
+                        <span className="text-[8px] font-black text-white tracking-widest capitalize">Diseñado en FutLog.app</span>
                     </div>
                 </div>
 

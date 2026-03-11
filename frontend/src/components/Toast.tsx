@@ -10,9 +10,9 @@ export function ToastContainer() {
     const getToastStyles = (type: string) => {
         switch (type) {
             case 'success':
-                return 'bg-[#10b981] text-white'
+                return 'bg-[var(--foreground)] text-[var(--background)]'
             case 'error':
-                return 'bg-[#ef4444] text-white'
+                return 'bg-[#dc2626] text-white'
             case 'warning':
                 return 'bg-[#f59e0b] text-black'
             default:
@@ -38,12 +38,13 @@ export function ToastContainer() {
                         initial={{ opacity: 0, x: 100, scale: 0.9 }}
                         animate={{ opacity: 1, x: 0, scale: 1 }}
                         exit={{ opacity: 0, x: 100, scale: 0.9 }}
-                        className={`px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 cursor-pointer
+                        className={`px-4 py-3 border border-[var(--card-border)] shadow-xl flex items-center gap-3 cursor-pointer
                                    ${getToastStyles(toast.type)}`}
+                        style={{ borderRadius: 'var(--radius)' }}
                         onClick={() => hideToast(toast.id)}
                     >
                         <span className="text-lg">{getIcon(toast.type)}</span>
-                        <span className="text-sm font-medium">{toast.message}</span>
+                        <span className="text-sm font-black capitalize tracking-widest">{toast.message}</span>
                     </motion.div>
                 ))}
             </AnimatePresence>

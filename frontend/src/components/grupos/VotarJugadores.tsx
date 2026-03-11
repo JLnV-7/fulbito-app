@@ -79,29 +79,29 @@ export function VotarJugadores({ partido, grupoId, onClose }: VotarJugadoresProp
             className="fixed inset-0 bg-[var(--background)] z-[60] overflow-y-auto"
         >
             {/* Header */}
-            <div className="bg-gradient-to-b from-[#10b981] to-[#059669] text-white pt-10 pb-6 px-6">
+            <div className="bg-[#16a34a] text-white pt-10 pb-6 px-6 border-b border-black/10">
                 <div className="max-w-lg mx-auto">
-                    <button onClick={onClose} className="bg-white/20 p-2 rounded-full mb-3 backdrop-blur-md">← Volver</button>
-                    <h1 className="text-2xl font-black">🗳️ Votar Jugadores</h1>
-                    <p className="text-white/80 text-sm">{fechaDisplay} - {partido.cancha || 'Sin cancha'}</p>
+                    <button onClick={onClose} className="bg-black/20 p-2 mb-3 font-black capitalize tracking-widest text-[10px] hover:bg-black/30 transition-all" style={{ borderRadius: 'var(--radius)' }}>← Volver</button>
+                    <h1 className="text-2xl font-black capitalize italic tracking-tighter">🗳️ Votar Jugadores</h1>
+                    <p className="text-white/80 text-[10px] font-bold capitalize tracking-widest leading-none mt-1">{fechaDisplay} - {partido.cancha || 'Sin cancha'}</p>
                 </div>
             </div>
 
             <div className="max-w-lg mx-auto px-4 -mt-3 pb-28 space-y-4">
                 {/* Progress */}
-                <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--card-border)] shadow-lg">
-                    <div className="flex justify-between text-sm mb-2">
-                        <span className="font-bold">📊 Tu Progreso:</span>
-                        <span className="font-black text-[#10b981]">{votados}/{total} votados</span>
+                <div className="bg-[var(--card-bg)] p-4 border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}>
+                    <div className="flex justify-between text-[10px] font-black capitalize tracking-widest mb-2">
+                        <span>📊 Tu Progreso</span>
+                        <span className="text-[#16a34a]">{votados}/{total} votados</span>
                     </div>
-                    <div className="w-full h-3 bg-[var(--background)] rounded-full overflow-hidden">
+                    <div className="w-full h-3 bg-[var(--background)] border border-[var(--card-border)] overflow-hidden" style={{ borderRadius: 'var(--radius)' }}>
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${progreso}%` }}
-                            className="h-full bg-gradient-to-r from-[#10b981] to-[#fbbf24] rounded-full"
+                            className="h-full bg-[#16a34a]"
                         />
                     </div>
-                    <p className="text-right text-xs text-[var(--text-muted)] mt-1">{progreso}%</p>
+                    <p className="text-right text-[10px] font-black tabular-nums text-[var(--text-muted)] mt-1">{progreso}%</p>
                 </div>
 
                 {loading ? (
@@ -128,11 +128,12 @@ export function VotarJugadores({ partido, grupoId, onClose }: VotarJugadoresProp
 
                         {/* Quick vote CTA */}
                         {votados < total && (
-                            <div className="bg-[#fbbf24]/10 border border-[#fbbf24]/30 rounded-2xl p-4 text-center">
-                                <p className="text-sm mb-2">⚠️ Te faltan <strong>{total - votados}</strong> jugadores</p>
+                            <div className="bg-[var(--card-bg)] border border-[#d97706]/30 p-4 text-center" style={{ borderRadius: 'var(--radius)' }}>
+                                <p className="text-[10px] font-black capitalize tracking-widest mb-3">⚠️ Te faltan <span className="text-[#d97706]">{total - votados}</span> jugadores</p>
                                 <button
                                     onClick={() => setShowRapida(true)}
-                                    className="bg-[#fbbf24] text-black px-6 py-3 rounded-xl font-black hover:shadow-lg hover:shadow-[#fbbf24]/30 transition-all"
+                                    className="w-full bg-[#d97706] text-white px-6 py-3 font-black capitalize tracking-widest italic text-sm hover:brightness-110 transition-all"
+                                    style={{ borderRadius: 'var(--radius)' }}
                                 >
                                     ⚡ Votar Todos
                                 </button>
@@ -182,7 +183,8 @@ function TeamVoteSection({ equipo, color, emoji, jugadores, onVotar }: {
                         initial={{ x: -20, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: i * 0.05 }}
-                        className="bg-[var(--card-bg)] rounded-xl p-4 border border-[var(--card-border)]"
+                        className="bg-[var(--card-bg)] p-4 border border-[var(--card-border)]"
+                        style={{ borderRadius: 'var(--radius)' }}
                     >
                         <div className="flex items-center justify-between">
                             <div>
@@ -198,20 +200,21 @@ function TeamVoteSection({ equipo, color, emoji, jugadores, onVotar }: {
                                         {j.mi_voto.comentario && (
                                             <p className="text-xs text-[var(--text-muted)] mt-0.5">💬 &ldquo;{j.mi_voto.comentario}&rdquo;</p>
                                         )}
-                                        <p className="text-[10px] text-[#10b981] font-bold mt-0.5">✅ Ya votaste</p>
+                                        <p className="text-[10px] text-[#16a34a] font-black capitalize tracking-widest mt-0.5">✅ Ya votaste</p>
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                                    <p className="text-[10px] text-[var(--text-muted)] font-black capitalize tracking-widest mt-1">
                                         {'○'.repeat(10)} Sin votar
                                     </p>
                                 )}
                             </div>
                             <button
                                 onClick={() => onVotar(j)}
-                                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${j.mi_voto
-                                    ? 'bg-[var(--background)] text-[var(--text-muted)] hover:bg-[var(--hover-bg)]'
-                                    : 'bg-[#10b981] text-white hover:bg-[#059669]'
+                                className={`px-4 py-2 text-xs font-black capitalize tracking-widest transition-all ${j.mi_voto
+                                    ? 'bg-[var(--hover-bg)] text-[var(--text-muted)] border border-[var(--card-border)]'
+                                    : 'bg-[#16a34a] text-white'
                                     }`}
+                                style={{ borderRadius: 'var(--radius)' }}
                             >
                                 {j.mi_voto ? 'Editar' : 'Votar →'}
                             </button>

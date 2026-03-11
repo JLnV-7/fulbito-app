@@ -86,11 +86,8 @@ export default function ProdePage() {
     }, [partidosDisponibles, pronosticos])
 
     const handleGuardarPronostico = async (partidoId: string | number, golesLocal: number, golesVisitante: number) => {
-        try {
-            await guardarPronostico(String(partidoId), golesLocal, golesVisitante)
-        } catch (error: any) {
-            showToast(error.message || 'Error al guardar pronóstico', 'error')
-        }
+        // Toast is now handled inside ProdeCard for better UX
+        await guardarPronostico(String(partidoId), golesLocal, golesVisitante)
     }
 
     const getPronosticoExistente = (partidoId: string | number) => {
@@ -106,16 +103,16 @@ export default function ProdePage() {
         <>
             <DesktopNav />
 
-            <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20">
+            <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20 overflow-x-hidden">
                 {/* Header */}
-                <div className="px-6 py-6 md:py-8">
+                <div className="px-6 py-8">
                     <div className="max-w-4xl mx-auto">
                         <div className="flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
                                     Hacer Pronósticos 🎯
                                 </h1>
-                                <p className="text-sm text-[var(--text-muted)]">
+                                <p className="text-sm text-[var(--text-muted)] font-medium">
                                     Predecí los resultados y sumá puntos.
                                 </p>
                             </div>
@@ -125,17 +122,17 @@ export default function ProdePage() {
                 </div>
 
                 {/* Filtros de liga */}
-                <div className="px-6 mb-4">
+                <div className="px-6 mb-8">
                     <div className="max-w-4xl mx-auto">
                         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
                             {LIGAS.map(liga => (
                                 <button
                                     key={liga}
                                     onClick={() => setFiltroLiga(liga)}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all
+                                    className={`px-5 py-2.5 rounded-xl text-xs font-bold capitalize tracking-tight transition-all whitespace-nowrap border
                              ${filtroLiga === liga
-                                            ? 'bg-[#10b981] text-white'
-                                            : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)] border border-[var(--card-border)]'
+                                            ? 'bg-[var(--accent)] text-white border-[var(--accent)] shadow-lg shadow-purple-500/20'
+                                            : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)] border-[var(--card-border)]'
                                         }`}
                                 >
                                     {liga}
@@ -146,43 +143,43 @@ export default function ProdePage() {
                 </div>
 
                 {/* Filtros de pronóstico */}
-                <div className="px-6 mb-6">
+                <div className="px-6 mb-10">
                     <div className="max-w-4xl mx-auto">
-                        <div className="flex gap-2 bg-[var(--card-bg)] p-1 rounded-xl border border-[var(--card-border)] w-fit">
+                        <div className="flex gap-2 bg-[var(--card-bg)] p-1.5 rounded-2xl border border-[var(--card-border)] w-fit shadow-sm">
                             <button
                                 onClick={() => setFiltroPronostico('todos')}
-                                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2
+                                className={`px-5 py-2.5 rounded-xl text-[10px] font-bold capitalize tracking-tight transition-all flex items-center gap-2
                                     ${filtroPronostico === 'todos'
                                         ? 'bg-[var(--background)] text-[var(--foreground)] shadow-sm'
                                         : 'text-[var(--text-muted)]'}`}
                             >
-                                Todos <span className="bg-[var(--card-border)] px-2 py-0.5 rounded-full">{contadores.todos}</span>
+                                Todos <span className="bg-[var(--card-border)] px-2 py-0.5 rounded-full text-[9px] font-bold">{contadores.todos}</span>
                             </button>
                             <button
                                 onClick={() => setFiltroPronostico('sin_pronosticar')}
-                                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2
+                                className={`px-5 py-2.5 rounded-xl text-[10px] font-bold capitalize tracking-tight transition-all flex items-center gap-2
                                     ${filtroPronostico === 'sin_pronosticar'
-                                        ? 'bg-[#ff6b6b]/10 text-[#ff6b6b] shadow-sm'
+                                        ? 'bg-[#ef4444]/10 text-[#ef4444] shadow-sm'
                                         : 'text-[var(--text-muted)]'}`}
                             >
-                                Pendientes <span className="bg-[#ff6b6b]/20 text-[#ff6b6b] px-2 py-0.5 rounded-full">{contadores.sinPronosticar}</span>
+                                Pendientes <span className="bg-[#ef4444]/20 text-[#ef4444] px-2 py-0.5 rounded-full text-[9px] font-bold">{contadores.sinPronosticar}</span>
                             </button>
                             <button
                                 onClick={() => setFiltroPronostico('pronosticados')}
-                                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2
+                                className={`px-5 py-2.5 rounded-xl text-[10px] font-bold capitalize tracking-tight transition-all flex items-center gap-2
                                     ${filtroPronostico === 'pronosticados'
-                                        ? 'bg-[#10b981]/10 text-[#10b981] shadow-sm'
+                                        ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm'
                                         : 'text-[var(--text-muted)]'}`}
                             >
-                                Completados <span className="bg-[#10b981]/20 text-[#10b981] px-2 py-0.5 rounded-full">{contadores.conPronostico}</span>
+                                Completados <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${filtroPronostico === 'pronosticados' ? 'bg-[var(--accent)]/20 text-[var(--accent)]' : 'bg-[var(--card-border)]'}`}>{contadores.conPronostico}</span>
                             </button>
                         </div>
                     </div>
                 </div>
 
                 {/* Stats del usuario y Simulador */}
-                <div className="px-6 mb-8">
-                    <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="px-6 mb-16">
+                    <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
                         {/* Mis Stats (Col 1) */}
                         <div className="md:col-span-1">
                             <ProdeStats />
@@ -199,33 +196,33 @@ export default function ProdePage() {
                 <div className="px-6">
                     <div className="max-w-4xl mx-auto">
                         {loadingPartidos || loadingPronosticos ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 {Array(6).fill(0).map((_, idx) => (
                                     <PartidoCardSkeleton key={idx} />
                                 ))}
                             </div>
                         ) : partidosFiltrados.length === 0 ? (
-                            <div className="text-center py-12">
-                                <span className="text-6xl mb-4 block">
+                            <div className="text-center py-20 bg-[var(--card-bg)] rounded-[2.5rem] border border-[var(--card-border)] shadow-xl">
+                                <span className="text-6xl mb-6 block">
                                     {filtroPronostico === 'sin_pronosticar' ? '🎉' : filtroPronostico === 'pronosticados' ? '📝' : '🎯'}
                                 </span>
-                                <h3 className="text-lg font-semibold mb-2">
+                                <h3 className="text-xl font-bold tracking-tight mb-2">
                                     {filtroPronostico === 'sin_pronosticar'
-                                        ? '¡Completaste todos los pronósticos!'
+                                        ? '¡Completaste todo!'
                                         : filtroPronostico === 'pronosticados'
-                                            ? 'No tenés pronósticos todavía'
-                                            : 'No hay partidos disponibles'}
+                                            ? 'Sin pronósticos'
+                                            : 'Sin partidos'}
                                 </h3>
-                                <p className="text-sm text-[var(--text-muted)]">
+                                <p className="text-sm text-[var(--text-muted)] font-medium max-w-xs mx-auto">
                                     {filtroPronostico === 'sin_pronosticar'
-                                        ? 'No hay más partidos pendientes para pronosticar'
+                                        ? 'No hay más partidos pendientes para pronosticar.'
                                         : filtroPronostico === 'pronosticados'
-                                            ? 'Hacé tu primer pronóstico para sumar puntos'
-                                            : 'No hay partidos próximos para pronosticar en esta liga'}
+                                            ? 'Hacé tu primer pronóstico para sumar puntos.'
+                                            : 'No hay partidos próximos en esta liga.'}
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-fade">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 stagger-fade">
                                 {partidosFiltrados.map(partido => (
                                     <ProdeCard
                                         key={partido.id}
@@ -243,13 +240,13 @@ export default function ProdePage() {
 
                 {/* CTA para ver ranking */}
                 {partidosFiltrados.length > 0 && (
-                    <div className="px-6 mt-8">
+                    <div className="px-6 mt-12 mb-8">
                         <div className="max-w-4xl mx-auto text-center">
                             <button
                                 onClick={() => router.push('/ranking')}
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--card-bg)] 
-                           border-2 border-[#10b981] text-[#10b981] rounded-xl font-semibold
-                           hover:bg-[#10b981] hover:text-white transition-all"
+                                className="inline-flex items-center gap-3 px-8 py-4 bg-[var(--card-bg)] 
+                            border border-[var(--accent-green)] text-[var(--accent-green)] rounded-2xl font-bold capitalize tracking-tight text-xs
+                            hover:bg-[var(--accent-green)] hover:text-black transition-all shadow-lg hover:shadow-green-500/10"
                             >
                                 <span>🏆</span>
                                 Ver Tabla de Posiciones

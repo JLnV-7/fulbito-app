@@ -38,10 +38,10 @@ const SLIDES = [
     },
     {
         id: 3,
-        icon: <MessageCircle size={56} className="text-[#8b5cf6] drop-shadow-md" />,
+        icon: <MessageCircle size={56} className="text-[#16a34a] drop-shadow-md" />,
         title: 'Viví la Previa',
         description: 'Unite al Chat en Vivo durante los partidos. Debatí minuto a minuto y seguí la acción.',
-        bgOffset: 'bg-gradient-to-br from-[var(--card-bg)] to-[#8b5cf6]/5'
+        bgOffset: 'bg-gradient-to-br from-[var(--card-bg)] to-[#16a34a]/5'
     },
     {
         id: 4,
@@ -98,7 +98,7 @@ export function OnboardingCarousel() {
     const slide = SLIDES[currentSlide]
 
     return (
-        <div className={`mb-6 relative overflow-hidden rounded-2xl border border-[var(--card-border)] p-6 shadow-sm min-h-[220px] flex flex-col justify-between ${slide.bgOffset} transition-colors duration-500`}>
+        <div className={`mb-6 relative overflow-hidden rounded-[var(--radius)] border border-[var(--card-border)] p-6 shadow-sm min-h-[220px] flex flex-col justify-between ${slide.bgOffset} transition-colors duration-500`}>
 
             {/* Skip Button - Hidden on last slide */}
             {currentSlide < SLIDES.length - 1 && (
@@ -154,7 +154,7 @@ export function OnboardingCarousel() {
                     {SLIDES.map((_, idx) => (
                         <div
                             key={idx}
-                            className={`h-1.5 rounded-full transition-all duration-300 ${currentSlide === idx ? 'w-4 bg-[var(--foreground)]' : 'w-1.5 bg-[var(--card-border)]'}`}
+                            className={`h-1.5 rounded-[var(--radius)] transition-all duration-300 ${currentSlide === idx ? 'w-4 bg-[var(--foreground)]' : 'w-1.5 bg-[var(--card-border)]'}`}
                         />
                     ))}
                 </div>

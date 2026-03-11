@@ -1,0 +1,4 @@
+0000000000000000000000000000000000000000 86df50fa98c3d1c40edc046db7a4346ab92339f7 Julian <julian@futlog.app> 1772595277 -0300	commit (initial): FutLog v1.0 - Full feature release
+86df50fa98c3d1c40edc046db7a4346ab92339f7 e442a7fb622b13b17efc8ff904d1a5bd6c86d7b4 Julian <julian@futlog.app> 1773018379 -0300	commit: Feat: Home redesign Promiedos-style and bug fixes
+e442a7fb622b13b17efc8ff904d1a5bd6c86d7b4 3631a2d6ca6bfb1aa399007ced4f4d2de9b2de33 Julian <julian@futlog.app> 1773020904 -0300	commit: Fix: Relocate feedback widget to avoid overlap and general UX polish
+3631a2d6ca6bfb1aa399007ced4f4d2de9b2de33 0518d0668ba0210694b1b02430222bdacbe758b4 Julian <julian@futlog.app> 1773021697 -0300	commit: Fix: Full branding transition to FutLog and UX polishing refinements

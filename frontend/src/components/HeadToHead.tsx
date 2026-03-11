@@ -115,14 +115,14 @@ export function HeadToHead({ equipoLocal, equipoVisitante, logoLocal, logoVisita
 
     if (loading) {
         return (
-            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 animate-pulse">
-                <div className="h-4 w-32 bg-[var(--card-border)] rounded mb-4"></div>
+            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 animate-pulse" style={{ borderRadius: 'var(--radius)' }}>
+                <div className="h-4 w-32 bg-[var(--card-border)] mb-4" style={{ borderRadius: 'var(--radius)' }}></div>
                 <div className="flex justify-between items-center">
-                    <div className="w-16 h-16 bg-[var(--card-border)] rounded-full"></div>
+                    <div className="w-16 h-16 bg-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}></div>
                     <div className="flex-1 mx-4">
-                        <div className="h-6 bg-[var(--card-border)] rounded"></div>
+                        <div className="h-6 bg-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}></div>
                     </div>
-                    <div className="w-16 h-16 bg-[var(--card-border)] rounded-full"></div>
+                    <div className="w-16 h-16 bg-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}></div>
                 </div>
             </div>
         )
@@ -152,17 +152,17 @@ export function HeadToHead({ equipoLocal, equipoVisitante, logoLocal, logoVisita
                                 <span className="text-2xl">⚽</span>
                             </div>
                         )}
-                        <span className="text-2xl font-black text-[#10b981]">{stats.victorias1}</span>
-                        <span className="text-[10px] text-[var(--text-muted)]">Victorias</span>
+                        <span className="text-2xl font-black text-[#16a34a]">{stats.victorias1}</span>
+                        <span className="text-[10px] text-[var(--text-muted)] capitalize font-black tracking-widest">Victorias</span>
                     </div>
 
                     {/* Empates */}
                     <div className="flex flex-col items-center">
-                        <div className="w-14 h-14 bg-[var(--background)] rounded-full flex items-center justify-center mb-2">
-                            <span className="text-2xl">🤝</span>
+                        <div className="w-12 h-12 bg-[var(--background)] flex items-center justify-center mb-2 border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}>
+                            <span className="text-xl">🤝</span>
                         </div>
                         <span className="text-2xl font-black text-[#6b7280]">{stats.empates}</span>
-                        <span className="text-[10px] text-[var(--text-muted)]">Empates</span>
+                        <span className="text-[10px] text-[var(--text-muted)] capitalize font-black tracking-widest">Empates</span>
                     </div>
 
                     {/* Equipo 2 */}
@@ -176,18 +176,18 @@ export function HeadToHead({ equipoLocal, equipoVisitante, logoLocal, logoVisita
                                 <span className="text-2xl">⚽</span>
                             </div>
                         )}
-                        <span className="text-2xl font-black text-[#ef4444]">{stats.victorias2}</span>
-                        <span className="text-[10px] text-[var(--text-muted)]">Victorias</span>
+                        <span className="text-2xl font-black text-[#dc2626]">{stats.victorias2}</span>
+                        <span className="text-[10px] text-[var(--text-muted)] capitalize font-black tracking-widest">Victorias</span>
                     </div>
                 </div>
 
                 {/* Barra de victorias */}
-                <div className="flex h-3 rounded-full overflow-hidden mb-4">
+                <div className="flex h-4 overflow-hidden mb-4 border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}>
                     <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${pct1}%` }}
                         transition={{ duration: 0.5 }}
-                        className="bg-[#10b981]"
+                        className="bg-[#16a34a]"
                     />
                     <motion.div
                         initial={{ width: 0 }}
@@ -199,7 +199,7 @@ export function HeadToHead({ equipoLocal, equipoVisitante, logoLocal, logoVisita
                         initial={{ width: 0 }}
                         animate={{ width: `${pct2}%` }}
                         transition={{ duration: 0.5, delay: 0.2 }}
-                        className="bg-[#ef4444]"
+                        className="bg-[#dc2626]"
                     />
                 </div>
 
@@ -233,14 +233,14 @@ export function HeadToHead({ equipoLocal, equipoVisitante, logoLocal, logoVisita
                         className="mt-3 space-y-2"
                     >
                         {stats.partidos.slice(0, 5).map(match => (
-                            <div key={match.id} className="flex justify-between items-center text-xs bg-[var(--background)] rounded-lg px-3 py-2">
-                                <span className="text-[var(--text-muted)]">
+                            <div key={match.id} className="flex justify-between items-center text-[10px] bg-[var(--background)] px-3 py-2 border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}>
+                                <span className="text-[var(--text-muted)] font-bold capitalize tracking-widest">
                                     {new Date(match.fecha).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: '2-digit' })}
                                 </span>
-                                <span className="font-bold">
+                                <span className="font-black text-xs">
                                     {match.golesLocal} - {match.golesVisitante}
                                 </span>
-                                <span className="text-[var(--text-muted)]">{match.competicion}</span>
+                                <span className="text-[var(--text-muted)] font-bold capitalize tracking-widest">{match.competicion}</span>
                             </div>
                         ))}
                     </motion.div>

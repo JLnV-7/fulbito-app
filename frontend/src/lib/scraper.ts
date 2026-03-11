@@ -37,7 +37,11 @@ const TSDB_SEASONS: Record<string, string> = {
 }
 
 // Leagues where TheSportsDB standings work correctly
-const STANDINGS_SUPPORTED = ['La Liga', 'Premier League', 'Serie A', 'Bundesliga', 'Ligue 1']
+const STANDINGS_SUPPORTED = [
+    'Liga Profesional', 'Primera Nacional',
+    'La Liga', 'Premier League', 'Serie A', 'Bundesliga', 'Ligue 1',
+    'Brasileirão', 'MLS'
+]
 
 async function fetchTSDB<T>(endpoint: string): Promise<T | null> {
     try {

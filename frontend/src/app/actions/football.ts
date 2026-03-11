@@ -3,6 +3,7 @@
 
 import { getStandings, getTopScorers, getFixtures, getFixtureById, getRounds, getFixturesByRound } from '@/lib/api'
 import { scrapeFixtures, scrapeStandings, scrapeTopScorers } from '@/lib/scraper'
+import { fetchPublicFixtures, fetchPublicStandings, fetchPublicScorers } from '@/lib/football-data'
 import { LIGAS_MAP, CURRENT_SEASONS } from '@/lib/constants'
 import type { ApiLeagueResponse, ApiFixture } from '@/types/api'
 import type { Partido } from '@/types'
@@ -19,7 +20,15 @@ function getSeasonForLeague(ligaName: string): number {
 }
 
 export async function fetchStandingsAction(ligaName: string) {
-    // Try scraper first (current season, free)
+    // 1. Try football-data.org first (New preferred public source)
+    try {
+        const data = await fetchPublicStandings(ligaName)
+        if (data && data.length > 0) return data
+    } catch (e) {
+        console.error('Error fetching from football-data:', e)
+    }
+
+    // 2. Try scraper second (current season, free)
     try {
         const scraped = await scrapeStandings(ligaName)
         if (scraped && scraped.length > 0) return scraped
@@ -42,7 +51,15 @@ export async function fetchStandingsAction(ligaName: string) {
 }
 
 export async function fetchTopScorersAction(ligaName: string) {
-    // Try scraper first
+    // 1. Try football-data.org first
+    try {
+        const data = await fetchPublicScorers(ligaName)
+        if (data && data.length > 0) return data
+    } catch (e) {
+        console.error('Error fetching scorers from football-data:', e)
+    }
+
+    // 2. Try scraper second
     try {
         const scraped = await scrapeTopScorers(ligaName)
         if (scraped && Array.isArray(scraped) && scraped.length > 0) return scraped
@@ -60,7 +77,19 @@ export async function fetchTopScorersAction(ligaName: string) {
 }
 
 export async function fetchFixturesAction(ligaName: string) {
-    // Try scraper first
+    // 1. Try football-data.org first
+    try {
+        const data = await fetchPublicFixtures(ligaName)
+        if (data && data.length > 0) {
+            return data.sort((a, b) =>
+                new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime()
+            )
+        }
+    } catch (e) {
+        console.error('Error fetching fixtures from football-data:', e)
+    }
+
+    // 2. Try scraper second
     try {
         const scraped = await scrapeFixtures(ligaName)
         if (scraped && scraped.length > 0) {
@@ -112,10 +141,40 @@ export async function fetchFixturesAction(ligaName: string) {
 }
 
 export async function fetchFixtureByIdAction(id: number): Promise<Partido | null> {
-    const data = await getFixtureById(id)
-    if (!data) return null
-    return adaptApiFixtureToPartido(data)
+    // 1. Attempt to find it quickly in public data (Football-Data API)
+    try {
+        const publicFixtures = await fetchPublicFixtures('Liga Profesional')
+        if (publicFixtures) {
+            const match = publicFixtures.find(f => f.fixture_id === id)
+            if (match) return match
+        }
+    } catch {}
+
+    // 2. Attempt to find it in the robust scraped data cache
+    try {
+        const scraped = await scrapeFixtures('Liga Profesional')
+        if (scraped) {
+            const match = scraped.find(f => f.fixture_id === id)
+            if (match) return match
+        }
+    } catch {}
+
+    // 3. Absolute fallback to API-Football fetching
+    try {
+        const data = await getFixtureById(id)
+        if (data) return adaptApiFixtureToPartido(data)
+    } catch (e) {
+        console.error('API-Football fallback failure for ID', id, e)
+    }
+    
+    return null
 }
+
+export async function fetchPlayerByIdAction(id: number, season: number = 2024) {
+    const { getPlayerById } = await import('@/lib/api')
+    return getPlayerById(id, season)
+}
+
 
 function adaptApiFixtureToPartido(item: ApiFixture): Partido {
     return {

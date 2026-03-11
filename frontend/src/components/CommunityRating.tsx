@@ -9,9 +9,10 @@ interface CommunityRatingProps {
     partidoId: string | number
     equipoLocal: string
     equipoVisitante: string
+    equipos?: any[] // Optional so it doesn't break if not passed
 }
 
-export function CommunityRating({ partidoId, equipoLocal, equipoVisitante }: CommunityRatingProps) {
+export function CommunityRating({ partidoId, equipoLocal, equipoVisitante, equipos = [] }: CommunityRatingProps) {
     const [stats, setStats] = useState({
         total_reviews: 0,
         avg_rating: 0,
@@ -20,6 +21,7 @@ export function CommunityRating({ partidoId, equipoLocal, equipoVisitante }: Com
         avg_dt: 0,
         top_estrella: '',
         top_villano: '',
+        playerRatings: [] as { id: number, name: string, avg: number, votes: number }[]
     })
     const [loading, setLoading] = useState(true)
 
@@ -50,6 +52,40 @@ export function CommunityRating({ partidoId, equipoLocal, equipoVisitante }: Com
                     const topEstrella = Object.entries(estrellaCount).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
                     const topVillano = Object.entries(villanoCount).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
 
+                    // Fetch numeric player ratings (1-10) from votaciones
+                    const { data: votosData } = await supabase
+                        .from('votaciones')
+                        .select('jugador_id, nota')
+                        .eq('partido_id', String(partidoId))
+                    
+                    let aggregatedPlayers: { id: number, name: string, avg: number, votes: number }[] = []
+
+                    if (votosData && votosData.length > 0 && equipos.length > 0) {
+                        // Map jugadorId to name
+                        const playerMap = new Map<number, string>()
+                        equipos.forEach(eq => {
+                            eq.titulares?.forEach((t: any) => playerMap.set(t.id, t.nombre))
+                            eq.suplentes?.forEach((t: any) => playerMap.set(t.id, t.nombre))
+                        })
+
+                        const playerScores: Record<number, { total: number, count: number }> = {}
+                        votosData.forEach(voto => {
+                            if (!playerScores[voto.jugador_id]) playerScores[voto.jugador_id] = { total: 0, count: 0 }
+                            playerScores[voto.jugador_id].total += voto.nota
+                            playerScores[voto.jugador_id].count += 1
+                        })
+
+                        aggregatedPlayers = Object.entries(playerScores)
+                            .filter(([id, data]) => playerMap.has(Number(id)))
+                            .map(([id, data]) => ({
+                                id: Number(id),
+                                name: playerMap.get(Number(id)) || 'Desconocido',
+                                avg: data.total / data.count,
+                                votes: data.count
+                            }))
+                            .sort((a, b) => b.avg - a.avg) // Best first
+                    }
+
                     setStats({
                         total_reviews: total,
                         avg_rating: avgRating,
@@ -58,6 +94,7 @@ export function CommunityRating({ partidoId, equipoLocal, equipoVisitante }: Com
                         avg_dt: avgDt,
                         top_estrella: topEstrella,
                         top_villano: topVillano,
+                        playerRatings: aggregatedPlayers
                     })
                 }
             } catch {
@@ -135,6 +172,48 @@ export function CommunityRating({ partidoId, equipoLocal, equipoVisitante }: Com
                             😈 {stats.top_villano}
                         </span>
                     )}
+                </div>
+            )}
+
+            {/* Top Players Table 1-10 */}
+            {stats.playerRatings.length > 0 && (
+                <div className="mt-6 border-t border-[var(--card-border)] pt-4">
+                    <h4 className="text-xs font-bold mb-3">Rendimiento (1-10)</h4>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        {/* Mejores */}
+                        <div className="space-y-2">
+                            <h5 className="text-[10px] font-black text-[var(--accent-green)] uppercase tracking-widest pl-1 mb-2">El Podio</h5>
+                            {stats.playerRatings.slice(0, 3).map(p => (
+                                <div key={p.id} className="flex items-center justify-between text-xs bg-[var(--background)] px-2 py-1.5 rounded-md border border-[var(--card-border)]">
+                                    <span className="truncate max-w-[80px] font-medium capitalize" title={p.name}>{p.name.split(' ').pop()}</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className={`px-1.5 py-0.5 rounded font-bold text-[10px] ${p.avg >= 6 ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400'}`}>
+                                            {p.avg.toFixed(1)}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        {/* Peores */}
+                        <div className="space-y-2">
+                            <h5 className="text-[10px] font-black text-red-500 uppercase tracking-widest pl-1 mb-2">Bajo Lupa</h5>
+                            {[...stats.playerRatings].reverse().slice(0, 3).filter(p => p.avg < 5).map(p => (
+                                <div key={p.id} className="flex items-center justify-between text-xs bg-[var(--background)] px-2 py-1.5 rounded-md border border-[var(--card-border)]">
+                                    <span className="truncate max-w-[80px] font-medium capitalize" title={p.name}>{p.name.split(' ').pop()}</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="px-1.5 py-0.5 rounded font-bold text-[10px] bg-red-500/20 text-red-600 dark:text-red-400">
+                                            {p.avg.toFixed(1)}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <p className="text-[9px] text-[var(--text-muted)] mt-2 text-center opacity-70">
+                        Top 3 mejores y peores (nota media global)
+                    </p>
                 </div>
             )}
         </div>

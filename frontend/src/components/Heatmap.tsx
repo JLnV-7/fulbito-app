@@ -106,7 +106,7 @@ export function Heatmap({ points = [], width = 300, height = 400 }: HeatmapProps
 
                 {/* HUD Overlay */}
                 <div className="absolute top-3 left-3 flex flex-col gap-1">
-                    <span className="text-[10px] font-black text-white/50 bg-white/5 px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                    <span className="text-[10px] font-black text-white/50 bg-white/5 px-2 py-0.5 rounded-full capitalize tracking-tighter">
                         Mapa de Calor
                     </span>
                 </div>

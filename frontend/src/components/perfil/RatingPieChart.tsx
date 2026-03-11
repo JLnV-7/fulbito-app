@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
+import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { Star } from 'lucide-react'
 
@@ -10,11 +11,11 @@ interface RatingPieChartProps {
 }
 
 const RATING_COLORS: Record<number, string> = {
-    5: '#10b981', // Verde FutLog (Excelente)
-    4: '#34d399', // Verde Claro (Muy bueno)
-    3: '#fbbf24', // Amarillo (Regular)
-    2: '#fb923c', // Naranja (Malo)
-    1: '#ef4444', // Rojo (Pésimo)
+    5: '#10b981', // Emerald
+    4: '#3b82f6', // Blue
+    3: '#f59e0b', // Amber
+    2: '#f97316', // Orange
+    1: '#ef4444', // Red
 }
 
 const RATING_LABELS: Record<number, string> = {
@@ -26,7 +27,7 @@ const RATING_LABELS: Record<number, string> = {
 }
 
 export function RatingPieChart({ userId }: RatingPieChartProps) {
-    const [data, setData] = useState<{ rating: number; count: number }[]>([])
+    const [data, setData] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [stats, setStats] = useState({ average: 0, total: 0 })
 
@@ -35,7 +36,6 @@ export function RatingPieChart({ userId }: RatingPieChartProps) {
 
         const fetchRatings = async () => {
             try {
-                // Fetch only ratings from match_logs
                 const { data: logs, error } = await supabase
                     .from('match_logs')
                     .select('rating')
@@ -48,7 +48,6 @@ export function RatingPieChart({ userId }: RatingPieChartProps) {
                     return
                 }
 
-                // Calculate distribution
                 const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
                 let sum = 0
                 let totalWithRating = 0
@@ -66,7 +65,6 @@ export function RatingPieChart({ userId }: RatingPieChartProps) {
                     return
                 }
 
-                // Format for Recharts
                 const chartData = [5, 4, 3, 2, 1]
                     .filter(r => distribution[r] > 0)
                     .map(r => ({
@@ -93,8 +91,8 @@ export function RatingPieChart({ userId }: RatingPieChartProps) {
 
     if (loading) {
         return (
-            <div className="h-[200px] flex items-center justify-center animate-pulse">
-                <div className="w-32 h-32 rounded-full border-4 border-[var(--card-border)] border-t-[var(--accent-green)] animate-spin" />
+            <div className="h-[200px] flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-[var(--accent)]/20 border-t-[var(--accent)] rounded-full animate-spin" />
             </div>
         )
     }
@@ -108,22 +106,19 @@ export function RatingPieChart({ userId }: RatingPieChartProps) {
         )
     }
 
-    // Find highest percentage for the central text display later if we want it
     const topRating = [...data].sort((a, b) => b.count - a.count)[0]
     const topPercentage = Math.round((topRating.count / stats.total) * 100)
 
     return (
-        <div className="flex flex-col md:flex-row items-center gap-6 py-2">
-
-            {/* Pie Chart */}
-            <div className="w-[180px] h-[180px] relative shrink-0">
+        <div className="flex flex-col md:flex-row items-center gap-8 py-4">
+            <div className="w-[200px] h-[200px] relative shrink-0">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
                             data={data}
-                            innerRadius={55}
-                            outerRadius={80}
-                            paddingAngle={2}
+                            innerRadius={60}
+                            outerRadius={90}
+                            paddingAngle={5}
                             dataKey="count"
                             stroke="transparent"
                         >
@@ -136,11 +131,9 @@ export function RatingPieChart({ userId }: RatingPieChartProps) {
                                 if (active && payload && payload.length) {
                                     const data = payload[0].payload
                                     return (
-                                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg p-2 shadow-xl text-center">
-                                            <div className="flex justify-center gap-0.5 mb-1 text-amber-400 text-xs">
-                                                {'★'.repeat(data.rating)}
-                                            </div>
-                                            <p className="text-xs font-bold text-[var(--foreground)]">{data.count} partidos</p>
+                                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-3 rounded-2xl shadow-xl text-center">
+                                            <p className="text-sm font-bold text-[var(--foreground)] mb-1">{data.label}</p>
+                                            <p className="text-xs text-[var(--text-muted)]">{data.count} partidos</p>
                                         </div>
                                     )
                                 }
@@ -150,41 +143,38 @@ export function RatingPieChart({ userId }: RatingPieChartProps) {
                     </PieChart>
                 </ResponsiveContainer>
 
-                {/* Center Stat */}
                 <div className="absolute inset-0 flex flex-col justify-center items-center pointer-events-none">
-                    <span className="text-2xl font-black text-[var(--foreground)] leading-none">{stats.average}</span>
-                    <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase mt-1">Promedio</span>
+                    <span className="text-3xl font-bold text-[var(--foreground)]">{stats.average}</span>
+                    <span className="text-[10px] text-[var(--text-muted)] font-medium capitalize tracking-wider">Promedio</span>
                 </div>
             </div>
 
-            {/* Legend / Stats Info */}
-            <div className="flex-1 w-full space-y-2.5">
-                <p className="text-xs text-[var(--text-muted)] border-b border-[var(--card-border)] pb-2 mb-3 font-medium">
-                    Basado en <span className="font-bold text-[var(--foreground)]">{stats.total} partidos rateados</span>. Tu calificación más común es {topRating.rating} estrellas ({topPercentage}%).
+            <div className="flex-1 w-full space-y-4">
+                <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+                    Basado en <span className="text-[var(--foreground)] font-semibold">{stats.total} partidos</span> evaluados. Tu calificación más común es <span className="text-[var(--foreground)] font-semibold">{topRating.label}</span> ({topPercentage}%).
                 </p>
 
-                {data.map((item) => (
-                    <div key={item.rating} className="flex items-center gap-3 text-sm">
-                        <div className="flex gap-0.5 w-16 shrink-0 justify-end" style={{ color: RATING_COLORS[item.rating] }}>
-                            {'★'.repeat(item.rating)}
-                            <span className="text-[var(--card-border)]">{'★'.repeat(5 - item.rating)}</span>
+                <div className="space-y-3">
+                    {data.map((item) => (
+                        <div key={item.rating} className="space-y-1">
+                            <div className="flex justify-between text-xs font-semibold">
+                                <span className="text-[var(--text-muted)] flex gap-1 items-center">
+                                    <span className="text-amber-400">★</span> {item.rating} {RATING_LABELS[item.rating]}
+                                </span>
+                                <span className="text-[var(--foreground)]">{item.count}</span>
+                            </div>
+                            <div className="w-full h-2 bg-[var(--background)] rounded-full overflow-hidden">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${(item.count / stats.total) * 100}%` }}
+                                    className="h-full rounded-full"
+                                    style={{ backgroundColor: RATING_COLORS[item.rating] }}
+                                />
+                            </div>
                         </div>
-                        <div className="flex-1 h-2 bg-[var(--card-border)] rounded-full overflow-hidden">
-                            <div
-                                className="h-full rounded-full transition-all duration-1000"
-                                style={{
-                                    width: `${(item.count / stats.total) * 100}%`,
-                                    backgroundColor: RATING_COLORS[item.rating]
-                                }}
-                            />
-                        </div>
-                        <div className="w-8 shrink-0 text-right text-xs font-bold text-[var(--text-muted)]">
-                            {item.count}
-                        </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
-
         </div>
     )
 }

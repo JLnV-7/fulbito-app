@@ -3,10 +3,17 @@
 
 import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { PublicOnboarding } from '@/components/PublicOnboarding'
+import { motion, AnimatePresence } from 'framer-motion'
 import { usePartidos } from '@/hooks/usePartidos'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTheme } from '@/contexts/ThemeContext'
 import { PartidoCard } from '@/components/PartidoCard'
+import { FixtureTable } from '@/components/FixtureTable'
 import { SearchBar } from '@/components/SearchBar'
 import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
@@ -15,25 +22,81 @@ import { ReglasPuntajeModal } from '@/components/ReglasPuntajeModal'
 import { TablaContent } from '@/components/TablaContent'
 import { GoleadoresContent } from '@/components/GoleadoresContent'
 import { FixturesContent } from '@/components/FixturesContent'
-import { Star, Search, ChevronLeft, ChevronRight, BarChart3, Trophy, Calendar, Globe } from 'lucide-react'
-import { OnboardingCarousel } from '@/components/OnboardingCarousel'
-import { TrendingMatchWidget } from '@/components/TrendingMatchWidget'
+import { Star, Search, ChevronLeft, ChevronRight, BarChart3, Trophy, Calendar, Globe, Users, Newspaper } from 'lucide-react'
 import { PullToRefresh } from '@/components/PullToRefresh'
-import { NewsFeed } from '@/components/NewsFeed'
-import { DailyContestWidget } from '@/components/DailyContestWidget'
-import { ProgresoHoyWidget } from '@/components/ProgresoHoyWidget'
 import type { Partido } from '@/types'
 
 import { LIGAS, type Liga } from '@/lib/constants'
+import { hapticFeedback } from '@/lib/helpers'
+import { LeagueChips } from '@/components/LeagueChips'
+import { MatchLogCard } from '@/components/MatchLogCard'
+import { useMatchLogs } from '@/hooks/useMatchLogs'
+import { Button } from '@/components/ui/Button'
+import { CommunityHighlights } from '@/components/CommunityHighlights'
+import { NewsTab } from '@/components/NewsTab'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
-type HomeTab = 'partidos' | 'tabla' | 'goleadores' | 'fixtures'
+type HomeTab = 'partidos' | 'tabla' | 'goleadores' | 'fixtures' | 'comunidad' | 'noticias'
 
 const TABS: { id: HomeTab; label: string; icon: React.ReactNode }[] = [
   { id: 'partidos', label: 'Partidos', icon: <span className="text-sm">⚽</span> },
+  { id: 'comunidad', label: 'Comunidad', icon: <Users size={14} /> },
   { id: 'tabla', label: 'Tabla', icon: <BarChart3 size={14} /> },
   { id: 'goleadores', label: 'Goleadores', icon: <Trophy size={14} /> },
   { id: 'fixtures', label: 'Fixtures', icon: <Calendar size={14} /> },
+  { id: 'noticias', label: 'Noticias', icon: <Newspaper size={14} /> },
 ]
+
+// ============================================
+// Example fixtures (last resort fallback)
+// ============================================
+const EXAMPLE_FIXTURES: Partido[] = [
+  {
+    id: 'mock-prev-1', fixture_id: 1001,
+    equipo_local: 'Boca Juniors', equipo_visitante: 'River Plate',
+    logo_local: 'https://media.api-sports.io/football/teams/451.png',
+    logo_visitante: 'https://media.api-sports.io/football/teams/435.png',
+    goles_local: 0, goles_visitante: 0,
+    fecha_inicio: new Date().toISOString().split('T')[0] + 'T20:00:00',
+    estado: 'PREVIA', liga: 'Liga Profesional'
+  },
+  {
+    id: 'mock-prev-2', fixture_id: 1002,
+    equipo_local: 'Racing Club', equipo_visitante: 'Independiente',
+    logo_local: 'https://media.api-sports.io/football/teams/436.png',
+    logo_visitante: 'https://media.api-sports.io/football/teams/438.png',
+    goles_local: 0, goles_visitante: 0,
+    fecha_inicio: new Date().toISOString().split('T')[0] + 'T18:00:00',
+    estado: 'PREVIA', liga: 'Liga Profesional'
+  },
+  {
+    id: 'mock-live-1', fixture_id: 1003,
+    equipo_local: 'Real Madrid', equipo_visitante: 'FC Barcelona',
+    logo_local: 'https://media.api-sports.io/football/teams/541.png',
+    logo_visitante: 'https://media.api-sports.io/football/teams/529.png',
+    goles_local: 2, goles_visitante: 1,
+    fecha_inicio: new Date().toISOString().split('T')[0] + 'T21:00:00',
+    estado: 'EN_JUEGO', liga: 'La Liga'
+  },
+  {
+    id: 'mock-fin-1', fixture_id: 1004,
+    equipo_local: 'Man City', equipo_visitante: 'Liverpool',
+    logo_local: 'https://media.api-sports.io/football/teams/50.png',
+    logo_visitante: 'https://media.api-sports.io/football/teams/40.png',
+    goles_local: 3, goles_visitante: 2,
+    fecha_inicio: new Date().toISOString().split('T')[0] + 'T13:30:00',
+    estado: 'FINALIZADO', liga: 'Premier League'
+  },
+  {
+    id: 'mock-prev-3', fixture_id: 1005,
+    equipo_local: 'San Lorenzo', equipo_visitante: 'Huracán',
+    logo_local: 'https://media.api-sports.io/football/teams/458.png',
+    logo_visitante: 'https://media.api-sports.io/football/teams/440.png',
+    goles_local: 0, goles_visitante: 0,
+    fecha_inicio: new Date().toISOString().split('T')[0] + 'T15:00:00',
+    estado: 'PREVIA', liga: 'Liga Profesional'
+  }
+] as Partido[]
 
 // ============================================
 // Date helpers
@@ -42,18 +105,18 @@ function toLocalDateStr(date: Date): string {
   return date.toISOString().split('T')[0]
 }
 
-function formatDateLabel(date: Date): string {
+function formatDateLabel(date: Date, t: any, localeFormat: string): string {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const target = new Date(date)
   target.setHours(0, 0, 0, 0)
   const diff = Math.round((target.getTime() - today.getTime()) / 86400000)
 
-  if (diff === 0) return 'Hoy'
-  if (diff === -1) return 'Ayer'
-  if (diff === 1) return 'Mañana'
+  if (diff === 0) return t('common.today') || 'Hoy'
+  if (diff === -1) return t('common.yesterday') || 'Ayer'
+  if (diff === 1) return t('common.tomorrow') || 'Mañana'
 
-  return target.toLocaleDateString('es-AR', {
+  return target.toLocaleDateString(localeFormat, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
@@ -79,11 +142,14 @@ function generateDateRange(): Date[] {
 // ============================================
 function HomeContent() {
   const { user } = useAuth()
+  const { classicMode } = useTheme()
+  const { t, language } = useLanguage()
+  const localeFormat = language === 'en' ? 'en-US' : language === 'pt' ? 'pt-BR' : 'es-AR'
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<HomeTab>(() => {
     const tab = searchParams.get('tab')
-    if (tab && ['partidos', 'tabla', 'goleadores', 'fixtures'].includes(tab)) {
+    if (tab && ['partidos', 'tabla', 'goleadores', 'fixtures', 'comunidad', 'noticias'].includes(tab)) {
       return tab as HomeTab
     }
     return 'partidos'
@@ -93,6 +159,7 @@ function HomeContent() {
   const [selectedDate, setSelectedDate] = useState<string>(toLocalDateStr(new Date()))
   const [favoritos, setFavoritos] = useState<string[]>([])
   const [showSearch, setShowSearch] = useState(false)
+  const [displayLimit, setDisplayLimit] = useState(24)
 
   const dateRange = useMemo(() => generateDateRange(), [])
 
@@ -115,7 +182,7 @@ function HomeContent() {
   // Sync tab with URL
   useEffect(() => {
     const tab = searchParams.get('tab')
-    if (tab && ['partidos', 'tabla', 'goleadores', 'fixtures'].includes(tab)) {
+    if (tab && ['partidos', 'tabla', 'goleadores', 'fixtures', 'comunidad', 'noticias'].includes(tab)) {
       setActiveTab(tab as HomeTab)
     }
   }, [searchParams])
@@ -142,6 +209,66 @@ function HomeContent() {
     })
   }, [partidos, searchQuery, selectedDate, filtroLiga, favoritos])
 
+  // Smart fallback: find nearest date with matches
+  const fixtureDisplay = useMemo(() => {
+    // Tier 1: matches for selected date exist
+    if (partidosFiltrados.length > 0) {
+      return { matches: partidosFiltrados, type: 'exact' as const, nearestDate: undefined }
+    }
+
+    // Tier 2: find nearest future date with real matches
+    if (partidos.length > 0) {
+      const today = new Date(selectedDate + 'T12:00:00')
+      const futureDates = new Map<string, Partido[]>()
+
+      partidos.forEach(p => {
+        const dateStr = p.fecha_inicio?.split('T')[0]
+        if (dateStr && dateStr >= selectedDate) {
+          const existing = futureDates.get(dateStr) || []
+          existing.push(p)
+          futureDates.set(dateStr, existing)
+        }
+      })
+
+      // Find first date after selected that has matches
+      const sortedDates = [...futureDates.keys()].sort()
+      for (const date of sortedDates) {
+        if (date > selectedDate) {
+          const nearestMatches = futureDates.get(date)!
+          return {
+            matches: nearestMatches,
+            type: 'nearest' as const,
+            nearestDate: date
+          }
+        }
+      }
+
+      // Also check past dates (nearest before selected)
+      const pastDates = [...new Map(
+        partidos.map(p => [p.fecha_inicio?.split('T')[0], p])
+      ).keys()].filter(d => d && d < selectedDate).sort().reverse()
+
+      for (const date of pastDates) {
+        const pastMatches = partidos.filter(p => p.fecha_inicio?.startsWith(date!))
+        if (pastMatches.length > 0) {
+          return {
+            matches: pastMatches,
+            type: 'nearest' as const,
+            nearestDate: date
+          }
+        }
+      }
+    }
+
+    // Tier 3: no real matches at all — use example fixtures
+    return { matches: EXAMPLE_FIXTURES, type: 'example' as const, nearestDate: undefined }
+  }, [partidosFiltrados, partidos, selectedDate])
+
+  // Reset display limit when filters change
+  useEffect(() => {
+    setDisplayLimit(24)
+  }, [searchQuery, selectedDate, filtroLiga])
+
   const liveCount = partidos.filter(p => p.estado === 'EN_JUEGO').length
 
   const currentLigaName = filtroLiga === 'Todos' || filtroLiga === 'Favoritos'
@@ -160,338 +287,229 @@ function HomeContent() {
       <DesktopNav />
       <PullToRefresh onRefresh={async () => { await refetch() }}>
         <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-28 md:pt-20">
-          {/* Imagen Hero de Fondo Desenfocada */}
-          <div className="absolute top-0 left-0 w-full h-[40vh] z-0 overflow-hidden pointer-events-none opacity-40">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--background)] z-10" />
-            <img
-              src="https://images.unsplash.com/photo-1518605368461-1ebcd036de1d?auto=format&fit=crop&q=80&w=2000"
-              alt="Estadio"
-              className="w-full h-full object-cover filter blur-sm scale-105"
-            />
-          </div>
-
-          {/* Contenido Principal (Z-Index alto para estar sobre el Hero) */}
           <div className="relative z-10">
-            {/* Header Mobile */}
-            <div className="px-5 pt-8 pb-4 flex justify-between items-center md:hidden">
-              <h1 className="text-3xl font-black tracking-tighter text-white drop-shadow-md">Fut<span className="text-[#10b981]">Log</span></h1>
-              <div className="flex items-center gap-3">
+            {/* Simple Fixed Branding Header - mobile only (DesktopNav handles desktop) */}
+            {/* Simple Fixed Branding Header - mobile only (DesktopNav handles desktop) */}
+            <div className="md:hidden px-4 py-3 flex justify-between items-center border-b border-[var(--card-border)] bg-[var(--card-bg)] z-30 sticky top-0">
+              <h1 className="text-xl font-black tracking-tighter text-[var(--foreground)]">FutLog</h1>
+              <div className="flex items-center gap-1.5">
+                {/* Desafíos & Feedback Actions */}
+                <button title="Desafíos" onClick={() => document.dispatchEvent(new CustomEvent('open-challenges'))} className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[#8b5cf6] hover:bg-[#8b5cf6]/10 transition-all">
+                    <Trophy size={16} />
+                </button>
+                <div className="w-px h-4 bg-[var(--card-border)] mx-0.5" />
                 <button
                   onClick={() => router.push('/buscar')}
-                  className="p-1.5 rounded-full bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)]"
+                  className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-bg)]"
                 >
-                  <Search size={18} />
+                  <Search size={16} />
                 </button>
-                <ReglasPuntajeModal />
+                <ThemeToggle compact />
+                {!user && (
+                  <Link href="/login" className="ml-1 px-2 py-1 text-[10px] font-bold bg-[var(--accent)] text-[var(--background)] rounded uppercase tracking-tight">Ingresar</Link>
+                )}
               </div>
             </div>
-
-            <div className="max-w-6xl mx-auto px-4 mt-2">
-
-              {/* Hero Banner CTA / Onboarding */}
-              {!user && <OnboardingCarousel />}
-
-              {/* Bento Box Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6">
-
-                {/* Columna Izquierda (Principal - Matches y News) */}
-                <div className="md:col-span-8 flex flex-col gap-4">
-
-                  {/* Trending Match Premium Widget */}
-                  {user && <TrendingMatchWidget />}
-
-                  {/* News Feed */}
-                  <NewsFeed userTeams={favoritos} />
-
-                </div>
-
-                {/* Columna Derecha (Secundaria - Progreso y Contests) */}
-                <div className="md:col-span-4 flex flex-col gap-4">
-                  {/* Quick Progress Dashboard */}
-                  {user && <ProgresoHoyWidget />}
-
-                  {/* Daily Contests */}
-                  <DailyContestWidget />
-                </div>
+            <div className="max-w-4xl mx-auto px-4 mt-2">
+              {/* Categorías de Ligas (Promiedos Style) */}
+              <div className="sticky top-0 md:top-[68px] z-20 bg-[var(--background)]/95 backdrop-blur-sm py-3 -mx-4 px-4 border-b border-[var(--card-border)] mb-4">
+                <LeagueChips
+                  activeLiga={filtroLiga}
+                  onSelect={(l) => {
+                    hapticFeedback(10)
+                    setFiltroLiga(l)
+                  }}
+                />
               </div>
 
-              {/* Section Tabs Premium */}
-              <div className="flex gap-2 mb-5 overflow-x-auto no-scrollbar pb-2">
-                {TABS.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={`flex-none min-w-[100px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold transition-all border
-                  ${activeTab === tab.id
-                        ? 'bg-[#00A651] text-white border-[#00A651] shadow-md shadow-[#00A651]/20'
-                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] border-[var(--card-border)] hover:bg-[var(--hover-bg)]'
-                      }`}
-                  >
-                    <div className={`${activeTab === tab.id ? 'text-white' : 'text-[var(--text-muted)]'} transition-colors`}>
-                      {tab.icon}
-                    </div>
-                    <span>{tab.label}</span>
-                  </button>
-                ))}
-              </div>
+              {!user && activeTab === 'partidos' && (
+                <div className="mb-4 p-4 bg-[var(--card-bg)] rounded-2xl border border-dashed border-[var(--card-border)] text-center">
+                  <p className="text-xs text-[var(--text-muted)] font-medium">
+                    Ve los resultados en tiempo real. Para participar del Prode y ratear jugadores, creá tu cuenta.
+                  </p>
+                </div>
+              )}
 
-              {/* === PARTIDOS TAB === */}
+              {/* Date Navigation — Promiedos-style (Horizontal Scroll) */}
               {activeTab === 'partidos' && (
-                <>
-                  {/* Date Navigation — Promiedos-style */}
-                  <div className="flex items-center gap-1 mb-3 bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] p-1">
-                    <button
-                      onClick={() => shiftDate(-1)}
-                      className="p-1.5 rounded-lg hover:bg-[var(--background)] text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors"
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-
-                    <div className="flex gap-1 overflow-x-auto no-scrollbar flex-1">
-                      {dateRange.map((date) => {
-                        const dateStr = toLocalDateStr(date)
-                        const isSelected = dateStr === selectedDate
-                        const isToday = dateStr === toLocalDateStr(new Date())
-                        return (
-                          <button
-                            key={dateStr}
-                            onClick={() => setSelectedDate(dateStr)}
-                            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all whitespace-nowrap min-w-fit
-                          ${isSelected
-                                ? 'bg-[#10b981] text-white shadow-sm'
-                                : isToday
-                                  ? 'bg-[#10b981]/10 text-[#10b981]'
-                                  : 'text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--background)]'
-                              }`}
-                          >
-                            {formatDateLabel(date)}
-                          </button>
-                        )
-                      })}
-                    </div>
-
-                    <button
-                      onClick={() => shiftDate(1)}
-                      className="p-1.5 rounded-lg hover:bg-[var(--background)] text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors"
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
-
-                  {/* League Filters + Search */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar flex-1 pb-1">
+                <div className="flex items-center gap-1.5 mb-5 overflow-x-auto no-scrollbar py-1">
+                  {dateRange.map((date) => {
+                    const dateStr = toLocalDateStr(date)
+                    const label = formatDateLabel(date, t, localeFormat)
+                    const isSelected = dateStr === selectedDate
+                    const isToday = dateStr === toLocalDateStr(new Date())
+                    return (
                       <button
-                        onClick={() => setFiltroLiga('Todos')}
-                        className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap border
-                      ${filtroLiga === 'Todos'
-                            ? 'bg-[var(--accent-green)] text-white border-[var(--accent-green)] shadow-md shadow-[var(--accent-green)]/20'
-                            : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)] border-[var(--card-border)]'
-                          }`}
-                      >
-                        <Globe size={12} />
-                        Todos
-                      </button>
-                      {LIGAS.filter(l => l !== 'Todos').map((liga) => (
-                        <button
-                          key={liga}
-                          onClick={() => setFiltroLiga(liga)}
-                          className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap border
-                        ${filtroLiga === liga
-                              ? 'bg-[var(--accent-green)] text-white border-[var(--accent-green)] shadow-md shadow-[var(--accent-green)]/20'
-                              : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)] border-[var(--card-border)]'
-                            }`}
-                        >
-                          <Trophy size={12} className={filtroLiga === liga ? 'text-white' : 'text-[var(--accent-yellow)]'} />
-                          {liga}
-                        </button>
-                      ))}
-                      <button
+                        key={dateStr}
                         onClick={() => {
-                          if (!user) { router.push('/login'); return }
-                          setFiltroLiga('Favoritos')
+                          hapticFeedback(5)
+                          setSelectedDate(dateStr)
                         }}
-                        className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border
-                      ${filtroLiga === 'Favoritos'
-                            ? 'bg-[var(--accent-yellow)]/10 text-[var(--accent-yellow)] border-[var(--accent-yellow)]/40'
-                            : 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--accent-yellow)] border-[var(--card-border)]'
+                        className={`flex flex-col items-center justify-center min-w-[3.5rem] py-1.5 px-2 rounded-xl border transition-all ${isSelected
+                            ? 'bg-[var(--foreground)] border-[var(--foreground)] text-[var(--background)] shadow-md'
+                            : isToday
+                              ? 'bg-[var(--card-bg)] border-[var(--accent)]/50 text-[var(--foreground)]'
+                              : 'bg-[var(--card-bg)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--card-border-hover)]'
                           }`}
                       >
-                        <Star size={12} fill={filtroLiga === 'Favoritos' ? 'currentColor' : 'none'} className={filtroLiga === 'Favoritos' ? "text-[var(--accent-yellow)]" : ""} />
-                        Mis Equipos
+                        <span className={`text-[9px] font-black uppercase tracking-wider ${isSelected ? 'opacity-90' : 'opacity-70'}`}>
+                          {label === t('common.today') || label === t('common.tomorrow') || label === t('common.yesterday') || label === 'Hoy' || label === 'Mañana' || label === 'Ayer' ? ' ' : new Date(dateStr + 'T12:00:00').toLocaleDateString(localeFormat, { weekday: 'short' })}
+                        </span>
+                        <span className={`text-sm font-black tracking-tighter mt-0.5 ${isSelected ? 'text-[var(--background)]' : ''}`}>
+                          {label === t('common.today') || label === t('common.tomorrow') || label === t('common.yesterday') || label === 'Hoy' || label === 'Mañana' || label === 'Ayer' ? label : new Date(dateStr + 'T12:00:00').getDate()}
+                        </span>
                       </button>
-                    </div>
+                    )
+                  })}
+                </div>
+              )}
 
-                    <button
-                      onClick={() => setShowSearch(!showSearch)}
-                      className={`p-1.5 rounded-lg border transition-all flex-shrink-0 ${showSearch || searchQuery
-                        ? 'bg-[#10b981]/10 border-[#10b981]/30 text-[#10b981]'
-                        : 'bg-[var(--card-bg)] border-[var(--card-border)] text-[var(--text-muted)]'
-                        }`}
-                    >
-                      <Search size={14} />
-                    </button>
+              {/* MATCH GRID / SEQUENTIAL CONTENT */}
+              <div className="space-y-12 pb-10">
+
+                {/* 1. SECTION: FIXTURE */}
+                <section>
+                  <div className="flex items-center justify-between mb-3 px-1">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-[12px] font-bold tracking-tight text-[var(--foreground)] capitalize">
+                        Fixture: {filtroLiga === 'Todos' || filtroLiga === 'Favoritos'
+                          ? formatDateLabel(new Date(selectedDate + 'T12:00:00'), t, localeFormat).toUpperCase()
+                          : filtroLiga.toUpperCase()}
+                      </h2>
+                      {liveCount > 0 && (
+                        <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-600 text-[8px] font-black animate-pulse flex items-center gap-1">
+                          {liveCount} VIVO
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Search (collapsible) */}
-                  {showSearch && (
-                    <div className="mb-3">
-                      <SearchBar
-                        value={searchQuery}
-                        onChange={setSearchQuery}
-                        placeholder="Buscar equipo..."
-                      />
+                  {loading ? (
+                    <div className="space-y-2">
+                      {Array(4).fill(0).map((_, i) => <div key={i} className="h-12 bg-[var(--card-bg)] border border-[var(--card-border)] animate-shimmer" />)}
                     </div>
-                  )}
-
-                  {/* Live indicator (Ya no es necesario arriba porque está en el Hero, pero lo dejamos sutil si hay búsqueda activa) */}
-                  {liveCount > 0 && searchQuery && (
-                    <div className="flex items-center justify-between mb-3 px-1">
-                      <span className="text-[11px] text-[var(--text-muted)] font-medium">Buscando...</span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75" />
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent)]" />
-                        </span>
-                        <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wide">
-                          {liveCount} en vivo
-                        </span>
-                      </div>
+                  ) : error ? (
+                    <div className="p-8 text-center bg-[var(--card-bg)] border border-[var(--card-border)] border-dashed">
+                      <p className="text-xs text-[var(--text-muted)]">Error al cargar fixture.</p>
+                      <button onClick={refetch} className="mt-2 text-[10px] font-bold text-[var(--accent)] underline">REINTENTAR</button>
                     </div>
-                  )}
-
-                  {/* Match Grid */}
-                  <div>
-                    {loading && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                        {Array(6).fill(0).map((_, idx) => (
-                          <PartidoCardSkeleton key={idx} />
-                        ))}
-                      </div>
-                    )}
-
-                    {error && !loading && (
-                      <div className="flex flex-col items-center justify-center py-12 px-4">
-                        <span className="text-3xl mb-3">❌</span>
-                        <h3 className="text-sm font-semibold mb-1">No pudimos cargar los partidos</h3>
-                        <button
-                          onClick={refetch}
-                          className="mt-3 px-4 py-2 text-xs font-semibold text-[#ff6b6b] bg-[#ff6b6b]/10 rounded-lg hover:bg-[#ff6b6b]/20 transition-colors"
-                        >
-                          Reintentar
-                        </button>
-                      </div>
-                    )}
-
-                    {!loading && !error && partidosFiltrados.length === 0 && (
-                      <div className="relative mb-8 rounded-3xl overflow-hidden border border-[var(--card-border)]/50 bg-[var(--card-bg)]/30">
-                        <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)] to-transparent z-10" />
-
-                        {/* Mock Blurred Match Background */}
-                        <div className="opacity-20 blur-sm pointer-events-none p-4 pb-12">
-                          <div className="flex justify-between items-center mb-4">
-                            <span className="text-xs font-bold text-[#ff6b6b]">PREVIA</span>
-                            <span className="text-xs font-bold text-[var(--text-muted)]">Liga Profesional</span>
-                          </div>
-                          <div className="flex justify-between items-center bg-[var(--card-bg)] p-4 rounded-xl border border-[var(--card-border)]">
-                            <span className="font-bold">River Plate</span>
-                            <span className="text-[10px] font-black text-[var(--text-muted)]">VS</span>
-                            <span className="font-bold">Boca Juniors</span>
-                          </div>
-                          <div className="mt-4 flex flex-col gap-2">
-                            <div className="h-4 bg-[var(--card-border)] rounded-full w-full"></div>
-                            <div className="h-4 bg-[var(--card-border)] rounded-full w-2/3"></div>
-                          </div>
-                        </div>
-
-                        {/* Glassmorphism Teaser Overlay */}
-                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center py-6 px-4 bg-[var(--background)]/60 backdrop-blur-md">
-                          <div className="w-16 h-16 rounded-full bg-[var(--accent-green)]/10 flex items-center justify-center mb-4 border border-[var(--accent-green)]/30 shadow-[0_0_20px_rgba(0,166,81,0.2)]">
-                            {searchQuery ? (
-                              <Search size={28} className="text-[var(--accent-green)]" />
-                            ) : filtroLiga === 'Favoritos' ? (
-                              <Star size={28} className="text-[var(--accent-yellow)]" />
-                            ) : (
-                              <span className="text-3xl filter drop-shadow-md">⚽</span>
-                            )}
-                          </div>
-
-                          <h3 className="text-lg font-black mb-1 bg-gradient-to-r from-[var(--accent-green)] to-[var(--accent-blue)] bg-clip-text text-transparent">
-                            {searchQuery
-                              ? 'Sin resultados'
-                              : filtroLiga === 'Favoritos'
-                                ? 'Tus equipos descansan hoy'
-                                : 'No hay partidos programados'}
-                          </h3>
-
-                          <p className="text-[var(--text-muted)] text-sm max-w-[280px] text-center mb-5 font-medium leading-relaxed">
-                            {searchQuery
-                              ? `No encontramos "${searchQuery}". Probá con otro equipo.`
-                              : filtroLiga === 'Favoritos'
-                                ? 'Añadí equipos a tus favoritos haciendo click en la estrella.'
-                                : `No hay encuentros de ${filtroLiga} para esta fecha.`}
+                  ) : (
+                    <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
+                      {/* Disclaimer banners */}
+                      {fixtureDisplay.type === 'nearest' && fixtureDisplay.nearestDate && (
+                        <div className="px-4 py-2.5 bg-[var(--accent-green)]/10 border-b border-[var(--card-border)] flex items-center justify-between">
+                          <p className="text-[10px] font-bold text-[var(--accent)] capitalize tracking-tight">
+                            📅 Próximos partidos: {formatDateLabel(new Date(fixtureDisplay.nearestDate + 'T12:00:00'), t, localeFormat)}
                           </p>
-
-                          {!user && !searchQuery && filtroLiga !== 'Favoritos' && (
-                            <button
-                              onClick={() => router.push('/login')}
-                              className="px-6 py-2.5 rounded-full bg-[var(--accent-green)] text-white font-bold text-sm shadow-[0_4px_14px_rgba(0,166,81,0.4)] hover:-translate-y-0.5 transition-all"
-                            >
-                              Iniciá sesión para ver más
-                            </button>
-                          )}
-
-                          {(searchQuery || filtroLiga !== 'Todos') && (
-                            <button
-                              onClick={() => { setSearchQuery(''); setFiltroLiga('Todos'); setShowSearch(false); }}
-                              className="mt-3 px-5 py-2.5 text-xs font-bold text-white bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl hover:bg-[var(--hover-bg)] hover:text-[var(--foreground)] transition-all"
-                            >
-                              Ver todos los partidos
-                            </button>
-                          )}
+                          <button
+                            onClick={() => setSelectedDate(fixtureDisplay.nearestDate!)}
+                            className="text-[9px] font-bold text-[var(--accent)] underline capitalize"
+                          >
+                            Ir a esa fecha
+                          </button>
                         </div>
-                      </div>
-                    )}
+                      )}
+                      {fixtureDisplay.type === 'example' && (
+                        <div className="px-4 py-2.5 bg-[var(--hover-bg)] border-b border-[var(--card-border)]">
+                          <p className="text-[10px] font-bold text-[var(--text-muted)] capitalize tracking-tight text-center">
+                            No hay partidos próximos programados · Mostrando clásicos destacados
+                          </p>
+                        </div>
+                      )}
+                      <FixtureTable partidos={fixtureDisplay.matches} />
+                    </div>
+                  )}
+                </section>
 
-                    {!loading && !error && partidosFiltrados.length > 0 && (
-                      <>
-                        <div className="flex items-center justify-between mb-2 px-1">
-                          <span className="text-[11px] text-[var(--text-muted)] font-medium">
-                            {partidosFiltrados.length} {partidosFiltrados.length === 1 ? 'partido' : 'partidos'}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                          {partidosFiltrados.map((partido: Partido) => (
-                            <PartidoCard key={partido.id} partido={partido} />
-                          ))}
-                        </div>
-                      </>
-                    )}
+                {/* 2. SECTION: POSITIONS (LPF or Selected) */}
+                <section>
+                  <div className="flex items-center justify-between mb-3 px-1">
+                    <h2 className="text-[12px] font-bold tracking-tight text-[var(--foreground)] capitalize">
+                      Tabla de Posiciones: {currentLigaName || 'Argentina LPF'}
+                    </h2>
                   </div>
-                </>
-              )}
+                  <TablaContent ligaExterna={currentLigaName || 'Liga Profesional'} />
+                </section>
 
-              {/* === TABLA TAB === */}
-              {activeTab === 'tabla' && (
-                <TablaContent ligaExterna={currentLigaName} />
-              )}
+                {/* 3. SECTION: TOP SCORERS */}
+                <section>
+                  <div className="flex items-center justify-between mb-3 px-1">
+                    <h2 className="text-[12px] font-bold tracking-tight text-[var(--foreground)] capitalize">
+                      Goleadores: {currentLigaName || 'Argentina LPF'}
+                    </h2>
+                  </div>
+                  <GoleadoresContent ligaExterna={currentLigaName || 'Liga Profesional'} />
+                </section>
 
-              {/* === GOLEADORES TAB === */}
-              {activeTab === 'goleadores' && (
-                <GoleadoresContent ligaExterna={currentLigaName} />
-              )}
+                {/* 4. SECTION: COMMUNITY HIGHLIGHTS (Top Rated + Popular Reviews) */}
+                <section className="pt-6 border-t border-[var(--card-border)]">
+                  <CommunityHighlights />
+                </section>
 
-              {/* === FIXTURES TAB === */}
-              {activeTab === 'fixtures' && (
-                <FixturesContent ligaExterna={currentLigaName} />
-              )}
+                {/* 5. SECTION: COMMUNITY FEED (Latest Reviews) */}
+                <section className="pt-6 border-t border-[var(--card-border)]">
+                  <div className="flex items-center justify-between mb-4 px-1">
+                    <h2 className="text-[12px] font-bold tracking-tight text-[var(--foreground)] capitalize">
+                      Últimas Reseñas de la Comunidad
+                    </h2>
+                    <Link href="/comunidad" className="text-[10px] font-bold text-[var(--accent)] hover:underline capitalize">Ver todas →</Link>
+                  </div>
+                  <ComunidadFeed activeLiga={filtroLiga === 'Todos' || filtroLiga === 'Favoritos' ? undefined : filtroLiga} limit={3} />
+                </section>
+
+              </div>
             </div>
+
           </div>
 
         </main>
       </PullToRefresh>
       <NavBar />
+      {!user && <PublicOnboarding />}
     </>
+  )
+}
+
+function ComunidadFeed({ activeLiga, limit }: { activeLiga?: string; limit?: number }) {
+  const { logs, loading, toggleLike } = useMatchLogs({
+    liga: activeLiga,
+    limit: limit || 10,
+    feedType: 'recent'
+  })
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-48 bg-[var(--card-bg)] animate-pulse border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }} />
+        ))}
+      </div>
+    )
+  }
+
+  if (logs.length === 0) {
+    return (
+      <div className="py-20 text-center bg-[var(--card-bg)] border border-[var(--card-border)] border-dashed" style={{ borderRadius: 'var(--radius)' }}>
+        <Users size={40} className="mx-auto mb-4 text-[var(--text-muted)] opacity-30" />
+        <p className="text-sm text-[var(--text-muted)] font-black capitalize italic tracking-tighter">No hay reseñas todavía.</p>
+        <p className="text-[10px] text-[var(--text-muted)] mt-1 capitalize tracking-widest font-bold">¡Sé el primero en ratear un partido!</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-4 px-1">
+        <h2 className="text-[10px] font-black tracking-widest text-[var(--text-muted)] capitalize">
+          RESEÑAS DE LA COMUNIDAD
+        </h2>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {logs.map((log) => (
+          <MatchLogCard key={log.id} log={log} onLike={toggleLike} />
+        ))}
+      </div>
+    </div>
   )
 }
 

@@ -115,6 +115,8 @@ export interface RankingProde {
   id: string
   user_id: string
   puntos_totales: number
+  puntos_semanales: number
+  puntos_mensuales: number
   partidos_jugados: number
   aciertos_exactos: number
   aciertos_ganador_diferencia: number
@@ -295,6 +297,7 @@ export interface MatchLog {
   is_liked?: boolean
   tags?: string[]
   profile?: Profile
+  my_reaction?: string // Nueva columna para reacciones temáticas
 }
 
 export interface MatchLogPlayerRating {

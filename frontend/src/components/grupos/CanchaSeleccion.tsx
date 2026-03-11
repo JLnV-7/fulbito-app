@@ -34,7 +34,7 @@ export function CanchaSeleccion({
         <div className="flex flex-col gap-4">
             {/* Header: Selector de Formación */}
             <div className="flex justify-between items-center bg-[var(--card-bg)] p-3 rounded-xl border border-[var(--card-border)]">
-                <span className="text-sm font-bold text-[var(--text-muted)] uppercase">Formación</span>
+                <span className="text-sm font-bold text-[var(--text-muted)] capitalize">Formación</span>
                 <div className="flex gap-2">
                     {formacionesDisponibles.map(f => (
                         <button

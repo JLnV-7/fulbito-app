@@ -17,13 +17,23 @@ import { useMatchLogs, type CreateMatchLogData } from '@/hooks/useMatchLogs'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { supabase } from '@/lib/supabase'
+import { isMatchTooOld } from '@/lib/helpers'
 import type { Partido, MatchLogPlayerRating } from '@/types'
 
 const MATCH_TYPES = [
-    { value: 'tv', label: 'Lo vi por TV', icon: Tv, color: '#3b82f6' },
-    { value: 'stadium', label: 'En la cancha', icon: MapPin, color: '#10b981' },
-    { value: 'friend', label: 'Con amigos', icon: Users, color: '#f59e0b' },
-    { value: 'other', label: 'Otro', icon: HelpCircle, color: '#8b5cf6' },
+    { value: 'tv', label: 'Lo vi por TV', icon: Tv, color: '#2563eb' },
+    { value: 'stadium', label: 'En la cancha', icon: MapPin, color: '#16a34a' },
+    { value: 'friend', label: 'Con amigos', icon: Users, color: '#d97706' },
+    { value: 'other', label: 'Otro', icon: HelpCircle, color: '#7c3aed' },
+] as const
+
+const MOODS = [
+    { value: 'euforia', emoji: '🤩', label: 'Euforia' },
+    { value: 'contento', emoji: '😊', label: 'Contento' },
+    { value: 'indiferente', emoji: '😐', label: 'Indiferente' },
+    { value: 'caliente', emoji: '😤', label: 'Caliente' },
+    { value: 'destruido', emoji: '😢', label: 'Destruido' },
+    { value: 'locura', emoji: '🤯', label: 'Locura' },
 ] as const
 
 const POPULAR_TAGS = [
@@ -70,6 +80,7 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
 
     // Step 2 - Type
     const [matchType, setMatchType] = useState<string>('tv')
+    const [mood, setMood] = useState<string>('')
 
     // Step 3 - Ratings
     const [ratingPartido, setRatingPartido] = useState(0)
@@ -201,6 +212,27 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
             return
         }
 
+        const matchInfo = getMatchInfo()
+        if (isMatchTooOld(matchInfo.fecha_partido)) {
+            showToast('Este partido es muy antiguo para ser reseñado', 'error')
+            return
+        }
+
+        // Check for existing log for this user/match
+        if (matchInfo.partido_id) {
+            const { data: existing } = await supabase
+                .from('match_logs')
+                .select('id')
+                .eq('user_id', user.id)
+                .eq('partido_id', String(matchInfo.partido_id))
+                .maybeSingle()
+
+            if (existing) {
+                showToast('Ya reseñaste este partido', 'error')
+                return
+            }
+        }
+
         setSubmitting(true)
         try {
             const matchInfo = getMatchInfo()
@@ -229,6 +261,7 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
                 jugador_estrella: jugadorEstrella || undefined,
                 jugador_villano: jugadorVillano || undefined,
                 foto_url: fotoUrl || undefined,
+                mood: mood || undefined,
             }
 
             await createMatchLog(data)
@@ -279,9 +312,9 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
             <div className="flex items-center gap-1 mb-6">
                 {STEPS.map((s, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                        <div className={`h-1 w-full rounded-full transition-all duration-500 ${i <= step ? 'bg-[#f59e0b]' : 'bg-[var(--card-border)]'
-                            }`} />
-                        <span className={`text-[10px] font-medium transition-colors ${i === step ? 'text-[#f59e0b]' : 'text-[var(--text-muted)]'
+                        <div className={`h-1.5 w-full transition-all duration-500 ${i <= step ? 'bg-[var(--foreground)]' : 'bg-[var(--card-border)]'
+                            }`} style={{ borderRadius: 'var(--radius)' }} />
+                        <span className={`text-[9px] font-black capitalize tracking-widest italic transition-colors ${i === step ? 'text-[var(--foreground)]' : 'text-[var(--text-muted)]'
                             }`}>
                             {s.title}
                         </span>
@@ -321,23 +354,24 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
 
                                     {/* Search Results */}
                                     {searchResults.length > 0 && (
-                                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                                        <div className="space-y-2 max-h-64 overflow-y-auto border-t border-[var(--card-border)] pt-2 border-dashed">
                                             {searchResults.map((p) => (
                                                 <button
                                                     key={p.id}
                                                     type="button"
                                                     onClick={() => { setSelectedMatch(p); setSearchQuery(''); setSearchResults([]) }}
-                                                    className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${selectedMatch?.id === p.id
-                                                        ? 'border-[#f59e0b]/50 bg-[#f59e0b]/5'
+                                                    className={`w-full flex items-center gap-3 p-3 border transition-all text-left ${selectedMatch?.id === p.id
+                                                        ? 'border-[var(--foreground)] bg-[var(--foreground)]/5'
                                                         : 'border-[var(--card-border)] bg-[var(--card-bg)] hover:border-[var(--text-muted)]'
                                                         }`}
+                                                    style={{ borderRadius: 'var(--radius)' }}
                                                 >
                                                     <TeamLogo src={p.logo_local} teamName={p.equipo_local} size={28} />
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="text-sm font-medium truncate">
+                                                        <div className="text-sm font-black capitalize italic tracking-tight truncate">
                                                             {p.equipo_local} vs {p.equipo_visitante}
                                                         </div>
-                                                        <div className="text-xs text-[var(--text-muted)]">
+                                                        <div className="text-[10px] text-[var(--text-muted)] font-bold capitalize tracking-widest">
                                                             {p.liga} · {new Date(p.fecha_inicio).toLocaleDateString('es-AR')}
                                                             {p.goles_local != null && ` · ${p.goles_local}-${p.goles_visitante}`}
                                                         </div>
@@ -452,25 +486,49 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
                             <h2 className="text-lg font-bold">¿Cómo lo viste?</h2>
                             <div className="grid grid-cols-2 gap-3">
                                 {MATCH_TYPES.map((type) => {
-                                    const Icon = type.icon
+                                    const Icon = type.icon || MapPin
+                                    const itemColor = type.color || '#16a34a'
                                     return (
                                         <button
                                             key={type.value}
                                             type="button"
                                             onClick={() => setMatchType(type.value)}
-                                            className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${matchType === type.value
-                                                ? 'border-[var(--accent)] bg-[var(--accent)]/5 scale-[1.02]'
+                                            className={`flex flex-col items-center gap-2 p-4 border-2 transition-all ${matchType === type.value
+                                                ? 'border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)] scale-[1.02]'
                                                 : 'border-[var(--card-border)] bg-[var(--card-bg)] hover:border-[var(--text-muted)]'
                                                 }`}
+                                            style={{ borderRadius: 'var(--radius)' }}
                                         >
-                                            <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                                                style={{ backgroundColor: `${type.color}15` }}>
-                                                <Icon size={24} style={{ color: type.color }} />
+                                            <div className="w-12 h-12 flex items-center justify-center"
+                                                style={{ backgroundColor: matchType === type.value ? 'var(--background)' : `${itemColor}15`, borderRadius: 'var(--radius)' }}>
+                                                <Icon size={24} style={{ color: matchType === type.value ? 'var(--foreground)' : itemColor }} />
                                             </div>
-                                            <span className="text-sm font-medium">{type.label}</span>
+                                            <span className="text-[11px] font-black capitalize tracking-widest">{type.label}</span>
                                         </button>
                                     )
                                 })}
+                            </div>
+
+                            {/* Mood Selector */}
+                            <div className="mt-6">
+                                <h3 className="text-sm font-bold mb-3">¿Cómo te sentiste después?</h3>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {MOODS.map(m => (
+                                        <button
+                                            key={m.value}
+                                            type="button"
+                                            onClick={() => setMood(mood === m.value ? '' : m.value)}
+                                            className={`flex flex-col items-center gap-1 p-3 border-2 transition-all ${mood === m.value
+                                                ? 'border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)] scale-[1.02]'
+                                                : 'border-[var(--card-border)] bg-[var(--card-bg)] hover:border-[var(--text-muted)]'
+                                            }`}
+                                            style={{ borderRadius: 'var(--radius)' }}
+                                        >
+                                            <span className="text-2xl">{m.emoji}</span>
+                                            <span className="text-[10px] font-black capitalize tracking-widest">{m.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -481,8 +539,8 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
                             <h2 className="text-lg font-bold">¿Qué te pareció?</h2>
 
                             {/* Main rating */}
-                            <div className="p-5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)]">
-                                <div className="text-sm font-medium text-[var(--text-muted)] mb-3">Rating del partido</div>
+                            <div className="p-5 bg-[var(--card-bg)] border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}>
+                                <div className="text-[10px] font-black capitalize tracking-widest text-[var(--text-muted)] mb-3 italic">Rating del partido</div>
                                 <div className="flex justify-center">
                                     <StarRating
                                         value={ratingPartido}
@@ -503,13 +561,13 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
                                         if (field === 'garra') setRatingGarra(val)
                                     }}
                                 />
-                                <div className="p-4 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)]">
+                                <div className="p-4 bg-[var(--card-bg)] border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}>
                                     <StarRating
                                         value={ratingDT}
                                         onChange={setRatingDT}
                                         label="Director Técnico"
                                         showValue
-                                        color="#8b5cf6"
+                                        color="var(--foreground)"
                                     />
                                 </div>
                             </div>
@@ -549,7 +607,8 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
                                     type="button"
                                     onClick={addPlayerRating}
                                     disabled={!newPlayerName.trim()}
-                                    className="p-2.5 bg-[#f59e0b] text-white rounded-xl hover:bg-[#d97706] disabled:opacity-30 transition-all"
+                                    className="px-4 bg-[var(--foreground)] text-[var(--background)] hover:opacity-90 disabled:opacity-30 transition-all font-black"
+                                    style={{ borderRadius: 'var(--radius)' }}
                                 >
                                     <Plus size={18} />
                                 </button>
@@ -729,7 +788,8 @@ export function MatchLogForm({ preselectedMatch }: { preselectedMatch?: Partido 
                                                 type="button"
                                                 onClick={() => fileInputRef.current?.click()}
                                                 disabled={uploadingPhoto}
-                                                className="px-4 py-2 bg-[#10b981] text-white rounded-xl hover:bg-[#0ea5e9] transition-colors disabled:opacity-50 flex items-center justify-center shrink-0"
+                                                className="px-4 py-2 bg-[var(--foreground)] text-[var(--background)] hover:opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center shrink-0 font-black"
+                                                style={{ borderRadius: 'var(--radius)' }}
                                             >
                                                 {uploadingPhoto ? <Loader2 size={16} className="animate-spin" /> : <ImagePlus size={18} />}
                                             </button>

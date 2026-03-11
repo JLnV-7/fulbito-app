@@ -7,7 +7,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 
-export function FeedbackWidget() {
+interface FeedbackWidgetProps {
+    inline?: boolean
+}
+
+export function FeedbackWidget({ inline = false }: FeedbackWidgetProps) {
     const { user } = useAuth()
     const { showToast } = useToast()
     const [isOpen, setIsOpen] = useState(false)
@@ -64,15 +68,28 @@ export function FeedbackWidget() {
 
     return (
         <>
-            {/* Floating Button */}
-            <motion.button
-                onClick={() => setIsOpen(true)}
-                whileTap={{ scale: 0.95 }}
-                className="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-40 bg-[var(--card-bg)]/80 backdrop-blur-md border border-[var(--card-border)] p-3.5 rounded-full shadow-lg text-[var(--foreground)] hover:text-[var(--accent-green)] hover:border-[var(--accent-green)] transition-all"
-                aria-label="Dejar Feedback"
-            >
-                <MessageSquarePlus size={24} />
-            </motion.button>
+            {inline ? (
+                <button
+                    onClick={() => setIsOpen(true)}
+                    className="w-full text-left py-3 px-1 border-b border-[var(--card-border)] last:border-0 flex items-center justify-between group transition-colors hover:bg-[var(--hover-bg)]"
+                >
+                    <div className="flex items-center gap-3">
+                        <MessageSquarePlus size={16} className="text-[var(--text-muted)] group-hover:text-[var(--foreground)] transition-colors" />
+                        <span className="text-xs font-bold capitalize tracking-tight text-[var(--foreground)]">Enviar Feedback</span>
+                    </div>
+                    <span className="text-[10px] text-[var(--text-muted)] font-medium capitalize">Ayudanos a mejorar</span>
+                </button>
+            ) : (
+                <motion.button
+                    onClick={() => setIsOpen(true)}
+                    whileTap={{ scale: 0.95 }}
+                    className="fixed bottom-[88px] left-3 z-40 flex items-center gap-1.5 px-3 py-2 shadow-md border bg-[var(--card-bg)]/90 backdrop-blur-md border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)] hover:border-[var(--accent)] transition-all text-[10px] font-bold capitalize tracking-tight"
+                    aria-label="Dejar Feedback"
+                    style={{ borderRadius: 'var(--radius)' }}
+                >
+                    <MessageSquarePlus size={14} /> Feedback
+                </motion.button>
+            )}
 
             {/* Modal */}
             <AnimatePresence>
@@ -89,20 +106,22 @@ export function FeedbackWidget() {
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.95, y: 20 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-[var(--card-bg)] w-full max-w-sm rounded-[32px] p-6 shadow-2xl border border-[var(--card-border)]"
+                            className="bg-[var(--card-bg)] w-full max-w-sm p-6 border border-[var(--card-border)]"
+                            style={{ borderRadius: 'var(--radius)' }}
                         >
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <h2 className="text-xl font-black bg-gradient-to-r from-[#10b981] to-[#3b82f6] bg-clip-text text-transparent">
+                                    <h2 className="text-xl font-black capitalize italic tracking-tighter text-[#16a34a]">
                                         Feedback Beta
                                     </h2>
-                                    <p className="text-xs text-[var(--text-muted)] mt-1">
-                                        ¿Qué te gustaría ver en la app o qué podemos mejorar?
+                                    <p className="text-[10px] font-black capitalize tracking-widest text-[var(--text-muted)] mt-1">
+                                        ¿Qué te gustaría ver?
                                     </p>
                                 </div>
                                 <button
                                     onClick={() => setIsOpen(false)}
-                                    className="p-1.5 bg-[var(--background)] rounded-full text-[var(--text-muted)] hover:text-white transition-colors"
+                                    className="p-1.5 bg-[var(--background)] text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors border border-[var(--card-border)]"
+                                    style={{ borderRadius: 'var(--radius)' }}
                                 >
                                     <X size={16} />
                                 </button>
@@ -136,8 +155,9 @@ export function FeedbackWidget() {
                                     <textarea
                                         value={comment}
                                         onChange={(e) => setComment(e.target.value)}
-                                        placeholder="Tus comentarios, ideas o reportes de bugs..."
-                                        className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-2xl p-4 text-sm focus:outline-none focus:border-[#10b981] transition-colors resize-none h-28"
+                                        placeholder="TUS COMENTARIOS..."
+                                        className="w-full bg-[var(--background)] border border-[var(--card-border)] p-4 text-xs font-black capitalize tracking-widest focus:outline-none focus:border-[#16a34a] transition-colors resize-none h-28 italic"
+                                        style={{ borderRadius: 'var(--radius)' }}
                                     />
                                 </div>
 
@@ -145,7 +165,8 @@ export function FeedbackWidget() {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting || rating === 0}
-                                    className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-black py-4 rounded-2xl transition-all shadow-lg hover:shadow-[#10b981]/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full bg-[#16a34a] text-white font-black py-4 capitalize tracking-widest text-sm italic transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    style={{ borderRadius: 'var(--radius)' }}
                                 >
                                     {isSubmitting ? 'Enviando...' : 'Enviar Feedback'}
                                 </button>

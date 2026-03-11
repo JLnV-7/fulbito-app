@@ -1,4 +1,4 @@
-# 🕵️‍♂️ Análisis Exhaustivo de Fulbito App
+# 🕵️‍♂️ Análisis Exhaustivo de FutLog App
 
 He revisado la arquitectura, el código y la experiencia de usuario actual. Aquí está mi diagnóstico honesto de qué tenemos, qué falta y qué urge arreglar.
 

@@ -142,7 +142,12 @@ export default function BuscarPage() {
     }, [])
 
     const handleSearch = useCallback(async () => {
-        if (!query && !filterLiga) return
+        // Permitir búsqueda vacía si hay filtro de liga o si estamos en Partidos (para ver recientes)
+        if (!query && !filterLiga && tab !== 'partidos') {
+            setLoading(false)
+            setHasSearched(false)
+            return
+        }
         setLoading(true)
         setHasSearched(true)
 
@@ -159,7 +164,7 @@ export default function BuscarPage() {
 
     // Auto-search on tab/filter change
     useEffect(() => {
-        if (hasSearched || filterLiga) {
+        if (hasSearched || filterLiga || query) {
             handleSearch()
         }
     }, [tab, filterLiga]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -194,7 +199,7 @@ export default function BuscarPage() {
                 <div className="max-w-2xl mx-auto px-4 py-4">
                     {/* Search Input */}
                     <div className="relative mb-4">
-                        <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
                         <input
                             type="text"
                             value={query}
@@ -202,30 +207,38 @@ export default function BuscarPage() {
                                 setQuery(e.target.value)
                                 setShowSuggestions(true)
                             }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    setShowSuggestions(false)
+                                    handleSearch()
+                                }
+                            }}
                             onFocus={() => setShowSuggestions(true)}
                             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                             placeholder={
-                                tab === 'partidos' ? 'Buscar equipo o liga...' :
-                                    tab === 'usuarios' ? 'Buscar usuario...' :
-                                        'Buscar en reseñas o títulos...'
+                                tab === 'partidos' ? 'BÚSQUEDA POR EQUIPO O LIGA...' :
+                                    tab === 'usuarios' ? 'BÚSQUEDA DE USUARIOS...' :
+                                        'BÚSQUEDA EN RESEÑAS...'
                             }
                             autoFocus
-                            className="w-full pl-10 pr-10 py-3 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl
-                       text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] transition-colors
-                       placeholder:text-[var(--text-muted)] text-sm"
+                            className="w-full pl-10 pr-10 py-3 bg-[var(--card-bg)] border border-[var(--card-border)]
+                       text-[var(--foreground)] focus:outline-none focus:border-[var(--foreground)]
+                       placeholder:text-[var(--text-muted)] text-[11px] font-black capitalize tracking-widest"
+                            style={{ borderRadius: 'var(--radius)' }}
                         />
                         {query && (
                             <button
                                 onClick={() => { setQuery(''); setHasSearched(false); setShowSuggestions(false); }}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--foreground)]"
                             >
-                                <X size={16} />
+                                <X size={14} />
                             </button>
                         )}
 
                         {/* Autocomplete Dropdown */}
                         {showSuggestions && autocompleteSuggestions.length > 0 && (
-                            <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.2)] z-50 overflow-hidden">
+                            <div className="absolute top-full left-0 right-0 mt-0 bg-[var(--card-bg)] border border-[var(--card-border)] z-50 overflow-hidden"
+                                style={{ borderTop: 'none', borderRadius: `0 0 var(--radius) var(--radius)` }}>
                                 {autocompleteSuggestions.map(sug => (
                                     <button
                                         key={sug}
@@ -238,9 +251,9 @@ export default function BuscarPage() {
                                             }
                                             setShowSuggestions(false)
                                         }}
-                                        className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--hover-bg)] focus:bg-[var(--hover-bg)] transition-colors border-b border-[var(--card-border)] last:border-b-0 flex items-center"
+                                        className="w-full text-left px-4 py-2.5 text-[10px] font-black capitalize hover:bg-[var(--hover-bg)] transition-colors border-b border-[var(--card-border)] last:border-b-0 flex items-center"
                                     >
-                                        <Search size={14} className="mr-3 text-[var(--text-muted)]" />
+                                        <Search size={12} className="mr-3 opacity-50" />
                                         {sug}
                                     </button>
                                 ))}
@@ -249,45 +262,43 @@ export default function BuscarPage() {
                     </div>
 
                     {/* Tabs */}
-                    <div className="flex gap-1 mb-4 p-1 bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)]">
-                        {tabs.map((t) => {
-                            const Icon = t.icon
-                            return (
-                                <button
-                                    key={t.id}
-                                    onClick={() => setTab(t.id)}
-                                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${tab === t.id
-                                        ? 'bg-[#ff6b6b]/10 text-[#ff6b6b]'
-                                        : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
-                                        }`}
-                                >
-                                    <Icon size={13} />
-                                    {t.label}
-                                </button>
-                            )
-                        })}
+                    <div className="flex border border-[var(--card-border)] bg-[var(--card-bg)] mb-4 overflow-hidden" style={{ borderRadius: 'var(--radius)' }}>
+                        {tabs.map((t) => (
+                            <button
+                                key={t.id}
+                                onClick={() => setTab(t.id)}
+                                className={`flex-1 py-3 text-[10px] font-black capitalize tracking-widest transition-colors ${tab === t.id
+                                    ? 'bg-[var(--foreground)] text-[var(--background)]'
+                                    : 'text-[var(--text-muted)] hover:bg-[var(--hover-bg)]'
+                                    }`}
+                            >
+                                {t.label}
+                            </button>
+                        ))}
                     </div>
 
                     {/* Liga Filter (for partidos tab) */}
                     {tab === 'partidos' && (
-                        <div className="flex gap-1.5 overflow-x-auto no-scrollbar mb-4 pb-0.5">
+                        <div className="flex gap-1 overflow-x-auto no-scrollbar mb-4">
                             <button
                                 onClick={() => setFilterLiga('')}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${!filterLiga
-                                    ? 'bg-[#10b981] text-white'
-                                    : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--card-border)]'
+                                className={`px-3 py-2 text-[9px] font-black capitalize tracking-tighter border transition-all whitespace-nowrap ${!filterLiga
+                                    ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)]'
+                                    : 'bg-[var(--card-bg)] text-[var(--text-muted)] border-[var(--card-border)]'
                                     }`}
+                                style={{ borderRadius: 'var(--radius)' }}
                             >
-                                Todas
+                                TODAS
                             </button>
                             {LIGAS.filter(l => l !== 'Todos').map(liga => (
                                 <button
                                     key={liga}
                                     onClick={() => setFilterLiga(filterLiga === liga ? '' : liga)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${filterLiga === liga
-                                        ? 'bg-[#10b981] text-white'
-                                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--card-border)]'
+                                    className={`px-3 py-2 text-[9px] font-black capitalize tracking-tighter border transition-all whitespace-nowrap ${filterLiga === liga
+                                        ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)]'
+                                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] border-[var(--card-border)]'
                                         }`}
+                                    style={{ borderRadius: 'var(--radius)' }}
                                 >
                                     {liga}
                                 </button>
@@ -297,44 +308,29 @@ export default function BuscarPage() {
 
                     {/* No search yet - show trending */}
                     {!hasSearched && !loading && (
-                        <div className="py-8">
+                        <div className="py-6">
                             <div className="flex items-center gap-2 mb-4">
-                                <TrendingUp size={14} className="text-[#f59e0b]" />
-                                <span className="text-xs font-semibold text-[var(--text-muted)]">TRENDING TAGS</span>
+                                <span className="text-[9px] font-black text-[var(--text-muted)] capitalize tracking-widest">TENDENCIAS</span>
                             </div>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-1">
                                 {trendingTags.map(tag => (
                                     <button
                                         key={tag}
                                         onClick={() => { setQuery(tag); if (tab === 'usuarios') setTab('resenas'); }}
-                                        className="px-3 py-1.5 rounded-full text-xs font-medium bg-[#f59e0b]/10 text-[#f59e0b]
-                             border border-[#f59e0b]/20 hover:bg-[#f59e0b]/20 transition-all"
+                                        className="px-3 py-1.5 border border-[var(--card-border)] text-[10px] font-black capitalize hover:bg-[var(--hover-bg)] transition-all"
+                                        style={{ borderRadius: 'var(--radius)' }}
                                     >
                                         #{tag}
                                     </button>
                                 ))}
                             </div>
-                            {trendingTags.includes('clasico') && trendingTags.includes('goles') && (
-                                <div className="mt-6 p-4 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl text-center">
-                                    <p className="text-xs font-medium text-[var(--text-muted)] mb-3">
-                                        Los tags más usados aparecerán aquí cuando haya más actividad.
-                                    </p>
-                                    <button
-                                        onClick={() => router.push('/')}
-                                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#ff6b6b] text-white rounded-xl text-xs font-bold hover:bg-[#ff5252] transition-colors"
-                                    >
-                                        ⭐ Ratear un partido ahora
-                                    </button>
-                                </div>
-                            )}
 
-                            <div className="mt-8 text-center">
-                                <div className="w-16 h-16 rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)]
-                               flex items-center justify-center mx-auto mb-3">
-                                    <Search size={24} className="text-[var(--text-muted)]" />
+                            <div className="mt-8 text-center py-10 bg-[var(--card-bg)] border border-[var(--card-border)] border-dashed" style={{ borderRadius: 'var(--radius)' }}>
+                                <div className="w-12 h-12 border border-[var(--card-border)] flex items-center justify-center mx-auto mb-4 opacity-30">
+                                    <Search size={20} />
                                 </div>
-                                <p className="text-sm text-[var(--text-muted)]">
-                                    Buscá partidos por equipo o encontrá usuarios
+                                <p className="text-[10px] font-black capitalize tracking-widest text-[var(--text-muted)]">
+                                    Buscá partidos, equipos o usuarios
                                 </p>
                             </div>
                         </div>
@@ -342,30 +338,22 @@ export default function BuscarPage() {
 
                     {/* Loading */}
                     {loading && (
-                        <div className="pt-4">
+                        <div className="pt-4 opacity-50">
                             <SearchSkeleton tab={tab} />
                         </div>
                     )}
 
                     {/* Results: Partidos */}
                     {!loading && hasSearched && tab === 'partidos' && (
-                        <div>
+                        <div className="space-y-4">
                             {partidos.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <span className="text-3xl mb-3 block">🔍</span>
-                                    <p className="text-sm text-[var(--text-muted)]">No se encontraron partidos</p>
+                                <div className="text-center py-12 border border-[var(--card-border)] border-dashed" style={{ borderRadius: 'var(--radius)' }}>
+                                    <p className="text-[10px] font-black capitalize text-[var(--text-muted)]">SIN RESULTADOS</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {partidos.map((partido, i) => (
-                                        <motion.div
-                                            key={partido.id}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: i * 0.03 }}
-                                        >
-                                            <PartidoCard partido={partido} />
-                                        </motion.div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    {partidos.map((partido) => (
+                                        <PartidoCard key={partido.id} partido={partido} />
                                     ))}
                                 </div>
                             )}
@@ -374,49 +362,45 @@ export default function BuscarPage() {
 
                     {/* Results: Usuarios */}
                     {!loading && hasSearched && tab === 'usuarios' && (
-                        <div>
+                        <div className="space-y-1">
                             {usuarios.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <span className="text-3xl mb-3 block">👤</span>
-                                    <p className="text-sm text-[var(--text-muted)]">
-                                        {query.length < 2 ? 'Escribí al menos 2 caracteres para buscar' : 'No se encontraron usuarios'}
+                                <div className="text-center py-12 border border-[var(--card-border)] border-dashed" style={{ borderRadius: 'var(--radius)' }}>
+                                    <p className="text-[10px] font-black capitalize text-[var(--text-muted)]">
+                                        {query.length < 2 ? 'ESCRIBÍ AL MENOS 2 CARACTERES' : 'SIN RESULTADOS'}
                                     </p>
                                 </div>
                             ) : (
-                                <div className="space-y-2">
-                                    {usuarios.map((user, i) => (
-                                        <motion.div
+                                <div className="border border-[var(--card-border)] bg-[var(--card-bg)] divide-y divide-[var(--card-border)] overflow-hidden" style={{ borderRadius: 'var(--radius)' }}>
+                                    {usuarios.map((user) => (
+                                        <div
                                             key={user.id}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: i * 0.03 }}
-                                            className="w-full flex items-center gap-3 p-3 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl hover:border-[var(--accent)]/30 transition-all text-left"
+                                            className="flex items-center gap-3 p-3 hover:bg-[var(--background)] transition-colors"
                                         >
                                             <div
-                                                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#f59e0b] to-[#ef4444] flex flex-shrink-0 items-center justify-center text-white text-lg cursor-pointer"
+                                                className="w-10 h-10 border border-[var(--card-border)] bg-[var(--background)] flex flex-shrink-0 items-center justify-center cursor-pointer overflow-hidden"
                                                 onClick={() => router.push(`/perfil/${user.id}`)}
+                                                style={{ borderRadius: 'var(--radius)' }}
                                             >
                                                 {user.avatar_url ? (
-                                                    <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover rounded-full" />
+                                                    <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
                                                 ) : (
-                                                    user.username?.charAt(0)?.toUpperCase() || '?'
+                                                    <span className="text-xs font-black">{user.username?.charAt(0)?.toUpperCase()}</span>
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-sm font-semibold truncate hover:underline cursor-pointer" onClick={() => router.push(`/perfil/${user.id}`)}>
-                                                    {user.username || 'Usuario'}
+                                                <div className="text-[11px] font-black capitalize tracking-widest hover:underline cursor-pointer" onClick={() => router.push(`/perfil/${user.id}`)}>
+                                                    {user.username}
                                                 </div>
                                                 {user.equipo && (
-                                                    <div className="text-xs text-[var(--text-muted)] flex items-center gap-1">
-                                                        <span>❤️</span> {user.equipo}
+                                                    <div className="text-[9px] text-[var(--text-muted)] font-black capitalize">
+                                                        {user.equipo}
                                                     </div>
                                                 )}
                                             </div>
                                             <div className="flex flex-col items-end gap-1">
                                                 <FollowButton targetUserId={user.id} targetUsername={user.username || ''} />
-                                                <span className="text-[10px] text-[var(--text-muted)] cursor-pointer hover:underline" onClick={() => router.push(`/perfil/${user.id}`)}>Ver perfil →</span>
                                             </div>
-                                        </motion.div>
+                                        </div>
                                     ))}
                                 </div>
                             )}
@@ -425,25 +409,15 @@ export default function BuscarPage() {
 
                     {/* Results: Reseñas */}
                     {!loading && hasSearched && tab === 'resenas' && (
-                        <div>
+                        <div className="space-y-4">
                             {resenas.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <span className="text-3xl mb-3 block">📜</span>
-                                    <p className="text-sm text-[var(--text-muted)]">
-                                        {query.length < 2 ? 'Escribí al menos 2 caracteres para buscar' : 'No se encontraron reseñas con ese texto'}
-                                    </p>
+                                <div className="text-center py-12 border border-[var(--card-border)] border-dashed" style={{ borderRadius: 'var(--radius)' }}>
+                                    <p className="text-[10px] font-black capitalize text-[var(--text-muted)]">SIN RESULTADOS</p>
                                 </div>
                             ) : (
-                                <div className="space-y-3">
-                                    {resenas.map((resena, i) => (
-                                        <motion.div
-                                            key={resena.id}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: i * 0.03 }}
-                                        >
-                                            <MatchLogCard log={resena} />
-                                        </motion.div>
+                                <div className="space-y-2">
+                                    {resenas.map((resena) => (
+                                        <MatchLogCard key={resena.id} log={resena} />
                                     ))}
                                 </div>
                             )}

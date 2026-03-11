@@ -92,7 +92,7 @@ export function XPFeedback() {
                                         particleCount: 100,
                                         spread: 60,
                                         origin: { y: 0.7 },
-                                        colors: ['#3b82f6', '#8b5cf6', '#ec4899']
+                                        colors: ['#16a34a', '#2563eb', '#60a5fa']
                                     })
                                 }
                             }).catch(e => console.error(e))
@@ -178,7 +178,7 @@ export function XPFeedback() {
                             {badge.icon}
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-[10px] items-center text-purple-400 font-bold uppercase tracking-wider mb-0.5">
+                            <span className="text-[10px] items-center text-purple-400 font-bold capitalize tracking-wider mb-0.5">
                                 Insignia Desbloqueada
                             </span>
                             <span className="font-black text-lg text-[var(--foreground)] leading-none">

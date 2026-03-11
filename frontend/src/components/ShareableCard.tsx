@@ -3,7 +3,7 @@
 
 import { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import html2canvas from 'html2canvas'
+import { toPng } from 'html-to-image'
 
 interface ShareableCardProps {
     children: React.ReactNode
@@ -22,13 +22,17 @@ export function ShareableCard({ children, title = 'Stats', filename = 'FutLog-st
 
         setIsCapturing(true)
         try {
-            const canvas = await html2canvas(cardRef.current, {
-                backgroundColor: null, // Transparent/Inherit
-                scale: 2, // Higher resolution
-                useCORS: true,
-                logging: false,
+            const watermark = cardRef.current.querySelector('.share-watermark') as HTMLElement
+            if (watermark) watermark.style.display = 'flex'
+
+            const dataUrl = await toPng(cardRef.current, {
+                pixelRatio: 2,
+                style: { margin: '0' }
             })
-            return canvas
+
+            if (watermark) watermark.style.display = 'none'
+
+            return dataUrl
         } catch (error) {
             console.error('Error capturing image:', error)
             return null
@@ -38,43 +42,32 @@ export function ShareableCard({ children, title = 'Stats', filename = 'FutLog-st
     }
 
     const downloadImage = async () => {
-        const canvas = await captureImage()
-        if (!canvas) return
+        const dataUrl = await captureImage()
+        if (!dataUrl) return
 
         const link = document.createElement('a')
         link.download = `${filename}.png`
-        link.href = canvas.toDataURL('image/png')
+        link.href = dataUrl
         link.click()
 
+        setShowMenu(false)
         setShowSuccess(true)
         setTimeout(() => setShowSuccess(false), 2000)
-        setShowMenu(false)
     }
 
     const shareImage = async () => {
-        const canvas = await captureImage()
-        if (!canvas) return
+        const dataUrl = await captureImage()
+        if (!dataUrl) return
 
         try {
-            canvas.toBlob(async (blob) => {
-                if (!blob) return
+            const blob = await (await fetch(dataUrl)).blob()
+            const file = new File([blob], `${filename}.png`, { type: 'image/png' })
 
-                if (navigator.share) {
-                    const file = new File([blob], `${filename}.png`, { type: 'image/png' })
-                    await navigator.share({
-                        title: `FutLog - ${title}`,
-                        text: '¡Mirá las stats en FutLog! ⚽🔥',
-                        files: [file]
-                    })
-                } else {
-                    // Fallback: copy to clipboard
-                    await navigator.clipboard.write([
-                        new ClipboardItem({ 'image/png': blob })
-                    ])
-                    setShowSuccess(true)
-                    setTimeout(() => setShowSuccess(false), 2000)
-                }
-            }, 'image/png')
+            await navigator.share({
+                title: `FutLog - ${title}`,
+                text: '¡Mirá las stats en FutLog! ⚽🔥',
+                files: [file]
+            })
         } catch (error) {
             console.error('Error sharing:', error)
             // Fallback to download
@@ -84,18 +77,16 @@ export function ShareableCard({ children, title = 'Stats', filename = 'FutLog-st
     }
 
     const copyToClipboard = async () => {
-        const canvas = await captureImage()
-        if (!canvas) return
+        const dataUrl = await captureImage()
+        if (!dataUrl) return
 
         try {
-            canvas.toBlob(async (blob) => {
-                if (!blob) return
-                await navigator.clipboard.write([
-                    new ClipboardItem({ 'image/png': blob })
-                ])
-                setShowSuccess(true)
-                setTimeout(() => setShowSuccess(false), 2000)
-            }, 'image/png')
+            const blob = await (await fetch(dataUrl)).blob()
+            await navigator.clipboard.write([
+                new ClipboardItem({ 'image/png': blob })
+            ])
+            setShowSuccess(true)
+            setTimeout(() => setShowSuccess(false), 2000)
         } catch (error) {
             console.error('Error copying to clipboard:', error)
         }
@@ -103,31 +94,31 @@ export function ShareableCard({ children, title = 'Stats', filename = 'FutLog-st
     }
 
     return (
-        <div className="relative">
+        <div className="relative group">
             {/* Card content to capture */}
-            <div ref={cardRef} className="bg-[var(--card-bg)] p-1 rounded-2xl">
+            <div ref={cardRef} className="bg-[var(--card-bg)] p-1" style={{ borderRadius: 'var(--radius)' }}>
                 {children}
 
-                {/* Watermark for sharing */}
-                <div className="mt-2 flex justify-between items-center px-4 py-2 opacity-60 grayscale">
+                {/* Watermark — hidden by default, shown during capture via onclone */}
+                <div className="hidden justify-between items-center px-4 py-2 border-t border-[var(--card-border)] border-dashed share-watermark">
                     <div className="flex items-center gap-2">
                         <span className="text-xl">⚽</span>
-                        <span className="text-xs font-bold text-[var(--text-muted)]">FutLog App</span>
+                        <span className="text-[10px] font-black capitalize tracking-tighter text-[var(--text-muted)]">FutLog App</span>
                     </div>
-                    <span className="text-[10px] text-[var(--text-muted)]">FutLog.app</span>
+                    <span className="text-[10px] font-black capitalize tracking-widest text-[var(--text-muted)]">FutLog.app</span>
                 </div>
             </div>
 
-            {/* Share button */}
-            <div className="absolute top-3 right-3">
+            {/* Share button — subtle, appears on hover */}
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 hover:!opacity-100 transition-opacity">
                 <button
                     onClick={() => setShowMenu(!showMenu)}
-                    className="w-8 h-8 bg-[var(--background)] hover:bg-[#ff6b6b] 
-                             rounded-full flex items-center justify-center
-                             transition-all hover:scale-110 border border-[var(--card-border)]"
+                    className="w-6 h-6 bg-[var(--background)]/70 backdrop-blur-sm hover:bg-[var(--card-border)] 
+                             flex items-center justify-center rounded-full
+                             transition-all border border-[var(--card-border)] shadow-sm"
                     title="Compartir"
                 >
-                    <span className="text-sm">📤</span>
+                    <span className="text-[10px]">📤</span>
                 </button>
 
                 {/* Dropdown menu */}
@@ -138,7 +129,8 @@ export function ShareableCard({ children, title = 'Stats', filename = 'FutLog-st
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: -10 }}
                             className="absolute right-0 top-10 bg-[var(--card-bg)] border border-[var(--card-border)]
-                                     rounded-xl shadow-xl overflow-hidden min-w-[140px] z-50"
+                                     shadow-xl overflow-hidden min-w-[140px] z-50"
+                            style={{ borderRadius: 'var(--radius)' }}
                         >
                             <button
                                 onClick={shareImage}
@@ -176,7 +168,8 @@ export function ShareableCard({ children, title = 'Stats', filename = 'FutLog-st
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center"
+                        className="absolute inset-0 bg-black/50 flex items-center justify-center"
+                        style={{ borderRadius: 'var(--radius)' }}
                     >
                         <div className="text-center">
                             <span className="animate-spin text-2xl inline-block">⚽</span>
@@ -194,10 +187,11 @@ export function ShareableCard({ children, title = 'Stats', filename = 'FutLog-st
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
                         className="absolute -bottom-12 left-1/2 -translate-x-1/2 
-                                 bg-[#10b981] text-white px-4 py-2 rounded-full text-sm font-bold
+                                 bg-[#16a34a] text-white px-4 py-2 text-sm font-black capitalize tracking-widest
                                  shadow-lg"
+                        style={{ borderRadius: 'var(--radius)' }}
                     >
-                        ✅ ¡Listo!
+                        ✓ ¡Hecho!
                     </motion.div>
                 )}
             </AnimatePresence>

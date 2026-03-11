@@ -1,4 +1,4 @@
-# ⚽ Fulbito - App de Votación de Jugadores
+# ⚽ FutLog - Tu Letterboxd del Fútbol
 
 Progressive Web App para votar jugadores de fútbol en tiempo real.
 
@@ -20,7 +20,7 @@ vercel
 #    - Set up and deploy? Yes
 #    - Which scope? Tu cuenta
 #    - Link to existing? No
-#    - Project name? fulbito (o el que quieras)
+#    - Project name? futlog (o el que quieras)
 #    - Directory? ./ (la raíz)
 #    - Override settings? No
 ```
@@ -53,7 +53,7 @@ vercel
      ```
    - Click en **Deploy**
 
-4. **Esperá 2-3 minutos** → ¡Listo! Tenés tu link tipo `fulbito-xxx.vercel.app`
+4. **Esperá 2-3 minutos** → ¡Listo! Tenés tu link tipo `futlog-xxx.vercel.app`
 
 ### Opción 3: Si tenés Git instalado
 
@@ -65,7 +65,7 @@ git commit -m "Initial commit - Fulbito PWA"
 
 # 2. Subir a GitHub
 # (Creá un repo en github.com primero)
-git remote add origin https://github.com/TU_USUARIO/fulbito.git
+git remote add origin https://github.com/TU_USUARIO/futlog.git
 git push -u origin main
 
 # 3. Deploy en Vercel (conectar repo desde dashboard)
@@ -76,7 +76,7 @@ git push -u origin main
 
 Una vez deployado, tus amigos pueden:
 
-1. **Android:** Entrar a `fulbito-xxx.vercel.app` → Menú (⋮) → "Instalar app"
+1. **Android:** Entrar a `futlog-xxx.vercel.app` → Menú (⋮) → "Instalar app"
 2. **iPhone:** Safari → Compartir → "Agregar a pantalla de inicio"
 
 La app va a funcionar con HTTPS y se podrá instalar correctamente como PWA.

@@ -3,7 +3,10 @@
         "loading": "Carregando a arquibancada...",
         "save": "Salvar",
         "cancel": "Cancelar",
-        "back": "Voltar"
+        "back": "Voltar",
+        "today": "Hoje",
+        "yesterday": "Ontem",
+        "tomorrow": "Amanhã"
     },
     "nav": {
         "home": "Início",
@@ -34,12 +37,37 @@
         },
         "teams": {
             "title": "Seus Times",
+            "favorite": "Seu Time Favorito",
+            "noTeam": "Você não tem um time favorito.",
+            "configure": "Configurar time",
+            "change": "Mudar",
             "notifications": "Notificações de partidas"
         },
         "settings": {
             "title": "Configurações",
             "language": "Idioma",
-            "logout": "Sair"
+            "logout": "Sair",
+            "sync": {
+                "title": "Sincronização offline",
+                "desc": "Se você salvou resenhas sem internet, pode enviá-las manualmente aqui.",
+                "action": "SINCRONIZAR"
+            },
+            "appearance": {
+                "title": "Aparência",
+                "classic": "Modo Clássico",
+                "classicDesc": "Arial, neutro, scroll longo",
+                "dark": "Tema Escuro",
+                "darkDesc": "Proteja sua visão"
+            },
+            "danger": {
+                "title": "Perigo"
+            },
+            "pwa": {
+                "title": "Instalar o App",
+                "desc": "Adicione o FutLog à sua tela inicial para carregar mais rápido.",
+                "offline": "OFFLINE",
+                "fast": "RÁPIDA"
+            }
         }
     },
     "ratings": {
@@ -48,5 +76,10 @@
             "atmosphere": "Clima",
             "garra": "Raça"
         }
+    },
+    "footer": {
+        "privacy": "Privacidade",
+        "terms": "Termos",
+        "sources": "Fontes"
     }
 }

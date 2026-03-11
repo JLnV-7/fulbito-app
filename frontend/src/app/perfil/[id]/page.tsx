@@ -12,8 +12,9 @@ import { BadgeDisplay } from '@/components/BadgeDisplay'
 import { ShareButton } from '@/components/ShareButton'
 import { MatchLogCard } from '@/components/MatchLogCard'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/contexts/AuthContext'
-import { useFollows } from '@/hooks/useMatchLogs'
+import { useFollows, useMatchLogs } from '@/hooks/useMatchLogs'
 import { useProfileFollowers } from '@/hooks/useProfileFollowers'
 import { FollowListModal, type FollowListType } from '@/components/FollowListModal'
 import type { Profile, MatchLog } from '@/types'
@@ -26,7 +27,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
     const { isFollowing, toggleFollow } = useFollows()
     const { followersCount, followingCount } = useProfileFollowers(id)
     const [profile, setProfile] = useState<Profile | null>(null)
-    const [logs, setLogs] = useState<MatchLog[]>([])
+    const { logs, loading: logsLoading, toggleLike } = useMatchLogs({ userId: id, limit: 10 })
     const [loading, setLoading] = useState(true)
     const [stats, setStats] = useState({ total_logs: 0, avg_rating: 0, total_likes: 0 })
     const [badgeStats, setBadgeStats] = useState<BadgeStats>({
@@ -57,20 +58,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
 
             if (profileData) setProfile(profileData)
 
-            // Fetch recent public logs
-            try {
-                const { data: logsData } = await supabase
-                    .from('match_logs')
-                    .select('*')
-                    .eq('user_id', id)
-                    .eq('is_private', false)
-                    .order('created_at', { ascending: false })
-                    .limit(10)
-
-                if (logsData) setLogs(logsData)
-            } catch {
-                console.log('Logs no disponibles')
-            }
+            // Logs are handled by useMatchLogs hook now
 
             // Fetch stats + badge data
             try {
@@ -116,7 +104,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
         fetchProfile()
     }, [id])
 
-    if (loading) {
+    if (loading || logsLoading) {
         return (
             <>
                 <DesktopNav />
@@ -151,7 +139,10 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
             <DesktopNav />
             <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20">
                 {/* Header with gradient - purple for public profiles */}
-                <div className="bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#a78bfa] pt-6 pb-20 px-6 rounded-b-[40px] relative overflow-hidden">
+                <div className="bg-[var(--card-bg)] pt-8 pb-12 px-6 border-b border-[var(--card-border)] relative overflow-hidden">
+                    {/* Subtle accent gradient background */}
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[var(--accent-green)]/5 to-transparent pointer-events-none" />
+
                     <div className="absolute inset-0 opacity-10 pointer-events-none">
                         <div className="absolute top-4 right-4 text-7xl">⚽</div>
                     </div>
@@ -161,40 +152,43 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                             <ArrowLeft size={18} />
                         </button>
 
-                        <div className="text-center text-white">
+                        <div className="text-center text-[var(--foreground)]">
                             <motion.div
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
-                                className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-3
-                           border-4 border-white/30 text-4xl shadow-xl"
+                                className="w-24 h-24 bg-[var(--background)] rounded-3xl flex items-center justify-center mx-auto mb-4
+                           border-2 border-[var(--card-border)] text-4xl shadow-2xl overflow-hidden"
                             >
-                                {profile.avatar_url || profile.username?.charAt(0)?.toUpperCase() || '?'}
+                                {profile.avatar_url ? (
+                                    <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                    profile.username?.charAt(0)?.toUpperCase() || '?'
+                                )}
                             </motion.div>
-                            <h1 className="text-2xl font-black mb-1 drop-shadow-md">{profile.username || 'Usuario'}</h1>
+                            <h1 className="text-2xl font-bold mb-1 capitalize tracking-tight">{profile.username || 'Usuario'}</h1>
                             {profile.equipo && (
-                                <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full text-sm mb-3">
+                                <div className="inline-flex items-center gap-2 bg-[var(--background)] border border-[var(--card-border)] px-4 py-2 rounded-full text-xs mb-6 shadow-sm">
                                     <span>❤️</span>
-                                    <span className="font-semibold">{profile.equipo}</span>
+                                    <span className="font-bold capitalize tracking-tight">{profile.equipo}</span>
                                 </div>
                             )}
 
                             {/* Follow button */}
                             {!isOwnProfile && user && (
-                                <div className="mt-2">
-                                    <button
+                                <div className="mt-2 text-white">
+                                    <Button
                                         onClick={() => toggleFollow(id)}
-                                        className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${isFollowing(id)
-                                            ? 'bg-white/20 text-white border border-white/30'
-                                            : 'bg-white text-[#6366f1] font-semibold'
-                                            }`}
+                                        variant={isFollowing(id) ? 'glass' : 'primary'}
+                                        size="md"
+                                        className={isFollowing(id) ? 'bg-[var(--card-bg)] text-[var(--foreground)] border-[var(--card-border)]' : 'bg-[#16a34a] text-white hover:bg-[#059669]'}
                                     >
-                                        {isFollowing(id) ? <><UserCheck size={15} /> Siguiendo</> : <><UserPlus size={15} /> Seguir</>}
-                                    </button>
+                                        {isFollowing(id) ? <><UserCheck size={18} className="mr-1" /> Siguiendo</> : <><UserPlus size={18} className="mr-1" /> Seguir</>}
+                                    </Button>
                                 </div>
                             )}
 
                             {/* Stats Summary */}
-                            <div className="flex items-center justify-center gap-6 mb-6">
+                            <div className="flex items-center justify-center gap-8 mb-6 border-t border-b border-[var(--card-border)] py-4 border-dashed">
                                 <div
                                     className="text-center cursor-pointer hover:opacity-80 transition-opacity"
                                     onClick={() => setFollowModalState({
@@ -203,8 +197,8 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                                         title: 'Seguidores'
                                     })}
                                 >
-                                    <div className="font-black text-xl text-white">{followersCount}</div>
-                                    <div className="text-[10px] uppercase font-bold text-white/80 tracking-widest">Seguidores</div>
+                                    <div className="font-bold text-xl">{followersCount}</div>
+                                    <div className="text-[10px] capitalize font-bold text-[var(--text-muted)] tracking-tight">Seguidores</div>
                                 </div>
                                 <div
                                     className="text-center cursor-pointer hover:opacity-80 transition-opacity"
@@ -214,40 +208,32 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                                         title: 'Siguiendo'
                                     })}
                                 >
-                                    <div className="font-black text-xl text-white">{followingCount}</div>
-                                    <div className="text-[10px] uppercase font-bold text-white/80 tracking-widest">Siguiendo</div>
+                                    <div className="font-bold text-xl">{followingCount}</div>
+                                    <div className="text-[10px] capitalize font-bold text-[var(--text-muted)] tracking-tight">Siguiendo</div>
                                 </div>
                             </div>
 
-                            <div className="max-w-[200px] mx-auto mt-4 mb-2">
-                                <ShareButton
-                                    titulo={`Perfil de ${profile.username || 'Usuario'} en FutLog`}
-                                    texto={`Mirá las reseñas y medallas de ${profile.username || 'Usuario'} en FutLog ⚽`}
-                                    url={typeof window !== 'undefined' ? window.location.href : ''}
-                                    label="Compartir Perfil"
-                                />
-                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="max-w-2xl mx-auto px-4 -mt-10 relative z-10 space-y-4">
+                <div className="max-w-2xl mx-auto px-6 mt-6 pb-8 relative z-10 space-y-6">
                     {/* Stats Row */}
-                    <div className="grid grid-cols-3 gap-3">
-                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-4 text-center">
-                            <Film size={16} className="mx-auto mb-1 text-[#f59e0b]" />
+                    <div className="grid grid-cols-3 gap-2">
+                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-4 text-center shadow-sm">
+                            <Film size={16} className="mx-auto mb-1.5 text-[var(--accent-green)]" />
                             <div className="text-xl font-bold">{stats.total_logs}</div>
-                            <div className="text-[10px] text-[var(--text-muted)]">Partidos</div>
+                            <div className="text-[10px] font-bold capitalize tracking-tight text-[var(--text-muted)]">Partidos</div>
                         </div>
-                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-4 text-center">
-                            <Star size={16} className="mx-auto mb-1 text-[#f59e0b]" />
+                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-4 text-center shadow-sm">
+                            <Star size={16} className="mx-auto mb-1.5 text-yellow-400" />
                             <div className="text-xl font-bold">{stats.avg_rating.toFixed(1)}</div>
-                            <div className="text-[10px] text-[var(--text-muted)]">Rating Prom.</div>
+                            <div className="text-[10px] font-bold capitalize tracking-tight text-[var(--text-muted)]">Rating</div>
                         </div>
-                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-4 text-center">
-                            <Trophy size={16} className="mx-auto mb-1 text-[#10b981]" />
+                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-4 text-center shadow-sm">
+                            <Trophy size={16} className="mx-auto mb-1.5 text-[var(--accent-green)]" />
                             <div className="text-xl font-bold">{badgeStats.distinct_ligas}</div>
-                            <div className="text-[10px] text-[var(--text-muted)]">Ligas</div>
+                            <div className="text-[10px] font-bold capitalize tracking-tight text-[var(--text-muted)]">Ligas</div>
                         </div>
                     </div>
 
@@ -259,7 +245,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                         <div>
                             <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
                                 <Film size={14} className="text-[#f59e0b]" />
-                                Últimas reseñas
+                                Últimas Reseñas
                             </h3>
                             <div className="space-y-3">
                                 {logs.map((log, i) => (
@@ -269,7 +255,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.05 }}
                                     >
-                                        <MatchLogCard log={log} />
+                                        <MatchLogCard log={log} onLike={toggleLike} />
                                     </motion.div>
                                 ))}
                             </div>

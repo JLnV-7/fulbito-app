@@ -19,7 +19,7 @@ export default function TermsPage() {
                         ← Volver
                     </button>
 
-                    <h1 className="text-3xl font-black mb-8 bg-gradient-to-r from-[#10b981] to-[#3b82f6] bg-clip-text text-transparent">
+                    <h1 className="text-3xl font-black mb-8 bg-gradient-to-r from-[#16a34a] to-[#3b82f6] bg-clip-text text-transparent">
                         Términos de Servicio
                     </h1>
 

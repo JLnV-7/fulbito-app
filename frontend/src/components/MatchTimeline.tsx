@@ -35,15 +35,15 @@ const EVENT_ICONS: Record<string, string> = {
 }
 
 const EVENT_COLORS: Record<string, string> = {
-    gol: '#10b981',
-    penalty: '#10b981',
-    gol_en_contra: '#f59e0b',
-    amarilla: '#fbbf24',
-    roja: '#ef4444',
-    amarilla_roja: '#ef4444',
-    cambio: '#6366f1',
-    var: '#8b5cf6',
-    otro: '#6b7280',
+    gol: '#16a34a',
+    penalty: '#16a34a',
+    gol_en_contra: '#d97706',
+    amarilla: '#d97706',
+    roja: '#b91c1c',
+    amarilla_roja: '#b91c1c',
+    cambio: '#2563eb',
+    var: '#6d28d9',
+    otro: '#4b5563',
 }
 
 export function MatchTimeline({ fixtureId, equipoLocal, equipoVisitante }: MatchTimelineProps) {
@@ -69,14 +69,14 @@ export function MatchTimeline({ fixtureId, equipoLocal, equipoVisitante }: Match
 
     if (loading) {
         return (
-            <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] p-4">
+            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-4" style={{ borderRadius: 'var(--radius)' }}>
                 <div className="flex items-center gap-2 mb-3">
                     <span className="text-sm">⏱️</span>
-                    <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase">Timeline</h3>
+                    <h3 className="text-[10px] font-black text-[var(--text-muted)] capitalize tracking-widest font-black capitalize">Timeline</h3>
                 </div>
                 <div className="space-y-2">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="h-8 bg-[var(--background)] rounded-lg animate-pulse" />
+                        <div key={i} className="h-8 bg-[var(--background)] animate-pulse" style={{ borderRadius: 'var(--radius)' }} />
                     ))}
                 </div>
             </div>
@@ -96,7 +96,7 @@ export function MatchTimeline({ fixtureId, equipoLocal, equipoVisitante }: Match
                     <div className="flex items-center justify-between">
                         <span>Timeline del Partido</span>
                         <div className="flex gap-2 items-center">
-                            <span className="text-[10px] text-[var(--text-muted)] bg-[var(--background)] px-2 py-0.5 rounded-full">
+                            <span className="text-[9px] font-black capitalize text-[var(--text-muted)] bg-[var(--background)] border border-[var(--card-border)] px-1.5 py-0.5" style={{ borderRadius: 'var(--radius)' }}>
                                 {events.length} eventos
                             </span>
                             {events.length > keyEvents.length && (
@@ -105,7 +105,7 @@ export function MatchTimeline({ fixtureId, equipoLocal, equipoVisitante }: Match
                                         e.stopPropagation()
                                         setExpanded(!expanded)
                                     }}
-                                    className="text-[10px] font-bold text-[#10b981] hover:underline"
+                                    className="text-[10px] font-black capitalize text-[#16a34a] hover:underline"
                                 >
                                     {expanded ? 'Solo clave' : 'Ver todo'}
                                 </button>
@@ -154,10 +154,10 @@ export function MatchTimeline({ fixtureId, equipoLocal, equipoVisitante }: Match
 
                                         {/* Dot on the line */}
                                         <div
-                                            className="w-3 h-3 rounded-full bg-[var(--card-bg)] border-2 flex-shrink-0 z-10 flex items-center justify-center"
-                                            style={{ borderColor: color }}
+                                            className="w-3 h-3 bg-[var(--card-bg)] border-2 flex-shrink-0 z-10 flex items-center justify-center"
+                                            style={{ borderColor: color, borderRadius: 'var(--radius)' }}
                                         >
-                                            <div className="w-1 h-1 rounded-full" style={{ backgroundColor: color }} />
+                                            <div className="w-1.5 h-1.5" style={{ backgroundColor: color, borderRadius: 'var(--radius)' }} />
                                         </div>
 
                                         {/* Content */}
@@ -180,10 +180,10 @@ export function MatchTimeline({ fixtureId, equipoLocal, equipoVisitante }: Match
                                             </div>
 
                                             {/* Team indicator */}
-                                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${isLocal
-                                                ? 'bg-[#10b981]/10 text-[#10b981]'
-                                                : 'bg-[#6366f1]/10 text-[#6366f1]'
-                                                }`}>
+                                            <span className={`text-[9px] font-black px-1.5 py-0.5 border ${isLocal
+                                                ? 'bg-[#16a34a]/10 text-[#16a34a] border-[#16a34a]/20'
+                                                : 'bg-[#2563eb]/10 text-[#2563eb] border-[#2563eb]/20'
+                                                }`} style={{ borderRadius: 'var(--radius)' }}>
                                                 {isLocal ? 'L' : 'V'}
                                             </span>
                                         </div>

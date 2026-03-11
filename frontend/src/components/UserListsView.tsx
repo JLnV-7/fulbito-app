@@ -43,18 +43,41 @@ export function UserListsView({ userId, isOwnProfile }: UserListsViewProps) {
             </div>
 
             {lists.length === 0 ? (
-                <div className="text-center py-8 bg-[var(--background)] rounded-2xl border border-dashed border-[var(--card-border)]">
-                    <p className="text-[var(--text-muted)] text-sm font-medium mb-3">
-                        {isOwnProfile ? 'Aún no creaste ninguna lista de partidos.' : 'Este usuario no tiene listas.'}
-                    </p>
-                    {isOwnProfile && (
-                        <button
-                            onClick={() => setShowCreateModal(true)}
-                            className="bg-[var(--card-bg)] border border-[var(--card-border)] hover:border-[var(--accent)] px-4 py-2 rounded-xl text-sm font-bold transition-colors"
-                        >
-                            Crear mi primera lista
-                        </button>
-                    )}
+                <div className="flex flex-col gap-4">
+                    <div className="text-center py-8 bg-[var(--background)] rounded-2xl border border-dashed border-[var(--card-border)]">
+                        <p className="text-[var(--text-muted)] text-sm font-medium mb-3">
+                            {isOwnProfile ? 'Aún no creaste ninguna lista de partidos.' : 'Este usuario no tiene listas.'}
+                        </p>
+                        {isOwnProfile && (
+                            <button
+                                onClick={() => setShowCreateModal(true)}
+                                className="bg-[var(--card-bg)] border border-[var(--card-border)] hover:border-[var(--accent)] px-4 py-2 rounded-xl text-sm font-bold transition-colors"
+                            >
+                                Crear mi primera lista
+                            </button>
+                        )}
+                    </div>
+                    {/* Example Mock List */}
+                    <div className="opacity-70 border-t border-[var(--card-border)] border-dashed pt-4">
+                        <span className="text-[10px] font-black capitalize text-[var(--accent)] tracking-widest mb-4 block">Visualización de Ejemplo</span>
+                        <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar pointer-events-none">
+                            <div className="min-w-[260px] md:min-w-[300px] shrink-0 snap-center">
+                                <div className="bg-[var(--background)] border border-[var(--card-border)] rounded-2xl p-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h3 className="font-bold text-lg">Mis Favoritos de Siempre</h3>
+                                        <span className="text-xl">⭐</span>
+                                    </div>
+                                    <p className="text-xs text-[var(--text-muted)] mb-4">Los mejores partidos que vi en mi vida.</p>
+                                    <div className="flex gap-1 -space-x-2">
+                                        <div className="w-6 h-6 rounded-full bg-[var(--accent)] border-2 border-[var(--card-bg)] flex items-center justify-center text-[10px] font-black text-white">1</div>
+                                        <div className="w-6 h-6 rounded-full bg-[var(--accent)] border-2 border-[var(--card-bg)] flex items-center justify-center text-[10px] font-black text-white">2</div>
+                                        <div className="w-6 h-6 rounded-full bg-[var(--accent)] border-2 border-[var(--card-bg)] flex items-center justify-center text-[10px] font-black text-white">3</div>
+                                    </div>
+                                    <div className="mt-3 text-[10px] font-black capitalize text-[var(--text-muted)]">3 Partidos Guardados</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             ) : (
                 <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar">

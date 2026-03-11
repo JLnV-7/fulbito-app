@@ -21,9 +21,9 @@ import type { MatchLog } from '@/types'
 
 const MATCH_TYPE_META: Record<string, { icon: typeof Tv; label: string; color: string }> = {
     tv: { icon: Tv, label: 'Lo vio por TV', color: '#3b82f6' },
-    stadium: { icon: MapPin, label: 'En la cancha', color: '#10b981' },
+    stadium: { icon: MapPin, label: 'En la cancha', color: '#16a34a' },
     friend: { icon: Users, label: 'Con amigos', color: '#f59e0b' },
-    other: { icon: HelpCircle, label: 'Otro', color: '#8b5cf6' },
+    other: { icon: HelpCircle, label: 'Otro', color: '#2563eb' },
 }
 
 export default function LogDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -154,7 +154,7 @@ export default function LogDetailPage({ params }: { params: Promise<{ id: string
                             <button
                                 onClick={() => toggleFollow(log.user_id)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${isFollowing(log.user_id)
-                                    ? 'border-[#10b981]/30 bg-[#10b981]/5 text-[#10b981]'
+                                    ? 'border-[#16a34a]/30 bg-[#16a34a]/5 text-[#16a34a]'
                                     : 'border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                     }`}
                             >
@@ -237,7 +237,7 @@ export default function LogDetailPage({ params }: { params: Promise<{ id: string
                                     <div className="text-center">
                                         <div className="text-[10px] text-[var(--text-muted)] mb-1">🏟️ Atmósfera</div>
                                         <div className="flex items-center justify-center gap-1.5">
-                                            <StarRatingDisplay value={log.rating_atmosfera} size="sm" color="#10b981" />
+                                            <StarRatingDisplay value={log.rating_atmosfera} size="sm" color="#16a34a" />
                                             <span className="text-xs font-bold">{log.rating_atmosfera.toFixed(1)}</span>
                                         </div>
                                     </div>

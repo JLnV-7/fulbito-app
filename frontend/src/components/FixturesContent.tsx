@@ -3,17 +3,26 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
+import { Calendar } from 'lucide-react'
 import { PartidoCard } from '@/components/PartidoCard'
 import { PartidoCardSkeleton } from '@/components/skeletons/PartidoCardSkeleton'
 import { fetchFixturesAction } from '@/app/actions/football'
+import { FixtureTable } from '@/components/FixtureTable'
+import { useTheme } from '@/contexts/ThemeContext'
 import type { Partido } from '@/types'
 import { LIGAS, type Liga } from '@/lib/constants'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { hapticFeedback } from '@/lib/helpers'
 
 interface FixturesContentProps {
     ligaExterna?: string
 }
 
 export function FixturesContent({ ligaExterna }: FixturesContentProps) {
+    const { classicMode } = useTheme()
+    const { language } = useLanguage()
+    const localeFormat = language === 'en' ? 'en-US' : language === 'pt' ? 'pt-BR' : 'es-AR'
+
     const [partidos, setPartidos] = useState<Partido[]>([])
     const [loading, setLoading] = useState(true)
     const [fechaSeleccionada, setFechaSeleccionada] = useState<string | null>(null)
@@ -22,26 +31,39 @@ export function FixturesContent({ ligaExterna }: FixturesContentProps) {
     const liga = ligaExterna || ligaInterna
 
     useEffect(() => {
-        const fetchPartidos = async () => {
-            setLoading(true)
+        const fetchPartidos = async (showLoading = true) => {
+            if (showLoading) setLoading(true)
             try {
                 const ligaParaBuscar = liga === 'Todos' ? 'Liga Profesional' : liga
                 const data = await fetchFixturesAction(ligaParaBuscar)
                 setPartidos(data)
-                if (data.length > 0) {
+
+                // Si no hay fecha seleccionada, poner la más cercana a hoy o la última
+                if (data.length > 0 && !fechaSeleccionada) {
+                    const today = new Date().toLocaleDateString('sv-SE')
                     const dates = [...new Set(data.map((p: Partido) =>
                         new Date(p.fecha_inicio).toLocaleDateString('sv-SE')
                     ))].sort()
-                    setFechaSeleccionada(dates[dates.length - 1])
+
+                    const nearestDate = dates.find(d => d >= today) || dates[dates.length - 1]
+                    setFechaSeleccionada(nearestDate)
                 }
             } catch (err: any) {
                 console.error('Error fetching fixtures:', err)
             } finally {
-                setLoading(false)
+                if (showLoading) setLoading(false)
             }
         }
+
         fetchPartidos()
-    }, [liga])
+
+        // Polling para actualizaciones en vivo cada 2 minutos si hay partidos en juego
+        const interval = setInterval(() => {
+            fetchPartidos(false)
+        }, 120000)
+
+        return () => clearInterval(interval)
+    }, [liga, fechaSeleccionada])
 
     const fechasDisponibles = useMemo(() => {
         const dateSet = new Set(partidos.map(p =>
@@ -61,7 +83,7 @@ export function FixturesContent({ ligaExterna }: FixturesContentProps) {
     const partidosPorHora = useMemo(() => {
         const grupos: Record<string, Partido[]> = {}
         partidosFiltrados.forEach(partido => {
-            const hora = new Date(partido.fecha_inicio).toLocaleTimeString('es-AR', {
+            const hora = new Date(partido.fecha_inicio).toLocaleTimeString(localeFormat, {
                 hour: '2-digit',
                 minute: '2-digit'
             })
@@ -74,10 +96,10 @@ export function FixturesContent({ ligaExterna }: FixturesContentProps) {
     const formatDateLabel = (dateStr: string) => {
         const date = new Date(dateStr + 'T12:00:00')
         return {
-            weekday: date.toLocaleDateString('es-AR', { weekday: 'short' }),
+            weekday: date.toLocaleDateString(localeFormat, { weekday: 'short' }),
             day: date.getDate(),
-            month: date.toLocaleDateString('es-AR', { month: 'short' }),
-            full: date.toLocaleDateString('es-AR', {
+            month: date.toLocaleDateString(localeFormat, { month: 'short' }),
+            full: date.toLocaleDateString(localeFormat, {
                 weekday: 'long',
                 day: 'numeric',
                 month: 'long'
@@ -96,9 +118,10 @@ export function FixturesContent({ ligaExterna }: FixturesContentProps) {
                             onClick={() => setLigaInterna(ligaName)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all
                                 ${ligaInterna === ligaName
-                                    ? 'bg-[#10b981] text-white'
+                                    ? 'bg-[var(--foreground)] text-[var(--background)]'
                                     : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                 }`}
+                            style={{ borderRadius: 'var(--radius)' }}
                         >
                             {ligaName}
                         </button>
@@ -120,19 +143,24 @@ export function FixturesContent({ ligaExterna }: FixturesContentProps) {
                             return (
                                 <button
                                     key={dateStr}
-                                    onClick={() => setFechaSeleccionada(dateStr)}
-                                    className={`flex flex-col items-center px-4 py-2 rounded-xl min-w-[70px] transition-all
+                                    onClick={() => { hapticFeedback(5); setFechaSeleccionada(dateStr); }}
+                                    className={`flex flex-col items-center px-4 py-3 min-w-[75px] transition-all border
                                         ${isSelected
-                                            ? 'bg-[#ff6b6b] text-white'
-                                            : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-muted)] hover:border-[#ff6b6b]/50'
+                                            ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)] shadow-sm scale-105 z-10'
+                                            : 'bg-[var(--card-bg)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--foreground)]/30'
                                         }`}
+                                    style={{ borderRadius: 'var(--radius)' }}
                                 >
-                                    <span className="text-[10px] uppercase font-bold">{label.weekday}</span>
-                                    <span className="text-lg font-black">{label.day}</span>
-                                    <span className="text-[10px]">{label.month}</span>
-                                    <span className={`text-[8px] mt-0.5 ${isSelected ? 'text-white/80' : 'text-[var(--text-muted)]'}`}>
-                                        {matchCount} partido{matchCount !== 1 ? 's' : ''}
-                                    </span>
+                                    <span className="text-[9px] capitalize font-black tracking-tighter mb-1 opacity-70">{label.weekday}</span>
+                                    <span className="text-xl font-black italic">{label.day}</span>
+                                    <span className="text-[9px] font-bold capitalize">{label.month}</span>
+                                    {matchCount > 0 && (
+                                        <div className={`mt-1.5 px-1.5 py-0.5 text-[7px] font-black
+                                            ${isSelected ? 'bg-[var(--background)] text-[var(--foreground)]' : 'bg-[var(--foreground)]/10 text-[var(--foreground)]'}`}
+                                            style={{ borderRadius: '2px' }}>
+                                            {matchCount} PART
+                                        </div>
+                                    )}
                                 </button>
                             )
                         })}
@@ -142,9 +170,12 @@ export function FixturesContent({ ligaExterna }: FixturesContentProps) {
 
             {/* Selected date header */}
             {fechaSeleccionada && (
-                <h2 className="text-lg font-bold capitalize mb-4">
-                    {formatDateLabel(fechaSeleccionada).full}
-                </h2>
+                <div className="flex items-center gap-2 mb-6 text-[var(--text-muted)]">
+                    <Calendar size={14} className="text-[var(--accent-green)]" />
+                    <h2 className="text-xs font-black capitalize tracking-widest">
+                        {formatDateLabel(fechaSeleccionada).full}
+                    </h2>
+                </div>
             )}
 
             {/* Matches */}
@@ -158,7 +189,8 @@ export function FixturesContent({ ligaExterna }: FixturesContentProps) {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-10 text-center"
+                    className="bg-[var(--card-bg)] border border-[var(--card-border)] p-10 text-center"
+                    style={{ borderRadius: 'var(--radius)' }}
                 >
                     <span className="text-5xl mb-4 block">⚽</span>
                     <h3 className="text-lg font-bold mb-2">No hay partidos</h3>
@@ -167,24 +199,30 @@ export function FixturesContent({ ligaExterna }: FixturesContentProps) {
                     </p>
                 </motion.div>
             ) : (
-                <div className="space-y-6">
-                    {partidosPorHora.map(([hora, partidosHora]) => (
-                        <div key={hora}>
-                            <div className="flex items-center gap-3 mb-3">
-                                <span className="text-sm font-bold text-[#ff6b6b]">{hora}</span>
-                                <div className="flex-1 h-px bg-[var(--card-border)]"></div>
-                                <span className="text-xs text-[var(--text-muted)]">
-                                    {partidosHora.length} partido{partidosHora.length !== 1 ? 's' : ''}
-                                </span>
+                classicMode ? (
+                    <FixtureTable partidos={partidosFiltrados} />
+                ) : (
+                    <div className="space-y-6">
+                        {partidosPorHora.map(([hora, partidosHora]) => (
+                            <div key={hora}>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="px-3 py-1 bg-[var(--foreground)]/10 border border-[var(--foreground)]/20" style={{ borderRadius: 'var(--radius)' }}>
+                                        <span className="text-[10px] font-black text-[var(--foreground)]">{hora}</span>
+                                    </div>
+                                    <div className="flex-1 h-px bg-[var(--card-border)] opacity-30"></div>
+                                    <span className="text-[9px] font-bold text-[var(--text-muted)] capitalize tracking-tighter">
+                                        {partidosHora.length} partido{partidosHora.length !== 1 ? 's' : ''}
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {partidosHora.map(partido => (
+                                        <PartidoCard key={partido.id} partido={partido} />
+                                    ))}
+                                </div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {partidosHora.map(partido => (
-                                    <PartidoCard key={partido.id} partido={partido} />
-                                ))}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )
             )}
         </div>
     )

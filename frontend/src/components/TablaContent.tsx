@@ -4,7 +4,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { TeamLogo } from '@/components/TeamLogo'
-import { ShareableCard } from '@/components/ShareableCard'
 import { PosicionesSkeleton } from '@/components/skeletons/PosicionesSkeleton'
 import { fetchStandingsAction } from '@/app/actions/football'
 import type { ApiStanding } from '@/types/api'
@@ -58,7 +57,17 @@ export function TablaContent({ ligaExterna }: TablaContentProps) {
                     points: item.points,
                     form: item.form ? item.form.split('').slice(-5) : []
                 }))
-                setStandings(adaptedStandings)
+
+                // Deduplicate by team name (keep first occurrence), aggressive normalization for accents
+                const seen = new Set<string>()
+                const deduped = adaptedStandings.filter(t => {
+                    const key = t.team.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim()
+                    if (seen.has(key)) return false
+                    seen.add(key)
+                    return true
+                })
+
+                setStandings(deduped)
             } catch (err: any) {
                 console.error('Error fetching standings:', err)
                 setError('No se pudieron cargar las posiciones')
@@ -71,17 +80,17 @@ export function TablaContent({ ligaExterna }: TablaContentProps) {
 
     const getFormColor = (result: string) => {
         switch (result) {
-            case 'W': return 'bg-[#10b981] text-white'
+            case 'W': return 'bg-[#16a34a] text-white'
             case 'D': return 'bg-[#6b7280] text-white'
-            case 'L': return 'bg-[#ef4444] text-white'
+            case 'L': return 'bg-[#dc2626] text-white'
             default: return 'bg-[var(--card-border)]'
         }
     }
 
     const getPositionStyle = (pos: number) => {
-        if (pos <= 4) return 'text-[#10b981] font-black'
-        if (pos <= 6) return 'text-[#3b82f6] font-bold'
-        if (pos >= 18) return 'text-[#ef4444] font-bold'
+        if (pos <= 4) return 'text-[#16a34a]'
+        if (pos <= 6) return 'text-[#2563eb]'
+        if (pos >= 26) return 'text-[#dc2626]'
         return ''
     }
 
@@ -94,11 +103,12 @@ export function TablaContent({ ligaExterna }: TablaContentProps) {
                         <button
                             key={ligaName}
                             onClick={() => setLigaInterna(ligaName)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all
+                            className={`px-3 py-1.5 border text-[10px] font-black capitalize tracking-widest whitespace-nowrap transition-all
                                 ${ligaInterna === ligaName
-                                    ? 'bg-[#10b981] text-white'
-                                    : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)]'
+                                    ? 'bg-[var(--foreground)] border-[var(--foreground)] text-[var(--background)]'
+                                    : 'bg-[var(--card-bg)] border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                 }`}
+                            style={{ borderRadius: 'var(--radius)' }}
                         >
                             {ligaName}
                         </button>
@@ -109,98 +119,79 @@ export function TablaContent({ ligaExterna }: TablaContentProps) {
             {loading ? (
                 <PosicionesSkeleton />
             ) : error ? (
-                <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] p-8 text-center">
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-8 text-center">
                     <span className="text-4xl">❌</span>
                     <p className="mt-2 text-sm text-[var(--text-muted)]">{error}</p>
                 </div>
             ) : (
-                <ShareableCard title={`Tabla - ${liga}`} filename={`posiciones-${liga.toLowerCase().replace(/ /g, '-')}`}>
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] overflow-hidden"
-                    >
-                        {/* Header de la tabla */}
-                        <div className="grid grid-cols-12 gap-2 px-4 py-3 bg-[var(--background)] text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--card-border)]">
-                            <div className="col-span-1 text-center">#</div>
-                            <div className="col-span-4">Equipo</div>
-                            <div className="col-span-1 text-center">PJ</div>
-                            <div className="col-span-1 text-center">G</div>
-                            <div className="col-span-1 text-center">E</div>
-                            <div className="col-span-1 text-center">P</div>
-                            <div className="col-span-1 text-center">DG</div>
-                            <div className="col-span-1 text-center">Pts</div>
-                            <div className="col-span-1 text-center hidden md:block">Forma</div>
-                        </div>
+                    <div className="bg-[var(--card-bg)] border border-[var(--card-border)] overflow-x-auto">
+                        <table className="classic-table">
+                            <thead className="text-[10px] text-[var(--text-muted)] border-b border-[var(--card-border)]">
+                                <tr>
+                                    <th className="w-8 font-normal">#</th>
+                                    <th className="text-left font-normal">Equipo</th>
+                                    <th className="font-normal">PJ</th>
+                                    <th className="font-normal">G</th>
+                                    <th className="font-normal">E</th>
+                                    <th className="font-normal">P</th>
+                                    <th className="hidden sm:table-cell font-normal">GF</th>
+                                    <th className="hidden sm:table-cell font-normal">GC</th>
+                                    <th className="font-normal">DG</th>
+                                    <th className="bg-[var(--background)] font-bold text-[var(--foreground)]">Pts</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {standings.map((team, idx) => (
+                                    <tr
+                                        key={team.team}
+                                        className="hover:bg-[var(--hover-bg)] transition-colors"
+                                    >
+                                        <td className={`font-mono text-xs ${getPositionStyle(team.position)}`}>
+                                            {team.position}
+                                        </td>
+                                        <td className="text-left py-2">
+                                            <div className="flex items-center gap-2">
+                                                <TeamLogo src={team.logo} teamName={team.team} size={16} />
+                                                <span className="font-bold whitespace-nowrap text-xs">{team.team}</span>
+                                            </div>
+                                        </td>
+                                        <td className="font-mono text-[11px] text-[var(--text-muted)]">{team.played}</td>
+                                        <td className="font-mono text-[11px] text-[#16a34a]">{team.won}</td>
+                                        <td className="font-mono text-[11px] text-[var(--text-muted)]">{team.draw}</td>
+                                        <td className="font-mono text-[11px] text-[#dc2626]">{team.lost}</td>
+                                        <td className="font-mono text-[11px] text-[var(--text-muted)] hidden sm:table-cell">{team.goalsFor}</td>
+                                        <td className="font-mono text-[11px] text-[var(--text-muted)] hidden sm:table-cell">{team.goalsAgainst}</td>
+                                        <td className={`font-mono text-[11px] ${team.goalDiff >= 0 ? 'text-[#16a34a]' : 'text-[#dc2626]'}`}>
+                                            {team.goalDiff > 0 ? '+' : ''}{team.goalDiff}
+                                        </td>
+                                        <td className="font-mono font-bold text-sm bg-[var(--background)]">
+                                            {team.points}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
 
-                        {/* Filas */}
-                        {standings.map((team, idx) => (
-                            <motion.div
-                                key={team.team}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: idx * 0.02 }}
-                                className={`grid grid-cols-12 gap-2 px-4 py-3 items-center text-sm
-                                ${idx % 2 === 0 ? 'bg-[var(--card-bg)]' : 'bg-[var(--background)]/30'}
-                                hover:bg-[var(--background)]/50 transition-colors`}
-                            >
-                                <div className={`col-span-1 text-center ${getPositionStyle(team.position)}`}>
-                                    {team.position}
-                                </div>
-                                <div className="col-span-4 flex items-center gap-2 truncate">
-                                    <TeamLogo src={team.logo} teamName={team.team} size={24} />
-                                    <span className="font-bold truncate text-xs md:text-sm">{team.team}</span>
-                                </div>
-                                <div className="col-span-1 text-center text-[var(--text-muted)]">{team.played}</div>
-                                <div className="col-span-1 text-center text-[#10b981]">{team.won}</div>
-                                <div className="col-span-1 text-center text-[#6b7280]">{team.draw}</div>
-                                <div className="col-span-1 text-center text-[#ef4444]">{team.lost}</div>
-                                <div className={`col-span-1 text-center font-bold ${team.goalDiff >= 0 ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
-                                    {team.goalDiff > 0 ? '+' : ''}{team.goalDiff}
-                                </div>
-                                <div className="col-span-1 text-center font-black text-lg">{team.points}</div>
-                                <div className="col-span-1 flex gap-0.5 justify-center">
-                                    {team.form.slice(-3).map((result, i) => (
-                                        <span
-                                            key={i}
-                                            className={`w-4 h-4 rounded-sm md:flex items-center justify-center text-[8px] font-black hidden md:inline-flex ${getFormColor(result)}`}
-                                        >
-                                            {result}
-                                        </span>
-                                    ))}
-                                    <div className="flex gap-0.5 md:hidden">
-                                        {team.form.slice(-3).map((result, i) => (
-                                            <span
-                                                key={i}
-                                                className={`w-2 h-2 rounded-full ${result === 'W' ? 'bg-[#10b981]' : result === 'D' ? 'bg-[#6b7280]' : 'bg-[#ef4444]'}`}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-
-                        {/* Leyenda */}
-                        <div className="px-4 py-3 bg-[var(--background)] border-t border-[var(--card-border)] flex flex-wrap gap-4 text-[10px] text-[var(--text-muted)]">
+                        {/* Leyenda Simple */}
+                        <div className="px-4 py-2 bg-[var(--background)] border-t border-[var(--card-border)] flex flex-wrap gap-4 text-[9px] text-[var(--text-muted)] font-black capitalize">
                             <div className="flex items-center gap-1">
-                                <span className="w-3 h-3 bg-[#10b981] rounded-sm"></span>
-                                <span>Clasificación Continental</span>
+                                <span className="w-2 h-2 bg-[#16a34a]"></span>
+                                <span>Libertadores</span>
                             </div>
                             <div className="flex items-center gap-1">
-                                <span className="w-3 h-3 bg-[#3b82f6] rounded-sm"></span>
-                                <span>Copa Secundaria</span>
+                                <span className="w-2 h-2 bg-[#2563eb]"></span>
+                                <span>Sudamericana</span>
                             </div>
                             <div className="flex items-center gap-1">
-                                <span className="w-3 h-3 bg-[#ef4444] rounded-sm"></span>
+                                <span className="w-2 h-2 bg-[#dc2626]"></span>
                                 <span>Descenso</span>
                             </div>
                         </div>
-                    </motion.div>
-                </ShareableCard>
+                    </div>
             )}
 
             <div className="mt-4 text-center text-[10px] text-[var(--text-muted)]">
-                Datos actualizados via API-Football · Actualización cada 2hs
+                Datos actualizados via football-data.org · Cada 5 min
             </div>
         </div>
     )

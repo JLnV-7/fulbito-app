@@ -9,11 +9,14 @@ import { supabase } from '@/lib/supabase'
 import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { FeedbackWidget } from '@/components/FeedbackWidget'
+import { ChallengesFAB } from '@/components/ChallengesFAB'
 import { NotificationSettings } from '@/components/NotificationSettings'
 import { BadgeDisplay } from '@/components/BadgeDisplay'
 import { motion, AnimatePresence } from 'framer-motion'
-import { hapticFeedback } from '@/lib/helpers'
+import { hapticFeedback, getTeamColor } from '@/lib/helpers'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useTheme } from '@/contexts/ThemeContext'
 import { useProfileFollowers } from '@/hooks/useProfileFollowers'
 import { FollowListModal, type FollowListType } from '@/components/FollowListModal'
 import type { Profile, UserStats } from '@/types'
@@ -33,6 +36,8 @@ import { RatingPieChart } from '@/components/perfil/RatingPieChart'
 import { PushDebug } from '@/components/PushDebug'
 import { Button } from '@/components/ui/Button'
 import { BuildXI } from '@/components/perfil/BuildXI'
+import { MatchDiary } from '@/components/perfil/MatchDiary'
+import { useMatchLogs } from '@/hooks/useMatchLogs'
 
 type ProfileTab = 'social' | 'stats' | 'ajustes'
 
@@ -40,6 +45,7 @@ export default function Perfil() {
   const router = useRouter()
   const { user, signOut, loading: authLoading } = useAuth()
   const { language, setLanguage, t } = useLanguage()
+  const { theme, toggleTheme, classicMode, toggleClassicMode } = useTheme()
   const { followersCount, followingCount } = useProfileFollowers(user?.id || '')
 
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -60,6 +66,8 @@ export default function Perfil() {
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
   const [activeTab, setActiveTab] = useState<ProfileTab>('social')
+  const { syncOfflineLogs } = useMatchLogs()
+  const [syncing, setSyncing] = useState(false)
   const [badgeStats, setBadgeStats] = useState<BadgeStats>({
     total_logs: 0, reviews_with_text: 0, total_votos: 0,
     grupos_joined: 0, followers_count: 0, total_likes_received: 0,
@@ -327,91 +335,65 @@ export default function Perfil() {
 
       <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20">
 
-        {/* Hero Header con gradiente */}
-        <div className="bg-gradient-to-br from-[var(--accent-green)] via-[#008f45] to-[#10b981] pt-8 pb-24 px-6 rounded-b-[50px] relative overflow-hidden shadow-[0_10px_40px_rgba(0,166,81,0.2)]">
-          <div className="absolute inset-0 opacity-10 pointer-events-none">
-            <div className="absolute top-4 right-4 text-8xl">⚽</div>
-            <div className="absolute bottom-8 left-8 text-6xl">🏆</div>
-          </div>
-
+        {/* Hero Header - simplified classic style */}
+        <div className="bg-[var(--card-bg)] pt-8 pb-10 px-6 border-b border-[var(--card-border)] relative overflow-hidden">
+          {profile?.equipo && (
+            <div 
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-60 blur-[100px] pointer-events-none opacity-20 dark:opacity-[0.15]"
+              style={{ backgroundColor: getTeamColor(profile.equipo) }}
+            />
+          )}
           <div className="max-w-2xl mx-auto relative z-10">
-            <div className="flex justify-between items-center mb-8">
-              <button onClick={() => router.push('/')} className="bg-black/20 p-2.5 rounded-full backdrop-blur-md text-white hover:bg-black/40 transition-all">
+            <div className="flex justify-between items-center mb-6">
+              <button onClick={() => router.push('/')} className="border border-[var(--card-border)] p-2 bg-[var(--background)] text-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-all rounded-full w-9 h-9 flex items-center justify-center">
                 ←
               </button>
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowQRModal(true)}
-                  className="bg-black/20 p-2.5 rounded-xl backdrop-blur-md text-white font-bold hover:bg-black/40 transition-all flex items-center justify-center shadow-lg"
+                  className="border border-[var(--card-border)] p-2 bg-[var(--background)] text-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-all rounded-full w-9 h-9 flex items-center justify-center"
                   aria-label="Mostrar código QR para compartir"
+                  title="Código QR"
                 >
-                  <span className="text-sm">📱</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="5" height="5" x="3" y="3" rx="1" /><rect width="5" height="5" x="16" y="3" rx="1" /><rect width="5" height="5" x="3" y="16" rx="1" /><path d="M21 16h-3a2 2 0 0 0-2 2v3" /><path d="M21 21v.01" /><path d="M12 7v3a2 2 0 0 1-2 2H7" /><path d="M3 12h.01" /><path d="M12 3h.01" /><path d="M12 16v.01" /><path d="M16 12h1" /><path d="M21 12v.01" /><path d="M12 21v-1" /></svg>
                 </button>
                 <button
                   onClick={() => setShowEditor(true)}
-                  className="bg-black/20 px-4 py-2 rounded-xl backdrop-blur-md text-white text-sm font-bold hover:bg-black/40 transition-all"
+                  className="border border-[var(--card-border)] px-4 py-2 bg-[var(--background)] text-[var(--foreground)] text-[10px] font-bold capitalize tracking-tight hover:bg-[var(--hover-bg)] transition-all rounded-full"
                 >
-                  ✏️ Editar
+                  EDITAR
                 </button>
-                <button onClick={handleSignOut} className="bg-black/20 px-4 py-2 rounded-xl backdrop-blur-md text-white text-sm font-bold hover:bg-black/40 transition-all">
-                  Salir
+                <button onClick={handleSignOut} className="border border-[var(--card-border)] px-4 py-2 bg-[var(--background)] text-[var(--text-muted)] text-[10px] font-bold capitalize tracking-tight hover:bg-[var(--hover-bg)] transition-all rounded-full">
+                  SALIR
                 </button>
               </div>
             </div>
 
-            <div className="text-center text-white relative">
+            <div className="text-center relative">
               <div className="relative inline-block mx-auto mb-4">
-                {/* SVG Progress Ring */}
-                <svg className="absolute -inset-3 w-[calc(100%+1.5rem)] h-[calc(100%+1.5rem)] -rotate-90 pointer-events-none drop-shadow-lg">
-                  <circle
-                    cx="50%"
-                    cy="50%"
-                    r="46%"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.2)"
-                    strokeWidth="6"
-                  />
-                  <circle
-                    cx="50%"
-                    cy="50%"
-                    r="46%"
-                    fill="none"
-                    stroke="#F59E0B" // Amber-500 for gold
-                    strokeWidth="6"
-                    strokeDasharray="100 100"
-                    strokeDashoffset={100 - xpProgress}
-                    strokeLinecap="round"
-                    className="transition-all duration-1000 ease-out"
-                    pathLength="100"
-                  />
-                </svg>
-                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-xs font-black px-2 py-1 rounded-full border-2 border-white shadow-xl z-10 transform rotate-12">
-                  Lvl {userLevel}
+                <div className="absolute -top-1 -right-1 bg-[var(--foreground)] text-[var(--background)] text-[9px] font-bold px-2 py-0.5 border border-[var(--card-border)] z-10 capitalize rounded-full">
+                  LVL {userLevel}
                 </div>
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="w-24 h-24 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center relative z-0 border-4 border-white/30 text-5xl shadow-xl overflow-hidden"
-                >
+                <div className="w-24 h-24 bg-[var(--background)] border-2 border-[var(--card-border)] flex items-center justify-center relative z-0 text-5xl overflow-hidden shadow-2xl" style={{ borderRadius: '2rem' }}>
                   {profile?.avatar_url ? (
                     <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                   ) : (
                     '👤'
                   )}
-                </motion.div>
+                </div>
               </div>
 
-              <h1 className="text-3xl font-black mb-1 drop-shadow-md">{profile?.username || 'Usuario'}</h1>
+              <h1 className="text-2xl font-bold mb-1 capitalize tracking-tight">{profile?.username || 'Usuario'}</h1>
 
-              <div className="flex flex-col items-center gap-1 opacity-90 text-sm mb-4">
+              <div className="flex flex-col items-center gap-1 opacity-70 text-[10px] font-bold capitalize mb-4 tracking-wider">
                 <span>{user.email}</span>
-                <span className="text-xs font-bold bg-black/20 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                <span className="bg-[var(--background)] border border-[var(--card-border)] px-3 py-1 rounded-full">
                   {userXp} / {nextLevelXp} XP
                 </span>
               </div>
 
               {/* Follower Stats */}
-              <div className="flex justify-center gap-6 mb-4">
+              <div className="flex justify-center gap-8 mb-6 border-t border-b border-[var(--card-border)] py-4 border-dashed">
                 <div
                   className="text-center cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => setFollowModalState({
@@ -420,14 +402,10 @@ export default function Perfil() {
                     title: 'Seguidores'
                   })}
                 >
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="font-black text-xl text-white"
-                  >
+                  <div className="font-bold text-xl">
                     {followersCount}
-                  </motion.div>
-                  <div className="text-[10px] uppercase font-bold text-white/80 tracking-widest">Seguidores</div>
+                  </div>
+                  <div className="text-[10px] capitalize font-bold text-[var(--text-muted)] tracking-tight">Seguidores</div>
                 </div>
                 <div
                   className="text-center cursor-pointer hover:opacity-80 transition-opacity"
@@ -437,25 +415,21 @@ export default function Perfil() {
                     title: 'Siguiendo'
                   })}
                 >
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="font-black text-xl text-white"
-                  >
+                  <div className="font-bold text-xl">
                     {followingCount}
-                  </motion.div>
-                  <div className="text-[10px] uppercase font-bold text-white/80 tracking-widest">Siguiendo</div>
+                  </div>
+                  <div className="text-[10px] capitalize font-bold text-[var(--text-muted)] tracking-tight">Siguiendo</div>
                 </div>
               </div>
 
               {profile?.equipo && (
-                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-white/10 mb-6">
-                  <span>❤️</span>
-                  <span className="font-bold">{profile.equipo}</span>
+                <div className="inline-flex items-center gap-2 bg-[var(--background)] px-4 py-2 border border-[var(--card-border)] mb-4 rounded-full shadow-sm">
+                  <span className="text-xs">❤️</span>
+                  <span className="font-bold text-[10px] capitalize tracking-wider">{profile.equipo}</span>
                 </div>
               )}
 
-              <div className="max-w-[200px] mx-auto mt-2">
+              <div className="max-w-[240px] mx-auto mt-2 opacity-90 scale-95">
                 <ShareButton
                   titulo={`Perfil de ${profile?.username || 'Usuario'} en FutLog`}
                   texto="Mostrale a tus amigos lo que rateaste"
@@ -467,50 +441,43 @@ export default function Perfil() {
           </div>
         </div>
 
-        {/* Profile Tabs Navigation */}
-        <div className="max-w-2xl mx-auto px-6 mt-4 relative z-10 flex gap-2">
-          <button
-            onClick={() => {
-              hapticFeedback(10)
-              setActiveTab('social')
-            }}
-            className={`flex-1 py-3 px-2 rounded-2xl text-xs font-bold transition-all border shadow-sm flex flex-col items-center gap-1
-                ${activeTab === 'social'
-                ? 'bg-[#10b981] text-white border-[#10b981] shadow-md shadow-[#10b981]/20'
-                : 'bg-[var(--card-bg)] text-[var(--text-muted)] border-[var(--card-border)] hover:bg-[var(--hover-bg)]'
-              }`}
-          >
-            <span className="text-lg">🏆</span>
-            Social
-          </button>
-          <button
-            onClick={() => {
-              hapticFeedback(10)
-              setActiveTab('stats')
-            }}
-            className={`flex-1 py-3 px-2 rounded-2xl text-xs font-bold transition-all border shadow-sm flex flex-col items-center gap-1
-                ${activeTab === 'stats'
-                ? 'bg-[#3b82f6] text-white border-[#3b82f6] shadow-md shadow-[#3b82f6]/20'
-                : 'bg-[var(--card-bg)] text-[var(--text-muted)] border-[var(--card-border)] hover:bg-[var(--hover-bg)]'
-              }`}
-          >
-            <span className="text-lg">📊</span>
-            Stats
-          </button>
-          <button
-            onClick={() => {
-              hapticFeedback(10)
-              setActiveTab('ajustes')
-            }}
-            className={`flex-1 py-3 px-2 rounded-2xl text-xs font-bold transition-all border shadow-sm flex flex-col items-center gap-1
-                ${activeTab === 'ajustes'
-                ? 'bg-[var(--card-bg)] text-[var(--foreground)] border-[var(--card-border)] bg-opacity-100 shadow-md'
-                : 'bg-[var(--card-bg)] text-[var(--text-muted)] border-[var(--card-border)] hover:bg-[var(--hover-bg)]'
-              }`}
-          >
-            <span className="text-lg">⚙️</span>
-            Ajustes
-          </button>
+        {/* Main Tabs Navigation — Letterboxd Notebook Tab Style */}
+        <div className="flex border-b border-[var(--card-border)] overflow-x-auto no-scrollbar bg-[var(--background)] px-4 md:px-0">
+          <div className="max-w-2xl mx-auto w-full flex items-end pt-2 gap-1">
+            <button
+                className={`py-3 px-5 text-[11px] font-black capitalize tracking-widest transition-colors whitespace-nowrap border-t border-x -mb-[1px]
+                  ${activeTab === 'social'
+                  ? 'border-[var(--card-border)] bg-[var(--background)] text-[var(--foreground)]'
+                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--foreground)] border-b-transparent hover:bg-[var(--hover-bg)]'
+                }`}
+              style={{ borderBottomColor: activeTab === 'social' ? 'var(--background)' : 'transparent' }}
+              onClick={() => setActiveTab('social')}
+            >
+              {t('nav.profile')}
+            </button>
+            <button
+              className={`py-3 px-5 text-[11px] font-black capitalize tracking-widest transition-colors whitespace-nowrap border-t border-x -mb-[1px]
+                  ${activeTab === 'stats'
+                  ? 'border-[var(--card-border)] bg-[var(--background)] text-[var(--foreground)]'
+                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--foreground)] border-b-transparent hover:bg-[var(--hover-bg)]'
+                }`}
+              style={{ borderBottomColor: activeTab === 'stats' ? 'var(--background)' : 'transparent' }}
+              onClick={() => setActiveTab('stats')}
+            >
+              {t('profile.stats.title') || 'STATS'}
+            </button>
+            <button
+              className={`py-3 px-5 text-[11px] font-black capitalize tracking-widest transition-colors whitespace-nowrap border-t border-x -mb-[1px]
+                  ${activeTab === 'ajustes'
+                  ? 'border-[var(--card-border)] bg-[var(--background)] text-[var(--foreground)]'
+                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--foreground)] border-b-transparent hover:bg-[var(--hover-bg)]'
+                }`}
+              style={{ borderBottomColor: activeTab === 'ajustes' ? 'var(--background)' : 'transparent' }}
+              onClick={() => setActiveTab('ajustes')}
+            >
+              {t('profile.settings.title') || 'CONFIGURACIÓN'}
+            </button>
+          </div>
         </div>
 
         {/* Tab Content Area */}
@@ -527,6 +494,9 @@ export default function Perfil() {
                 transition={{ duration: 0.2 }}
                 className="space-y-6"
               >
+                {/* 📓 Match Diary — Letterboxd-style timeline */}
+                <MatchDiary userId={user.id} isOwnProfile />
+
                 {/* Build Your Own XI */}
                 <BuildXI />
 
@@ -537,22 +507,26 @@ export default function Perfil() {
                 <UserListsView userId={user.id} isOwnProfile={true} />
 
                 {/* Quick Actions (Grupos & Historial) */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => router.push('/historial')}
-                    className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 text-left hover:border-[#ff6b6b]/50 transition-all shadow-sm hover:shadow-md"
+                    className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 text-left hover:bg-[var(--hover-bg)] transition-all flex flex-col justify-between rounded-2xl"
                   >
-                    <span className="text-2xl mb-2 block">📜</span>
-                    <span className="font-bold text-sm block">Mi Historial</span>
-                    <span className="text-[10px] text-[var(--text-muted)] block mt-1">Ver todos mis pronósticos</span>
+                    <div>
+                      <span className="text-xl mb-1 block">📜</span>
+                      <span className="font-bold text-xs capitalize tracking-tight block">Mi Historial</span>
+                    </div>
+                    <span className="text-[10px] text-[var(--text-muted)] block mt-3 font-medium capitalize">Ver pronósticos</span>
                   </button>
                   <button
                     onClick={() => router.push('/grupos')}
-                    className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 text-left hover:border-[#10b981]/50 transition-all shadow-sm hover:shadow-md"
+                    className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 text-left hover:bg-[var(--hover-bg)] transition-all flex flex-col justify-between rounded-2xl"
                   >
-                    <span className="text-2xl mb-2 block">👥</span>
-                    <span className="font-bold text-sm block">Mis Grupos</span>
-                    <span className="text-[10px] text-[var(--text-muted)] block mt-1">Competí con amigos</span>
+                    <div>
+                      <span className="text-xl mb-1 block">👥</span>
+                      <span className="font-bold text-xs capitalize tracking-tight block">Mis Grupos</span>
+                    </div>
+                    <span className="text-[10px] text-[var(--text-muted)] block mt-3 font-medium capitalize">Competir</span>
                   </button>
                 </div>
               </motion.div>
@@ -615,61 +589,145 @@ export default function Perfil() {
                 className="space-y-6"
               >
                 {/* Tus Equipos / Notificaciones básicas */}
-                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-sm flex items-center gap-2">
-                      🛡️ Tu Equipo Favorito
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl">
+                  <div className="flex items-center justify-between mb-5 border-b border-[var(--card-border)] pb-3">
+                    <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2">
+                      {t('profile.teams.favorite')}
                     </h3>
                   </div>
                   {profile?.equipo ? (
-                    <div className="flex items-center justify-between bg-[var(--background)] p-3 rounded-xl border border-[var(--card-border)]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[var(--hover-bg)] rounded-full flex items-center justify-center text-xl shadow-sm">
+                    <div className="flex items-center justify-between bg-[var(--background)] p-4 border border-[var(--card-border)] rounded-2xl">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-[var(--hover-bg)] border border-[var(--card-border)] flex items-center justify-center text-xl rounded-xl">
                           🛡️
                         </div>
                         <div>
-                          <p className="font-bold text-sm">{profile.equipo}</p>
-                          <p className="text-[10px] text-[var(--text-muted)] mt-0.5">Suscrito a alertas</p>
+                          <p className="font-bold text-xs capitalize tracking-tight">{profile.equipo}</p>
+                          <p className="text-[10px] text-[var(--text-muted)] font-black capitalize mt-1 tracking-widest">{t('profile.stats.matchesRated')}</p>
                         </div>
                       </div>
-                      <button onClick={() => setShowEditor(true)} className="text-xs font-bold text-[var(--accent)] hover:underline">
-                        Cambiar
-                      </button>
+                      <div className="flex flex-col gap-2">
+                        <button onClick={() => setShowEditor(true)} className="text-[10px] font-bold text-[var(--accent-green)] hover:underline capitalize tracking-tight text-center">
+                          {t('common.change')}
+                        </button>
+                        <Button
+                          onClick={() => signOut()}
+                          className="bg-red-500 hover:bg-red-600 text-white font-bold w-full capitalize tracking-widest text-xs"
+                        >
+                          {t('profile.settings.logout')}
+                        </Button>
+                      </div>
                     </div>
                   ) : (
-                    <div className="text-center py-6 bg-[var(--background)] rounded-xl border border-[var(--card-border)] border-dashed">
-                      <p className="text-[var(--text-muted)] text-sm mb-3">No tenés equipo favorito configurado.</p>
-                      <button onClick={() => setShowEditor(true)} className="text-xs font-bold text-[#10b981] hover:underline">
-                        Configurar equipo
+                    <div className="text-center py-8 bg-[var(--background)] border border-[var(--card-border)] border-dashed rounded-2xl">
+                      <p className="text-[var(--text-muted)] text-[10px] font-bold capitalize mb-3 tracking-tight">{t('profile.teams.noTeam')}</p>
+                      <button onClick={() => setShowEditor(true)} className="text-[10px] font-bold text-[var(--accent-green)] hover:underline capitalize tracking-tight">
+                        {t('profile.teams.configure')}
                       </button>
                     </div>
                   )}
                 </div>
 
+                {/* Sincronización Offline */}
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 mt-4 rounded-3xl">
+                  <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2 mb-4 border-b border-[var(--card-border)] pb-3">
+                    🔄 {t('profile.settings.sync.title')}
+                  </h3>
+                  <p className="text-[10px] font-medium text-[var(--text-muted)] capitalize mb-5 leading-relaxed tracking-tight">
+                    {t('profile.settings.sync.desc')}
+                  </p>
+                  <Button
+                    variant="outline"
+                    fullWidth
+                    onClick={async () => {
+                      setSyncing(true)
+                      await syncOfflineLogs()
+                      setSyncing(false)
+                    }}
+                    loading={syncing}
+                    size="sm"
+                    className="rounded-xl"
+                  >
+                    {t('profile.settings.sync.action')}
+                  </Button>
+                </div>
+
+                {/* Ajustes de Apariencia */}
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 mt-4 rounded-3xl">
+                  <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2 mb-5 border-b border-[var(--card-border)] pb-3">
+                    🎨 {t('profile.settings.appearance.title')}
+                  </h3>
+
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-xs capitalize tracking-tight">{t('profile.settings.appearance.classic')}</p>
+                        <p className="text-[10px] text-[var(--text-muted)] font-medium capitalize mt-0.5">{t('profile.settings.appearance.classicDesc')}</p>
+                      </div>
+                      <button
+                        onClick={() => { hapticFeedback(10); toggleClassicMode(); }}
+                        className={`w-12 h-6 border-2 border-[var(--card-border)] transition-colors relative rounded-full ${classicMode ? 'bg-[var(--accent-green)] border-[var(--accent-green)]' : 'bg-[var(--hover-bg)]'}`}
+                      >
+                        <motion.div
+                          animate={{ x: classicMode ? 24 : 0 }}
+                          className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-all ${classicMode ? 'bg-white' : 'bg-[var(--text-muted)]'}`}
+                        />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between border-t border-[var(--card-border)] pt-5">
+                      <div>
+                        <p className="font-bold text-xs capitalize tracking-tight">{t('profile.settings.appearance.dark')}</p>
+                        <p className="text-[10px] text-[var(--text-muted)] font-medium capitalize mt-0.5">{t('profile.settings.appearance.darkDesc')}</p>
+                      </div>
+                      <button
+                        onClick={() => { hapticFeedback(10); toggleTheme(); }}
+                        className={`w-12 h-6 border-2 border-[var(--card-border)] transition-colors relative rounded-full ${theme === 'dark' ? 'bg-[var(--accent-green)] border-[var(--accent-green)]' : 'bg-[var(--hover-bg)]'}`}
+                      >
+                        <motion.div
+                          animate={{ x: theme === 'dark' ? 24 : 0 }}
+                          className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-all ${theme === 'dark' ? 'bg-white' : 'bg-[var(--text-muted)]'}`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Participación & Comunidad */}
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 mt-4 rounded-3xl">
+                  <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2 mb-2 border-b border-[var(--card-border)] pb-3">
+                    ⭐ Participación & Feedback
+                  </h3>
+                  <div className="flex flex-col">
+                    <ChallengesFAB inline={true} />
+                    <FeedbackWidget inline={true} />
+                  </div>
+                </div>
+
                 {/* Preferencias Push Granulares */}
                 <NotificationSettings />
 
-                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
-                  <h3 className="font-bold text-sm flex items-center gap-2 mb-4 text-[#ff6b6b]">
-                    Peligro
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 mt-4" style={{ borderRadius: 'var(--radius)' }}>
+                  <h3 className="text-[10px] font-black capitalize tracking-widest flex items-center gap-2 mb-4 border-b border-[var(--card-border)] pb-2 border-dashed text-[#ff4d4d]">
+                    {t('profile.settings.danger.title')}
                   </h3>
-                  <Button variant="destructive" fullWidth onClick={handleSignOut}>
-                    Cerrar Sesión
+                  <Button variant="destructive" fullWidth onClick={handleSignOut} size="sm">
+                    {t('profile.settings.logout')}
                   </Button>
                 </div>
 
                 {/* PWA Widget Info */}
-                <div className="bg-gradient-to-r from-[#6366f1]/10 to-[#8b5cf6]/10 border border-[#6366f1]/30 rounded-2xl p-5 shadow-sm mt-8">
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 mt-6" style={{ borderRadius: 'var(--radius)' }}>
                   <div className="flex items-start gap-4">
-                    <span className="text-3xl">📱</span>
+                    <span className="text-2xl">📱</span>
                     <div>
-                      <h4 className="font-bold text-sm mb-1 text-[#6366f1]">Instalá la App</h4>
-                      <p className="text-xs text-[var(--text-muted)] mb-3">
-                        Agregá FutLog a tu inicio para que cargue más rápido y funcione sin internet.
+                      <h4 className="text-[10px] font-black capitalize mb-1 text-[var(--foreground)]">{t('profile.settings.pwa.title')}</h4>
+                      <p className="text-[9px] font-bold text-[var(--text-muted)] capitalize mb-3 leading-tight">
+                        {t('profile.settings.pwa.desc')}
                       </p>
-                      <div className="flex flex-wrap gap-2 text-[10px]">
-                        <span className="bg-[var(--card-bg)] px-2 py-1 rounded-full border border-[var(--card-border)]">✅ Offline</span>
-                        <span className="bg-[var(--card-bg)] px-2 py-1 rounded-full border border-[var(--card-border)]">⚡ Rápida</span>
+                      <div className="flex flex-wrap gap-1 text-[8px] font-black capitalize">
+                        <span className="bg-[var(--background)] px-1.5 py-0.5 border border-[var(--card-border)]">{t('profile.settings.pwa.offline')}</span>
+                        <span className="bg-[var(--background)] px-1.5 py-0.5 border border-[var(--card-border)]">{t('profile.settings.pwa.fast')}</span>
                       </div>
                     </div>
                   </div>
@@ -678,11 +736,11 @@ export default function Perfil() {
                 {/* Trust & Compliance Footer */}
                 <div className="mt-8 mb-4 border-t border-[var(--card-border)] pt-6 text-center">
                   <div className="flex justify-center flex-wrap gap-3 text-xs font-bold text-[var(--text-muted)]">
-                    <Link href="/privacy" className="hover:text-[#10b981] hover:underline transition-colors">Privacidad</Link>
+                    <Link href="/privacy" className="hover:text-[#16a34a] hover:underline transition-colors">{t('footer.privacy')}</Link>
                     <span>•</span>
-                    <Link href="/terms" className="hover:text-[#10b981] hover:underline transition-colors">Términos</Link>
+                    <Link href="/terms" className="hover:text-[#16a34a] hover:underline transition-colors">{t('footer.terms')}</Link>
                     <span>•</span>
-                    <Link href="/sources" className="hover:text-[#10b981] hover:underline transition-colors">Fuentes</Link>
+                    <Link href="/sources" className="hover:text-[#16a34a] hover:underline transition-colors">{t('footer.sources')}</Link>
                   </div>
                   <p className="text-[10px] text-[var(--text-muted)] mt-4 opacity-50">
                     FutLog Beta © {new Date().getFullYear()}
@@ -711,13 +769,15 @@ export default function Perfil() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[var(--card-bg)] rounded-3xl p-6 w-full max-w-lg border border-[var(--card-border)] shadow-2xl my-auto"
+              className="bg-[var(--card-bg)] p-6 w-full max-w-lg border border-[var(--card-border)] my-auto"
+              style={{ borderRadius: 'var(--radius)' }}
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-black">✏️ Editar Perfil</h2>
+              <div className="flex items-center justify-between mb-6 border-b border-[var(--card-border)] pb-2 border-dashed">
+                <h2 className="text-sm font-black capitalize tracking-widest">✏️ Editar Perfil</h2>
                 <button
                   onClick={() => setShowEditor(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--background)] text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors"
+                  className="w-7 h-7 flex items-center justify-center border border-[var(--card-border)] bg-[var(--background)] text-[var(--text-muted)] hover:text-[var(--foreground)]"
+                  style={{ borderRadius: 'var(--radius)' }}
                 >
                   ✕
                 </button>
@@ -725,8 +785,8 @@ export default function Perfil() {
 
               <div className="space-y-6">
                 {/* Avatar Selection */}
-                <div className="space-y-3 pb-2 pt-2 border-t border-[var(--card-border)]">
-                  <label className="block text-sm font-bold text-[var(--foreground)] opacity-90 mx-1">
+                <div className="space-y-3 pb-2 pt-2 border-t border-[var(--card-border)] border-dashed">
+                  <label className="block text-[10px] font-black capitalize tracking-widest text-[var(--foreground)] opacity-90 mx-1">
                     Foto de perfil
                   </label>
 
@@ -735,15 +795,15 @@ export default function Perfil() {
                     onUploadSuccess={(url) => setEditAvatar(url)}
                   />
 
-                  <p className="text-[10px] text-center text-[var(--text-muted)] mt-2">
-                    Toca la imagen para subir una foto desde tu galería o cámara. (Máx 5MB)
+                  <p className="text-[8px] text-center text-[var(--text-muted)] font-black capitalize mt-2">
+                    Toca la imagen para subir (MÁX 5MB)
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Username */}
                   <div>
-                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase mb-2 block">
+                    <label className="text-[9px] font-black text-[var(--text-muted)] capitalize mb-2 block">
                       Nombre de Usuario
                     </label>
                     <input
@@ -752,14 +812,15 @@ export default function Perfil() {
                       onChange={(e) => setEditUsername(e.target.value)}
                       placeholder="Tu nombre..."
                       maxLength={20}
-                      className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-xl px-4 py-3 
-                                    focus:outline-none focus:border-[#ff6b6b] transition-colors"
+                      className="w-full bg-[var(--background)] border border-[var(--card-border)] px-4 py-3 
+                                    focus:outline-none focus:border-[var(--foreground)] transition-colors"
+                      style={{ borderRadius: 'var(--radius)' }}
                     />
                   </div>
 
                   {/* Equipo Favorito */}
                   <div>
-                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase mb-2 block">
+                    <label className="text-[9px] font-black text-[var(--text-muted)] capitalize mb-2 block">
                       Equipo Favorito
                     </label>
                     <div className="relative group">
@@ -767,26 +828,27 @@ export default function Perfil() {
                         type="text"
                         value={editEquipo}
                         readOnly
-                        className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-xl px-4 py-3 cursor-default"
+                        className="w-full bg-[var(--background)] border border-[var(--card-border)] px-4 py-3 cursor-default"
+                        style={{ borderRadius: 'var(--radius)' }}
                         placeholder="Seleccionar abajo..."
                       />
-                      <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none opacity-50">▼</div>
+                      <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none opacity-50 text-[10px]">▼</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Team Selector Component */}
-                <div className="bg-[var(--background)] p-4 rounded-xl border border-[var(--card-border)] text-sm mb-4">
-                  <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-2">Buscar Equipo</p>
+                <div className="bg-[var(--background)] p-4 border border-[var(--card-border)] text-sm mb-4" style={{ borderRadius: 'var(--radius)' }}>
+                  <p className="text-[9px] font-black text-[var(--text-muted)] capitalize mb-2 border-b border-[var(--card-border)] pb-1 border-dashed">Buscar Equipo</p>
                   <EquipoSelector selectedEquipo={editEquipo} onSelect={setEditEquipo} />
                 </div>
 
                 {/* Idioma Selector */}
                 <div>
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase mb-2 block">
+                  <label className="text-[9px] font-black text-[var(--text-muted)] capitalize mb-2 block">
                     {t('profile.settings.language')}
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     {(['es', 'en', 'pt'] as const).map(lang => (
                       <button
                         key={lang}
@@ -794,10 +856,11 @@ export default function Perfil() {
                           e.preventDefault()
                           setLanguage(lang)
                         }}
-                        className={`flex-1 py-3 px-4 rounded-xl border transition-all text-sm font-bold uppercase
+                        className={`flex-1 py-2 px-3 border transition-all text-[9px] font-black capitalize
                           ${language === lang
-                            ? 'bg-[#10b981]/10 border-[#10b981] text-[#10b981]'
-                            : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'}`}
+                            ? 'bg-[var(--foreground)] border-[var(--foreground)] text-[var(--background)]'
+                            : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--foreground)]'}`}
+                        style={{ borderRadius: 'var(--radius)' }}
                       >
                         {lang === 'es' ? '🇪🇸 ES' : lang === 'en' ? '🇺🇸 EN' : '🇧🇷 PT'}
                       </button>
@@ -807,7 +870,7 @@ export default function Perfil() {
 
                 {/* Mensaje de guardado */}
                 {saveMessage && (
-                  <div className="text-center p-3 rounded-xl bg-[#10b981]/10 text-[#10b981] font-bold text-sm animate-pulse">
+                  <div className="text-center p-3 rounded-xl bg-[#16a34a]/10 text-[#16a34a] font-bold text-sm animate-pulse">
                     {saveMessage}
                   </div>
                 )}
@@ -818,8 +881,9 @@ export default function Perfil() {
                     onClick={handleSaveProfile}
                     loading={saving}
                     fullWidth
+                    size="sm"
                   >
-                    Guardar cambios
+                    GUARDAR CAMBIOS
                   </Button>
                 </div>
               </div>

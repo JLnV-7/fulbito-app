@@ -78,12 +78,12 @@ export function NotificationSettings() {
 
     if (!isSupported) {
         return (
-            <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] p-6">
+            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 mt-4" style={{ borderRadius: 'var(--radius)' }}>
                 <div className="text-center">
-                    <span className="text-4xl mb-4 block">🔕</span>
-                    <h3 className="font-bold mb-2 text-[var(--foreground)]">Notificaciones no soportadas</h3>
-                    <p className="text-sm text-[var(--text-muted)]">
-                        Tu navegador o dispositivo no soporta notificaciones push.
+                    <span className="text-3xl mb-4 block">🔕</span>
+                    <h3 className="text-[10px] font-black capitalize tracking-widest mb-2 text-[var(--foreground)]">Notificaciones no soportadas</h3>
+                    <p className="text-[9px] font-bold text-[var(--text-muted)] capitalize">
+                        Tu navegador o dispositivo no las soporta.
                     </p>
                 </div>
             </div>
@@ -91,14 +91,10 @@ export function NotificationSettings() {
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] overflow-hidden"
-        >
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] mt-4 overflow-hidden" style={{ borderRadius: 'var(--radius)' }}>
             {/* Header */}
-            <div className="px-5 py-4 bg-[var(--background)] border-b border-[var(--card-border)]">
-                <h3 className="font-bold flex items-center gap-2 text-[var(--foreground)]">
+            <div className="px-5 py-3 bg-[var(--background)] border-b border-[var(--card-border)] border-dashed">
+                <h3 className="text-[10px] font-black capitalize tracking-widest flex items-center gap-2 text-[var(--foreground)]">
                     <span>🔔</span> Notificaciones
                 </h3>
             </div>
@@ -106,25 +102,25 @@ export function NotificationSettings() {
             <div className="p-5 space-y-4">
                 {/* Estado del permiso */}
                 {permissionState === 'denied' ? (
-                    <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
-                        <p className="text-sm mb-2 text-red-500 font-medium">
+                    <div className="bg-red-500/5 border border-red-500/20 p-4 text-center" style={{ borderRadius: 'var(--radius)' }}>
+                        <p className="text-[10px] mb-2 text-red-600 font-black capitalize">
                             🚫 Notificaciones bloqueadas
                         </p>
-                        <p className="text-xs text-[var(--text-muted)]">
-                            Tenés que habilitarlas desde la configuración de tu navegador o celular.
+                        <p className="text-[9px] text-[var(--text-muted)] font-bold capitalize">
+                            Habilitalas en la configuración de tu navegador.
                         </p>
                     </div>
                 ) : !isOptedIn ? (
-                    <div className="bg-gradient-to-r from-[#10b981]/20 to-[#3b82f6]/20 border border-[#10b981]/30 rounded-xl p-5 text-center shadow-lg relative overflow-hidden">
-                        <div className="absolute -top-3 -right-3 text-4xl opacity-20">🔔</div>
-                        <p className="text-sm mb-3 font-medium text-[var(--foreground)] relative z-10">
-                            Activá notifs para no perderte nada 🏆
+                    <div className="bg-[var(--background)] border border-[var(--card-border)] p-5 text-center relative overflow-hidden" style={{ borderRadius: 'var(--radius)' }}>
+                        <p className="text-[10px] mb-3 font-black text-[var(--foreground)] capitalize relative z-10">
+                            Activá alertas para no perderte nada 🏆
                         </p>
                         <button
                             onClick={handleSubscribe}
                             disabled={loading}
-                            className="bg-gradient-to-r from-[#10b981] to-[#047857] text-white px-5 py-2.5 rounded-xl font-bold text-sm
-                                        hover:shadow-lg hover:shadow-emerald-500/25 transition-all disabled:opacity-50 relative z-10 w-full"
+                            className="bg-[var(--foreground)] text-[var(--background)] px-5 py-2 font-black text-[10px] capitalize tracking-widest
+                                        hover:bg-[var(--foreground)] transition-all disabled:opacity-50 relative z-10 w-full"
+                            style={{ borderRadius: 'var(--radius)' }}
                         >
                             {loading ? 'Activando...' : '¡Activar ahora!'}
                         </button>
@@ -132,55 +128,55 @@ export function NotificationSettings() {
                 ) : (
                     <>
                         {/* Preferencias */}
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                             <ToggleOption
                                 icon="⚽"
                                 label="Inicio de partido"
-                                description="Avisarte cuando arranca un partido que pronosticaste"
+                                description="Al arrancar un partido pronosticado"
                                 enabled={prefs.partidoInicio}
                                 onToggle={() => togglePref('partidoInicio')}
                             />
                             <ToggleOption
                                 icon="❤️"
                                 label="Goles en vivo"
-                                description="Notificación instantánea cuando hay un gol de tus equipos"
+                                description="Instantánea cuando hay goles"
                                 enabled={prefs.golFavorito}
                                 onToggle={() => togglePref('golFavorito')}
                             />
                             <ToggleOption
                                 icon="👤"
-                                label="Nuevos seguidores"
-                                description="Avisarte cuando alguien empieza a seguirte"
+                                label="Seguidores"
+                                description="Cuando alguien te sigue"
                                 enabled={prefs.nuevosSeguidores}
                                 onToggle={() => togglePref('nuevosSeguidores')}
                             />
                             <ToggleOption
                                 icon="🎖️"
-                                label="Insignias y Logros"
-                                description="Notificarte cuando desbloqueás una nueva medalla"
+                                label="Insignias"
+                                description="Al desbloquear medallas"
                                 enabled={prefs.insignias}
                                 onToggle={() => togglePref('insignias')}
                             />
                             <ToggleOption
                                 icon="🎯"
-                                label="Resultado del prode"
-                                description="Saber cuántos puntos ganaste al finalizar el partido"
+                                label="Prode"
+                                description="Saber puntos al finalizar"
                                 enabled={prefs.resultadoProde}
                                 onToggle={() => togglePref('resultadoProde')}
                             />
                         </div>
 
                         {/* Estado activo */}
-                        <div className="pt-3 border-t border-[var(--card-border)]">
-                            <p className="text-xs text-[#10b981] flex items-center gap-2 font-medium">
-                                <span className="w-2 h-2 bg-[#10b981] rounded-full animate-pulse"></span>
+                        <div className="pt-3 border-t border-[var(--card-border)] border-dashed">
+                            <p className="text-[9px] text-[#16a34a] flex items-center gap-2 font-black capitalize">
+                                <span className="w-1.5 h-1.5 bg-[#16a34a] rounded-full"></span>
                                 Notificaciones activas
                             </p>
                         </div>
                     </>
                 )}
             </div>
-        </motion.div>
+        </div>
     )
 }
 
@@ -200,21 +196,19 @@ function ToggleOption({
     return (
         <div
             onClick={onToggle}
-            className="flex items-center justify-between p-3 bg-[var(--background)] rounded-xl cursor-pointer
-                       hover:bg-[var(--background)]/70 transition-colors"
+            className="flex items-center justify-between p-3 bg-[var(--background)] border border-[var(--card-border)] cursor-pointer
+                       hover:bg-[var(--hover-bg)] transition-colors"
+            style={{ borderRadius: 'var(--radius)' }}
         >
             <div className="flex items-center gap-3">
-                <span className="text-xl">{icon}</span>
+                <span className="text-lg">{icon}</span>
                 <div>
-                    <p className="font-medium text-sm">{label}</p>
-                    <p className="text-xs text-[var(--text-muted)]">{description}</p>
+                    <p className="font-black text-[10px] capitalize">{label}</p>
+                    <p className="text-[9px] text-[var(--text-muted)] font-bold capitalize">{description}</p>
                 </div>
             </div>
-            <div className={`w-12 h-7 rounded-full p-1 transition-colors ${enabled ? 'bg-[#10b981]' : 'bg-[var(--card-border)]'}`}>
-                <motion.div
-                    animate={{ x: enabled ? 20 : 0 }}
-                    className="w-5 h-5 bg-white rounded-full shadow-md"
-                />
+            <div className={`w-8 h-4 border border-[var(--card-border)] transition-colors relative ${enabled ? 'bg-[var(--foreground)]' : 'bg-[var(--background)]'}`}>
+                <div className={`absolute top-0.5 w-2.5 h-2.5 bg-[var(--background)] border border-[var(--card-border)] transition-all ${enabled ? 'right-0.5' : 'left-0.5'}`} />
             </div>
         </div>
     )

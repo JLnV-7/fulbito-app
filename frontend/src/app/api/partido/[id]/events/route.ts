@@ -20,15 +20,21 @@ export async function GET(
 ) {
     const { id } = await params
 
-    if (!API_KEY || id === '00000000-0000-0000-0000-000000000001') {
-        if (id === '00000000-0000-0000-0000-000000000001') {
-            return NextResponse.json({
-                events: [
-                    { minuto: 22, tipo: 'gol', jugador: 'Miguel Borja', asistencia: 'Nacho F.', equipo: 'River Plate', detalle: 'Normal Goal' },
-                    { minuto: 35, tipo: 'amarilla', jugador: 'Nacho Fernández', equipo: 'River Plate', detalle: 'Yellow Card' },
-                    { minuto: 40, tipo: 'amarilla', jugador: 'Kevin Zenón', equipo: 'Boca Juniors', detalle: 'Yellow Card' }
-                ]
-            })
+    if (!API_KEY || id.startsWith('mock-')) {
+        if (id.startsWith('mock-')) {
+            const events = [
+                { minuto: 12, tipo: 'gol', jugador: 'Lionel Messi', asistencia: 'Pedri', equipo: 'FC Barcelona', detalle: 'Normal Goal' },
+                { minuto: 45, tipo: 'amarilla', jugador: 'Vinicius Jr', equipo: 'Real Madrid', detalle: 'Yellow Card' },
+            ]
+
+            if (id.includes('live') || id.includes('fin')) {
+                events.push(
+                    { minuto: 67, tipo: 'gol', jugador: 'Robert Lewandowski', asistencia: 'Gündogan', equipo: 'FC Barcelona', detalle: 'Normal Goal' },
+                    { minuto: 82, tipo: 'roja', jugador: 'Sergio Ramos', equipo: 'Real Madrid', detalle: 'Red Card' }
+                )
+            }
+
+            return NextResponse.json({ events: timelineFromMock(events) })
         }
         return NextResponse.json({ events: [] })
     }
@@ -65,6 +71,14 @@ export async function GET(
     } catch {
         return NextResponse.json({ events: [] })
     }
+}
+
+function timelineFromMock(events: any[]) {
+    return events.map(e => ({
+        ...e,
+        equipoLogo: e.equipo.includes('Madrid') ? 'https://media.api-sports.io/football/teams/541.png' : 'https://media.api-sports.io/football/teams/529.png',
+        comentario: null
+    }))
 }
 
 function mapEventType(type: string, detail: string): string {

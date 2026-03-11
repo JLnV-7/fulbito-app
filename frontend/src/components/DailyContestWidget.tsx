@@ -40,40 +40,40 @@ export function DailyContestWidget() {
             </div>
 
             <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 hide-scrollbar">
-                <GlassCard noPadding className="min-w-[320px] max-w-sm p-6 shrink-0 snap-center relative border border-[#10b981]/30 bg-gradient-to-br from-[#10b981]/20 to-[var(--card-bg)] flex flex-col justify-center">
-                    <div className="absolute -right-6 -top-6 text-8xl opacity-10 pointer-events-none filter blur-sm">⭐</div>
+                <div className="min-w-[320px] max-w-sm p-6 shrink-0 snap-center relative border-2 border-[var(--foreground)] bg-[var(--card-bg)] flex flex-col justify-center shadow-sm" style={{ borderRadius: 'var(--radius)' }}>
+                    <div className="absolute -right-4 -top-4 text-6xl opacity-10 pointer-events-none filter grayscale">⭐</div>
 
-                    <h3 className="font-black text-xl text-[var(--foreground)] mb-2 leading-tight">Reto de clásicos</h3>
-                    <p className="text-sm text-white/90 mb-6 leading-relaxed">
-                        Predecí el resultado de los 5 clásicos de la fecha. Si acertás 3 o más ganás el <span className="font-bold whitespace-nowrap bg-black/20 px-2 py-0.5 rounded-md">Badge Oráculo</span> y +500 XP.
+                    <h3 className="font-black text-xl text-[var(--foreground)] mb-2 capitalize italic tracking-tighter">Reto de clásicos</h3>
+                    <p className="text-sm text-[var(--foreground)] mb-6 leading-tight border-l-2 border-[var(--foreground)] pl-3">
+                        Predecí el resultado de los 5 clásicos de la fecha. Si acertás 3 o más ganás el <span className="font-black bg-[var(--foreground)] text-[var(--background)] px-1.5 py-0.5">Badge Oráculo</span> y +500 XP.
                     </p>
 
                     <div className="space-y-3">
-                        <div className="flex justify-between text-xs font-bold text-white mb-1">
+                        <div className="flex justify-between text-[10px] font-black capitalize tracking-widest text-[var(--foreground)] mb-1">
                             <span>{predictedCount} de 5 listos</span>
                             <span>{Math.round((predictedCount / 5) * 100)}%</span>
                         </div>
-                        <div className="w-full bg-black/40 h-2.5 rounded-full overflow-hidden">
+                        <div className="w-full bg-[var(--card-border)] h-3 overflow-hidden" style={{ borderRadius: 'var(--radius)' }}>
                             <motion.div
-                                className="h-full bg-amber-400"
+                                className="h-full bg-[var(--foreground)]"
                                 initial={{ width: 0 }}
                                 animate={{ width: `${(predictedCount / 5) * 100}%` }}
                                 transition={{ type: 'spring', bounce: 0, duration: 0.5 }}
                             />
                         </div>
                     </div>
-                </GlassCard>
+                </div>
 
                 {LIVE_CONTESTS.map(match => {
                     const currentPred = predictions[match.id]
                     return (
-                        <GlassCard
+                        <div
                             key={match.id}
-                            noPadding
-                            className="min-w-[280px] p-5 shrink-0 snap-center flex flex-col"
+                            className="min-w-[280px] p-5 shrink-0 snap-center flex flex-col bg-[var(--card-bg)] border border-[var(--card-border)]"
+                            style={{ borderRadius: 'var(--radius)' }}
                         >
                             <div className="flex justify-between items-center mb-4">
-                                <span className="text-[10px] font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                <span className="text-[10px] font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-1 rounded-full capitalize tracking-wider">
                                     {match.hora}
                                 </span>
                             </div>
@@ -84,94 +84,99 @@ export function DailyContestWidget() {
                                 <span className="w-[40%] text-left truncate">{match.visitante}</span>
                             </div>
 
-                            <div className="flex gap-2 h-11 mt-auto">
+                            <div className="flex gap-1.5 h-11 mt-auto">
                                 <button
                                     onClick={() => handlePredict(match.id, 'L')}
-                                    className={`flex-1 rounded-xl text-xs font-bold transition-all border
-                                        ${currentPred === 'L' ? 'bg-[#10b981] text-white border-[#10b981]' : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-white/20'}
+                                    className={`flex-1 text-xs font-black transition-all border
+                                        ${currentPred === 'L' ? 'bg-[#16a34a] text-white border-[#16a34a]' : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--foreground)]'}
                                     `}
+                                    style={{ borderRadius: 'var(--radius)' }}
                                 >L</button>
                                 <button
                                     onClick={() => handlePredict(match.id, 'E')}
-                                    className={`flex-1 rounded-xl text-xs font-bold transition-all border
-                                        ${currentPred === 'E' ? 'bg-[#ffb020] text-black border-[#ffb020]' : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-white/20'}
+                                    className={`flex-1 text-xs font-black transition-all border
+                                        ${currentPred === 'E' ? 'bg-[#d97706] text-white border-[#d97706]' : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--foreground)]'}
                                     `}
+                                    style={{ borderRadius: 'var(--radius)' }}
                                 >E</button>
                                 <button
                                     onClick={() => handlePredict(match.id, 'V')}
-                                    className={`flex-1 rounded-xl text-xs font-bold transition-all border
-                                        ${currentPred === 'V' ? 'bg-[#ff6b6b] text-white border-[#ff6b6b]' : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-white/20'}
+                                    className={`flex-1 text-xs font-black transition-all border
+                                        ${currentPred === 'V' ? 'bg-[#dc2626] text-white border-[#dc2626]' : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--foreground)]'}
                                     `}
+                                    style={{ borderRadius: 'var(--radius)' }}
                                 >V</button>
                             </div>
-                        </GlassCard>
+                        </div>
                     )
                 })}
 
                 {/* PICK'EM RAPIDO CARD */}
-                <GlassCard noPadding className="min-w-[280px] p-5 shrink-0 snap-center border border-[#8b5cf6]/30 bg-gradient-to-b from-[#8b5cf6]/10 to-[var(--card-bg)] flex flex-col relative overflow-visible mt-8">
-                    <div className="absolute top-0 right-0 p-3 opacity-20"><Target size={40} /></div>
+                <div className="min-w-[280px] p-5 shrink-0 snap-center border-2 border-[var(--foreground)] bg-[var(--card-bg)] flex flex-col relative overflow-visible mt-8" style={{ borderRadius: 'var(--radius)' }}>
+                    <div className="absolute top-0 right-0 p-3 opacity-10 grayscale scale-125"><Target size={40} /></div>
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-[10px] font-bold text-[#8b5cf6] bg-[#8b5cf6]/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        <span className="text-[10px] font-black text-[var(--background)] bg-[var(--foreground)] px-2.5 py-1 capitalize tracking-widest italic">
                             Pick'em Rápido
                         </span>
                     </div>
-                    <h4 className="font-black text-sm mb-1 leading-tight">¿Quién será la Figura?</h4>
-                    <p className="text-[11px] text-[var(--text-muted)] mb-4">Elegí al jugador con mejor SofaScore de la fecha.</p>
+                    <h4 className="font-black text-sm mb-1 capitalize italic tracking-tighter">¿Quién será la Figura?</h4>
+                    <p className="text-[11px] text-[var(--text-muted)] mb-4 font-bold border-l border-[var(--card-border)] pl-2">Mejor SofaScore de la fecha.</p>
 
                     <div className="flex gap-2 h-20 mt-auto z-10 pt-4 relative">
                         {PICKEM_OPTIONS.map(opt => (
                             <button
                                 key={opt.id}
                                 onClick={() => setPickem(opt.id)}
-                                className={`flex flex-col items-center justify-end flex-1 rounded-xl text-xs font-bold transition-all border relative pb-1
-                                    ${pickem === opt.id ? 'bg-[#8b5cf6]/20 border-[#8b5cf6] shadow-[0_0_15px_rgba(139,92,246,0.2)]' : 'bg-white/5 border-white/10 text-[var(--text-muted)] hover:border-[#8b5cf6]/30 hover:bg-white/10'}
+                                className={`flex flex-col items-center justify-end flex-1 text-xs font-black transition-all border relative pb-1
+                                    ${pickem === opt.id ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)]' : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--foreground)]'}
                                 `}
+                                style={{ borderRadius: 'var(--radius)' }}
                             >
                                 {/* Img out of bounds top overlay */}
-                                <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 w-[70px] h-[70px] transition-transform duration-300 origin-bottom 
-                                                ${pickem === opt.id ? 'scale-[1.3]' : 'scale-110 hover:scale-[1.2]'}`}>
+                                <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 w-[70px] h-[70px] transition-transform duration-300 origin-bottom grayscale
+                                                ${pickem === opt.id ? 'scale-[1.15] grayscale-0' : 'scale-100 hover:scale-[1.1]'}`}>
                                     <Image
                                         src={opt.imgUrl}
                                         alt={opt.name}
                                         fill
-                                        className="object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]"
+                                        className="object-contain"
                                         sizes="70px"
                                         unoptimized
                                     />
                                 </div>
-                                <span className={`text-[10px] truncate w-full px-1 text-center font-bold z-10 relative ${pickem === opt.id ? 'text-[#8b5cf6]' : 'text-[var(--text-muted)]'}`}>{opt.name}</span>
+                                <span className={`text-[10px] truncate w-full px-1 text-center font-black z-10 relative ${pickem === opt.id ? 'text-[var(--background)]' : 'text-[var(--text-muted)]'}`}>{opt.name}</span>
                             </button>
                         ))}
                     </div>
-                </GlassCard>
+                </div>
 
                 {/* BEST BALL SEMANAL CARD */}
-                <GlassCard noPadding className="min-w-[280px] p-5 shrink-0 snap-center border border-[#ec4899]/30 bg-gradient-to-b from-[#ec4899]/10 to-[var(--card-bg)] flex flex-col relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-3 opacity-20"><Trophy size={40} /></div>
+                <div className="min-w-[280px] p-5 shrink-0 snap-center border border-[var(--card-border)] bg-[var(--card-bg)] flex flex-col relative overflow-hidden" style={{ borderRadius: 'var(--radius)' }}>
+                    <div className="absolute top-0 right-0 p-3 opacity-10 grayscale"><Trophy size={40} /></div>
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-[10px] font-bold text-[#ec4899] bg-[#ec4899]/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        <span className="text-[10px] font-black text-[var(--foreground)] bg-[var(--card-border)] px-2.5 py-1 capitalize tracking-widest italic">
                             Best Ball Semanal
                         </span>
                     </div>
-                    <h4 className="font-black text-sm mb-1 leading-tight">Goleada de la Fecha</h4>
-                    <p className="text-[11px] text-[var(--text-muted)] mb-4">¿Qué equipo marcará más goles este finde?</p>
+                    <h4 className="font-black text-sm mb-1 capitalize italic tracking-tighter">Goleada de la Fecha</h4>
+                    <p className="text-[11px] text-[var(--text-muted)] mb-4 font-bold">¿Quién marcará más goles hoy?</p>
 
-                    <div className="flex flex-col gap-2 mt-auto z-10 w-full">
+                    <div className="flex flex-col gap-1.5 mt-auto z-10 w-full">
                         {BESTBALL_OPTIONS.map(team => (
                             <button
                                 key={team.id}
                                 onClick={() => setBestBall(team.id)}
-                                className={`flex items-center justify-between w-full h-10 px-4 rounded-xl text-xs font-bold transition-all border
-                                    ${bestBall === team.id ? 'bg-[#ec4899] text-white border-[#ec4899] shadow-md shadow-[#ec4899]/20' : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[#ec4899]/30'}
+                                className={`flex items-center justify-between w-full h-10 px-4 text-xs font-black transition-all border
+                                    ${bestBall === team.id ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)]' : 'bg-[var(--background)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--foreground)]'}
                                 `}
+                                style={{ borderRadius: 'var(--radius)' }}
                             >
                                 <span>{team.name}</span>
-                                <span className={`text-[10px] font-black opacity-60 ${bestBall === team.id ? 'text-white' : 'text-[#ec4899]'}`}>{team.odds}</span>
+                                <span className={`text-[10px] font-black ${bestBall === team.id ? 'text-[var(--background)]' : 'text-[var(--foreground)]'}`}>{team.odds}</span>
                             </button>
                         ))}
                     </div>
-                </GlassCard>
+                </div>
 
             </div>
         </div>

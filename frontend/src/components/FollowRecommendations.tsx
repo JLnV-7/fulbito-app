@@ -124,10 +124,10 @@ export function FollowRecommendations() {
     if (loading) {
         return (
             <div className="py-4 space-y-3">
-                <div className="h-4 w-32 bg-[var(--card-border)] rounded animate-pulse" />
+                <div className="h-4 w-32 bg-[var(--card-border)] animate-pulse" style={{ borderRadius: 'var(--radius)' }} />
                 <div className="flex gap-4 overflow-x-auto pb-2">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="min-w-[140px] h-36 bg-[var(--card-border)] rounded-2xl animate-pulse" />
+                        <div key={i} className="min-w-[140px] h-36 bg-[var(--card-border)] animate-pulse" style={{ borderRadius: 'var(--radius)' }} />
                     ))}
                 </div>
             </div>
@@ -138,7 +138,7 @@ export function FollowRecommendations() {
 
     return (
         <div className="py-4">
-            <h3 className="text-sm font-bold text-[var(--foreground)] mb-3 flex items-center gap-2">
+            <h3 className="text-xs font-black text-[var(--text-muted)] capitalize tracking-widest mb-3 flex items-center gap-2">
                 Sugerencias para ti
             </h3>
 
@@ -150,11 +150,13 @@ export function FollowRecommendations() {
                             key={profile.id}
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-4 min-w-[150px] flex-shrink-0 snap-start flex flex-col items-center text-center shadow-sm"
+                            className="bg-[var(--card-bg)] border border-[var(--card-border)] p-4 min-w-[150px] flex-shrink-0 snap-start flex flex-col items-center text-center shadow-sm"
+                            style={{ borderRadius: 'var(--radius)' }}
                         >
                             <div
-                                className="w-14 h-14 rounded-full mb-3 cursor-pointer ring-2 ring-transparent hover:ring-[#10b981] transition-all overflow-hidden bg-[var(--hover-bg)] flex items-center justify-center text-xl"
+                                className="w-14 h-14 mb-3 cursor-pointer ring-2 ring-transparent hover:ring-[#16a34a] transition-all overflow-hidden bg-[var(--hover-bg)] flex items-center justify-center text-xl border border-[var(--card-border)]"
                                 onClick={() => router.push(`/perfil/${profile.id}`)}
+                                style={{ borderRadius: 'var(--radius)' }}
                             >
                                 {profile.avatar_url ? (
                                     <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
@@ -162,22 +164,23 @@ export function FollowRecommendations() {
                             </div>
 
                             <h4
-                                className="font-bold text-sm text-[var(--foreground)] truncate w-full cursor-pointer hover:underline"
+                                className="font-black text-sm text-[var(--foreground)] truncate w-full cursor-pointer hover:underline capitalize tracking-tighter"
                                 onClick={() => router.push(`/perfil/${profile.id}`)}
                             >
                                 {profile.username}
                             </h4>
-                            <p className="text-[10px] text-[var(--text-muted)] truncate w-full mb-3 h-3">
+                            <p className="text-[9px] font-black capitalize tracking-widest text-[var(--text-muted)] truncate w-full mb-3 h-3 italic">
                                 {profile.reason}
                             </p>
 
                             <button
                                 onClick={() => handleFollow(profile.id, profile.username)}
                                 disabled={isFollowing}
-                                className={`w-full py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${isFollowing
-                                    ? 'bg-[var(--background)] text-[var(--foreground)] border border-[var(--card-border)]'
-                                    : 'bg-[#10b981] text-white hover:bg-[#059669] shadow-md hover:shadow-[#10b981]/20'
+                                className={`w-full py-1.5 text-[10px] font-black capitalize tracking-widest transition-all flex items-center justify-center gap-1 italic ${isFollowing
+                                    ? 'bg-[var(--hover-bg)] text-[var(--text-muted)] border border-[var(--card-border)]'
+                                    : 'bg-[#16a34a] text-white'
                                     }`}
+                                style={{ borderRadius: 'var(--radius)' }}
                             >
                                 {isFollowing ? (
                                     <><Check size={14} /> Siguiendo</>

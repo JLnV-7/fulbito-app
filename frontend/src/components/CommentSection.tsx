@@ -190,12 +190,12 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
     // Render UI (Teaser for Unauthenticated Users)
     if (!user) {
         return (
-            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl overflow-hidden mb-6 relative">
+            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] overflow-hidden mb-6 relative" style={{ borderRadius: 'var(--radius)' }}>
                 {/* Header */}
-                <div className="p-4 border-b border-[var(--card-border)] bg-[var(--background)]">
-                    <h3 className="font-semibold text-sm flex items-center gap-2">
+                <div className="p-4 border-b border-[var(--card-border)] bg-[var(--card-bg)]">
+                    <h3 className="text-xs font-black capitalize tracking-widest flex items-center gap-2">
                         💬 Reseñas
-                        <span className="bg-[var(--hover-bg)] text-xs px-2 py-0.5 rounded-full text-[var(--text-muted)]">
+                        <span className="bg-[var(--background)] border border-[var(--card-border)] text-[9px] px-2 py-0.5 text-[var(--text-muted)]" style={{ borderRadius: 'var(--radius)' }}>
                             ...
                         </span>
                     </h3>
@@ -205,9 +205,9 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
                 <div className="h-[250px] relative p-4 space-y-4 bg-[var(--background)] overflow-hidden cursor-pointer" onClick={() => router.push('/login')}>
                     <div className="absolute inset-0 z-10 bg-black/5 backdrop-blur-[3px]" />
                     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none">
-                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 rounded-2xl shadow-xl max-w-[280px] text-center transform scale-105 pointer-events-auto">
-                            <h4 className="font-black text-lg mb-2 text-[var(--foreground)]">Análisis de los hinchas</h4>
-                            <p className="text-sm text-[var(--text-muted)] mb-4">Iniciá sesión para leer las reseñas y dejar tu propio análisis del partido.</p>
+                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 max-w-[280px] text-center transform scale-105 pointer-events-auto" style={{ borderRadius: 'var(--radius)' }}>
+                            <h4 className="font-black text-sm capitalize italic tracking-tighter mb-2 text-[var(--foreground)]">Análisis de los hinchas</h4>
+                            <p className="text-[10px] font-black capitalize tracking-widest text-[var(--text-muted)] mb-4">Iniciá sesión para leer las reseñas.</p>
                             <Button fullWidth onClick={() => router.push('/login')}>
                                 Iniciar sesión
                             </Button>
@@ -224,7 +224,7 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
                     </div>
 
                     <div className="text-center absolute bottom-4 left-0 right-0 z-20 pointer-events-none opacity-50 blur-[1px]">
-                        <p className="text-xs font-bold text-[#10b981]">Ver más mensajes...</p>
+                        <p className="text-[10px] font-black capitalize tracking-widest text-[#16a34a]">Ver más mensajes...</p>
                     </div>
                 </div>
 
@@ -233,8 +233,9 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
                     <input
                         type="text"
                         disabled
-                        placeholder="Inicia sesión para comentar..."
-                        className="w-full bg-[var(--input-bg)] border border-[var(--card-border)] rounded-lg pl-4 pr-12 py-3 text-sm focus:outline-none"
+                        placeholder="INICIA SESIÓN PARA COMENTAR..."
+                        className="w-full bg-[var(--background)] border border-[var(--card-border)] pl-4 pr-12 py-3 text-xs font-black capitalize tracking-widest focus:outline-none"
+                        style={{ borderRadius: 'var(--radius)' }}
                     />
                 </div>
             </div>
@@ -242,12 +243,12 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
     }
 
     return (
-        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl overflow-hidden mb-6">
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] overflow-hidden mb-6" style={{ borderRadius: 'var(--radius)' }}>
             {/* Header */}
-            <div className="p-4 border-b border-[var(--card-border)] bg-[var(--background)]">
-                <h3 className="font-semibold text-sm flex items-center gap-2">
+            <div className="p-4 border-b border-[var(--card-border)] bg-[var(--card-bg)]">
+                <h3 className="text-xs font-black capitalize tracking-widest flex items-center gap-2">
                     💬 Reseñas
-                    <span className="bg-[var(--hover-bg)] text-xs px-2 py-0.5 rounded-full text-[var(--text-muted)]">
+                    <span className="bg-[var(--background)] border border-[var(--card-border)] text-[9px] font-black px-2 py-0.5 text-[var(--text-muted)]" style={{ borderRadius: 'var(--radius)' }}>
                         {comments.length}
                     </span>
                 </h3>
@@ -306,8 +307,8 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
             <div className="p-4 bg-[var(--card-bg)] border-t border-[var(--card-border)]">
                 {/* Reply indicator */}
                 {replyTo && (
-                    <div className="flex items-center justify-between mb-2 px-2 py-1.5 bg-[#10b981]/5 rounded-lg border border-[#10b981]/20">
-                        <span className="text-[10px] text-[#10b981] font-medium">
+                    <div className="flex items-center justify-between mb-2 px-2 py-1.5 bg-[#16a34a]/5 border border-[#16a34a]/20" style={{ borderRadius: 'var(--radius)' }}>
+                        <span className="text-[10px] text-[#16a34a] font-black capitalize tracking-widest">
                             ↩ Respondiendo a @{replyTo.username}
                         </span>
                         <button
@@ -325,18 +326,15 @@ export function CommentSection({ partidoId }: CommentSectionProps) {
                         type="text"
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
-                        placeholder={replyTo ? `Responder a @${replyTo.username}...` : 'Escribe un comentario...'}
-                        className="w-full bg-[var(--input-bg)] border border-[var(--card-border)] rounded-lg pl-4 pr-12 py-3 text-sm
-                    focus:outline-none focus:border-[#10b981] transition-colors
-                    placeholder-[var(--text-muted)] text-[var(--foreground)]"
+                        placeholder={replyTo ? `RESPONDER A @${replyTo.username.toUpperCase()}...` : 'ESCRIBIR RESEÑA...'}
+                        className="w-full bg-[var(--background)] border border-[var(--card-border)] pl-4 pr-12 py-3 text-xs font-black capitalize tracking-widest focus:outline-none focus:border-[#16a34a] transition-colors placeholder-[var(--text-muted)] text-[var(--foreground)]"
+                        style={{ borderRadius: 'var(--radius)' }}
                         maxLength={500}
                     />
                     <button
                         type="submit"
                         disabled={!newComment.trim() || sending}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5
-                    text-[#10b981] disabled:text-[var(--text-muted)] disabled:cursor-not-allowed
-                    hover:scale-110 transition-transform"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[#16a34a] disabled:text-[var(--text-muted)] disabled:cursor-not-allowed hover:scale-110 transition-transform"
                     >
                         ➤
                     </button>
@@ -365,23 +363,24 @@ function CommentItem({
         <div className="flex gap-3 animate-fade-in group">
             {/* Avatar */}
             <div
-                className={`rounded-full bg-[var(--hover-bg)] border border-[var(--card-border)] flex items-center justify-center flex-shrink-0 text-xs overflow-hidden shadow-sm cursor-pointer hover:ring-2 hover:ring-[#10b981]/50 transition-all ${isReply ? 'w-6 h-6' : 'w-8 h-8'}`}
+                className={`bg-[var(--hover-bg)] border border-[var(--card-border)] flex items-center justify-center flex-shrink-0 text-[10px] font-black overflow-hidden hover:ring-2 hover:ring-[#16a34a]/50 transition-all ${isReply ? 'w-6 h-6' : 'w-8 h-8'}`}
                 onClick={(e) => {
                     e.stopPropagation()
                     if (comment.user_id) window.location.href = `/perfil/${comment.user_id}`
                 }}
+                style={{ borderRadius: 'var(--radius)' }}
             >
                 {comment.profile?.avatar_url ? (
                     <img src={comment.profile.avatar_url} alt="" className="w-full h-full object-cover" />
                 ) : (
-                    '👤'
+                    comment.profile?.username?.charAt(0).toUpperCase() || '👤'
                 )}
             </div>
 
             <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2 mb-0.5">
                     <span
-                        className="text-xs font-bold text-[var(--foreground)] cursor-pointer hover:text-[#10b981] hover:underline transition-colors"
+                        className="text-[11px] font-black text-[var(--foreground)] cursor-pointer hover:text-[#16a34a] hover:underline transition-colors capitalize italic tracking-tighter"
                         onClick={(e) => {
                             e.stopPropagation()
                             if (comment.user_id) window.location.href = `/perfil/${comment.user_id}`
@@ -389,7 +388,7 @@ function CommentItem({
                     >
                         {comment.profile?.username || 'Usuario'}
                     </span>
-                    <span className="text-[10px] text-[var(--text-muted)]">
+                    <span className="text-[9px] font-black capitalize tracking-widest text-[var(--text-muted)]">
                         {formatTime(comment.created_at)}
                     </span>
                 </div>
@@ -403,7 +402,7 @@ function CommentItem({
                     {user && !isReply && (
                         <button
                             onClick={() => onReply(comment.profile?.username || 'Usuario', comment.id)}
-                            className="text-[10px] text-[var(--text-muted)] hover:text-[#10b981] flex items-center gap-1 transition-colors font-medium"
+                            className="text-[9px] font-black capitalize tracking-widest text-[var(--text-muted)] hover:text-[#16a34a] flex items-center gap-1 transition-colors"
                         >
                             <Reply size={10} />
                             Responder

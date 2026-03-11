@@ -40,8 +40,8 @@ export function StatsRadar({ stats, size = 220 }: StatsRadarProps) {
     }).join(' ') + ' Z'
 
     return (
-        <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] p-4">
-            <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 flex items-center gap-2">
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-4" style={{ borderRadius: 'var(--radius)' }}>
+            <h3 className="text-[10px] font-black text-[var(--text-muted)] capitalize tracking-widest mb-3 flex items-center gap-2 italic">
                 📊 Tu Radar
             </h3>
 
@@ -86,8 +86,9 @@ export function StatsRadar({ stats, size = 220 }: StatsRadarProps) {
                     {/* Data polygon */}
                     <motion.path
                         d={dataPath}
-                        fill="rgba(16, 185, 129, 0.15)"
-                        stroke="#10b981"
+                        fill="var(--foreground)"
+                        fillOpacity={0.1}
+                        stroke="var(--foreground)"
                         strokeWidth={2}
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -103,8 +104,8 @@ export function StatsRadar({ stats, size = 220 }: StatsRadarProps) {
                                 key={i}
                                 cx={x}
                                 cy={y}
-                                r={3}
-                                fill="#10b981"
+                                r={2.5}
+                                fill="var(--foreground)"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: 0.3 + i * 0.1 }}
@@ -131,9 +132,9 @@ export function StatsRadar({ stats, size = 220 }: StatsRadarProps) {
                                     x={x}
                                     y={y + 6}
                                     textAnchor="middle"
-                                    fill="#10b981"
+                                    fill="var(--foreground)"
                                     fontSize={10}
-                                    fontWeight={700}
+                                    fontWeight={800}
                                 >
                                     {s.raw}
                                 </text>

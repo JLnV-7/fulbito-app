@@ -77,3 +77,9 @@ export const getFixturesByDate = async (leagueId: number, season: number, date: 
         REVALIDATE_CONFIG.LIVE
     )
 }
+
+export const getPlayerById = async (id: number, season: number = 2024) => {
+    const data = await fetchApi<any[]>(`/players?id=${id}&season=${season}`, 86400) // 1 day cache
+    return data && data.length > 0 ? data[0] : null
+}
+

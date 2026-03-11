@@ -56,13 +56,14 @@ export function ShareButton({ titulo, texto, url, captureRef, label = 'Compartir
         setShowMenu(false)
 
         try {
-            // Usar modern-screenshot en lugar de html2canvas
-            const { domToPng } = await import('modern-screenshot')
+            // Usar html-to-image para evitar crash de oklch
+            const { toPng } = await import('html-to-image')
 
             // Capturar el elemento
-            const dataUrl = await domToPng(captureRef.current, {
-                scale: 2,
+            const dataUrl = await toPng(captureRef.current, {
+                pixelRatio: 2,
                 backgroundColor: '#1a1a1a',
+                style: { margin: '0' }
             })
 
             // Crear imagen y canvas para agregar branding

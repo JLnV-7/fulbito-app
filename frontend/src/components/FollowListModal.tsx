@@ -148,14 +148,16 @@ export function FollowListModal({ isOpen, onClose, userId, type, title }: Follow
                     exit={{ y: 20, opacity: 0 }}
                     transition={{ duration: 0.25, ease: 'easeOut' }}
                     onClick={e => e.stopPropagation()}
-                    className="w-full max-w-md bg-[var(--background)] sm:rounded-[var(--radius-lg)] rounded-t-[var(--radius-lg)] border border-[var(--card-border)] overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[80vh] shadow-2xl"
+                    className="w-full max-w-md bg-[var(--background)] border border-[var(--card-border)] overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[80vh] shadow-2xl"
+                    style={{ borderRadius: 'var(--radius)' }}
                 >
                     {/* Header */}
                     <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--card-border)] bg-[var(--card-bg)]">
-                        <h2 className="text-lg font-black">{title}</h2>
+                        <h2 className="text-lg font-black capitalize italic tracking-tighter">{title}</h2>
                         <button
                             onClick={onClose}
-                            className="p-2 -mr-2 text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--hover-bg)] rounded-full transition-colors"
+                            className="p-2 -mr-2 text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-colors"
+                            style={{ borderRadius: 'var(--radius)' }}
                         >
                             <X size={20} />
                         </button>
@@ -169,8 +171,9 @@ export function FollowListModal({ isOpen, onClose, userId, type, title }: Follow
                                 type="text"
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
-                                placeholder="Buscar usuario..."
-                                className="w-full bg-[var(--input-bg)] border border-[var(--card-border)] rounded-full pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#10b981] transition-colors"
+                                placeholder="BUSCAR USUARIO..."
+                                className="w-full bg-[var(--background)] border border-[var(--card-border)] pl-9 pr-4 py-2.5 text-xs font-black capitalize tracking-widest focus:outline-none focus:border-[#16a34a] transition-colors"
+                                style={{ borderRadius: 'var(--radius)' }}
                             />
                         </div>
                     </div>
@@ -200,7 +203,10 @@ export function FollowListModal({ isOpen, onClose, userId, type, title }: Follow
                                         }}
                                     >
                                         <div className="flex items-center gap-3 min-w-0 pr-2">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#10b981] to-[#3b82f6] shrink-0 border border-[var(--card-border)] flex items-center justify-center text-white text-sm font-bold overflow-hidden shadow-sm group-hover:ring-2 group-hover:ring-[#10b981]/50 transition-all">
+                                            <div
+                                                className="w-10 h-10 bg-[var(--hover-bg)] shrink-0 border border-[var(--card-border)] flex items-center justify-center text-[var(--foreground)] text-sm font-black overflow-hidden transition-all"
+                                                style={{ borderRadius: 'var(--radius)' }}
+                                            >
                                                 {userItem.avatar_url ? (
                                                     <img src={userItem.avatar_url} alt="" className="w-full h-full object-cover" />
                                                 ) : (
@@ -208,11 +214,11 @@ export function FollowListModal({ isOpen, onClose, userId, type, title }: Follow
                                                 )}
                                             </div>
                                             <div className="flex flex-col min-w-0">
-                                                <span className="text-sm font-bold text-[var(--foreground)] truncate group-hover:text-[#10b981] transition-colors">
+                                                <span className="text-sm font-black text-[var(--foreground)] truncate group-hover:text-[#16a34a] transition-colors capitalize italic tracking-tighter">
                                                     {userItem.username || 'Usuario'}
                                                 </span>
                                                 {userItem.equipo && (
-                                                    <span className="text-[10px] text-[var(--text-muted)] truncate flex items-center gap-1">
+                                                    <span className="text-[10px] font-black capitalize tracking-widest text-[var(--text-muted)] truncate flex items-center gap-1 italic">
                                                         <span>🛡️</span> {userItem.equipo}
                                                     </span>
                                                 )}
@@ -223,11 +229,11 @@ export function FollowListModal({ isOpen, onClose, userId, type, title }: Follow
                                         {currentUser && currentUser.id !== userItem.id && (
                                             <button
                                                 onClick={(e) => handleToggleFollow(e, userItem.id)}
-                                                className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 min-w-[100px]
-                                                    ${userItem.is_following
-                                                        ? 'bg-[var(--hover-bg)] text-[var(--text-muted)] border border-[var(--card-border)] hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30'
-                                                        : 'bg-[#10b981] text-white hover:bg-[#059669] shadow-sm'
+                                                className={`flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-black capitalize tracking-widest transition-all shrink-0 min-w-[110px] italic ${userItem.is_following
+                                                    ? 'bg-[var(--hover-bg)] text-[var(--text-muted)] border border-[var(--card-border)] hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30'
+                                                    : 'bg-[#16a34a] text-white'
                                                     }`}
+                                                style={{ borderRadius: 'var(--radius)' }}
                                             >
                                                 {userItem.is_following ? (
                                                     <>

@@ -4,12 +4,13 @@ import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { DndProvider, useDrag, useDrop } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-// @ts-ignore
-import html2canvas from 'html2canvas'
+import { toPng } from 'html-to-image'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Save, Share2, Users, Download, Trash2 } from 'lucide-react'
 import confetti from 'canvas-confetti'
+import { hapticFeedback } from '@/lib/helpers'
+import { useToast } from '@/contexts/ToastContext'
 
 interface Player {
     id: number
@@ -63,7 +64,6 @@ const PitchSlot = ({ id, role, pos, player, onDrop, onRemove }: SlotProps) => {
     const [{ isOver, canDrop }, drop] = useDrop(() => ({
         accept: 'player',
         canDrop: (item: { player: Player }) => {
-            // Very basic validation, could be improved
             return true
         },
         drop: (item: { player: Player }) => onDrop(item, id),
@@ -76,33 +76,41 @@ const PitchSlot = ({ id, role, pos, player, onDrop, onRemove }: SlotProps) => {
     return (
         <div
             ref={drop as any}
-            className={`absolute -translate-x-1/2 -translate-y-1/2 w-14 h-16 sm:w-16 sm:h-18 rounded-lg flex flex-col items-center justify-center transition-all cursor-pointer z-10
-                ${isOver ? 'bg-[#10b981]/40 border-2 border-[#10b981] scale-110' : canDrop ? 'bg-white/10 border-2 border-white/30 border-dashed' : ''}
-                ${!canDrop && !isOver && !player ? 'bg-black/30 border border-white/20 hover:bg-black/40' : ''}
+            className={`absolute -translate-x-1/2 -translate-y-1/2 w-14 h-16 sm:w-16 sm:h-20 flex flex-col items-center justify-center transition-all cursor-pointer z-10
+                ${isOver ? 'scale-110' : ''}
             `}
             style={{ top: pos.top, left: pos.left }}
         >
-            {player ? (
-                <div className="relative group w-full h-full flex flex-col items-center justify-center">
-                    <div className="w-10 h-10 rounded-full bg-slate-800 border-2 border-[#10b981] flex items-center justify-center overflow-hidden mb-1">
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center transition-all shadow-lg
+                ${player ? 'border-[var(--accent)] bg-[var(--card-bg)]' : isOver ? 'border-[#10b981] bg-[#10b981]/20' : 'border-white/30 bg-black/20 backdrop-blur-sm'}
+            `}>
+                {player ? (
+                    <div className="relative w-full h-full rounded-full overflow-hidden">
                         {player.photo ? (
                             <img src={player.photo} alt={player.name} className="w-full h-full object-cover" />
                         ) : (
-                            <span className="text-white text-xs font-bold">{role}</span>
+                            <div className="w-full h-full flex items-center justify-center bg-[var(--accent)] text-white text-xs font-bold capitalize italic">
+                                {player.name.charAt(0)}
+                            </div>
                         )}
                     </div>
-                    <span className="text-[9px] sm:text-[10px] font-bold text-white whitespace-nowrap bg-black/60 px-1 rounded truncate max-w-[120%]">
+                ) : (
+                    <span className="text-[10px] font-black text-white/50">{role}</span>
+                )}
+            </div>
+
+            {player && (
+                <div className="mt-1 flex flex-col items-center">
+                    <span className="text-[9px] sm:text-[10px] font-black capitalize tracking-tighter text-white whitespace-nowrap bg-black/60 px-2 py-0.5 rounded-full shadow-sm max-w-[80px] truncate">
                         {player.name}
                     </span>
                     <button
-                        onClick={() => onRemove(id)}
-                        className="absolute -top-2 -right-2 bg-[#ff6b6b] text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => { e.stopPropagation(); onRemove(id); }}
+                        className="mt-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white shadow-lg active:scale-90"
                     >
                         <Trash2 size={10} />
                     </button>
                 </div>
-            ) : (
-                <span className="text-white/50 text-[10px] font-bold tracking-widest">{role}</span>
             )}
         </div>
     )
@@ -120,26 +128,20 @@ const PlayerDraggableItem = ({ player }: { player: Player }) => {
     return (
         <div
             ref={drag as any}
-            className={`flex items-center gap-3 p-3 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl cursor-grab active:cursor-grabbing hover:bg-[var(--hover-bg)] transition-colors
-                ${isDragging ? 'opacity-50 scale-95' : 'opacity-100'}
+            className={`flex items-center gap-3 p-3 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl cursor-grab transition-all shadow-sm
+                ${isDragging ? 'opacity-50 scale-95' : 'hover:border-[var(--accent)] hover:shadow-md'}
             `}
         >
-            <div className="w-10 h-10 rounded-full bg-slate-800 1-0 overflow-hidden flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-full bg-[var(--background)] overflow-hidden flex items-center justify-center border border-[var(--card-border)]">
                 {player.photo ? (
                     <img src={player.photo} alt={player.name} className="w-full h-full object-cover" />
                 ) : (
-                    <span className="text-white text-xs font-bold">{player.position}</span>
+                    <span className="text-[var(--text-muted)] text-xs font-bold capitalize italic">{player.position}</span>
                 )}
             </div>
             <div className="min-w-0 flex-1">
                 <p className="font-bold text-sm truncate">{player.name}</p>
-                <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-semibold text-[#10b981]">{player.position}</span>
-                    <span className="text-[10px] text-[var(--text-muted)] truncate">{player.team}</span>
-                </div>
-            </div>
-            <div className="shrink-0 text-[10px] bg-[var(--background)] px-2 py-1 rounded-md text-[var(--text-muted)] border border-[var(--card-border)]">
-                Arrastrar
+                <p className="text-[10px] text-[var(--text-muted)] capitalize font-medium">{player.team}</p>
             </div>
         </div>
     )
@@ -147,30 +149,54 @@ const PlayerDraggableItem = ({ player }: { player: Player }) => {
 
 export function BuildXI() {
     const { user } = useAuth()
+    const { showToast } = useToast()
     const pitchRef = useRef<HTMLDivElement>(null)
     const [formation, setFormation] = useState<FormationKey>('4-3-3')
     const [lineup, setLineup] = useState<Record<string, Player>>({})
     const [saving, setSaving] = useState(false)
     const [saved, setSaved] = useState(false)
     const [suggestedPlayers, setSuggestedPlayers] = useState<Player[]>([])
+    const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
 
     useEffect(() => {
-        // En una app real, acá buscamos en user_votaciones los players más votados
-        // y generamos estas sugerencias dinámicas usando Supabase.
         const mockSuggested: Player[] = [
-            { id: 101, name: 'Dibu Martínez', position: 'POR', team: 'Aston Villa' },
-            { id: 102, name: 'Cuti Romero', position: 'DEF', team: 'Tottenham' },
-            { id: 103, name: 'L. Martínez', position: 'DEF', team: 'Man United' },
-            { id: 104, name: 'E. Fernández', position: 'MED', team: 'Chelsea' },
-            { id: 105, name: 'A. Mac Allister', position: 'MED', team: 'Liverpool' },
-            { id: 106, name: 'L. Messi', position: 'DEL', team: 'Inter Miami' },
-            { id: 107, name: 'J. Álvarez', position: 'DEL', team: 'Man City' },
-            { id: 108, name: 'A. Di María', position: 'MED', team: 'Benfica' },
+            { id: 101, name: 'Dibu Martínez', position: 'POR', team: 'Argentina' },
+            { id: 102, name: 'Cuti Romero', position: 'DEF', team: 'Argentina' },
+            { id: 103, name: 'L. Martínez', position: 'DEF', team: 'Argentina' },
+            { id: 104, name: 'E. Fernández', position: 'MED', team: 'Argentina' },
+            { id: 105, name: 'A. Mac Allister', position: 'MED', team: 'Argentina' },
+            { id: 106, name: 'L. Messi', position: 'DEL', team: 'Argentina' },
+            { id: 107, name: 'J. Álvarez', position: 'DEL', team: 'Argentina' },
+            { id: 108, name: 'A. Di María', position: 'MED', team: 'Argentina' },
         ]
         setSuggestedPlayers(mockSuggested)
-    }, [])
+        // Load from local storage if exists
+        if (user) {
+            const saved = localStorage.getItem(`futlog_lineup_${user.id}`)
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved)
+                    if (parsed.formation) setFormation(parsed.formation)
+                    if (parsed.players && Array.isArray(parsed.players)) {
+                        const newMap: Record<string, Player> = {}
+                        parsed.players.forEach((p: Player, idx: number) => {
+                            // Assign back to slots safely
+                            const slotsStr = Object.keys(FORMATIONS[parsed.formation as FormationKey] || FORMATIONS['4-3-3']).map(String)
+                            if (slotsStr[idx]) {
+                                newMap[slotsStr[idx]] = p
+                            }
+                        })
+                        setLineup(newMap)
+                    }
+                } catch (e) {
+                    console.error('Error loading local lineup', e)
+                }
+            }
+        }
+    }, [user])
 
     const handleDrop = (item: { player: Player }, slotId: string) => {
+        hapticFeedback(10)
         setLineup(prev => ({
             ...prev,
             [slotId]: item.player
@@ -178,6 +204,7 @@ export function BuildXI() {
     }
 
     const handleRemove = (slotId: string) => {
+        hapticFeedback(5)
         setLineup(prev => {
             const next = { ...prev }
             delete next[slotId]
@@ -185,164 +212,212 @@ export function BuildXI() {
         })
     }
 
+    // Mobile tap-to-assign: tap player in sidebar, then tap a slot
+    const handleSlotTap = (slotId: string) => {
+        if (selectedPlayer) {
+            hapticFeedback(10)
+            setLineup(prev => ({ ...prev, [slotId]: selectedPlayer }))
+            setSelectedPlayer(null)
+        }
+    }
+
+    const handlePlayerTap = (player: Player) => {
+        hapticFeedback(5)
+        setSelectedPlayer(prev => prev?.id === player.id ? null : player)
+    }
+
     const handleSave = async () => {
-        if (!user) return
+        if (!user) {
+            showToast('Iniciá sesión para guardar tu XI', 'error')
+            return
+        }
+        if (Object.keys(lineup).length === 0) {
+            showToast('Agregá al menos un jugador', 'error')
+            return
+        }
         setSaving(true)
         try {
             const payload = Object.values(lineup)
-            await supabase.from('user_lineups').insert({
+            const { error } = await supabase.from('user_lineups').upsert({
                 user_id: user.id,
                 formation: formation,
                 players: payload
-            })
+            }, { onConflict: 'user_id' })
+
+            if (error) {
+                console.warn('Supabase error, falling back to local storage:', error)
+            }
+            // Save to localStorage as reliable fallback for now
+            localStorage.setItem(`futlog_lineup_${user.id}`, JSON.stringify({ formation, players: payload }))
+
             setSaved(true)
+            showToast('¡XI Ideal guardado! ⚽', 'success')
             confetti({
-                particleCount: 80,
+                particleCount: 100,
                 spread: 70,
                 origin: { y: 0.6 },
-                colors: ['#10b981', '#fbbf24']
+                colors: ['#8b5cf6', '#10b981']
             })
             setTimeout(() => setSaved(false), 3000)
         } catch (e) {
             console.error('Error saving lineup:', e)
+            showToast('No se pudo guardar el XI', 'error')
         } finally {
             setSaving(false)
         }
     }
 
     const handleShare = async () => {
-        if (!pitchRef.current) return
+        if (!pitchRef.current) {
+            showToast('Error al capturar la cancha', 'error')
+            return
+        }
+        setSaving(true)
         try {
-            const canvas = await html2canvas(pitchRef.current, {
-                useCORS: true,
-                scale: 2,
-                backgroundColor: '#0a0e17'
+            const watermark = pitchRef.current.querySelector('.watermark-hidden') as HTMLElement
+            if (watermark) watermark.style.display = 'flex'
+
+            const dataUrl = await toPng(pitchRef.current, {
+                pixelRatio: 2,
+                backgroundColor: '#10b981',
+                style: { margin: '0' }
             })
-            const dataUrl = canvas.toDataURL('image/png')
 
-            // Si el browser lo soporta, abrimos el share native api con el blob
-            if (navigator.share && navigator.canShare) {
-                const blob = await (await fetch(dataUrl)).blob()
-                const file = new File([blob], 'futlog-dreamteam.png', { type: 'image/png' })
-                if (navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        title: 'Mi XI Ideal',
-                        text: '¡Mirá mi XI Ideal armado en FutLog! ⚽🔥',
-                        files: [file]
-                    })
-                    return
-                }
+            if (watermark) watermark.style.display = 'none'
+
+            const response = await fetch(dataUrl)
+            const blob = await response.blob()
+            const file = new File([blob], 'futlog-xi.png', { type: 'image/png' })
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    title: 'Mi XI Ideal',
+                    text: '¡Mirá el Dream Team que armé en FutLog! ⚽🔥',
+                    files: [file]
+                })
+            } else {
+                const link = document.createElement('a')
+                link.href = dataUrl
+                link.download = 'futlog-xi.png'
+                document.body.appendChild(link)
+                link.click()
+                document.body.removeChild(link)
+                showToast('Imagen descargada ✅', 'success')
             }
-
-            // Fallback: Descargar
-            const a = document.createElement('a')
-            a.href = dataUrl
-            a.download = 'futlog-dreamteam.png'
-            a.click()
-        } catch (e) {
-            console.error('Error sharing image:', e)
+        } catch (e: any) {
+            console.error('Error sharing lineup:', e)
+            if (e?.name !== 'AbortError') {
+                showToast('Error al generar la imagen (posible CORS)', 'error')
+            }
+        } finally {
+            setSaving(false)
         }
     }
 
     return (
         <DndProvider backend={HTML5Backend}>
-            <div className="bg-[var(--background)] min-h-[500px]">
-                <div className="flex flex-col lg:flex-row gap-6">
+            <div className="bg-[var(--background)]">
+                <div className="flex flex-col lg:flex-row gap-8">
                     {/* Pitch Section */}
                     <div className="flex-1">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-black text-lg flex items-center gap-2">
-                                <Users size={18} className="text-[#10b981]" />
-                                Tu XI Ideal
-                            </h3>
-                            <div className="flex items-center gap-2">
-                                <select
-                                    className="bg-[var(--card-bg)] border border-[var(--card-border)] text-sm rounded-lg px-3 py-1.5 focus:outline-none"
-                                    value={formation}
-                                    onChange={(e) => setFormation(e.target.value as FormationKey)}
-                                >
-                                    <option value="4-3-3">4-3-3</option>
-                                    <option value="4-4-2">4-4-2</option>
-                                </select>
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="text-xl font-black italic tracking-tighter capitalize">Tu XI Ideal</h3>
+                                <p className="text-xs text-[var(--text-muted)] font-medium">Armá tu equipo de ensueño</p>
                             </div>
+                            <select
+                                className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-full px-4 py-2 text-sm font-bold focus:outline-none shadow-sm transition-all"
+                                value={formation}
+                                onChange={(e) => setFormation(e.target.value as FormationKey)}
+                            >
+                                <option value="4-3-3">4-3-3</option>
+                                <option value="4-4-2">4-4-2</option>
+                            </select>
                         </div>
 
                         {/* Cancha */}
                         <div
                             ref={pitchRef}
-                            className="relative w-full aspect-[2/3] sm:aspect-[3/4] max-w-lg mx-auto bg-green-800 rounded-xl overflow-hidden border-4 border-green-900 shadow-2xl"
+                            className="relative w-full aspect-[2/3] max-w-lg mx-auto bg-[#10b981] rounded-[2rem] overflow-hidden shadow-2xl border-8 border-white/10"
                             style={{
-                                backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 10%, rgba(255,255,255,0.05) 10%, rgba(255,255,255,0.05) 20%)`
+                                backgroundImage: `radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.1) 100%), 
+                                                repeating-linear-gradient(0deg, transparent, transparent 10%, rgba(255,255,255,0.05) 10%, rgba(255,255,255,0.05) 20%)`
                             }}
                         >
-                            {/* Líneas de la cancha (decorativo) */}
-                            <div className="absolute inset-4 border border-white/40" />
-                            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-1/3 h-[15%] border border-t-0 border-white/40" />
-                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-1/3 h-[15%] border border-b-0 border-white/40" />
-                            <div className="absolute top-1/2 left-4 right-4 h-px bg-white/40 -translate-y-1/2" />
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border border-white/40" />
+                            {/* Líneas de la cancha */}
+                            <div className="absolute inset-6 border-2 border-white/30 rounded-lg pointer-events-none" />
+                            <div className="absolute top-6 left-1/2 -translate-x-1/2 w-1/2 h-[18%] border-2 border-t-0 border-white/30 pointer-events-none" />
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-1/2 h-[18%] border-2 border-b-0 border-white/30 pointer-events-none" />
+                            <div className="absolute top-1/2 left-6 right-6 h-0.5 bg-white/30 -translate-y-1/2 pointer-events-none" />
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border-2 border-white/30 pointer-events-none" />
 
-                            {/* Watermark for Share */}
-                            <div className="absolute bottom-2 left-6 text-white/30 text-[10px] font-black tracking-widest pointer-events-none">
-                                FUTLOG APP
+                            {/* Watermark */}
+                            <div className="hidden absolute bottom-4 left-0 right-0 justify-center watermark-hidden pointer-events-none">
+                                <span className="bg-black/60 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black tracking-[0.2em] text-white italic">FUTLOG.APP</span>
                             </div>
 
-                            {/* Slots de Jugadores */}
+                            {/* Slots */}
                             {FORMATIONS[formation].map((posInfo) => (
-                                <PitchSlot
-                                    key={posInfo.id}
-                                    id={posInfo.id}
-                                    role={posInfo.role}
-                                    pos={posInfo.pos}
-                                    player={lineup[posInfo.id]}
-                                    onDrop={handleDrop}
-                                    onRemove={handleRemove}
-                                />
+                                <div key={posInfo.id} onClick={() => handleSlotTap(posInfo.id)}>
+                                    <PitchSlot
+                                        id={posInfo.id}
+                                        role={posInfo.role}
+                                        pos={posInfo.pos}
+                                        player={lineup[posInfo.id]}
+                                        onDrop={handleDrop}
+                                        onRemove={handleRemove}
+                                    />
+                                </div>
                             ))}
                         </div>
 
-                        {/* Botonera Guardar/Compartir */}
-                        <div className="mt-6 flex items-center justify-between gap-4 max-w-lg mx-auto">
-                            <button
+                        <div className="mt-8 flex items-center justify-center gap-3 max-w-lg mx-auto">
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
                                 onClick={handleSave}
                                 disabled={saving || Object.keys(lineup).length === 0}
-                                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all
-                                    ${saved ? 'bg-[#10b981] text-white' : 'bg-[#10b981]/10 text-[#10b981] hover:bg-[#10b981] hover:text-white'}
-                                    disabled:opacity-50 disabled:cursor-not-allowed border border-[#10b981]/30
+                                className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full font-black capitalize tracking-wider text-[10px] shadow-sm transition-all border
+                                    ${saved ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)]' : 'bg-[var(--card-bg)] text-[var(--foreground)] border-[var(--card-border)] hover:bg-[var(--hover-bg)]'}
+                                    disabled:opacity-40
                                 `}
                             >
-                                <Save size={18} />
-                                {saving ? 'Guardando...' : saved ? '¡Guardado!' : 'Guardar XI'}
-                            </button>
-                            <button
+                                <Save size={14} />
+                                {saving ? 'Guardando...' : saved ? '¡Guardado!' : 'Guardar'}
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
                                 onClick={handleShare}
                                 disabled={Object.keys(lineup).length === 0}
-                                className="flex-1 flex items-center justify-center gap-2 py-3 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl font-bold hover:bg-[var(--hover-bg)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-full font-black capitalize tracking-wider text-[10px] shadow-sm hover:bg-[var(--hover-bg)] transition-all disabled:opacity-40"
                             >
-                                <Share2 size={18} />
-                                Compartir
-                            </button>
+                                <Download size={14} />
+                                Descargar
+                            </motion.button>
                         </div>
                     </div>
 
-                    {/* Players Selector Sidebar */}
-                    <div className="w-full lg:w-72 flex flex-col pt-2 lg:pt-11">
-                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-4 flex-1">
-                            <h4 className="text-sm font-bold mb-1">Recomendados</h4>
-                            <p className="text-[10px] text-[var(--text-muted)] mb-4">
-                                Jugadores que más has votado
-                            </p>
-
-                            <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto no-scrollbar pb-4 pr-1">
-                                {suggestedPlayers.map(p => (
-                                    <PlayerDraggableItem key={p.id} player={p} />
-                                ))}
+                    {/* Sidebar */}
+                    <div className="w-full lg:w-80 space-y-6">
+                        {selectedPlayer && (
+                            <div className="bg-[var(--foreground)] text-[var(--background)] px-4 py-2.5 rounded-full text-center text-[10px] font-black capitalize tracking-tight">
+                                ✅ Tocá una posición en la cancha para asignar a {selectedPlayer.name}
                             </div>
-
-                            <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
-                                <button className="w-full py-2 text-xs font-bold text-[var(--text-muted)] border border-dashed border-[var(--card-border)] rounded-lg hover:bg-[var(--hover-bg)] transition-colors">
-                                    + Buscar más jugadores
-                                </button>
+                        )}
+                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-6 shadow-sm">
+                            <h4 className="font-black italic capitalize tracking-tighter mb-4">Recomendados</h4>
+                            <p className="text-[9px] text-[var(--text-muted)] font-bold capitalize tracking-tight mb-3">Arrastrá o tocá un jugador para seleccionarlo</p>
+                            <div className="grid grid-cols-1 gap-3 max-h-[500px] overflow-y-auto no-scrollbar pr-1">
+                                {suggestedPlayers.map(p => (
+                                    <div
+                                        key={p.id}
+                                        onClick={() => handlePlayerTap(p)}
+                                        className={`cursor-pointer rounded-2xl transition-all ${selectedPlayer?.id === p.id ? 'ring-2 ring-[var(--foreground)] scale-[1.02]' : ''}`}
+                                    >
+                                        <PlayerDraggableItem player={p} />
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>

@@ -59,10 +59,10 @@ export function AdvancedStats({ fixtureId }: AdvancedStatsProps) {
 
     if (loading) {
         return (
-            <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] p-4">
+            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-4" style={{ borderRadius: 'var(--radius)' }}>
                 <div className="flex items-center gap-2 mb-3">
                     <span>📊</span>
-                    <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase">Estadísticas Avanzadas</h3>
+                    <h3 className="text-xs font-bold text-[var(--text-muted)] capitalize">Estadísticas Avanzadas</h3>
                 </div>
                 <div className="space-y-3">
                     {[1, 2, 3, 4, 5].map(i => (
@@ -142,32 +142,32 @@ export function AdvancedStats({ fixtureId }: AdvancedStatsProps) {
                         >
                             {/* Label */}
                             <div className="flex items-center justify-between mb-1">
-                                <span className={`text-[11px] font-bold tabular-nums ${localWins ? 'text-[#10b981]' : 'text-[var(--text-muted)]'}`}>
+                                <span className={`text-[11px] font-bold tabular-nums ${localWins ? 'text-[#16a34a]' : 'text-[var(--text-muted)]'}`}>
                                     {formatValue(row.local)}
                                 </span>
                                 <span className="text-[10px] text-[var(--text-muted)] font-medium">
                                     {row.icon} {row.label}
                                 </span>
-                                <span className={`text-[11px] font-bold tabular-nums ${visitanteWins ? 'text-[#6366f1]' : 'text-[var(--text-muted)]'}`}>
+                                <span className={`text-[11px] font-bold tabular-nums ${visitanteWins ? 'text-[#2563eb]' : 'text-[var(--text-muted)]'}`}>
                                     {formatValue(row.visitante)}
                                 </span>
                             </div>
 
                             {/* Bar */}
-                            <div className="flex h-1.5 rounded-full overflow-hidden gap-0.5">
+                            <div className="flex h-1.5 gap-0.5 border border-black/5 bg-black/5">
                                 <motion.div
                                     initial={{ width: '50%' }}
                                     animate={{ width: `${localPct}%` }}
                                     transition={{ duration: 0.6, delay: idx * 0.05 }}
-                                    className="rounded-full"
-                                    style={{ backgroundColor: localWins ? '#10b981' : 'var(--card-border)' }}
+                                    className=""
+                                    style={{ backgroundColor: localWins ? '#16a34a' : 'var(--card-border)' }}
                                 />
                                 <motion.div
                                     initial={{ width: '50%' }}
                                     animate={{ width: `${visitantePct}%` }}
                                     transition={{ duration: 0.6, delay: idx * 0.05 }}
-                                    className="rounded-full"
-                                    style={{ backgroundColor: visitanteWins ? '#6366f1' : 'var(--card-border)' }}
+                                    className=""
+                                    style={{ backgroundColor: visitanteWins ? '#2563eb' : 'var(--card-border)' }}
                                 />
                             </div>
                         </motion.div>

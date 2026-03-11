@@ -65,31 +65,31 @@ export function MatchStats({ stats, loading = false }: MatchStatsProps) {
                             className="space-y-2"
                         >
                             {/* Values Row */}
-                            <div className="flex justify-between items-center text-sm">
-                                <span className={`font-bold min-w-[40px] ${homeWins ? 'text-[#10b981]' : ''}`}>
+                            <div className="flex justify-between items-center text-[10px] font-black capitalize">
+                                <span className={`min-w-[40px] ${homeWins ? 'text-[var(--foreground)]' : 'text-[var(--text-muted)]'}`}>
                                     {stat.isPercentage ? `${stat.home}%` : stat.home}
                                 </span>
-                                <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">
+                                <span className="text-[9px] text-[var(--text-muted)] tracking-widest">
                                     {stat.label}
                                 </span>
-                                <span className={`font-bold min-w-[40px] text-right ${awayWins ? 'text-[#10b981]' : ''}`}>
+                                <span className={`min-w-[40px] text-right ${awayWins ? 'text-[var(--foreground)]' : 'text-[var(--text-muted)]'}`}>
                                     {stat.isPercentage ? `${stat.away}%` : stat.away}
                                 </span>
                             </div>
 
                             {/* Progress Bar */}
-                            <div className="flex h-2 rounded-full overflow-hidden bg-[var(--background)]">
+                            <div className="flex h-1.5 overflow-hidden bg-[var(--background)] border border-[var(--card-border)]">
                                 <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${homePercent}%` }}
                                     transition={{ duration: 0.5, delay: idx * 0.05 }}
-                                    className={`rounded-l-full ${homeWins ? 'bg-[#ff6b6b]' : 'bg-[#ff6b6b]/50'}`}
+                                    className={`${homeWins ? 'bg-[#ff4d4d]' : 'bg-[#ff4d4d]/30'}`}
                                 />
                                 <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${awayPercent}%` }}
                                     transition={{ duration: 0.5, delay: idx * 0.05 }}
-                                    className={`rounded-r-full ${awayWins ? 'bg-[#3b82f6]' : 'bg-[#3b82f6]/50'}`}
+                                    className={`${awayWins ? 'bg-[#4d4dff]' : 'bg-[#4d4dff]/30'}`}
                                 />
                             </div>
                         </motion.div>

@@ -73,17 +73,17 @@ export function NewsFeed({ userTeams }: NewsFeedProps) {
 
     if (loading) {
         return (
-            <GlassCard className="mb-6">
+            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 mb-6" style={{ borderRadius: 'var(--radius)' }}>
                 <div className="flex items-center gap-2 mb-4">
-                    <Newspaper size={18} className="text-[#10b981]" />
-                    <h2 className="text-lg font-black tracking-tight">Últimas Noticias</h2>
+                    <Newspaper size={18} className="text-[var(--text-muted)]" />
+                    <h2 className="text-sm font-black capitalize tracking-widest italic">Últimas Noticias</h2>
                 </div>
                 <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 hide-scrollbar">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="min-w-[260px] md:min-w-[300px] h-[120px] bg-white/5 border border-white/10 rounded-2xl animate-pulse shrink-0 snap-start" />
+                        <div key={i} className="min-w-[260px] md:min-w-[300px] h-[120px] bg-[var(--background)] border border-[var(--card-border)] animate-pulse shrink-0 snap-start" style={{ borderRadius: 'var(--radius)' }} />
                     ))}
                 </div>
-            </GlassCard>
+            </div>
         )
     }
 
@@ -92,10 +92,10 @@ export function NewsFeed({ userTeams }: NewsFeedProps) {
     }
 
     return (
-        <GlassCard noPadding className="mb-6 p-5 border-[#10b981]/10 shadow-[0_4px_24px_rgba(0,0,0,0.1)]">
-            <div className="flex items-center gap-2 mb-4">
-                <Flame size={18} className="text-[#ff6b6b]" />
-                <h2 className="text-lg font-black tracking-tight">
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] mb-6 p-5" style={{ borderRadius: 'var(--radius)' }}>
+            <div className="flex items-center gap-2 mb-4 border-b border-[var(--card-border)] pb-2 border-dashed">
+                <Flame size={18} className="text-[#ff4d4d]" />
+                <h2 className="text-sm font-black capitalize tracking-widest italic">
                     {userTeams.length > 0 ? 'Noticias para vos' : 'Últimas Noticias'}
                 </h2>
             </div>
@@ -107,27 +107,28 @@ export function NewsFeed({ userTeams }: NewsFeedProps) {
                         href={item.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group relative min-w-[280px] md:min-w-[320px] h-[140px] rounded-[18px] overflow-hidden shrink-0 snap-center border border-white/10"
+                        className="group relative min-w-[280px] md:min-w-[320px] h-[140px] overflow-hidden shrink-0 snap-center border border-[var(--card-border)]"
+                        style={{ borderRadius: 'var(--radius)' }}
                         whileHover={{ y: -2 }}
                         whileTap={{ scale: 0.98 }}
                     >
                         {item.thumbnail ? (
                             <img src={item.thumbnail} alt={item.title} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity" />
                         ) : (
-                            <div className="absolute inset-0 bg-[#1a1a1a]" />
+                            <div className="absolute inset-0 bg-[var(--background)]" />
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)] via-[var(--background)]/80 to-transparent" />
+                        <div className="absolute inset-0 bg-[var(--background)]/80" />
 
                         <div className="absolute inset-x-0 bottom-0 p-4">
                             <div className="flex justify-between items-start gap-2 mb-2">
-                                <span className="text-[10px] font-bold text-[#10b981] uppercase tracking-wider bg-[#10b981]/10 px-2 py-0.5 rounded">
+                                <span className="text-[8px] font-black text-[var(--background)] bg-[var(--foreground)] capitalize tracking-widest px-2 py-0.5">
                                     {item.source}
                                 </span>
-                                <span className="text-[10px] text-[var(--text-muted)] font-medium">
+                                <span className="text-[8px] text-[var(--text-muted)] font-black capitalize">
                                     {item.pubDate}
                                 </span>
                             </div>
-                            <h3 className="text-sm font-semibold text-white leading-tight line-clamp-2">
+                            <h3 className="text-xs font-bold text-[var(--foreground)] leading-tight line-clamp-2 capitalize">
                                 {item.title}
                             </h3>
                         </div>
@@ -135,14 +136,14 @@ export function NewsFeed({ userTeams }: NewsFeedProps) {
                 ))}
 
                 <div className="min-w-[150px] flex items-center justify-center shrink-0 snap-center">
-                    <a href="https://www.tycsports.com/futbol.html" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-[var(--text-muted)] hover:text-[#10b981] transition-colors">
-                        <div className="w-12 h-12 rounded-full border border-dashed border-white/20 flex items-center justify-center bg-white/5 hover:bg-[#10b981]/10">
-                            <ExternalLink size={18} />
+                    <a href="https://www.tycsports.com/futbol.html" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors">
+                        <div className="w-10 h-10 border border-dashed border-[var(--card-border)] flex items-center justify-center bg-[var(--background)] hover:bg-[var(--hover-bg)]" style={{ borderRadius: 'var(--radius)' }}>
+                            <ExternalLink size={16} />
                         </div>
-                        <span className="text-xs font-bold">Ver más noticias</span>
+                        <span className="text-[10px] font-black capitalize">Ver más</span>
                     </a>
                 </div>
             </div>
-        </GlassCard>
+        </div>
     )
 }

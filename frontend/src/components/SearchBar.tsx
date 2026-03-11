@@ -45,7 +45,7 @@ export function SearchBar({ value, onChange, placeholder = 'Buscar hincha o equi
         relative flex items-center gap-3 px-4 py-3 rounded-xl
         bg-[var(--card-bg)] border transition-all duration-200
         ${isFocused
-                    ? 'border-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/10'
+                    ? 'border-[var(--accent)] shadow-lg shadow-[var(--accent)]/10'
                     : 'border-[var(--card-border)] hover:border-[var(--hover-bg)]'
                 }
       `}>

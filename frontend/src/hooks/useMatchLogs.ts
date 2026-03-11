@@ -44,6 +44,7 @@ export interface CreateMatchLogData {
     jugador_estrella?: string
     jugador_villano?: string
     foto_url?: string
+    mood?: string
 }
 
 export function useMatchLogs(filters?: MatchLogFilters) {
@@ -54,71 +55,7 @@ export function useMatchLogs(filters?: MatchLogFilters) {
     const [error, setError] = useState<string | null>(null)
     const [hasMore, setHasMore] = useState(true)
 
-    // Offline Syncing
-    const syncOfflineLogs = useCallback(async () => {
-        if (!user || typeof window === 'undefined' || !navigator.onLine) return
 
-        try {
-            const queueStr = localStorage.getItem('futlog_offline_queue')
-            if (!queueStr) return
-
-            const queue: (CreateMatchLogData & { _queuedAt: string })[] = JSON.parse(queueStr)
-            if (queue.length === 0) return
-
-            let syncedCount = 0
-            for (const item of queue) {
-                const { _queuedAt, ...data } = item
-                try {
-                    const { player_ratings, tags, ...logData } = data
-                    const { data: newLog, error: insertError } = await supabase
-                        .from('match_logs')
-                        .insert({
-                            ...logData,
-                            user_id: user.id,
-                            watched_at: logData.watched_at || new Date().toISOString(),
-                        })
-                        .select()
-                        .single()
-
-                    if (insertError) throw insertError
-
-                    if (player_ratings && player_ratings.length > 0) {
-                        await supabase
-                            .from('match_log_player_ratings')
-                            .insert(player_ratings.map(pr => ({ ...pr, match_log_id: newLog.id })))
-                    }
-
-                    if (tags && tags.length > 0) {
-                        await supabase
-                            .from('match_log_tags')
-                            .insert(tags.map(tag => ({ match_log_id: newLog.id, tag })))
-                    }
-                    syncedCount++
-                } catch (e) {
-                    console.error('Error syncing individual offline log:', e)
-                }
-            }
-
-            localStorage.removeItem('futlog_offline_queue')
-            if (syncedCount > 0) {
-                showToast(`Se sincronizaron ${syncedCount} reseña(s) guardada(s) sin conexión.`, 'success')
-                fetchLogs(true)
-            }
-        } catch (e) {
-            console.error('Error in syncOfflineLogs:', e)
-        }
-    }, [user])
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            window.addEventListener('online', syncOfflineLogs)
-            // Trigger sync on mount in case they are online and there's queue
-            if (navigator.onLine) {
-                syncOfflineLogs()
-            }
-            return () => window.removeEventListener('online', syncOfflineLogs)
-        }
-    }, [syncOfflineLogs])
 
     const fetchLogs = useCallback(async (reset = false) => {
         try {
@@ -183,31 +120,32 @@ export function useMatchLogs(filters?: MatchLogFilters) {
 
             if (fetchError) throw fetchError
 
+            // Fetch my reactions if user logged in
+            let myReactions: Record<string, string> = {}
+            if (user && data && data.length > 0) {
+                const { data: likes } = await supabase
+                    .from('match_log_likes')
+                    .select('match_log_id, reaction_type')
+                    .in('match_log_id', data.map(d => d.id))
+                    .eq('user_id', user.id)
+
+                if (likes) {
+                    likes.forEach(l => {
+                        myReactions[l.match_log_id] = l.reaction_type || 'like'
+                    })
+                }
+            }
+
             // Process data: flatten tags, check if liked
-            const processedLogs: MatchLog[] = (data || []).map((log: Record<string, unknown>) => ({
+            const processedLogs: MatchLog[] = (data || []).map((log: Record<string, any>) => ({
                 ...log,
                 tags: ((log.tags as { tag: string }[]) || []).map((t: { tag: string }) => t.tag),
                 likes_count: ((log.likes_count as { count: number }[]) || [{ count: 0 }])[0]?.count || 0,
                 profile: log.profile as MatchLog['profile'],
                 player_ratings: log.player_ratings as MatchLogPlayerRating[],
+                is_liked: !!myReactions[log.id],
+                my_reaction: myReactions[log.id]
             })) as MatchLog[]
-
-            // Check if current user liked each log
-            if (user) {
-                const logIds = processedLogs.map(l => l.id)
-                if (logIds.length > 0) {
-                    const { data: userLikes } = await supabase
-                        .from('match_log_likes')
-                        .select('match_log_id')
-                        .eq('user_id', user.id)
-                        .in('match_log_id', logIds)
-
-                    const likedIds = new Set((userLikes || []).map((l: { match_log_id: string }) => l.match_log_id))
-                    processedLogs.forEach(log => {
-                        log.is_liked = likedIds.has(log.id)
-                    })
-                }
-            }
 
             if (reset) {
                 setLogs(processedLogs)
@@ -226,6 +164,83 @@ export function useMatchLogs(filters?: MatchLogFilters) {
     useEffect(() => {
         fetchLogs(true)
     }, [fetchLogs])
+
+    // Offline Syncing
+    const syncOfflineLogs = useCallback(async () => {
+        if (!user || typeof window === 'undefined' || !navigator.onLine) return
+
+        try {
+            const queueStr = localStorage.getItem('futlog_offline_queue')
+            if (!queueStr) return
+
+            const queue: (CreateMatchLogData & { _queuedAt: string })[] = JSON.parse(queueStr)
+            if (queue.length === 0) return
+
+            const successfulIndices: number[] = []
+
+            for (let i = 0; i < queue.length; i++) {
+                const item = queue[i]
+                const { _queuedAt, ...data } = item
+                try {
+                    const { player_ratings, tags, ...logData } = data
+                    const { data: newLog, error: insertError } = await supabase
+                        .from('match_logs')
+                        .insert({
+                            ...logData,
+                            user_id: user.id,
+                            watched_at: logData.watched_at || new Date().toISOString(),
+                        })
+                        .select()
+                        .single()
+
+                    if (insertError) throw insertError
+
+                    if (player_ratings && player_ratings.length > 0) {
+                        const { error: prError } = await supabase
+                            .from('match_log_player_ratings')
+                            .insert(player_ratings.map(pr => ({ ...pr, match_log_id: newLog.id })))
+                        if (prError) console.error('Error syncing player ratings:', prError)
+                    }
+
+                    if (tags && tags.length > 0) {
+                        const { error: tagError } = await supabase
+                            .from('match_log_tags')
+                            .insert(tags.map(tag => ({ match_log_id: newLog.id, tag })))
+                        if (tagError) console.error('Error syncing tags:', tagError)
+                    }
+                    successfulIndices.push(i)
+                } catch (e) {
+                    console.error('Error syncing individual offline log:', e)
+                }
+            }
+
+            // Remove only successful items from queue
+            if (successfulIndices.length > 0) {
+                const newQueue = queue.filter((_, idx) => !successfulIndices.includes(idx))
+                if (newQueue.length > 0) {
+                    localStorage.setItem('futlog_offline_queue', JSON.stringify(newQueue))
+                } else {
+                    localStorage.removeItem('futlog_offline_queue')
+                }
+
+                showToast(`Se sincronizaron ${successfulIndices.length} reseña(s) guardada(s).`, 'success')
+                fetchLogs(true)
+            }
+        } catch (e) {
+            console.error('Error in syncOfflineLogs:', e)
+        }
+    }, [user, fetchLogs])
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            window.addEventListener('online', syncOfflineLogs)
+            // Trigger sync on mount in case they are online and there's queue
+            if (navigator.onLine) {
+                syncOfflineLogs()
+            }
+            return () => window.removeEventListener('online', syncOfflineLogs)
+        }
+    }, [syncOfflineLogs])
 
     const createMatchLog = async (data: CreateMatchLogData): Promise<MatchLog | null> => {
         if (!user) return null
@@ -289,38 +304,59 @@ export function useMatchLogs(filters?: MatchLogFilters) {
         }
     }
 
-    const toggleLike = async (logId: string) => {
+    const toggleLike = async (logId: string, reactionType: string = 'like') => {
         if (!user) return
 
         const log = logs.find(l => l.id === logId)
         if (!log) return
 
         const wasLiked = log.is_liked
+        const previousReaction = log.my_reaction
 
         // Optimistic update
-        setLogs(prev => prev.map(l =>
-            l.id === logId
-                ? { ...l, is_liked: !wasLiked, likes_count: (l.likes_count || 0) + (wasLiked ? -1 : 1) }
-                : l
-        ))
+        setLogs(prev => prev.map(l => {
+            if (l.id !== logId) return l
+            
+            let newLikesCount = l.likes_count || 0
+            if (wasLiked) {
+                if (previousReaction === reactionType) {
+                    // Remove reaction
+                    newLikesCount--
+                    return { ...l, is_liked: false, my_reaction: undefined, likes_count: newLikesCount }
+                } else {
+                    // Change reaction (count stays same)
+                    return { ...l, is_liked: true, my_reaction: reactionType }
+                }
+            } else {
+                // Add new reaction
+                newLikesCount++
+                return { ...l, is_liked: true, my_reaction: reactionType, likes_count: newLikesCount }
+            }
+        }))
 
         try {
-            if (wasLiked) {
+            if (wasLiked && previousReaction === reactionType) {
                 await supabase
                     .from('match_log_likes')
                     .delete()
                     .eq('match_log_id', logId)
                     .eq('user_id', user.id)
             } else {
+                // Upsert to handle changing reaction type
                 await supabase
                     .from('match_log_likes')
-                    .insert({ match_log_id: logId, user_id: user.id })
+                    .upsert({ 
+                        match_log_id: logId, 
+                        user_id: user.id, 
+                        reaction_type: reactionType 
+                    }, { onConflict: 'match_log_id,user_id' })
             }
-        } catch {
-            // Revert optimistic update
+        } catch (err) {
+            console.error('Error toggling reaction:', err)
+            // Revert on error
             setLogs(prev => prev.map(l =>
                 l.id === logId
-                    ? { ...l, is_liked: wasLiked, likes_count: (l.likes_count || 0) + (wasLiked ? 1 : -1) }
+                    ? { ...l, is_liked: wasLiked, my_reaction: previousReaction, likes_count: log.likes_count }
                     : l
             ))
         }
@@ -380,6 +416,7 @@ export function useMatchLogs(filters?: MatchLogFilters) {
         toggleLike,
         getMatchLog,
         refetch: () => fetchLogs(true),
+        syncOfflineLogs,
     }
 }
 

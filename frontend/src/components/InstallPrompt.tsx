@@ -70,36 +70,35 @@ export function InstallPrompt() {
                         bottom-20 left-4 right-4
                         md:bottom-6 md:left-auto md:right-6 md:max-w-xs"
                 >
-                    <div className="bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--card-border)]
-                                    rounded-2xl shadow-2xl shadow-black/20 overflow-hidden">
+                    <div className="bg-[var(--card-bg)] border border-[var(--card-border)] overflow-hidden" style={{ borderRadius: 'var(--radius)' }}>
                         {/* Close button */}
                         <button
                             onClick={handleDismiss}
-                            className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full
-                                       bg-[var(--background)]/80 flex items-center justify-center
+                            className="absolute top-2.5 right-2.5 w-6 h-6 border border-[var(--card-border)]
+                                       bg-[var(--background)] flex items-center justify-center
                                        text-[var(--text-muted)] hover:text-[var(--foreground)]
                                        transition-colors z-10"
                             aria-label="Cerrar"
                         >
-                            <X size={12} />
+                            <X size={10} />
                         </button>
 
                         <div className="p-4">
                             <div className="flex items-start gap-3">
                                 {/* Icon */}
-                                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#10b981] to-[#047857]
-                                                flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-500/20">
-                                    <span className="text-xl">⚽</span>
+                                <div className="w-10 h-10 bg-[var(--background)] border border-[var(--card-border)]
+                                                flex items-center justify-center flex-shrink-0" style={{ borderRadius: 'var(--radius)' }}>
+                                    <span className="text-lg">⚽</span>
                                 </div>
 
                                 <div className="flex-1 min-w-0 pr-4">
-                                    <h3 className="font-bold text-sm text-[var(--foreground)] leading-tight">
+                                    <h3 className="font-black text-[10px] capitalize tracking-widest text-[var(--foreground)] leading-tight">
                                         Instalá FutLog
                                     </h3>
-                                    <p className="text-[11px] text-[var(--text-muted)] mt-0.5 leading-snug">
+                                    <p className="text-[9px] font-bold text-[var(--text-muted)] capitalize mt-0.5 leading-snug">
                                         {isIOS
-                                            ? 'Acceso rápido desde tu pantalla de inicio'
-                                            : 'Accedé más rápido como app nativa'}
+                                            ? 'Acceso rápido desde tu inicio'
+                                            : 'Accedé más rápido como app'}
                                     </p>
                                 </div>
                             </div>
@@ -107,32 +106,31 @@ export function InstallPrompt() {
                             {/* Action area */}
                             <div className="mt-3">
                                 {isIOS ? (
-                                    <p className="text-[11px] text-[var(--text-muted)] bg-[var(--background)]/60 rounded-lg px-3 py-2 flex items-center gap-2">
-                                        <Share size={14} className="text-[#10b981] flex-shrink-0" />
+                                    <p className="text-[9px] font-bold capitalize text-[var(--text-muted)] bg-[var(--background)] border border-[var(--card-border)] px-3 py-2 flex items-center gap-2">
+                                        <Share size={12} className="text-[var(--foreground)] flex-shrink-0" />
                                         <span>
-                                            Tocá <span className="font-semibold text-[var(--foreground)]">Compartir</span> y luego{' '}
-                                            <span className="font-semibold text-[var(--foreground)]">"Agregar a Inicio"</span>
+                                            Tocá <span className="font-black text-[var(--foreground)]">Compartir</span> y luego{' '}
+                                            <span className="font-black text-[var(--foreground)]">"Agregar a Inicio"</span>
                                         </span>
                                     </p>
                                 ) : (
                                     <div className="flex gap-2">
                                         <button
                                             onClick={handleDismiss}
-                                            className="flex-1 py-2 rounded-lg text-xs font-semibold
+                                            className="flex-1 py-2 border border-[var(--card-border)] text-[9px] font-black capitalize
                                                        text-[var(--text-muted)] hover:text-[var(--foreground)]
-                                                       hover:bg-[var(--background)]/60 transition-all"
+                                                       hover:bg-[var(--hover-bg)] transition-all"
                                         >
-                                            Ahora no
+                                            AHORA NO
                                         </button>
                                         <button
                                             onClick={handleInstallClick}
-                                            className="flex-1 py-2 rounded-lg text-xs font-bold
-                                                       bg-gradient-to-r from-[#10b981] to-[#059669]
-                                                       text-white hover:shadow-lg hover:shadow-emerald-500/25
+                                            className="flex-1 py-2 border border-[var(--foreground)] text-[9px] font-black capitalize
+                                                       bg-[var(--foreground)] text-[var(--background)]
                                                        transition-all flex items-center justify-center gap-1.5"
                                         >
-                                            <Download size={13} />
-                                            Instalar
+                                            <Download size={11} />
+                                            INSTALAR
                                         </button>
                                     </div>
                                 )}

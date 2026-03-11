@@ -165,7 +165,7 @@ export function AddToListModal({ isOpen, onClose, matchData }: AddToListModalPro
                                     <div className="flex justify-center p-6"><Loader2 className="animate-spin text-[var(--accent)]" /></div>
                                 ) : lists.length > 0 ? (
                                     <div className="space-y-2 mt-4">
-                                        <h4 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Mis Listas</h4>
+                                        <h4 className="text-xs font-bold text-[var(--text-muted)] capitalize tracking-wider mb-2">Mis Listas</h4>
                                         {lists.map(list => (
                                             <button
                                                 key={list.id}

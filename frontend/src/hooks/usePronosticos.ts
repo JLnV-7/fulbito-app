@@ -84,7 +84,8 @@ export function usePronosticos(partidoId?: string) {
                 goles_visitante_pronostico: golesVisitante,
                 updated_at: new Date().toISOString()
             }, {
-                onConflict: 'user_id,partido_id'
+                onConflict: 'user_id,partido_id',
+                ignoreDuplicates: false
             })
             .select()
             .single()

@@ -17,7 +17,7 @@ interface EstadisticaJugador {
     goles: number
     asistencias: number
     promedio: number
-    mvps: number // Opcional, por ahora 0
+    mvps: number
 }
 
 export function TablaEstadisticas({ grupoId, miembros }: TablaEstadisticasProps) {
@@ -32,8 +32,6 @@ export function TablaEstadisticas({ grupoId, miembros }: TablaEstadisticasProps)
     const fetchStats = async () => {
         setLoading(true)
         try {
-            // ... (ommited fetch logic for brevity)
-            // 1. Obtener todos los partidos del grupo
             const { data: partidos } = await supabase
                 .from('partidos_amigos')
                 .select('id')
@@ -48,23 +46,19 @@ export function TablaEstadisticas({ grupoId, miembros }: TablaEstadisticasProps)
 
             const partidoIds = partidos.map(p => p.id)
 
-            // 2. Obtener todos los jugadores de esos partidos (que tengan usuario real)
             const { data: jugadoresHistorial } = await supabase
                 .from('jugadores_partido_amigo')
                 .select('user_id, goles, asistencias, nombre')
                 .in('partido_amigo_id', partidoIds)
                 .not('user_id', 'is', null)
 
-            // 3. Obtener votos
             const { data: votos } = await supabase
                 .from('votos_partido_amigo')
                 .select('jugador_id, nota, jugadores_partido_amigo!inner(user_id)')
                 .in('partido_amigo_id', partidoIds)
 
-            // 4. Agregar datos
             const statsMap: Record<string, EstadisticaJugador> = {}
 
-            // Inicializar con miembros
             miembros.forEach(m => {
                 if (m.user_id) {
                     statsMap[m.user_id] = {
@@ -80,24 +74,20 @@ export function TablaEstadisticas({ grupoId, miembros }: TablaEstadisticasProps)
                 }
             })
 
-            // Procesar historial
             jugadoresHistorial?.forEach((j: any) => {
                 const uid = j.user_id
                 if (!statsMap[uid]) return
-
                 statsMap[uid].pj += 1
                 statsMap[uid].goles += (j.goles || 0)
                 statsMap[uid].asistencias += (j.asistencias || 0)
             })
 
-            // Procesar votos
             const notasSum: Record<string, number> = {}
             const notasCount: Record<string, number> = {}
 
             votos?.forEach((v: any) => {
                 const uid = v.jugadores_partido_amigo?.user_id
                 if (!uid || !statsMap[uid]) return
-
                 notasSum[uid] = (notasSum[uid] || 0) + v.nota
                 notasCount[uid] = (notasCount[uid] || 0) + 1
             })
@@ -109,7 +99,6 @@ export function TablaEstadisticas({ grupoId, miembros }: TablaEstadisticasProps)
             })
 
             setStats(Object.values(statsMap))
-
         } catch (error) {
             console.error('Error stats', error)
         } finally {
@@ -119,49 +108,49 @@ export function TablaEstadisticas({ grupoId, miembros }: TablaEstadisticasProps)
 
     const sortedStats = [...stats].sort((a, b) => b[orden] - a[orden])
 
-    if (loading) return <div className="text-center py-10">⏳ Calculando estadísticas...</div>
+    if (loading) return <div className="text-center py-20 animate-pulse text-[var(--text-muted)] font-bold italic capitalize tracking-widest">Calculando estadísticas...</div>
 
     if (stats.length === 0) return (
-        <div className="text-center py-10 text-[var(--text-muted)]">
-            📉 Aún no hay estadísticas. ¡Jueguen partidos para generar datos!
+        <div className="text-center py-20 text-[var(--text-muted)] bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)]">
+            <p className="text-4xl mb-4">📉</p>
+            <p className="font-bold italic">Aún no hay estadísticas. ¡Jueguen partidos para generar datos!</p>
         </div>
     )
 
     return (
-        <div className="space-y-4">
-            {/* Filtros Orden */}
-            <div className="flex gap-2 justify-center pb-4">
+        <div className="space-y-6">
+            <div className="flex gap-2 justify-center pb-2 overflow-x-auto no-scrollbar px-2">
                 <FilterButton active={orden === 'goles'} onClick={() => setOrden('goles')} label="⚽ Goles" />
                 <FilterButton active={orden === 'asistencias'} onClick={() => setOrden('asistencias')} label="👟 Asistencias" />
                 <FilterButton active={orden === 'promedio'} onClick={() => setOrden('promedio')} label="⭐ Promedio" />
                 <FilterButton active={orden === 'pj'} onClick={() => setOrden('pj')} label="📅 PJ" />
             </div>
 
-            <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] overflow-hidden">
+            <div className="bg-[var(--card-bg)] rounded-3xl border border-[var(--card-border)] overflow-hidden shadow-xl">
                 <table className="w-full text-sm">
                     <thead className="bg-[#10b981]/10 text-[#10b981]">
                         <tr>
-                            <th className="p-3 text-left">Jugador</th>
-                            <th className="p-3 text-center">PJ</th>
-                            <th className="p-3 text-center">⚽</th>
-                            <th className="p-3 text-center">👟</th>
-                            <th className="p-3 text-center">⭐</th>
+                            <th className="p-4 text-left font-black capitalize italic text-xs">Jugador</th>
+                            <th className="p-4 text-center font-black capitalize italic text-xs">PJ</th>
+                            <th className="p-4 text-center font-black capitalize italic text-xs">⚽</th>
+                            <th className="p-4 text-center font-black capitalize italic text-xs">👟</th>
+                            <th className="p-4 text-center font-black capitalize italic text-xs">⭐</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-[var(--card-border)]">
                         {sortedStats.map((s, i) => (
-                            <tr key={s.userId} className="border-b border-[var(--card-border)] last:border-0 hover:bg-[var(--hover-bg)]">
-                                <td className="p-3 flex items-center gap-2 font-bold">
-                                    <span className={`text-xs w-5 text-[var(--text-muted)]`}>#{i + 1}</span>
-                                    <div className="w-8 h-8 rounded-full bg-[var(--background)] overflow-hidden border border-[var(--card-border)] flex items-center justify-center">
-                                        {s.foto || '👤'}
+                            <tr key={s.userId} className="hover:bg-[var(--hover-bg)] transition-colors">
+                                <td className="p-4 flex items-center gap-3">
+                                    <span className="text-[10px] font-black w-4 text-[var(--text-muted)]">#{i + 1}</span>
+                                    <div className="w-10 h-10 rounded-full bg-[var(--background)] overflow-hidden border-2 border-[var(--card-border)] flex items-center justify-center shrink-0 shadow-sm">
+                                        {s.foto ? <img src={s.foto} alt={s.nombre} className="w-full h-full object-cover" /> : '👤'}
                                     </div>
-                                    <span className="truncate max-w-[100px]">{s.nombre}</span>
+                                    <span className="font-bold truncate max-w-[120px]">{s.nombre}</span>
                                 </td>
-                                <td className={`p-3 text-center ${orden === 'pj' ? 'font-black text-white' : ''}`}>{s.pj}</td>
-                                <td className={`p-3 text-center ${orden === 'goles' ? 'font-black text-[#10b981]' : ''}`}>{s.goles}</td>
-                                <td className={`p-3 text-center ${orden === 'asistencias' ? 'font-black text-blue-400' : ''}`}>{s.asistencias}</td>
-                                <td className={`p-3 text-center ${orden === 'promedio' ? 'font-black text-yellow-400' : ''}`}>{s.promedio || '-'}</td>
+                                <td className={`p-4 text-center text-xs ${orden === 'pj' ? 'font-black text-[var(--foreground)]' : 'font-medium text-[var(--text-muted)]'}`}>{s.pj}</td>
+                                <td className={`p-4 text-center text-xs ${orden === 'goles' ? 'font-black text-[#10b981]' : 'font-medium text-[var(--text-muted)]'}`}>{s.goles}</td>
+                                <td className={`p-4 text-center text-xs ${orden === 'asistencias' ? 'font-black text-blue-400' : 'font-medium text-[var(--text-muted)]'}`}>{s.asistencias}</td>
+                                <td className={`p-4 text-center text-xs ${orden === 'promedio' ? 'font-black text-yellow-400' : 'font-medium text-[var(--text-muted)]'}`}>{s.promedio || '-'}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -175,8 +164,8 @@ function FilterButton({ active, onClick, label }: { active: boolean, onClick: ()
     return (
         <button
             onClick={onClick}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${active ? 'bg-[#10b981] text-white shadow-lg' : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-muted)]'
-                }`}
+            className={`px-4 py-2 rounded-full text-xs font-black capitalize tracking-wider transition-all shadow-sm shrink-0
+                ${active ? 'bg-[#10b981] text-white shadow-emerald-500/20' : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-muted)] hover:bg-[var(--hover-bg)]'}`}
         >
             {label}
         </button>

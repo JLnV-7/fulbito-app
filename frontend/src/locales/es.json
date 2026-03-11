@@ -3,7 +3,10 @@
         "loading": "Cargando la tribuna...",
         "save": "Guardar",
         "cancel": "Cancelar",
-        "back": "Volver"
+        "back": "Volver",
+        "today": "Hoy",
+        "yesterday": "Ayer",
+        "tomorrow": "Mañana"
     },
     "nav": {
         "home": "Inicio",
@@ -34,12 +37,37 @@
         },
         "teams": {
             "title": "Tus Equipos",
+            "favorite": "Tu Equipo Favorito",
+            "noTeam": "No tenés equipo favorito.",
+            "configure": "Configurar equipo",
+            "change": "Cambiar",
             "notifications": "Notificaciones de partidos"
         },
         "settings": {
             "title": "Configuración",
             "language": "Idioma",
-            "logout": "Cerrar Sesión"
+            "logout": "Cerrar Sesión",
+            "sync": {
+                "title": "Sincronización",
+                "desc": "Si guardaste reseñas sin internet, podés subirlas manualmente acá.",
+                "action": "SINCRONIZAR"
+            },
+            "appearance": {
+                "title": "Apariencia",
+                "classic": "Modo Clásico",
+                "classicDesc": "Arial, neutro, scroll largo",
+                "dark": "Tema Oscuro",
+                "darkDesc": "Cuidá tu vista"
+            },
+            "danger": {
+                "title": "Peligro"
+            },
+            "pwa": {
+                "title": "Instalá la App",
+                "desc": "Agregá FutLog a tu inicio para que cargue más rápido.",
+                "offline": "OFFLINE",
+                "fast": "RÁPIDA"
+            }
         }
     },
     "ratings": {
@@ -48,5 +76,10 @@
             "atmosphere": "Atmósfera",
             "garra": "Garra"
         }
+    },
+    "footer": {
+        "privacy": "Privacidad",
+        "terms": "Términos",
+        "sources": "Fuentes"
     }
 }

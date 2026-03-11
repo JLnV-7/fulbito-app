@@ -208,7 +208,7 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
                         >
                             {/* Tipo de partido */}
                             <div>
-                                <label className="text-xs font-bold text-[var(--text-muted)] uppercase mb-2 block">
+                                <label className="text-xs font-bold text-[var(--text-muted)] capitalize mb-2 block">
                                     ⚽ Tipo de partido
                                 </label>
                                 <div className="space-y-2">
@@ -216,8 +216,8 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
                                         <button
                                             key={t.value}
                                             onClick={() => setTipo(t.value)}
-                                            className={`w-full p-3 rounded-xl border text-left flex justify-between items-center transition-all ${tipo === t.value
-                                                ? 'border-[#10b981] bg-[#10b981]/10 text-[#10b981]'
+                                            className={`w-full p-3 rounded-[var(--radius)] border text-left flex justify-between items-center transition-all ${tipo === t.value
+                                                ? 'border-[#16a34a] bg-[#16a34a]/10 text-[#16a34a]'
                                                 : 'border-[var(--card-border)] hover:bg-[var(--hover-bg)]'
                                                 }`}
                                         >
@@ -231,34 +231,34 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
                             {/* Fecha y hora */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1 block">📅 Fecha</label>
+                                    <label className="text-xs font-bold text-[var(--text-muted)] capitalize mb-1 block">📅 Fecha</label>
                                     <input
                                         type="date"
                                         value={fecha}
                                         onChange={e => setFecha(e.target.value)}
-                                        className="w-full bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#10b981]/50"
+                                        className="w-full bg-[var(--input-bg)] border border-[var(--card-border)] rounded-[var(--radius)] p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/50"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1 block">🕐 Hora</label>
+                                    <label className="text-xs font-bold text-[var(--text-muted)] capitalize mb-1 block">🕐 Hora</label>
                                     <input
                                         type="time"
                                         value={hora}
                                         onChange={e => setHora(e.target.value)}
-                                        className="w-full bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#10b981]/50"
+                                        className="w-full bg-[var(--input-bg)] border border-[var(--card-border)] rounded-[var(--radius)] p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/50"
                                     />
                                 </div>
                             </div>
 
                             {/* Cancha */}
                             <div>
-                                <label className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1 block">📍 Cancha</label>
+                                <label className="text-xs font-bold text-[var(--text-muted)] capitalize mb-1 block">📍 Cancha</label>
                                 <input
                                     type="text"
                                     value={cancha}
                                     onChange={e => setCancha(e.target.value)}
                                     placeholder="Ej: Cancha Don Pepe"
-                                    className="w-full bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#10b981]/50"
+                                    className="w-full bg-[var(--input-bg)] border border-[var(--card-border)] rounded-[var(--radius)] p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/50"
                                 />
                             </div>
 
@@ -266,7 +266,7 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
                             <button
                                 onClick={handleSiguiente}
                                 disabled={!fecha || guardando}
-                                className="w-full py-4 rounded-xl font-black text-white bg-[#10b981] disabled:opacity-40 hover:bg-[#059669] transition-all"
+                                className="w-full py-4 rounded-[var(--radius)] font-black text-white bg-[#16a34a] disabled:opacity-40 hover:bg-[#059669] transition-all"
                             >
                                 {guardando ? '⏳ Creando...' : 'Siguiente: Armar Equipos →'}
                             </button>
@@ -320,13 +320,13 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
                                 <button
                                     onClick={handleCrearYAbrir}
                                     disabled={guardando || (jugadoresAzul.length === 0 && jugadoresRojo.length === 0)}
-                                    className="w-full py-4 rounded-xl font-black text-white bg-[#10b981] disabled:opacity-40 hover:bg-[#059669] transition-all"
+                                    className="w-full py-4 rounded-[var(--radius)] font-black text-white bg-[#16a34a] disabled:opacity-40 hover:bg-[#059669] transition-all"
                                 >
                                     {guardando ? '⏳' : '🗳️ Crear y Abrir Votación'}
                                 </button>
                                 <button
                                     onClick={handleGuardarBorrador}
-                                    className="w-full py-3 rounded-xl font-bold text-[var(--text-muted)] border border-[var(--card-border)] hover:bg-[var(--hover-bg)]"
+                                    className="w-full py-3 rounded-[var(--radius)] font-bold text-[var(--text-muted)] border border-[var(--card-border)] hover:bg-[var(--hover-bg)]"
                                 >
                                     📝 Guardar como Borrador
                                 </button>
@@ -358,7 +358,7 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
                                 </p>
                                 <div className="mb-3 space-y-2">
                                     {/* Lista de miembros para seleccionar */}
-                                    <div className="max-h-32 overflow-y-auto border border-[var(--card-border)] rounded-xl mb-2">
+                                    <div className="max-h-32 overflow-y-auto border border-[var(--card-border)] rounded-[var(--radius)] mb-2">
                                         {miembros.map(m => (
                                             <button
                                                 key={m.user_id}
@@ -366,7 +366,7 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
                                                     setNuevoNombre(m.profile?.username || 'Usuario');
                                                     setSelectedUserId(m.user_id);
                                                 }}
-                                                className={`w-full text-left p-2 text-xs flex items-center gap-2 hover:bg-[var(--hover-bg)] ${selectedUserId === m.user_id ? 'bg-[#10b981]/10 text-[#10b981] font-bold' : ''
+                                                className={`w-full text-left p-2 text-xs flex items-center gap-2 hover:bg-[var(--hover-bg)] ${selectedUserId === m.user_id ? 'bg-[#16a34a]/10 text-[#16a34a] font-bold' : ''
                                                     }`}
                                             >
                                                 <span>{m.profile?.username}</span>
@@ -385,19 +385,19 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
                                             onKeyDown={e => e.key === 'Enter' && handleAgregarJugador()}
                                             placeholder="O escribí nombre invitado..."
                                             autoFocus
-                                            className="flex-1 bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#10b981]/50"
+                                            className="flex-1 bg-[var(--input-bg)] border border-[var(--card-border)] rounded-[var(--radius)] p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/50"
                                         />
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => { setEquipoAgregando(null); setNuevoNombre(''); setSelectedUserId(null); setOrdenAgregando(null) }}
-                                        className="flex-1 py-2 rounded-xl text-[var(--text-muted)] font-bold"
+                                        className="flex-1 py-2 rounded-[var(--radius)] text-[var(--text-muted)] font-bold"
                                     >Cancelar</button>
                                     <button
                                         onClick={handleAgregarJugador}
                                         disabled={!nuevoNombre.trim() || guardando}
-                                        className="flex-1 py-2 rounded-xl font-black text-white bg-[#10b981] disabled:opacity-40"
+                                        className="flex-1 py-2 rounded-[var(--radius)] font-black text-white bg-[#16a34a] disabled:opacity-40"
                                     >{guardando ? '⏳' : 'Agregar'}</button>
                                 </div>
                             </motion.div>
@@ -426,7 +426,7 @@ function TeamSection({ equipo, color, emoji, maxJugadores, jugadores, onAgregar,
 
             <button
                 onClick={onAgregar}
-                className="w-full p-3 rounded-xl border-2 border-dashed border-[var(--card-border)] text-sm text-[var(--text-muted)] hover:border-[#10b981] hover:text-[#10b981] transition-all mb-2"
+                className="w-full p-3 rounded-[var(--radius)] border-2 border-dashed border-[var(--card-border)] text-sm text-[var(--text-muted)] hover:border-[#16a34a] hover:text-[#16a34a] transition-all mb-2"
             >
                 + Agregar jugador
             </button>
@@ -437,7 +437,7 @@ function TeamSection({ equipo, color, emoji, maxJugadores, jugadores, onAgregar,
                         key={j.id}
                         initial={{ x: -10, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
-                        className="flex items-center justify-between p-3 bg-[var(--background)] rounded-xl"
+                        className="flex items-center justify-between p-3 bg-[var(--background)] rounded-[var(--radius)]"
                     >
                         <span className="text-sm font-bold">👤 {j.nombre}</span>
                         <button

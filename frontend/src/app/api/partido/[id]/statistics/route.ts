@@ -25,18 +25,19 @@ export async function GET(
     }
 
     // --- MOCK FALLBACK DEMO PARA ESTADISTICAS ---
-    if (['mock-fin-1', 'mock-live-1', 'mock-prev-1', '00000000-0000-0000-0000-000000000001'].includes(id) || (parseInt(id) >= 9991 && parseInt(id) <= 9993)) {
+    if (id.startsWith('mock-')) {
+        const isLiveOrFin = id.includes('live') || id.includes('fin')
         return NextResponse.json({
             stats: {
                 local: {
-                    name: "River Plate",
-                    logo: "https://media.api-sports.io/football/teams/435.png",
-                    possession: "65%", shots: 15, shots_on_target: 7, corners: 6, fouls: 12, yellow_cards: 2, red_cards: 0, offsides: 3, passes_total: 540, passes_accurate: 490, expected_goals: "2.3"
+                    name: id.includes('3') ? "San Lorenzo" : "Real Madrid",
+                    logo: id.includes('3') ? "https://media.api-sports.io/football/teams/458.png" : "https://media.api-sports.io/football/teams/541.png",
+                    possession: isLiveOrFin ? "55%" : "0%", shots: isLiveOrFin ? 12 : 0, shots_on_target: isLiveOrFin ? 5 : 0, corners: isLiveOrFin ? 4 : 0, fouls: isLiveOrFin ? 10 : 0, yellow_cards: isLiveOrFin ? 1 : 0, red_cards: 0, offsides: isLiveOrFin ? 2 : 0, passes_total: isLiveOrFin ? 450 : 0, passes_accurate: isLiveOrFin ? 380 : 0, expected_goals: isLiveOrFin ? "1.8" : "0.0"
                 },
                 visitante: {
-                    name: "Boca Juniors",
-                    logo: "https://media.api-sports.io/football/teams/451.png",
-                    possession: "35%", shots: 6, shots_on_target: 2, corners: 2, fouls: 18, yellow_cards: 4, red_cards: 1, offsides: 1, passes_total: 290, passes_accurate: 210, expected_goals: "0.8"
+                    name: id.includes('3') ? "Huracán" : "FC Barcelona",
+                    logo: id.includes('3') ? "https://media.api-sports.io/football/teams/440.png" : "https://media.api-sports.io/football/teams/529.png",
+                    possession: isLiveOrFin ? "45%" : "0%", shots: isLiveOrFin ? 8 : 0, shots_on_target: isLiveOrFin ? 3 : 0, corners: isLiveOrFin ? 3 : 0, fouls: isLiveOrFin ? 14 : 0, yellow_cards: isLiveOrFin ? 3 : 0, red_cards: isLiveOrFin ? 1 : 0, offsides: isLiveOrFin ? 1 : 0, passes_total: isLiveOrFin ? 320 : 0, passes_accurate: isLiveOrFin ? 260 : 0, expected_goals: isLiveOrFin ? "1.2" : "0.0"
                 }
             }
         })

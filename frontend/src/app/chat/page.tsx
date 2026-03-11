@@ -25,8 +25,8 @@ export default function ChatPage() {
             </div>
 
             <div className="max-w-4xl mx-auto px-4 py-6">
-                {/* Usamos ID 0 para el chat global */}
-                <CommentSection partidoId={0} />
+                {/* Usamos ID 'global' para el chat de la comunidad */}
+                <CommentSection partidoId="global" />
             </div>
 
             <NavBar />

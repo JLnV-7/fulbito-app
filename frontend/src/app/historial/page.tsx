@@ -104,14 +104,14 @@ export default function HistorialPage() {
     }, [historial, filtroLiga])
 
     const getPuntosColor = (puntos: number) => {
-        if (puntos === 8) return 'text-[#10b981]'
+        if (puntos === 8) return 'text-[#16a34a]'
         if (puntos === 5) return 'text-[#3b82f6]'
         if (puntos === 3) return 'text-[#6366f1]'
         return 'text-[var(--text-muted)]'
     }
 
     const getPuntosBadge = (puntos: number) => {
-        if (puntos === 8) return { text: 'EXACTO', color: 'bg-[#10b981]' }
+        if (puntos === 8) return { text: 'EXACTO', color: 'bg-[#16a34a]' }
         if (puntos === 5) return { text: 'GANADOR+DIF', color: 'bg-[#3b82f6]' }
         if (puntos === 3) return { text: 'GANADOR', color: 'bg-[#6366f1]' }
         return { text: 'FALLADO', color: 'bg-[#ef4444]' }
@@ -139,35 +139,35 @@ export default function HistorialPage() {
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="bg-gradient-to-br from-[#10b981]/10 to-[#10b981]/5 rounded-3xl border border-[#10b981]/30 p-6"
+                                className="bg-gradient-to-br from-[#16a34a]/10 to-[#16a34a]/5 rounded-3xl border border-[#16a34a]/30 p-6"
                             >
                                 {/* Stats principales */}
                                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                                     <div className="text-center">
-                                        <div className="text-3xl font-black text-[#10b981]">{stats.totalPuntos}</div>
-                                        <div className="text-[10px] text-[var(--text-muted)] uppercase">Puntos Total</div>
+                                        <div className="text-3xl font-black text-[#16a34a]">{stats.totalPuntos}</div>
+                                        <div className="text-[10px] text-[var(--text-muted)] capitalize">Puntos Total</div>
                                     </div>
                                     <div className="text-center">
                                         <div className="text-3xl font-black">{stats.total}</div>
-                                        <div className="text-[10px] text-[var(--text-muted)] uppercase">Pronósticos</div>
+                                        <div className="text-[10px] text-[var(--text-muted)] capitalize">Pronósticos</div>
                                     </div>
                                     <div className="text-center">
                                         <div className="text-3xl font-black text-[#ffd700]">{stats.porcentajeExactos}%</div>
-                                        <div className="text-[10px] text-[var(--text-muted)] uppercase">Exactos</div>
+                                        <div className="text-[10px] text-[var(--text-muted)] capitalize">Exactos</div>
                                     </div>
                                     <div className="text-center">
                                         <div className="text-3xl font-black text-[#3b82f6]">{stats.porcentajeAciertos}%</div>
-                                        <div className="text-[10px] text-[var(--text-muted)] uppercase">Aciertos</div>
+                                        <div className="text-[10px] text-[var(--text-muted)] capitalize">Aciertos</div>
                                     </div>
                                     <div className="text-center">
                                         <div className="text-3xl font-black text-[#ff6b6b]">{stats.racha}🔥</div>
-                                        <div className="text-[10px] text-[var(--text-muted)] uppercase">Racha</div>
+                                        <div className="text-[10px] text-[var(--text-muted)] capitalize">Racha</div>
                                     </div>
                                 </div>
 
                                 {/* Breakdown por tipo */}
                                 <div className="flex flex-wrap gap-2 justify-center mb-4">
-                                    <span className="text-xs bg-[#10b981]/20 text-[#10b981] px-3 py-1 rounded-full font-bold">
+                                    <span className="text-xs bg-[#16a34a]/20 text-[#16a34a] px-3 py-1 rounded-full font-bold">
                                         {stats.exactos} exactos
                                     </span>
                                     <span className="text-xs bg-[#3b82f6]/20 text-[#3b82f6] px-3 py-1 rounded-full font-bold">
@@ -183,13 +183,13 @@ export default function HistorialPage() {
 
                                 {/* Stats por liga */}
                                 {Object.keys(stats.ligaStats).length > 1 && (
-                                    <div className="pt-4 border-t border-[#10b981]/20">
-                                        <h4 className="text-xs font-bold text-[var(--text-muted)] uppercase mb-3 text-center">Por Liga</h4>
+                                    <div className="pt-4 border-t border-[#16a34a]/20">
+                                        <h4 className="text-xs font-bold text-[var(--text-muted)] capitalize mb-3 text-center">Por Liga</h4>
                                         <div className="flex flex-wrap gap-4 justify-center">
                                             {Object.entries(stats.ligaStats).map(([liga, data]) => (
                                                 <div key={liga} className="bg-[var(--card-bg)] px-4 py-2 rounded-xl text-center">
                                                     <div className="text-xs font-bold truncate max-w-[100px]">{liga}</div>
-                                                    <div className="text-lg font-black text-[#10b981]">{data.puntos}</div>
+                                                    <div className="text-lg font-black text-[#16a34a]">{data.puntos}</div>
                                                     <div className="text-[9px] text-[var(--text-muted)]">{data.count} partidos</div>
                                                 </div>
                                             ))}
@@ -212,7 +212,7 @@ export default function HistorialPage() {
                                         onClick={() => setFiltroLiga(liga)}
                                         className={`px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all
                                             ${filtroLiga === liga
-                                                ? 'bg-[#10b981] text-white'
+                                                ? 'bg-[#16a34a] text-white'
                                                 : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                             }`}
                                     >
@@ -229,7 +229,7 @@ export default function HistorialPage() {
                         {loading ? (
                             <div className="text-center py-12 opacity-50">
                                 <span className="animate-spin inline-block text-2xl">⚽</span>
-                                <p className="mt-2 text-xs uppercase tracking-widest">Cargando tus prodes...</p>
+                                <p className="mt-2 text-xs capitalize tracking-widest">Cargando tus prodes...</p>
                             </div>
                         ) : historialFiltrado.length === 0 ? (
                             <div className="bg-[var(--card-bg)] rounded-2xl p-12 text-center border border-[var(--card-border)] border-dashed">
@@ -272,11 +272,11 @@ export default function HistorialPage() {
                                                     <span className="truncate">{p.partido?.equipo_visitante}</span>
                                                     <span className="font-bold">{p.partido?.goles_visitante}</span>
                                                 </div>
-                                                <div className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-tighter">Resultado Final</div>
+                                                <div className="text-[10px] text-[var(--text-muted)] font-bold capitalize tracking-tighter">Resultado Final</div>
                                             </div>
 
                                             <div className="bg-[var(--background)] rounded-xl p-3 border border-[var(--card-border)]">
-                                                <div className="text-[9px] text-[var(--text-muted)] font-black uppercase tracking-widest mb-2 text-center">Mi Prode</div>
+                                                <div className="text-[9px] text-[var(--text-muted)] font-black capitalize tracking-widest mb-2 text-center">Mi Prode</div>
                                                 <div className="flex items-center justify-center gap-3">
                                                     <span className="text-lg font-black">{p.goles_local_pronostico}</span>
                                                     <span className="opacity-20">-</span>
@@ -288,7 +288,7 @@ export default function HistorialPage() {
                                                 <div className={`text-4xl font-black ${getPuntosColor(puntos)}`}>
                                                     +{puntos}
                                                 </div>
-                                                <div className="text-[10px] font-bold uppercase tracking-widest opacity-60">puntos</div>
+                                                <div className="text-[10px] font-bold capitalize tracking-widest opacity-60">puntos</div>
                                             </div>
                                         </div>
                                     </motion.div>

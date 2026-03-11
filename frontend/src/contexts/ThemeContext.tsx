@@ -7,30 +7,41 @@ type Theme = 'dark' | 'light'
 
 interface ThemeContextType {
     theme: Theme
+    classicMode: boolean
     toggleTheme: () => void
+    toggleClassicMode: () => void
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    const [theme, setTheme] = useState<Theme>('dark')
+    const [theme, setTheme] = useState<Theme>('light')
+    const [classicMode, setClassicMode] = useState(false)
     const [mounted, setMounted] = useState(false)
 
     // Cargar tema desde localStorage al montar
     useEffect(() => {
         const savedTheme = localStorage.getItem('FutLog-theme') as Theme | null
-        let initialTheme: Theme = 'dark'
+        let initialTheme: Theme = 'light'
 
         if (savedTheme === 'light' || savedTheme === 'dark') {
             initialTheme = savedTheme
         } else {
             // Check system preference
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-            initialTheme = prefersDark ? 'dark' : 'light'
+            initialTheme = prefersDark ? 'dark' : 'light' // Respect system, default light for classic feel
         }
 
         setTheme(initialTheme)
         document.documentElement.setAttribute('data-theme', initialTheme)
+
+        // Load classic mode preference
+        const savedClassic = localStorage.getItem('FutLog-classic-mode')
+        if (savedClassic === 'true') {
+            setClassicMode(true)
+            document.documentElement.classList.add('classic-mode')
+        }
+
         setMounted(true)
 
         // Setup listener for system theme changes if user hasn't forced a theme
@@ -64,18 +75,31 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         })
     }
 
+    const toggleClassicMode = () => {
+        setClassicMode(prev => {
+            const next = !prev
+            localStorage.setItem('FutLog-classic-mode', String(next))
+            if (next) {
+                document.documentElement.classList.add('classic-mode')
+            } else {
+                document.documentElement.classList.remove('classic-mode')
+            }
+            return next
+        })
+    }
+
     // Evitar flash dando un render inicial seguro
     if (!mounted) {
         // En SSR o primer render, asume dark
         return (
-            <ThemeContext.Provider value={{ theme: 'dark', toggleTheme }}>
+            <ThemeContext.Provider value={{ theme: 'light', classicMode: false, toggleTheme, toggleClassicMode }}>
                 {children}
             </ThemeContext.Provider>
         )
     }
 
     return (
-        <ThemeContext.Provider value={{ theme, toggleTheme }}>
+        <ThemeContext.Provider value={{ theme, classicMode, toggleTheme, toggleClassicMode }}>
             {children}
         </ThemeContext.Provider>
     )

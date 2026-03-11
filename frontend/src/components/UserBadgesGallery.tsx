@@ -83,13 +83,13 @@ export function UserBadgesGallery({ userId, isOwnProfile = false }: UserBadgesGa
     const unlockedIds = new Set(unlockedBadges.map(ub => ub.badge.id))
 
     return (
-        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-6 shadow-sm mb-6">
-            <div className="flex items-center gap-2 mb-4">
-                <div className="p-2 bg-amber-500/10 rounded-xl text-amber-500">
-                    <Award size={20} />
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 mb-4" style={{ borderRadius: 'var(--radius)' }}>
+            <div className="flex items-center gap-2 mb-4 border-b border-[var(--card-border)] pb-2 border-dashed">
+                <div className="p-1.5 bg-[var(--background)] border border-[var(--card-border)] text-[var(--foreground)]" style={{ borderRadius: 'var(--radius)' }}>
+                    <Award size={16} />
                 </div>
-                <h2 className="text-xl font-black">Mis Insignias</h2>
-                <span className="ml-auto text-xs font-bold bg-[var(--background)] px-2 py-1 rounded-full border border-[var(--card-border)]">
+                <h2 className="text-[10px] font-black capitalize tracking-widest">Mis Insignias</h2>
+                <span className="ml-auto text-[9px] font-bold bg-[var(--background)] px-2 py-0.5 border border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}>
                     {unlockedBadges.length} / {allBadges.length}
                 </span>
             </div>

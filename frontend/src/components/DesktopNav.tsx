@@ -19,6 +19,7 @@ export function DesktopNav() {
 
     const mainItems: NavItem[] = [
         { label: 'Partidos', path: '/', icon: <Trophy size={14} /> },
+        { label: 'Noticias', path: '/?tab=noticias', icon: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path></svg> },
         { label: 'Prode', path: '/prode', icon: <Target size={14} /> },
         { label: 'Ranking', path: '/ranking', icon: <Trophy size={14} /> },
         { label: 'Comunidad', path: '/comunidad', icon: <Users size={14} /> },
@@ -32,7 +33,7 @@ export function DesktopNav() {
             {/* Left: Logo */}
             <div className="w-36 flex-shrink-0">
                 <button onClick={() => router.push('/')} className="flex items-center gap-2 group">
-                    <span className="text-lg font-black text-[var(--foreground)] tracking-tight group-hover:text-[#10b981] transition-colors">
+                    <span className="text-xl font-black text-[var(--foreground)] tracking-tight hover:opacity-80 transition-opacity">
                         FutLog
                     </span>
                 </button>
@@ -59,7 +60,17 @@ export function DesktopNav() {
             </div>
 
             {/* Right: Actions */}
-            <div className="w-48 flex justify-end items-center gap-2">
+            <div className="w-64 flex justify-end items-center gap-1">
+                {/* Restore Feedback & Challenges for Desktop */}
+                <button title="Desafíos" onClick={() => document.dispatchEvent(new CustomEvent('open-challenges'))} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-[#8b5cf6] hover:bg-[#8b5cf6]/10 transition-all">
+                    <Trophy size={18} />
+                </button>
+                <button title="Feedback" onClick={() => document.dispatchEvent(new CustomEvent('open-feedback'))} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/10 transition-all mr-2">
+                    <PenLine size={18} />
+                </button>
+
+                <div className="w-px h-6 bg-[var(--card-border)] mx-1" />
+
                 <button
                     onClick={() => router.push('/buscar')}
                     className="p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-bg)] transition-all"

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Partido, Liga, AsyncState } from '@/types'
 import { fetchFixturesAction } from '@/app/actions/football'
+import { syncPartidosToSupabase } from '@/app/actions/syncPartidos'
 import { LIGAS_MAP } from '@/lib/constants'
 
 const POLL_INTERVAL = 180000 // 3 minutos
@@ -25,6 +26,18 @@ export function usePartidos(filtroLiga: Liga = 'Todos') {
           data = await fetchFixturesAction('Liga Profesional')
         } else {
           data = await fetchFixturesAction(filtroLiga)
+        }
+
+        // SYNC to Supabase to get UUIDs for navigation
+        if (data.length > 0) {
+          try {
+            const synced = await syncPartidosToSupabase(data)
+            if (synced && synced.length > 0) {
+              data = synced
+            }
+          } catch (syncErr) {
+            console.error('[usePartidos] Sync failed:', syncErr)
+          }
         }
       } catch (e) {
         console.error('Error fetching API fixtures:', e)
@@ -72,31 +85,59 @@ export function usePartidos(filtroLiga: Liga = 'Todos') {
         const hoyEnJuego = new Date(now); hoyEnJuego.setHours(hoyEnJuego.getHours() - 1)
         const manana = new Date(now); manana.setDate(manana.getDate() + 1)
 
+        const todayStr = now.toISOString().split('T')[0]
+
         data = [
           {
-            id: 'mock-fin-1',
-            fixture_id: 9991,
+            id: 'mock-river-boca',
+            fixture_id: 1001,
             equipo_local: 'River Plate',
             equipo_visitante: 'Boca Juniors',
             logo_local: 'https://media.api-sports.io/football/teams/435.png',
             logo_visitante: 'https://media.api-sports.io/football/teams/451.png',
-            goles_local: 3,
-            goles_visitante: 1,
-            fecha_inicio: ayer.toISOString(),
-            estado: 'FINALIZADO',
+            goles_local: 0,
+            goles_visitante: 0,
+            fecha_inicio: `${todayStr}T20:00:00`,
+            estado: 'PREVIA',
             liga: 'Liga Profesional'
           },
           {
-            id: 'mock-live-1',
-            fixture_id: 9992,
+            id: 'mock-real-barca',
+            fixture_id: 1002,
+            equipo_local: 'Real Madrid',
+            equipo_visitante: 'FC Barcelona',
+            logo_local: 'https://media.api-sports.io/football/teams/541.png',
+            logo_visitante: 'https://media.api-sports.io/football/teams/529.png',
+            goles_local: 2,
+            goles_visitante: 2,
+            fecha_inicio: `${todayStr}T16:00:00`,
+            estado: 'EN_JUEGO',
+            liga: 'La Liga'
+          },
+          {
+            id: 'mock-city-liverpool',
+            fixture_id: 1003,
+            equipo_local: 'Man City',
+            equipo_visitante: 'Liverpool',
+            logo_local: 'https://media.api-sports.io/football/teams/50.png',
+            logo_visitante: 'https://media.api-sports.io/football/teams/40.png',
+            goles_local: 1,
+            goles_visitante: 0,
+            fecha_inicio: `${todayStr}T11:00:00`,
+            estado: 'FINALIZADO',
+            liga: 'Premier League'
+          },
+          {
+            id: 'mock-racing-independiente',
+            fixture_id: 1004,
             equipo_local: 'Racing Club',
             equipo_visitante: 'Independiente',
             logo_local: 'https://media.api-sports.io/football/teams/436.png',
             logo_visitante: 'https://media.api-sports.io/football/teams/438.png',
             goles_local: 0,
             goles_visitante: 0,
-            fecha_inicio: hoyEnJuego.toISOString(),
-            estado: 'EN_JUEGO',
+            fecha_inicio: `${todayStr}T18:30:00`,
+            estado: 'PREVIA',
             liga: 'Liga Profesional'
           }
         ] as any[]
@@ -126,7 +167,17 @@ export function usePartidos(filtroLiga: Liga = 'Todos') {
     // Polling fijo: el efecto se re-ejecuta al cambiar filtroLiga
     const intervalId = setInterval(fetchPartidos, POLL_INTERVAL)
 
-    return () => clearInterval(intervalId)
+    // Refetch on window focus (to catch updates when returning to the app)
+    const handleFocus = () => {
+      console.log('[usePartidos] Window focused, refetching...')
+      fetchPartidos()
+    }
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      clearInterval(intervalId)
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [fetchPartidos])
 
   return {

@@ -152,28 +152,31 @@ export function QuickPoll({ fixtureId, equipoLocal, equipoVisitante, compact = f
                             exit={{ opacity: 0, y: -5 }}
                             className="flex items-center gap-1.5"
                         >
-                            <span className="text-[10px] text-[var(--text-muted)] mr-1 whitespace-nowrap">¿Quién gana?</span>
+                            <span className="text-[9px] font-black capitalize tracking-tighter text-[var(--text-muted)] mr-1 whitespace-nowrap">¿Quién gana?</span>
                             <button
                                 onClick={() => handleVote('local')}
                                 disabled={loading || !user}
-                                className="flex-1 py-1.5 text-[10px] font-bold rounded-lg bg-[var(--background)] border border-[var(--card-border)]
-                                           hover:border-[#10b981]/50 hover:bg-[#10b981]/5 transition-all truncate"
+                                className="flex-1 py-1.5 text-[10px] font-black capitalize tracking-widest bg-[var(--background)] border border-[var(--card-border)]
+                                           hover:border-[#16a34a] hover:bg-[#16a34a]/5 transition-all truncate"
+                                style={{ borderRadius: 'var(--radius)' }}
                             >
                                 {localShort}
                             </button>
                             <button
                                 onClick={() => handleVote('empate')}
                                 disabled={loading || !user}
-                                className="py-1.5 px-3 text-[10px] font-bold rounded-lg bg-[var(--background)] border border-[var(--card-border)]
-                                           hover:border-[#fbbf24]/50 hover:bg-[#fbbf24]/5 transition-all"
+                                className="py-1.5 px-3 text-[10px] font-black capitalize bg-[var(--background)] border border-[var(--card-border)]
+                                           hover:border-[#d97706] hover:bg-[#d97706]/5 transition-all"
+                                style={{ borderRadius: 'var(--radius)' }}
                             >
                                 X
                             </button>
                             <button
                                 onClick={() => handleVote('visitante')}
                                 disabled={loading || !user}
-                                className="flex-1 py-1.5 text-[10px] font-bold rounded-lg bg-[var(--background)] border border-[var(--card-border)]
-                                           hover:border-[#6366f1]/50 hover:bg-[#6366f1]/5 transition-all truncate"
+                                className="flex-1 py-1.5 text-[10px] font-black capitalize tracking-widest bg-[var(--background)] border border-[var(--card-border)]
+                                           hover:border-[#2563eb] hover:bg-[#2563eb]/5 transition-all truncate"
+                                style={{ borderRadius: 'var(--radius)' }}
                             >
                                 {visitanteShort}
                             </button>
@@ -189,23 +192,23 @@ export function QuickPoll({ fixtureId, equipoLocal, equipoVisitante, compact = f
                                 <PollBar
                                     label={localShort}
                                     percent={getPercent('local')}
-                                    color="#10b981"
+                                    color="#16a34a"
                                     isSelected={miVoto === 'local'}
                                 />
                                 <PollBar
                                     label="X"
                                     percent={getPercent('empate')}
-                                    color="#fbbf24"
+                                    color="#d97706"
                                     isSelected={miVoto === 'empate'}
                                 />
                                 <PollBar
                                     label={visitanteShort}
                                     percent={getPercent('visitante')}
-                                    color="#6366f1"
+                                    color="#2563eb"
                                     isSelected={miVoto === 'visitante'}
                                 />
                             </div>
-                            <div className="text-[10px] font-black text-[var(--accent-green)] text-center bg-[var(--accent-green)]/5 py-1 rounded-full border border-[var(--accent-green)]/10">
+                            <div className="text-[9px] font-black text-[var(--foreground)] text-center bg-[var(--background)] py-1 border border-[var(--card-border)] capitalize tracking-widest">
                                 {results.total} {results.total === 1 ? 'VOTO' : 'VOTOS TOTALES'} 🗳️
                             </div>
                         </motion.div>
@@ -217,8 +220,8 @@ export function QuickPoll({ fixtureId, equipoLocal, equipoVisitante, compact = f
 
     // Full mode (standalone)
     return (
-        <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] p-4">
-            <h4 className="text-xs font-bold text-[var(--text-muted)] uppercase mb-3">
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-4" style={{ borderRadius: 'var(--radius)' }}>
+            <h4 className="text-[10px] font-black text-[var(--text-muted)] capitalize tracking-widest mb-3 italic">
                 🗳️ ¿Quién gana?
             </h4>
             <AnimatePresence mode="wait">
@@ -233,24 +236,27 @@ export function QuickPoll({ fixtureId, equipoLocal, equipoVisitante, compact = f
                         <button
                             onClick={() => handleVote('local')}
                             disabled={loading || !user}
-                            className="flex-1 py-3 rounded-xl text-sm font-bold bg-[var(--background)] border-2 border-[var(--card-border)]
-                                       hover:border-[#10b981] hover:bg-[#10b981]/5 transition-all"
+                            className="flex-1 py-3 text-sm font-black capitalize bg-[var(--background)] border-2 border-[var(--card-border)]
+                                       hover:border-[#16a34a] hover:bg-[#16a34a]/5 transition-all italic tracking-tighter"
+                            style={{ borderRadius: 'var(--radius)' }}
                         >
                             {equipoLocal}
                         </button>
                         <button
                             onClick={() => handleVote('empate')}
                             disabled={loading || !user}
-                            className="py-3 px-5 rounded-xl text-sm font-bold bg-[var(--background)] border-2 border-[var(--card-border)]
-                                       hover:border-[#fbbf24] hover:bg-[#fbbf24]/5 transition-all"
+                            className="py-3 px-5 text-sm font-black capitalize bg-[var(--background)] border-2 border-[var(--card-border)]
+                                       hover:border-[#d97706] hover:bg-[#d97706]/5 transition-all"
+                            style={{ borderRadius: 'var(--radius)' }}
                         >
                             Empate
                         </button>
                         <button
                             onClick={() => handleVote('visitante')}
                             disabled={loading || !user}
-                            className="flex-1 py-3 rounded-xl text-sm font-bold bg-[var(--background)] border-2 border-[var(--card-border)]
-                                       hover:border-[#6366f1] hover:bg-[#6366f1]/5 transition-all"
+                            className="flex-1 py-3 text-sm font-black capitalize bg-[var(--background)] border-2 border-[var(--card-border)]
+                                       hover:border-[#2563eb] hover:bg-[#2563eb]/5 transition-all italic tracking-tighter"
+                            style={{ borderRadius: 'var(--radius)' }}
                         >
                             {equipoVisitante}
                         </button>
@@ -262,10 +268,10 @@ export function QuickPoll({ fixtureId, equipoLocal, equipoVisitante, compact = f
                         animate={{ opacity: 1, y: 0 }}
                         className="space-y-2"
                     >
-                        <PollBar label={equipoLocal} percent={getPercent('local')} color="#10b981" isSelected={miVoto === 'local'} />
-                        <PollBar label="Empate" percent={getPercent('empate')} color="#fbbf24" isSelected={miVoto === 'empate'} />
-                        <PollBar label={equipoVisitante} percent={getPercent('visitante')} color="#6366f1" isSelected={miVoto === 'visitante'} />
-                        <div className="text-[11px] font-black text-[var(--accent-green)] text-center bg-[var(--accent-green)]/5 py-2 rounded-xl border border-[var(--accent-green)]/20 mt-2">
+                        <PollBar label={equipoLocal} percent={getPercent('local')} color="#16a34a" isSelected={miVoto === 'local'} />
+                        <PollBar label="Empate" percent={getPercent('empate')} color="#d97706" isSelected={miVoto === 'empate'} />
+                        <PollBar label={equipoVisitante} percent={getPercent('visitante')} color="#2563eb" isSelected={miVoto === 'visitante'} />
+                        <div className="text-[10px] font-black text-[var(--foreground)] text-center bg-[var(--background)] py-2 border border-[var(--card-border)] mt-2 capitalize tracking-widest">
                             {results.total} {results.total === 1 ? 'VOTO REGISTRADO' : 'VOTOS TOTALES'} 🗳️
                         </div>
                     </motion.div>
@@ -284,7 +290,8 @@ export function QuickPoll({ fixtureId, equipoLocal, equipoVisitante, compact = f
                         <button
                             onClick={handleVoteWithXI}
                             disabled={loading || !user}
-                            className="w-full py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 transition-all flex items-center justify-center gap-2"
+                            className="w-full py-2.5 text-[10px] font-black capitalize tracking-widest bg-[var(--background)] border border-[var(--card-border)] text-[var(--accent)] hover:bg-[var(--hover-bg)] transition-all flex items-center justify-center gap-2"
+                            style={{ borderRadius: 'var(--radius)' }}
                         >
                             <span>⚡</span> Usar mi XI Ideal para pronosticar
                         </button>
@@ -297,23 +304,23 @@ export function QuickPoll({ fixtureId, equipoLocal, equipoVisitante, compact = f
 
 function PollBar({ label, percent, color, isSelected }: { label: string; percent: number; color: string; isSelected: boolean }) {
     return (
-        <div className={`relative flex-1 overflow-hidden rounded-lg transition-all`}
-            style={isSelected ? { boxShadow: `inset 0 0 0 1.5px ${color}` } : undefined}
+        <div className={`relative flex-1 overflow-hidden transition-all border border-black/5`}
+            style={isSelected ? { boxShadow: `0 0 0 1px ${color}`, borderRadius: 'var(--radius)' } : { borderRadius: 'var(--radius)' }}
         >
             <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${percent}%` }}
                 transition={{ duration: 0.6, ease: 'easeOut' }}
-                className="absolute inset-0 rounded-lg opacity-20"
+                className="absolute inset-0 opacity-20"
                 style={{ backgroundColor: color }}
             />
-            <div className="relative flex items-center justify-between px-2.5 py-1.5">
-                <span className={`text-[10px] font-bold truncate ${isSelected ? '' : 'text-[var(--text-muted)]'}`}
+            <div className="relative flex items-center justify-between px-2 py-1.5">
+                <span className={`text-[9px] font-black capitalize tracking-tighter truncate ${isSelected ? '' : 'text-[var(--text-muted)]'}`}
                     style={isSelected ? { color } : undefined}
                 >
                     {label} {isSelected && '✓'}
                 </span>
-                <span className="text-[10px] font-bold tabular-nums" style={{ color }}>
+                <span className="text-[9px] font-black tabular-nums" style={{ color }}>
                     {percent}%
                 </span>
             </div>

@@ -21,21 +21,21 @@ export function SubRatings({ ratings, onChange, readOnly = false }: SubRatingsPr
             id: 'arbitro' as const,
             label: t('ratings.subratings.referee'),
             icon: '🟨',
-            color: '#f59e0b',
+            color: '#d97706',
             value: ratings.arbitro
         },
         {
             id: 'atmosfera' as const,
             label: t('ratings.subratings.atmosphere'),
             icon: '🏟️',
-            color: '#10b981',
+            color: 'var(--foreground)',
             value: ratings.atmosfera
         },
         {
             id: 'garra' as const,
             label: t('ratings.subratings.garra'),
             icon: '🔥',
-            color: '#ff6b6b',
+            color: '#dc2626',
             value: ratings.garra
         }
     ]
@@ -47,26 +47,23 @@ export function SubRatings({ ratings, onChange, readOnly = false }: SubRatingsPr
     }
 
     return (
-        <div className="space-y-5 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-5">
-            <div className="mb-2">
-                <h3 className="text-sm font-bold flex items-center gap-2">
-                    <span>📊</span> Calificaciones Detalladas
+        <div className="space-y-5 bg-[var(--card-bg)] border border-[var(--card-border)] p-5" style={{ borderRadius: 'var(--radius)' }}>
+            <div className="mb-2 border-b border-[var(--card-border)] border-dashed pb-2">
+                <h3 className="text-[10px] font-black capitalize tracking-widest flex items-center gap-2">
+                    📊 Calificaciones Detalladas
                 </h3>
-                <p className="text-xs text-[var(--text-muted)]">
-                    {language === 'es' ? 'Deslizá para evaluar' : (language === 'en' ? 'Slide to rate' : 'Deslize para avaliar')} (0.5 - 5.0)
+                <p className="text-[9px] font-bold text-[var(--text-muted)] capitalize mt-1">
+                    {language === 'es' ? 'Deslizá para evaluar' : (language === 'en' ? 'Slide to rate' : 'Deslize para avaliar')}
                 </p>
             </div>
 
             {categories.map((cat) => (
                 <div key={cat.id} className="space-y-2">
                     <div className="flex justify-between items-center">
-                        <label className="text-xs font-bold text-[var(--text-muted)] uppercase flex items-center gap-1.5">
+                        <label className="text-[9px] font-black text-[var(--text-muted)] capitalize flex items-center gap-1.5 tracking-tight">
                             <span>{cat.icon}</span> {cat.label}
-                            {cat.id === 'garra' && (
-                                <span className="text-[9px] bg-red-500/10 text-red-500 px-1.5 py-0.5 rounded ml-1 font-bold">REQ</span>
-                            )}
                         </label>
-                        <span className="text-sm font-bold tabular-nums" style={{ color: cat.value > 0 ? cat.color : 'var(--text-muted)' }}>
+                        <span className="text-[10px] font-black tabular-nums border border-[var(--card-border)] bg-[var(--background)] px-1.5 py-0.5" style={{ color: cat.value > 0 ? cat.color : 'var(--text-muted)', borderRadius: 'var(--radius)' }}>
                             {cat.value > 0 ? cat.value.toFixed(1) : '-.-'}
                         </span>
                     </div>
@@ -84,9 +81,9 @@ export function SubRatings({ ratings, onChange, readOnly = false }: SubRatingsPr
                         />
 
                         {/* Custom visual track */}
-                        <div className="w-full h-2 bg-[var(--input-bg)] rounded-full overflow-hidden border border-[var(--card-border)] relative z-10">
+                        <div className="w-full h-1.5 bg-[var(--background)] border border-[var(--card-border)] overflow-hidden relative z-10">
                             <motion.div
-                                className="h-full rounded-full"
+                                className="h-full"
                                 style={{ backgroundColor: cat.color }}
                                 initial={{ width: 0 }}
                                 animate={{ width: `${(cat.value / 5) * 100}%` }}
@@ -96,13 +93,10 @@ export function SubRatings({ ratings, onChange, readOnly = false }: SubRatingsPr
 
                         {/* Custom thumb/handle */}
                         <motion.div
-                            className="absolute h-5 w-5 bg-white rounded-full shadow-md z-10 border-2 pointer-events-none"
+                            className="absolute h-4 w-4 bg-[var(--background)] z-10 border-2 border-[var(--foreground)] pointer-events-none"
                             style={{
-                                borderColor: cat.value > 0 ? cat.color : '#ccc',
-                                left: `calc(${(cat.value / 5) * 100}% - 10px)`
-                            }}
-                            animate={{
-                                scale: cat.value > 0 ? 1.1 : 1
+                                left: `calc(${(cat.value / 5) * 100}% - 8px)`,
+                                borderRadius: 'var(--radius)'
                             }}
                         />
                     </div>

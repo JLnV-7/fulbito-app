@@ -72,34 +72,34 @@ export function ProgresoHoyWidget() {
     if (!user) return null
 
     return (
-        <GlassCard
-            className="flex items-center justify-between cursor-pointer hover:border-white/10 transition-all border border-transparent shadow-[0_4px_24px_rgba(0,0,0,0.2)]"
+        <div
+            className="flex items-center justify-between cursor-pointer border border-[var(--card-border)] bg-[var(--card-bg)] p-4 transition-all"
+            style={{ borderRadius: 'var(--radius)' }}
             onClick={() => router.push('/perfil')}
-        // no padding needed if we want custom inside, or we use default 
         >
             <div className="flex flex-col">
-                <span className="text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Tu Progreso Hoy</span>
+                <span className="text-[10px] capitalize font-black text-[var(--text-muted)] tracking-widest">Tu Progreso Hoy</span>
                 <div className="flex gap-4 mt-1.5">
                     <div className="flex items-center gap-1.5">
-                        <span className="text-[#10b981] text-sm">🎯</span>
-                        <span className="font-bold text-sm">{stats.prodes} <span className="text-xs font-normal text-[var(--text-muted)]">Prodes</span></span>
+                        <span className="text-[#16a34a] text-sm">🎯</span>
+                        <span className="font-black text-sm tracking-tighter tabular-nums">{stats.prodes} <span className="text-[10px] capitalize font-bold text-[var(--text-muted)]">Prodes</span></span>
                     </div>
                     {stats.badges > 0 && (
                         <div className="flex items-center gap-1.5">
-                            <span className="text-[#F59E0B] text-sm">🎖️</span>
-                            <span className="font-bold text-sm">{stats.badges} <span className="text-xs font-normal text-[var(--text-muted)]">Nuevos</span></span>
+                            <span className="text-[#d97706] text-sm">🎖️</span>
+                            <span className="font-black text-sm tracking-tighter tabular-nums">{stats.badges} <span className="text-[10px] capitalize font-bold text-[var(--text-muted)]">Nuevos</span></span>
                         </div>
                     )}
                     <div className="flex items-center gap-1.5">
-                        <span className="text-[#3b82f6] text-sm">🏆</span>
-                        <span className="font-bold text-sm">#{stats.rango} <span className="text-xs font-normal text-[var(--text-muted)]">Global</span></span>
+                        <span className="text-[#2563eb] text-sm">🏆</span>
+                        <span className="font-black text-sm tracking-tighter tabular-nums">#{stats.rango} <span className="text-[10px] capitalize font-bold text-[var(--text-muted)]">Global</span></span>
                     </div>
                 </div>
             </div>
 
-            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-[var(--foreground)] backdrop-blur-md">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            <div className="w-8 h-8 bg-[var(--foreground)]/5 flex items-center justify-center text-[var(--foreground)] border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </div>
-        </GlassCard>
+        </div>
     )
 }

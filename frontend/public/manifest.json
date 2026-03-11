@@ -1,12 +1,12 @@
 {
-    "name": "FutLog",
+    "name": "FutLog - Tu Letterboxd del Fútbol",
     "short_name": "FutLog",
-    "description": "Votá jugadores, hacé pronósticos y competí con amigos ⚽",
+    "description": "Rateá partidos, votá figuras y competí en el prode con la comunidad.",
     "id": "/",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#1a1a1a",
-    "theme_color": "#10b981",
+    "background_color": "#ffffff",
+    "theme_color": "#333333",
     "orientation": "portrait",
     "icons": [
         {

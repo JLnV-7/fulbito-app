@@ -35,7 +35,7 @@ export function ListCard({ list }: ListCardProps) {
                     ) : (
                         <div className="flex flex-col items-center justify-center text-[var(--text-muted)] opacity-50">
                             <AlignLeft size={24} className="mb-1" />
-                            <span className="text-[10px] uppercase font-bold tracking-wider">Lista Vacía</span>
+                            <span className="text-[10px] capitalize font-bold tracking-wider">Lista Vacía</span>
                         </div>
                     )}
 

@@ -65,8 +65,8 @@ export default function GruposPage() {
                                         </button>
                                         <button
                                             onClick={() => setView('create')}
-                                            className="px-4 py-2 rounded-xl bg-[#10b981] text-white 
-                                                 text-sm font-bold hover:bg-[#059669] transition-all shadow-lg shadow-[#10b981]/20"
+                                            className="px-4 py-2 rounded-xl bg-[#16a34a] text-white 
+                                                 text-sm font-bold hover:bg-[#059669] transition-all shadow-lg shadow-[#16a34a]/20"
                                         >
                                             + Crear Grupo
                                         </button>
@@ -94,7 +94,7 @@ export default function GruposPage() {
                                                         placeholder="Buscar grupos, amigos o torneos..."
                                                         value={search}
                                                         onChange={(e) => setSearch(e.target.value)}
-                                                        className="w-full bg-[var(--card-bg)] border border-[var(--card-border)] rounded-full py-3.5 pl-11 pr-4 text-sm focus:outline-none focus:border-[#10b981] transition-colors shadow-sm"
+                                                        className="w-full bg-[var(--card-bg)] border border-[var(--card-border)] rounded-full py-3.5 pl-11 pr-4 text-sm focus:outline-none focus:border-[#16a34a] transition-colors shadow-sm"
                                                     />
                                                 </div>
                                             </div>
@@ -115,7 +115,7 @@ export default function GruposPage() {
                                                     </button>
                                                     <button
                                                         onClick={() => setView('create')}
-                                                        className="px-4 py-2 rounded-xl bg-[#10b981] text-white font-bold"
+                                                        className="px-4 py-2 rounded-xl bg-[#16a34a] text-white font-bold"
                                                     >
                                                         Crear Grupo
                                                     </button>
@@ -129,16 +129,16 @@ export default function GruposPage() {
                                                         layoutId={grupo.id}
                                                         onClick={() => router.push(`/grupos/${grupo.id}`)}
                                                         className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5
-                                                             hover:border-[#10b981]/50 cursor-pointer transition-all hover:shadow-md group"
+                                                             hover:border-[#16a34a]/50 cursor-pointer transition-all hover:shadow-md group"
                                                     >
                                                         <div className="flex justify-between items-start mb-3">
                                                             <div className="flex items-center gap-3">
-                                                                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#10b981] to-emerald-400 flex items-center justify-center text-xl shadow-inner flex-shrink-0">
+                                                                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#16a34a] to-emerald-400 flex items-center justify-center text-xl shadow-inner flex-shrink-0">
                                                                     🏆
                                                                 </div>
                                                                 <div>
                                                                     <div className="flex items-center gap-2">
-                                                                        <h3 className="text-base font-bold group-hover:text-[#10b981] transition-colors line-clamp-1">{grupo.nombre}</h3>
+                                                                        <h3 className="text-base font-bold group-hover:text-[#16a34a] transition-colors line-clamp-1">{grupo.nombre}</h3>
                                                                         {(grupo as any).unread_count > 0 && (
                                                                             <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full animate-pulse">
                                                                                 {(grupo as any).unread_count}
@@ -169,17 +169,17 @@ export default function GruposPage() {
                                                             <span className="flex items-center gap-1 font-mono bg-[var(--background)] px-1.5 py-0.5 rounded">
                                                                 #{grupo.codigo_invitacion}
                                                             </span>
-                                                            <span className="flex items-center gap-1 font-bold text-[#10b981]">
+                                                            <span className="flex items-center gap-1 font-bold text-[#16a34a]">
                                                                 ⭐ {(grupo as any).mi_puntos || 0} pts
                                                             </span>
                                                         </div>
 
                                                         {/* Last Message Preview */}
-                                                        <div className="mt-4 p-3 bg-[#10b981]/5 rounded-xl border border-[#10b981]/10 flex flex-col gap-1 relative overflow-hidden">
+                                                        <div className="mt-4 p-3 bg-[#16a34a]/5 rounded-xl border border-[#16a34a]/10 flex flex-col gap-1 relative overflow-hidden">
                                                             <div className="absolute top-0 right-0 w-8 h-full bg-gradient-to-l from-[var(--card-bg)] to-transparent pointer-events-none" />
                                                             <p className="text-xs text-[var(--text-muted)] line-clamp-1 italic pr-4">
                                                                 <span className="font-bold text-[var(--foreground)] not-italic relative mr-1">
-                                                                    <span className="absolute -left-1.5 top-0.5 w-[3px] h-[3px] rounded-full bg-[#10b981]" />
+                                                                    <span className="absolute -left-1.5 top-0.5 w-[3px] h-[3px] rounded-full bg-[#16a34a]" />
                                                                     Lucas:
                                                                 </span>
                                                                 "Típico que se le escapa en el último minuto..."

@@ -194,7 +194,7 @@ export function ChatPoll({ partidoId }: { partidoId: string }) {
                 <BarChart2 size={40} />
             </div>
 
-            <h4 className="font-black text-sm mb-4 pr-10 uppercase tracking-tight">
+            <h4 className="font-black text-sm mb-4 pr-10 capitalize tracking-tight">
                 🔥 {poll.question}
             </h4>
 
@@ -237,7 +237,7 @@ export function ChatPoll({ partidoId }: { partidoId: string }) {
             </div>
 
             <div className="mt-4 flex justify-between items-center">
-                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+                <span className="text-[10px] font-bold text-[var(--text-muted)] capitalize tracking-widest">
                     {totalVotes} {totalVotes === 1 ? 'VOTO' : 'VOTOS'}
                 </span>
                 <button

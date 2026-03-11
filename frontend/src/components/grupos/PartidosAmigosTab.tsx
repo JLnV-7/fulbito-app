@@ -135,11 +135,12 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-black">⚽ Partidos entre Amigos</h2>
+                    <h2 className="text-xl font-black capitalize italic tracking-tighter">⚽ Partidos Amigos</h2>
                     {user && (
                         <button
                             onClick={() => setCreando(true)}
-                            className="bg-[#10b981] text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-[#059669] transition-all"
+                            className="bg-[#16a34a] text-white px-4 py-2 font-black capitalize tracking-widest text-[10px] hover:brightness-110 transition-all italic"
+                            style={{ borderRadius: 'var(--radius)' }}
                         >
                             + Crear Partido
                         </button>
@@ -148,10 +149,10 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
 
                 {/* Empty State */}
                 {partidos.length === 0 && (
-                    <div className="text-center py-16 bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)]">
+                    <div className="text-center py-16 bg-[var(--card-bg)] border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}>
                         <div className="text-5xl mb-4">⚽</div>
-                        <p className="font-bold mb-1">No hay partidos entre amigos</p>
-                        <p className="text-sm text-[var(--text-muted)]">
+                        <p className="font-black capitalize tracking-widest mb-1">No hay partidos</p>
+                        <p className="text-[10px] text-[var(--text-muted)] font-black capitalize">
                             {'Cualquier miembro del grupo puede crear partidos'}
                         </p>
                     </div>
@@ -162,27 +163,30 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
                     <Section title="🗳️ VOTACIÓN ABIERTA">
                         {votacionAbierta.map(p => (
                             <PartidoCard key={p.id} partido={p} variant="votacion">
-                                <div className="flex items-center justify-between gap-2 text-xs text-[var(--text-muted)] mb-3">
+                                <div className="flex items-center justify-between gap-2 text-[10px] font-black capitalize tracking-widest text-[var(--text-muted)] mb-3">
                                     <span>👥 {p.votos_usuarios || 0} votaron</span>
                                     <span>{p.jugadores_count} jugadores</span>
                                 </div>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => setVotando(p)}
-                                        className="flex-1 bg-[#10b981] text-white py-3 rounded-xl font-black hover:bg-[#059669] transition-all"
+                                        className="flex-1 bg-[#16a34a] text-white py-3 font-black capitalize tracking-widest italic text-sm hover:brightness-110 transition-all"
+                                        style={{ borderRadius: 'var(--radius)' }}
                                     >
                                         🗳️ Votar
                                     </button>
                                     <button
                                         onClick={() => setViendoResultados(p)}
-                                        className="flex-1 bg-[#8b5cf6] text-white py-3 rounded-xl font-black hover:bg-[#7c3aed] transition-all"
+                                        className="flex-1 bg-[#2563eb] text-white py-3 font-black capitalize tracking-widest italic text-sm hover:brightness-110 transition-all"
+                                        style={{ borderRadius: 'var(--radius)' }}
                                     >
                                         📊 Resultados
                                     </button>
                                     {(esAdmin || user?.id === p.creado_por) && (
                                         <button
                                             onClick={() => handleClickCerrar(p.id)}
-                                            className="px-3 py-3 rounded-xl text-xs font-bold border border-[var(--card-border)] text-[var(--text-muted)] hover:bg-[var(--hover-bg)]"
+                                            className="px-3 py-3 text-[10px] font-black capitalize tracking-widest border border-[var(--card-border)] text-[var(--text-muted)] hover:bg-[var(--hover-bg)]"
+                                            style={{ borderRadius: 'var(--radius)' }}
                                         >
                                             🔒 Cerrar
                                         </button>
@@ -202,22 +206,24 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
 
                             return (
                                 <PartidoCard key={p.id} partido={p} variant="borrador">
-                                    <div className="text-xs text-[var(--text-muted)] mb-3">
-                                        📝 En armado... — {p.jugadores_count || 0} jugadores cargados
+                                    <div className="text-[10px] font-black capitalize tracking-widest text-[var(--text-muted)] mb-3 italic">
+                                        📝 En armado... — {p.jugadores_count || 0} jugadores
                                     </div>
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => handleAbrirVotacion(p.id)}
-                                            className="flex-1 bg-[#10b981] text-white py-2.5 rounded-xl font-bold text-sm hover:bg-[#059669]"
+                                            className="flex-1 bg-[#16a34a] text-white py-2.5 font-black capitalize tracking-widest text-xs"
+                                            style={{ borderRadius: 'var(--radius)' }}
                                         >
                                             🗳️ Abrir Votación
                                         </button>
                                         <button
                                             onClick={() => handleEliminarPartido(p.id)}
-                                            className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-all ${confirmandoEliminar === p.id
-                                                ? 'bg-[#ef4444] text-white border-[#ef4444]'
-                                                : 'text-[#ef4444] border-[#ef4444]/30 hover:bg-[#ef4444]/10'
+                                            className={`px-3 py-2.5 font-black text-xs capitalize tracking-widest border transition-all ${confirmandoEliminar === p.id
+                                                ? 'bg-[#991b1b] text-white border-[#991b1b]'
+                                                : 'text-[#991b1b] border-[#991b1b]/30 hover:bg-[#991b1b]/10'
                                                 }`}
+                                            style={{ borderRadius: 'var(--radius)' }}
                                         >
                                             {confirmandoEliminar === p.id ? '¿Seguro?' : '🗑️'}
                                         </button>
@@ -234,13 +240,14 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
                         {finalizados.map(p => (
                             <PartidoCard key={p.id} partido={p} variant="finalizado">
                                 {p.resultado_azul !== null && p.resultado_rojo !== null && (
-                                    <p className="text-sm font-black mb-2">
+                                    <p className="text-sm font-black capitalize tracking-tighter mb-2 italic">
                                         🔵 Azul {p.resultado_azul} - {p.resultado_rojo} Rojo 🔴
                                     </p>
                                 )}
                                 <button
                                     onClick={() => setViendoResultados(p)}
-                                    className="w-full bg-[#8b5cf6] text-white py-2.5 rounded-xl font-bold text-sm hover:bg-[#7c3aed] transition-all"
+                                    className="w-full bg-[#2563eb] text-white py-2.5 font-black capitalize tracking-widest text-xs"
+                                    style={{ borderRadius: 'var(--radius)' }}
                                 >
                                     📊 Ver Stats Completas
                                 </button>
@@ -289,7 +296,8 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
                         <motion.div
                             initial={{ scale: 0.9 }}
                             animate={{ scale: 1 }}
-                            className="bg-[var(--card-bg)] rounded-2xl p-6 w-full max-w-md border border-[var(--card-border)] max-h-[90vh] overflow-y-auto"
+                            className="bg-[var(--card-bg)] p-6 w-full max-w-md border border-[var(--card-border)] max-h-[90vh] overflow-y-auto"
+                            style={{ borderRadius: 'var(--radius)' }}
                         >
                             <h2 className="text-xl font-black mb-4 flex items-center gap-2">
                                 🔒 Cerrar Partido y Cargar Goles
@@ -393,14 +401,14 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
                                     </div>
 
                                     {/* Resultados Calc */}
-                                    <div className="bg-[var(--background)] p-3 rounded-xl border border-[var(--card-border)] text-center">
-                                        <p className="text-xs text-[var(--text-muted)] uppercase mb-1">Resultado Final</p>
-                                        <div className="flex items-center justify-center gap-4 font-black text-xl">
-                                            <span className="text-blue-500">
+                                    <div className="bg-[var(--background)] p-3 border border-[var(--card-border)] text-center" style={{ borderRadius: 'var(--radius)' }}>
+                                        <p className="text-[9px] font-black text-[var(--text-muted)] capitalize tracking-widest mb-1">Resultado Final</p>
+                                        <div className="flex items-center justify-center gap-4 font-black text-xl italic tracking-tighter">
+                                            <span className="text-[#2563eb]">
                                                 {jugadoresCierre.filter(j => j.equipo === 'azul').reduce((acc, j) => acc + (golesJugadores[j.id] || 0), 0)}
                                             </span>
                                             <span className="text-[var(--text-muted)]">-</span>
-                                            <span className="text-red-500">
+                                            <span className="text-[#991b1b]">
                                                 {jugadoresCierre.filter(j => j.equipo === 'rojo').reduce((acc, j) => acc + (golesJugadores[j.id] || 0), 0)}
                                             </span>
                                         </div>
@@ -410,12 +418,14 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
                                 <div className="flex gap-2 pt-2">
                                     <button
                                         onClick={() => setCerrandoId(null)}
-                                        className="flex-1 py-3 rounded-xl font-bold text-[var(--text-muted)] border border-[var(--card-border)]"
+                                        className="flex-1 py-3 font-black capitalize tracking-widest text-xs text-[var(--text-muted)] border border-[var(--card-border)] bg-[var(--background)]"
+                                        style={{ borderRadius: 'var(--radius)' }}
                                     >Cancelar</button>
                                     <button
                                         onClick={handleConfirmarCierre}
                                         disabled={procesandoCierre}
-                                        className="flex-1 py-3 rounded-xl font-black text-white bg-[#8b5cf6] disabled:opacity-50"
+                                        className="flex-1 py-3 font-black capitalize tracking-widest text-xs text-white bg-[#2563eb] disabled:opacity-50 italic"
+                                        style={{ borderRadius: 'var(--radius)' }}
                                     >
                                         {procesandoCierre ? '⏳ Procesando...' : '🏆 Confirmar y Cerrar'}
                                     </button>
@@ -432,7 +442,7 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <div>
-            <h3 className="text-xs font-black text-[var(--text-muted)] uppercase tracking-wider mb-3">{title}</h3>
+            <h3 className="text-xs font-black text-[var(--text-muted)] capitalize tracking-wider mb-3">{title}</h3>
             <div className="space-y-3">{children}</div>
         </div>
     )
@@ -444,7 +454,7 @@ function PartidoCard({ partido, variant, children }: {
     variant: 'votacion' | 'borrador' | 'finalizado'
     children: React.ReactNode
 }) {
-    const borderColor = variant === 'votacion' ? '#10b981' : variant === 'finalizado' ? '#8b5cf6' : 'var(--card-border)'
+    const borderColor = variant === 'votacion' ? '#16a34a' : variant === 'finalizado' ? '#2563eb' : 'var(--card-border)'
 
     const formatFecha = (fecha: string, hora: string) => {
         const d = new Date(fecha + 'T00:00:00')
@@ -462,12 +472,12 @@ function PartidoCard({ partido, variant, children }: {
         <motion.div
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--card-border)] shadow-sm"
-            style={{ borderLeftColor: borderColor, borderLeftWidth: 4 }}
+            className="bg-[var(--card-bg)] p-4 border border-[var(--card-border)]"
+            style={{ borderLeftColor: borderColor, borderLeftWidth: 4, borderRadius: 'var(--radius)' }}
         >
             <div className="mb-3">
-                <p className="text-sm font-bold">{formatFecha(partido.fecha, partido.hora)}</p>
-                <p className="text-xs text-[var(--text-muted)]">
+                <p className="text-[10px] font-black capitalize tracking-widest text-[var(--foreground)]">{formatFecha(partido.fecha, partido.hora)}</p>
+                <p className="text-[9px] font-black capitalize tracking-widest text-[var(--text-muted)]">
                     ⚽ {getTipoLabel(partido.tipo_partido)}{partido.cancha ? ` - ${partido.cancha}` : ''}
                 </p>
             </div>

@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { calcularEstadoPartido, hapticFeedback } from '@/lib/helpers'
+import { calcularEstadoPartido, hapticFeedback, isMatchTooOld, getTeamColor } from '@/lib/helpers'
 import { CanchaFormacion } from '@/components/CanchaFormacion'
 import { CommentSection } from '@/components/CommentSection'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
@@ -25,7 +25,7 @@ import { AiPredictionWidget } from '@/components/AiPredictionWidget'
 import { PullToRefresh } from '@/components/PullToRefresh'
 import { Heatmap } from '@/components/Heatmap'
 import { TeamLogo } from '@/components/TeamLogo'
-import { MessageSquare, MessagesSquare, ChevronDown, ChevronUp, BarChart2, Clock, Zap } from 'lucide-react'
+import { MessageSquare, MessagesSquare, ChevronDown, ChevronUp, BarChart2, Clock, Zap, PenLine, Star } from 'lucide-react'
 import type { Partido, EstadoPartido } from '@/types'
 import { fetchFixtureByIdAction } from '@/app/actions/football'
 import { syncPartidosToSupabase } from '@/app/actions/syncPartidos'
@@ -59,7 +59,16 @@ export default function PartidoPage() {
   const [error, setError] = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
   const [votosGuardados, setVotosGuardados] = useState(false)
+  const [votoExistente, setVotoExistente] = useState(false)
+  const [loadingVotos, setLoadingVotos] = useState(false)
   const [activeTab, setActiveTab] = useState<'reviews' | 'chat'>('reviews')
+  
+  // Set default tab based on match state
+  useEffect(() => {
+    if (estado === 'EN_JUEGO') {
+      setActiveTab('chat')
+    }
+  }, [estado])
   const [openAccordion, setOpenAccordion] = useState<string | null>('resumen')
   const formacionesRef = useRef<HTMLDivElement>(null)
   const chatRef = useRef<HTMLDivElement>(null)
@@ -82,26 +91,68 @@ export default function PartidoPage() {
         setLoading(true)
         setError(null)
 
-        const matchId = Number(id)
+        const matchIdStr = String(id)
+        const matchIdNum = Number(id)
 
-        if (isNaN(matchId)) {
-          const { data: dbPartido } = await supabase
-            .from('partidos')
-            .select('*')
-            .eq('id', id)
-            .single()
-
-          if (dbPartido) {
-            setPartido(dbPartido as Partido)
-            setEstado(calcularEstadoPartido(dbPartido.fecha_inicio))
-          } else {
-            router.replace(`/log/${id}`)
-            return
+        // 1. Check if it's a known MOCK ID
+        if (matchIdStr.startsWith('mock-')) {
+          const type = matchIdStr.split('-')[1] // prev, live, fin
+          const mockData: Partido = {
+            id: matchIdStr,
+            fixture_id: 1000 + Math.floor(Math.random() * 9000),
+            equipo_local: matchIdStr.includes('1') ? 'Boca Juniors' : matchIdStr.includes('2') ? 'Racing Club' : 'Real Madrid',
+            equipo_visitante: matchIdStr.includes('1') ? 'River Plate' : matchIdStr.includes('2') ? 'Independiente' : 'FC Barcelona',
+            logo_local: 'https://media.api-sports.io/football/teams/451.png',
+            logo_visitante: 'https://media.api-sports.io/football/teams/435.png',
+            goles_local: matchIdStr.includes('live') ? 2 : matchIdStr.includes('fin') ? 3 : 0,
+            goles_visitante: matchIdStr.includes('live') ? 1 : matchIdStr.includes('fin') ? 2 : 0,
+            fecha_inicio: new Date().toISOString(),
+            estado: type === 'prev' ? 'PREVIA' : type === 'live' ? 'EN_JUEGO' : 'FINALIZADO',
+            liga: 'Liga Profesional'
           }
+
+          if (matchIdStr.includes('3')) {
+            mockData.equipo_local = 'San Lorenzo'
+            mockData.equipo_visitante = 'Huracán'
+            mockData.logo_local = 'https://media.api-sports.io/football/teams/458.png'
+            mockData.logo_visitante = 'https://media.api-sports.io/football/teams/440.png'
+          } else if (matchIdStr.includes('live')) {
+            mockData.equipo_local = 'Real Madrid'
+            mockData.equipo_visitante = 'FC Barcelona'
+            mockData.logo_local = 'https://media.api-sports.io/football/teams/541.png'
+            mockData.logo_visitante = 'https://media.api-sports.io/football/teams/529.png'
+          }
+
+          setPartido(mockData)
+          setEstado(mockData.estado as EstadoPartido)
+          setLoading(false)
+          return
+        }
+
+        // 2. Check Supabase by ID (UUID or numeric fixture_id)
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(matchIdStr)
+        
+        let query = supabase.from('partidos').select('*')
+        if (isUuid) {
+          query = query.eq('id', matchIdStr)
         } else {
-          const data = await fetchFixtureByIdAction(matchId)
+          query = query.eq('fixture_id', isNaN(matchIdNum) ? -1 : matchIdNum)
+        }
+        
+        let { data: dbPartido } = await query.single()
+
+        if (dbPartido) {
+          setPartido(dbPartido as Partido)
+          setEstado(calcularEstadoPartido(dbPartido.fecha_inicio))
+          setLoading(false)
+          return
+        }
+
+        // 3. Try Remote API if it's a number
+        if (!isNaN(matchIdNum) && matchIdNum > 1000) {
+          const data = await fetchFixtureByIdAction(matchIdNum)
           if (data) {
-            // Sync to Supabase to get a UUID for this partido
+            // Sync to Supabase
             try {
               const synced = await syncPartidosToSupabase([data])
               if (synced && synced.length > 0) {
@@ -115,13 +166,15 @@ export default function PartidoPage() {
               setPartido(data)
               setEstado(calcularEstadoPartido(data.fecha_inicio))
             }
-          } else {
-            throw new Error('Partido no encontrado en API')
+            setLoading(false)
+            return
           }
         }
+
+        throw new Error('Partido no encontrado')
       } catch (err: any) {
         console.error('Error cargando partido:', err)
-        setError('No pudimos cargar el partido. Asegurate de entrar desde la lista de Fixtures.')
+        setError('No pudimos cargar el partido. El fixture podría haber cambiado.')
       } finally {
         setLoading(false)
       }
@@ -153,13 +206,49 @@ export default function PartidoPage() {
     fetchLineups()
   }, [estado, partido])
 
+  // Cargar votos existentes si el usuario ya votó
+  useEffect(() => {
+    const fetchExistingVotes = async () => {
+      if (!user || !partido || estado !== 'FINALIZADO') return
+
+      try {
+        setLoadingVotos(true)
+        const { data, error: fetchError } = await supabase
+          .from('votaciones')
+          .select('jugador_id, nota')
+          .eq('user_id', user.id)
+          .eq('partido_id', String(partido.id))
+
+        if (fetchError) throw fetchError
+
+        if (data && data.length > 0) {
+          setVotoExistente(true)
+          const vMap: Record<number, number> = {}
+          data.forEach(v => {
+            vMap[v.jugador_id] = v.nota
+          })
+          setVotos(vMap)
+        }
+      } catch (err) {
+        console.error('Error fetching existing votes:', err)
+      } finally {
+        setLoadingVotos(false)
+      }
+    }
+
+    fetchExistingVotes()
+  }, [user, partido, estado])
+
+  const isTooOld = partido ? isMatchTooOld(partido.fecha_inicio) : false
+
   const handleVotar = useCallback((jugadorId: number, nota: number) => {
+    if (votoExistente || isTooOld) return // Bloqueado
     hapticFeedback(20)
     setVotos(prev => ({
       ...prev,
       [jugadorId]: nota
     }))
-  }, [])
+  }, [votoExistente, isTooOld])
 
   const handleGuardarVotos = async () => {
     if (!user) {
@@ -255,14 +344,14 @@ export default function PartidoPage() {
 
               {/* Status and League Tags */}
               <div className="flex items-center justify-between mt-2 mb-6">
-                <span className="text-xs font-black text-[#10b981] uppercase tracking-wider bg-[#10b981]/10 px-2.5 py-1 rounded-full border border-[#10b981]/20">
+                <span className="text-xs font-black text-[#16a34a] capitalize tracking-wider bg-[#16a34a]/10 px-2.5 py-1 rounded-full border border-[#16a34a]/20">
                   {partido.liga}
                 </span>
-                <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full border shadow-sm ${estado === 'PREVIA'
-                  ? 'bg-[#fbbf24]/10 text-[#fbbf24] border-[#fbbf24]/20'
+                <span className={`text-[10px] font-black capitalize px-2.5 py-1 rounded-full border shadow-sm ${estado === 'PREVIA'
+                  ? 'bg-[var(--accent-yellow)]/10 text-[var(--accent-yellow)] border-[var(--accent-yellow)]/20'
                   : estado === 'EN_JUEGO'
-                    ? 'bg-[#ff6b6b]/10 text-[#ff6b6b] border-[#ff6b6b]/20 animate-pulse'
-                    : 'bg-white/5 text-[var(--text-muted)] border-white/10'
+                    ? 'bg-[var(--accent-red)]/10 text-[var(--accent-red)] border-[var(--accent-red)]/20 animate-pulse'
+                    : 'bg-[var(--foreground)]/5 text-[var(--text-muted)] border-[var(--card-border)]'
                   }`}>
                   {estado === 'PREVIA' && 'Próximo'}
                   {estado === 'EN_JUEGO' && 'En vivo'}
@@ -275,7 +364,10 @@ export default function PartidoPage() {
                 {/* Local */}
                 <div className="flex flex-col items-center flex-1 gap-3 relative z-10 w-[120px]">
                   <div className="relative">
-                    <div className="absolute inset-0 bg-[#10b981]/30 blur-2xl rounded-full scale-110" />
+                    <div 
+                      className="absolute inset-0 blur-2xl rounded-full scale-110 opacity-30 dark:opacity-40" 
+                      style={{ backgroundColor: getTeamColor(partido.equipo_local) }} 
+                    />
                     <TeamLogo src={partido.logo_local || undefined} teamName={partido.equipo_local} size={72} className="relative z-10 shadow-2xl drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
                   </div>
                   <h3 className="font-black text-sm md:text-base text-center leading-tight">
@@ -301,8 +393,10 @@ export default function PartidoPage() {
                 {/* Visitante */}
                 <div className="flex flex-col items-center flex-1 gap-3 relative z-10 w-[120px]">
                   <div className="relative">
-                    {/* Temporary distinct color for visitante glow */}
-                    <div className="absolute inset-0 bg-[#3b82f6]/30 blur-2xl rounded-full scale-110" />
+                    <div 
+                      className="absolute inset-0 blur-2xl rounded-full scale-110 opacity-30 dark:opacity-40" 
+                      style={{ backgroundColor: getTeamColor(partido.equipo_visitante) }} 
+                    />
                     <TeamLogo src={partido.logo_visitante || undefined} teamName={partido.equipo_visitante} size={72} className="relative z-10 shadow-2xl drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
                   </div>
                   <h3 className="font-black text-sm md:text-base text-center leading-tight">
@@ -312,6 +406,46 @@ export default function PartidoPage() {
               </div>
             </div>
           </div>
+
+          {/* Letterboxd-style CTA: Log this match */}
+          {user && estado === 'FINALIZADO' && (
+            <div className="max-w-6xl mx-auto px-6 pt-4">
+              <button
+                onClick={() => {
+                  hapticFeedback(15)
+                  router.push(`/log?match=${partido.id}`)
+                }}
+                className="w-full flex items-center justify-between p-4 bg-[var(--card-bg)] border-2 border-dashed border-[var(--accent)] hover:bg-[var(--accent)]/5 transition-all group"
+                style={{ borderRadius: 'var(--radius)' }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[var(--accent)]/10 flex items-center justify-center group-hover:bg-[var(--accent)]/20 transition-colors">
+                    <PenLine size={20} className="text-[var(--accent)]" />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-sm font-black">¿Viste este partido?</div>
+                    <div className="text-xs text-[var(--text-muted)]">Logueá tu experiencia, puntuá y dejá tu reseña</div>
+                  </div>
+                </div>
+                <span className="text-[var(--accent)] font-black text-sm group-hover:translate-x-1 transition-transform">
+                  Loguear →
+                </span>
+              </button>
+            </div>
+          )}
+
+          {!user && estado === 'FINALIZADO' && (
+            <div className="max-w-6xl mx-auto px-6 pt-4">
+              <button
+                onClick={() => router.push('/login')}
+                className="w-full flex items-center justify-center gap-2 p-3 bg-[var(--card-bg)] border border-[var(--card-border)] hover:border-[var(--accent)] transition-all text-sm text-[var(--text-muted)] hover:text-[var(--foreground)]"
+                style={{ borderRadius: 'var(--radius)' }}
+              >
+                <Star size={14} />
+                <span>Iniciá sesión para loguear y puntuar este partido</span>
+              </button>
+            </div>
+          )}
 
           <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
             {estado === 'FINALIZADO' ? (
@@ -334,10 +468,10 @@ export default function PartidoPage() {
                         className="w-full flex items-center justify-between p-4 hover:bg-[var(--hover-bg)] transition-colors"
                       >
                         <div className="flex items-center gap-2 font-bold text-sm">
-                          <BarChart2 size={16} className="text-[#10b981]" />
+                          <BarChart2 size={16} className="text-[#16a34a]" />
                           Resumen del Partido
                         </div>
-                        {openAccordion === 'resumen' ? <ChevronUp size={16} className="text-[#10b981]" /> : <ChevronDown size={16} className="text-[#10b981]" />}
+                        {openAccordion === 'resumen' ? <ChevronUp size={16} className="text-[#16a34a]" /> : <ChevronDown size={16} className="text-[#16a34a]" />}
                       </button>
                       <AnimatePresence>
                         {openAccordion === 'resumen' && (
@@ -366,7 +500,7 @@ export default function PartidoPage() {
                             <Clock size={16} className="text-[#f59e0b]" />
                             Cronología
                           </div>
-                          {openAccordion === 'cronologia' ? <ChevronUp size={16} className="text-[#10b981]" /> : <ChevronDown size={16} className="text-[#10b981]" />}
+                          {openAccordion === 'cronologia' ? <ChevronUp size={16} className="text-[#16a34a]" /> : <ChevronDown size={16} className="text-[#16a34a]" />}
                         </button>
                         <AnimatePresence>
                           {openAccordion === 'cronologia' && (
@@ -400,7 +534,7 @@ export default function PartidoPage() {
                             <Zap size={16} className="text-[#6366f1]" />
                             Estadísticas Avanzadas
                           </div>
-                          {openAccordion === 'avanzadas' ? <ChevronUp size={16} className="text-[#10b981]" /> : <ChevronDown size={16} className="text-[#10b981]" />}
+                          {openAccordion === 'avanzadas' ? <ChevronUp size={16} className="text-[#16a34a]" /> : <ChevronDown size={16} className="text-[#16a34a]" />}
                         </button>
                         <AnimatePresence>
                           {openAccordion === 'avanzadas' && (
@@ -452,7 +586,7 @@ export default function PartidoPage() {
                         <div className="mb-2 flex items-center gap-3">
                           <div className="flex-1 h-1.5 bg-[var(--card-border)] rounded-full overflow-hidden">
                             <motion.div
-                              className="h-full bg-[#10b981] rounded-full"
+                              className="h-full bg-[#16a34a] rounded-full"
                               initial={{ width: 0 }}
                               animate={{ width: `${progressPercent}%` }}
                               transition={{ duration: 0.3 }}
@@ -464,26 +598,37 @@ export default function PartidoPage() {
                         </div>
 
                         <div className="flex items-center justify-between gap-4">
-                          <p className="text-xs text-[var(--text-muted)]">
-                            {votosGuardados
-                              ? '✅ Votos guardados'
-                              : totalVotados === 0
-                                ? 'Tocá un jugador para calificarlo'
-                                : `${totalVotados} jugador${totalVotados > 1 ? 'es' : ''} votado${totalVotados > 1 ? 's' : ''}`
-                            }
-                          </p>
+                          <div className="flex flex-col gap-0.5">
+                            <p className={`text-xs font-bold ${isTooOld ? 'text-amber-500' : 'text-[var(--text-muted)]'}`}>
+                              {votosGuardados || votoExistente
+                                ? '✅ Votos guardados'
+                                : isTooOld
+                                  ? '⚠️ Votación cerrada (>30 días)'
+                                  : totalVotados === 0
+                                    ? 'Tocá un jugador para calificarlo'
+                                    : `${totalVotados} jugador${totalVotados > 1 ? 'es' : ''} votado${totalVotados > 1 ? 's' : ''}`
+                              }
+                            </p>
+                            {(votoExistente || isTooOld) && (
+                              <p className="text-[10px] text-[var(--text-muted)]">
+                                {isTooOld ? 'Los partidos antiguos no permiten nuevas votaciones.' : 'Ya participaste en la votación de este partido.'}
+                              </p>
+                            )}
+                          </div>
                           <motion.button
                             onClick={handleGuardarVotos}
-                            disabled={guardando || totalVotados === 0 || votosGuardados}
+                            disabled={guardando || totalVotados === 0 || votosGuardados || votoExistente || isTooOld}
                             whileTap={{ scale: 0.95 }}
                             className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition-all
-                                    ${votosGuardados
-                                ? 'bg-[#10b981] text-white'
-                                : 'bg-[#10b981] hover:bg-[#059669] text-white'
+                                    ${(votosGuardados || votoExistente)
+                                ? 'bg-[#16a34a] text-white opacity-80'
+                                : isTooOld
+                                  ? 'bg-[var(--card-border)] text-[var(--text-muted)]'
+                                  : 'bg-[#16a34a] hover:bg-[#059669] text-white'
                               }
                                     disabled:opacity-50 disabled:cursor-not-allowed`}
                           >
-                            {guardando ? 'Guardando...' : votosGuardados ? '✓ Guardado' : (user ? 'Guardar' : 'Iniciar sesión')}
+                            {guardando ? 'Guardando...' : (votosGuardados || votoExistente) ? '✓ Guardado' : isTooOld ? 'Cerrado' : (user ? 'Guardar' : 'Iniciar sesión')}
                           </motion.button>
                         </div>
                       </div>
@@ -491,7 +636,21 @@ export default function PartidoPage() {
                   </AnimatePresence>
                 </div>
               )
-            ) : (
+            ) : null}
+
+            {/* Always show Community Rating below formations if match is finished */}
+            {estado === 'FINALIZADO' && typeof partido.id === 'number' && (
+              <div className="mt-8">
+                <CommunityRating 
+                  partidoId={partido.id}
+                  equipoLocal={partido.equipo_local}
+                  equipoVisitante={partido.equipo_visitante}
+                  equipos={equipos}
+                />
+              </div>
+            )}
+            
+            {estado !== 'FINALIZADO' && (
               <div className="space-y-6">
                 <AiPredictionWidget
                   partidoId={partido.id}
@@ -524,7 +683,7 @@ export default function PartidoPage() {
                   <div className="space-y-6">
                     <MatchStats />
                     <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-6 shadow-sm">
-                      <h3 className="text-sm font-black mb-4 flex items-center gap-2 uppercase tracking-tighter">
+                      <h3 className="text-sm font-black mb-4 flex items-center gap-2 capitalize tracking-tighter">
                         <Zap size={16} className="text-amber-500" /> Rendimiento en Campo
                       </h3>
                       <Heatmap />

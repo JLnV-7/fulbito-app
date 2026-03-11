@@ -167,7 +167,7 @@ export default function GrupoDetailPage() {
             <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20">
 
                 {/* Header del Grupo */}
-                <div className="bg-[#10b981] text-white pt-10 pb-20 px-6 rounded-b-[40px] shadow-lg">
+                <div className="bg-[#16a34a] text-white pt-10 pb-20 px-6 rounded-b-[40px] shadow-lg">
                     <div className="max-w-4xl mx-auto flex justify-between items-start">
                         <button onClick={() => router.push('/grupos')} className="bg-white/20 p-2 rounded-full backdrop-blur-md">←</button>
                         <div className="text-center flex-1">
@@ -188,7 +188,7 @@ export default function GrupoDetailPage() {
                         <button
                             onClick={() => setActiveTab('ranking')}
                             className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'ranking'
-                                ? 'bg-[#10b981] text-white shadow-md'
+                                ? 'bg-[#16a34a] text-white shadow-md'
                                 : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                 }`}
                         >
@@ -197,7 +197,7 @@ export default function GrupoDetailPage() {
                         <button
                             onClick={() => setActiveTab('partidos')}
                             className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'partidos'
-                                ? 'bg-[#10b981] text-white shadow-md'
+                                ? 'bg-[#16a34a] text-white shadow-md'
                                 : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                 }`}
                         >
@@ -206,7 +206,7 @@ export default function GrupoDetailPage() {
                         <button
                             onClick={() => setActiveTab('stats')}
                             className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'stats'
-                                ? 'bg-[#10b981] text-white shadow-md'
+                                ? 'bg-[#16a34a] text-white shadow-md'
                                 : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                 }`}
                         >
@@ -215,7 +215,7 @@ export default function GrupoDetailPage() {
                         <button
                             onClick={() => setActiveTab('chat')}
                             className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'chat'
-                                ? 'bg-[#10b981] text-white shadow-md'
+                                ? 'bg-[#16a34a] text-white shadow-md'
                                 : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                 }`}
                         >
@@ -257,10 +257,10 @@ export default function GrupoDetailPage() {
                                                     <span className="text-[9px] bg-[#ffd700]/20 text-[#ffd700] px-2 py-0.5 rounded-full">ADMIN</span>
                                                 )}
                                                 {miembro.user_id === user?.id && (
-                                                    <span className="text-[9px] bg-[#10b981]/20 text-[#10b981] px-2 py-0.5 rounded-full">VOS</span>
+                                                    <span className="text-[9px] bg-[#16a34a]/20 text-[#16a34a] px-2 py-0.5 rounded-full">VOS</span>
                                                 )}
                                             </div>
-                                            <div className="text-[10px] text-[var(--text-muted)] uppercase">{miembro.profile?.equipo || 'Hincha'}</div>
+                                            <div className="text-[10px] text-[var(--text-muted)] capitalize">{miembro.profile?.equipo || 'Hincha'}</div>
 
                                             {/* Racha Mundial Display */}
                                             {miembro.racha && (miembro.racha.fase > 0 || miembro.racha.copas > 0) && (
@@ -285,8 +285,8 @@ export default function GrupoDetailPage() {
                                         </div>
 
                                         <div className="text-right">
-                                            <div className={`text-xl font-black ${index === 0 ? 'text-[#ffd700]' : 'text-[#10b981]'}`}>{miembro.puntos_mostrados}</div>
-                                            <div className="text-[9px] text-[var(--text-muted)] uppercase">Pts</div>
+                                            <div className={`text-xl font-black ${index === 0 ? 'text-[#ffd700]' : 'text-[#16a34a]'}`}>{miembro.puntos_mostrados}</div>
+                                            <div className="text-[9px] text-[var(--text-muted)] capitalize">Pts</div>
                                         </div>
                                     </motion.div>
                                 ))}

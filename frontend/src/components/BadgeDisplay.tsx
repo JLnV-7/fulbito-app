@@ -26,7 +26,7 @@ export function BadgeDisplay({ stats, compact = false }: BadgeDisplayProps) {
                 particleCount: 150,
                 spread: 70,
                 origin: { y: 0.6 },
-                colors: ['#f59e0b', '#10b981', '#3b82f6']
+                colors: ['#f59e0b', '#16a34a', '#2563eb']
             })
         }
         setLastUnlockedCount(unlocked.length)
@@ -56,69 +56,63 @@ export function BadgeDisplay({ stats, compact = false }: BadgeDisplayProps) {
     const displayBadges = showAll ? BADGES : [...unlocked, ...nextBadges.filter(b => !unlockedIds.has(b.id))].slice(0, 8)
 
     return (
-        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold flex items-center gap-2">
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-4" style={{ borderRadius: 'var(--radius)' }}>
+            <div className="flex items-center justify-between mb-4 border-b border-[var(--card-border)] pb-2 border-dashed">
+                <h3 className="text-[10px] font-black capitalize tracking-widest flex items-center gap-2">
                     🏅 Logros
-                    <span className="text-xs font-normal text-[var(--text-muted)]">
+                    <span className="text-[9px] font-bold text-[var(--text-muted)] border border-[var(--card-border)] px-1.5 py-0.5 ml-1">
                         {unlocked.length}/{BADGES.length}
                     </span>
                 </h3>
                 {BADGES.length > 8 && (
                     <button
                         onClick={() => setShowAll(!showAll)}
-                        className="text-xs text-[var(--text-muted)] hover:text-[var(--foreground)] flex items-center gap-1 transition-colors"
+                        className="text-[9px] font-black capitalize text-[var(--accent)] hover:underline flex items-center gap-1"
                     >
-                        {showAll ? <><ChevronUp size={12} /> Menos</> : <><ChevronDown size={12} /> Ver todos</>}
+                        {showAll ? 'Menos' : 'Ver todos'}
                     </button>
                 )}
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5">
-                <AnimatePresence mode="popLayout">
-                    {displayBadges.map((badge, i) => {
-                        const isUnlocked = unlockedIds.has(badge.id)
-                        const progress = getBadgeProgress(badge, stats)
+            <div className="grid grid-cols-2 gap-2">
+                {displayBadges.map((badge) => {
+                    const isUnlocked = unlockedIds.has(badge.id)
+                    const progress = getBadgeProgress(badge, stats)
 
-                        return (
-                            <motion.div
-                                key={badge.id}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                transition={{ delay: i * 0.03 }}
-                                className={`relative flex items-center gap-2.5 p-3 rounded-xl border transition-all ${isUnlocked
-                                    ? 'bg-[#f59e0b]/5 border-[#f59e0b]/20'
-                                    : 'bg-[var(--background)] border-[var(--card-border)] opacity-60'
-                                    }`}
-                            >
-                                <div className={`text-2xl shrink-0 ${!isUnlocked ? 'grayscale' : ''}`}>
-                                    {isUnlocked ? badge.icon : <Lock size={18} className="text-[var(--text-muted)]" />}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="text-xs font-semibold truncate">{badge.name}</div>
-                                    <div className="text-[10px] text-[var(--text-muted)] truncate">{badge.description}</div>
-                                    {!isUnlocked && (
-                                        <div className="mt-1.5">
-                                            <div className="h-1 bg-[var(--card-border)] rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-[#f59e0b] rounded-full transition-all duration-500"
-                                                    style={{ width: `${progress}%` }}
-                                                />
-                                            </div>
-                                            <div className="text-[9px] text-[var(--text-muted)] mt-0.5">{progress}%</div>
+                    return (
+                        <div
+                            key={badge.id}
+                            className={`relative flex items-center gap-2 p-2 border transition-all ${isUnlocked
+                                ? 'bg-[var(--background)] border-[var(--foreground)]/20'
+                                : 'bg-[var(--background)] border-[var(--card-border)] opacity-40'
+                                }`}
+                            style={{ borderRadius: 'var(--radius)' }}
+                        >
+                            <div className={`text-xl shrink-0 ${!isUnlocked ? 'grayscale brightness-50' : ''}`}>
+                                {isUnlocked ? badge.icon : '🔒'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="text-[10px] font-black capitalize tracking-tighter truncate">{badge.name}</div>
+                                <div className="text-[8px] text-[var(--text-muted)] font-bold truncate leading-tight">{badge.description}</div>
+                                {!isUnlocked && (
+                                    <div className="mt-1">
+                                        <div className="h-1 bg-[var(--card-border)] overflow-hidden">
+                                            <div
+                                                className="h-full bg-[var(--foreground)] transition-all duration-500"
+                                                style={{ width: `${progress}%` }}
+                                            />
                                         </div>
-                                    )}
-                                </div>
-                                {isUnlocked && (
-                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#10b981] rounded-full flex items-center justify-center">
-                                        <span className="text-white text-[8px]">✓</span>
                                     </div>
                                 )}
-                            </motion.div>
-                        )
-                    })}
-                </AnimatePresence>
+                            </div>
+                            {isUnlocked && (
+                                <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[var(--foreground)] border border-[var(--background)] flex items-center justify-center">
+                                    <span className="text-[var(--background)] text-[8px] font-black">✓</span>
+                                </div>
+                            )}
+                        </div>
+                    )
+                })}
             </div>
         </div>
     )

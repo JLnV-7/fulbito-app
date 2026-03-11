@@ -45,19 +45,17 @@ export function RankingGoal({ currentPoints, rank }: RankingGoalProps) {
     }, [currentPoints])
 
     return (
-        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-6 shadow-sm overflow-hidden relative">
-            {/* Background Decoration */}
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-[var(--accent-green)]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 overflow-hidden relative" style={{ borderRadius: 'var(--radius)' }}>
 
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[var(--accent-yellow)]/10 text-[var(--accent-yellow)] rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-[var(--background)] text-[var(--foreground)] border border-[var(--card-border)] flex items-center justify-center" style={{ borderRadius: 'var(--radius)' }}>
                         <Target size={20} />
                     </div>
                     <div>
-                        <h4 className="font-bold text-sm text-[var(--foreground)]">Tu meta esta semana</h4>
-                        <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">
-                            Rumbo a: <span className="text-[var(--accent-green)]">{tierName}</span>
+                        <h4 className="font-black text-[10px] capitalize tracking-widest text-[var(--foreground)]">Tu meta esta semana</h4>
+                        <p className="text-[10px] text-[var(--text-muted)] font-black capitalize tracking-widest italic">
+                            Rumbo a: <span className="text-[#16a34a]">{tierName}</span>
                         </p>
                     </div>
                 </div>
@@ -68,15 +66,15 @@ export function RankingGoal({ currentPoints, rank }: RankingGoalProps) {
             </div>
 
             {/* Progress Bar Container */}
-            <div className="relative h-4 bg-[var(--background)] rounded-full border border-[var(--card-border)] p-0.5 overflow-hidden">
+            <div className="relative h-4 bg-[var(--background)] border border-[var(--card-border)] p-0.5 overflow-hidden" style={{ borderRadius: 'var(--radius)' }}>
                 <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 1, ease: 'easeOut' }}
-                    className="h-full bg-gradient-to-r from-[var(--accent-green)] to-[#10b981] rounded-full relative"
+                    className="h-full bg-[#16a34a] relative"
                 >
-                    {/* Glossy effect */}
-                    <div className="absolute inset-0 bg-white/20 h-1/2 rounded-full" />
+                    {/* Minimal indicator */}
+                    <div className="absolute inset-y-0 right-0 w-px bg-white/40" />
 
                     {progress > 90 && (
                         <motion.div
@@ -91,15 +89,15 @@ export function RankingGoal({ currentPoints, rank }: RankingGoalProps) {
             </div>
 
             <div className="mt-3 flex justify-between items-center">
-                <p className="text-[10px] text-[var(--text-muted)] italic">
+                <p className="text-[10px] text-[var(--text-muted)] italic font-bold">
                     {progress > 75
                         ? '¡Estás a nada de subir! Seguí sumando.'
                         : 'Meté un par de aciertos y subís de rango.'}
                 </p>
                 {rank && (
-                    <div className="flex items-center gap-1.5 px-2 py-1 bg-[var(--hover-bg)] rounded-lg border border-[var(--card-border)]">
-                        <Trophy size={10} className="text-[var(--accent-yellow)]" />
-                        <span className="text-[10px] font-bold">Top #{rank}</span>
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-[var(--background)] border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}>
+                        <Trophy size={10} className="text-[var(--foreground)]" />
+                        <span className="text-[9px] font-black capitalize tracking-widest text-[var(--foreground)]">Top #{rank}</span>
                     </div>
                 )}
             </div>

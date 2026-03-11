@@ -1,8 +1,9 @@
 // src/components/TeamLogo.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import { getShieldForTeam } from '@/lib/shields'
 
 interface TeamLogoProps {
     src?: string
@@ -34,14 +35,25 @@ export function TeamLogo({ src, teamName, size = 24, className = '' }: TeamLogoP
     const [hasError, setHasError] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
 
+    // Only recalculate on mount or prop change
+    const [finalSrc, setFinalSrc] = useState<string | undefined>(undefined)
+
+    useEffect(() => {
+        // Evaluate the safe shield URL using our map
+        const safeShield = getShieldForTeam(teamName, src)
+        setFinalSrc(safeShield)
+        setHasError(false)
+        setIsLoading(true)
+    }, [src, teamName])
+
     const initials = getInitials(teamName)
     const bgColor = stringToColor(teamName)
 
     // Si no hay src o hubo error, mostrar fallback
-    if (!src || hasError) {
+    if (!finalSrc || hasError) {
         return (
             <div
-                className={`flex items-center justify-center rounded-full font-bold text-white ${className}`}
+                className={`flex items-center justify-center rounded-full font-bold text-white shadow-inner ${className}`}
                 style={{
                     width: size,
                     height: size,
@@ -62,7 +74,7 @@ export function TeamLogo({ src, teamName, size = 24, className = '' }: TeamLogoP
                 />
             )}
             <Image
-                src={src}
+                src={finalSrc}
                 alt={teamName}
                 fill
                 className="object-contain"
@@ -72,6 +84,7 @@ export function TeamLogo({ src, teamName, size = 24, className = '' }: TeamLogoP
                     setHasError(true)
                     setIsLoading(false)
                 }}
+                unoptimized // External shield API URLs can be slow to optimize
             />
         </div>
     )
