@@ -9,7 +9,9 @@ import type {
     JugadorPartidoAmigo,
     VotoPartidoAmigo,
     TipoPartidoAmigo,
-    EstadoPartidoAmigo
+    EstadoPartidoAmigo,
+    FacetType,
+    FacetVote
 } from '@/types'
 
 export function usePartidosAmigos(grupoId?: string) {
@@ -179,6 +181,13 @@ export function usePartidosAmigos(grupoId?: string) {
         })
 
         if (error) throw error
+
+        // 3. Mark stats as completed
+        await supabase
+            .from('partidos_amigos')
+            .update({ stats_completed: true, updated_at: new Date().toISOString() })
+            .eq('id', partidoId)
+
         await fetchPartidos()
     }
 
@@ -289,6 +298,35 @@ export function usePartidosAmigos(grupoId?: string) {
         await fetchPartidos()
     }
 
+    // ── VOTAR FACETA ──
+    const votarFaceta = async (partidoId: string, player_id: string, facet: FacetType) => {
+        if (!user) throw new Error('No autenticado')
+
+        const { error } = await supabase
+            .from('facet_votes')
+            .upsert({
+                partido_amigo_id: partidoId,
+                voter_id: user.id,
+                player_id: player_id,
+                facet: facet
+            }, {
+                onConflict: 'partido_amigo_id,voter_id,facet'
+            })
+
+        if (error) throw error
+    }
+
+    // ── FETCH FACET VOTES ──
+    const fetchFacetVotes = async (partidoId: string): Promise<FacetVote[]> => {
+        const { data, error } = await supabase
+            .from('facet_votes')
+            .select('*')
+            .eq('partido_amigo_id', partidoId)
+
+        if (error) throw error
+        return (data || []) as FacetVote[]
+    }
+
     return {
         partidos,
         loading,
@@ -301,6 +339,8 @@ export function usePartidosAmigos(grupoId?: string) {
         cerrarVotacion,
         cerrarPartidoMundial,
         votarJugador,
+        votarFaceta,
+        fetchFacetVotes,
         fetchJugadoresConVotos,
         fetchDetalleJugador,
         eliminarPartido,

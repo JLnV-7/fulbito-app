@@ -212,6 +212,8 @@ export interface PartidoAmigo {
   estado: EstadoPartidoAmigo
   resultado_azul?: number
   resultado_rojo?: number
+  stats_completed?: boolean
+  votes_completed?: boolean
   created_at: string
   updated_at: string
 
@@ -250,6 +252,17 @@ export interface VotoPartidoAmigo {
 
   // Relaciones
   profile?: Profile
+}
+
+export type FacetType = 'goleador' | 'comilon' | 'patadas' | 'arquero'
+
+export interface FacetVote {
+  id: string
+  partido_amigo_id: string
+  voter_id: string
+  player_id: string
+  facet: FacetType
+  created_at: string
 }
 
 export interface RachaMundial {
