@@ -22,6 +22,7 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
 
     const [creando, setCreando] = useState(false)
     const [detalleVisible, setDetalleVisible] = useState<PartidoAmigo | null>(null)
+    const [tabInicial, setTabInicial] = useState<'info' | 'stats' | 'votos' | 'resultados'>('info')
     const [procesandoCierre, setProcesandoCierre] = useState(false)
 
     const esAdmin = user?.id === grupo.admin_id
@@ -112,7 +113,7 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
                                 </div>
                                 <div className="flex gap-2">
                                     <button
-                                        onClick={() => setDetalleVisible(p)}
+                                        onClick={() => { setDetalleVisible(p); setTabInicial('votos'); }}
                                         className="flex-1 bg-[#16a34a] text-white py-3 font-black capitalize tracking-widest italic text-sm hover:brightness-110 transition-all"
                                         style={{ borderRadius: 'var(--radius)' }}
                                     >
@@ -120,7 +121,7 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
                                     </button>
                                     {(esAdmin || user?.id === p.creado_por) && (
                                         <button
-                                            onClick={() => setDetalleVisible(p)}
+                                            onClick={() => { setDetalleVisible(p); setTabInicial('stats'); }}
                                             className="px-3 py-3 text-[10px] font-black capitalize tracking-widest border border-[var(--card-border)] text-[var(--text-muted)] hover:bg-[var(--hover-bg)]"
                                             style={{ borderRadius: 'var(--radius)' }}
                                         >
@@ -181,11 +182,11 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
                                     </p>
                                 )}
                                 <button
-                                    onClick={() => setDetalleVisible(p)}
+                                    onClick={() => { setDetalleVisible(p); setTabInicial('resultados'); }}
                                     className="w-full bg-[#2563eb] text-white py-2.5 font-black capitalize tracking-widest text-xs"
                                     style={{ borderRadius: 'var(--radius)' }}
                                 >
-                                    📊 Ver Stats Completas
+                                    📊 Ver Resultados y Stats
                                 </button>
                             </PartidoCard>
                         ))}
@@ -199,6 +200,7 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
                     <MatchDetailTabs
                         partido={detalleVisible}
                         grupoId={grupo.id}
+                        initialTab={tabInicial}
                         onClose={() => { setDetalleVisible(null); refetch() }}
                         onUpdate={refetch}
                     />

@@ -9,9 +9,10 @@ interface FacetVotingCardsProps {
     jugadores: JugadorPartidoAmigo[]
     votosExistentes: FacetVote[]
     onVote: (playerId: string, facet: FacetType) => void
+    onDeleteVote: (facet: FacetType) => void
 }
 
-export function FacetVotingCards({ jugadores, votosExistentes, onVote }: FacetVotingCardsProps) {
+export function FacetVotingCards({ jugadores, votosExistentes, onVote, onDeleteVote }: FacetVotingCardsProps) {
     const { user } = useAuth()
     
     const facets: { id: FacetType, label: string, emoji: string, color: string, desc: string }[] = [
@@ -54,7 +55,13 @@ export function FacetVotingCards({ jugadores, votosExistentes, onVote }: FacetVo
                                 </p>
                             </div>
                             {myVote && (
-                                <span className="p-1 px-2 bg-[#16a34a] text-white text-[8px] font-black uppercase rounded-lg italic">Votado</span>
+                                <button 
+                                    onClick={() => onDeleteVote(facet.id)}
+                                    className="p-2 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-all border border-red-500/10"
+                                    title="Quitar voto"
+                                >
+                                    🗑️
+                                </button>
                             )}
                         </div>
 

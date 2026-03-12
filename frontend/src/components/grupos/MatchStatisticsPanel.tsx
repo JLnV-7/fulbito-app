@@ -14,7 +14,7 @@ interface MatchStatisticsPanelProps {
 }
 
 export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: MatchStatisticsPanelProps) {
-    const { cerrarPartidoMundial } = usePartidosAmigos(grupoId)
+    const { cerrarPartidoMundial, reabrirEstadisticas } = usePartidosAmigos(grupoId)
     const { showToast } = useToast()
 
     // Internal state for unsaved stats
@@ -37,10 +37,17 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: 
     }
 
     const handleSaveStats = async () => {
+        if (procesando) return
         setProcesando(true)
         try {
-            const azulGoles = jugadores.filter(j => j.equipo === 'azul').reduce((acc, j) => acc + (goles[j.id] || 0), 0)
-            const rojoGoles = jugadores.filter(j => j.equipo === 'rojo').reduce((acc, j) => acc + (goles[j.id] || 0), 0)
+            // Recalculate everything based on CURRENT state to be 100% sure
+            const azulGoles = jugadores
+                .filter(j => j.equipo === 'azul')
+                .reduce((acc, j) => acc + (goles[j.id] || 0), 0)
+            
+            const rojoGoles = jugadores
+                .filter(j => j.equipo === 'rojo')
+                .reduce((acc, j) => acc + (goles[j.id] || 0), 0)
 
             const statsPayload = jugadores.map(j => ({
                 id: j.id,
@@ -48,11 +55,17 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: 
                 asistencias: asistencias[j.id] || 0
             }))
 
+            console.log('Guardando estadísticas finales:', { azulGoles, rojoGoles, statsPayload })
             await cerrarPartidoMundial(partido.id, azulGoles, rojoGoles, statsPayload)
-            showToast('Estadísticas guardadas y partido cerrado 🏆', 'success')
-            onUpdate()
+            
+            showToast('Estadísticas guardadas 🏆', 'success')
+            // Don't close immediately to let the user see the success
+            setTimeout(() => {
+                onUpdate()
+            }, 500)
         } catch (err: any) {
-            showToast('Error: ' + err.message, 'error')
+            console.error('Error al guardar stats:', err)
+            showToast('Error al guardar: ' + (err.message || 'Cerrá y reintentá'), 'error')
         } finally {
             setProcesando(false)
         }
@@ -76,24 +89,38 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: 
                     className="w-7 h-7 flex items-center justify-center text-[#16a34a] hover:bg-[#16a34a]/10 rounded-lg disabled:opacity-20"
                 >+</button>
             </div>
+            {value > 0 && !partido.stats_completed && (
+                <button 
+                    onClick={() => onDelta(-value)}
+                    className="mt-1 text-[8px] font-black text-red-500/50 hover:text-red-500 uppercase tracking-widest transition-colors"
+                >
+                    Reset
+                </button>
+            )}
         </div>
     )
 
     return (
-        <div className="space-y-6">
-            <div className="space-y-4">
+        <div className="space-y-8 pb-32">
+            <div className="grid grid-cols-1 gap-8">
                 {/* Equipo Azul */}
-                <div>
-                    <h4 className="font-black text-blue-500 text-[10px] uppercase tracking-[0.2em] mb-3 border-b border-blue-500/10 pb-2">
-                        🔵 EQUIPO AZUL
-                    </h4>
-                    <div className="space-y-3">
+                <div className="bg-blue-500/5 rounded-[2.5rem] p-1 border border-blue-500/10 backdrop-blur-sm">
+                    <div className="bg-blue-600/10 px-6 py-4 rounded-t-[2.2rem] flex items-center justify-between border-b border-blue-500/10">
+                        <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                            <h4 className="font-black text-blue-500 text-xs uppercase tracking-[0.2em]">EQUIPO AZUL</h4>
+                        </div>
+                        <span className="text-xl font-black text-blue-500 italic">
+                            {jugadores.filter(j => j.equipo === 'azul').reduce((acc, j) => acc + (goles[j.id] || 0), 0)}
+                        </span>
+                    </div>
+                    <div className="p-2 space-y-1">
                         {jugadores.filter(j => j.equipo === 'azul').map(j => (
-                            <div key={j.id} className="flex items-center justify-between bg-[var(--card-bg)] p-3 rounded-2xl border border-[var(--card-border)]">
-                                <span className="font-bold text-sm truncate max-w-[120px]">{j.nombre}</span>
+                            <div key={j.id} className="flex items-center justify-between hover:bg-blue-500/5 p-4 rounded-2xl transition-all group">
+                                <span className="font-bold text-sm truncate max-w-[120px] group-hover:translate-x-1 transition-transform">{j.nombre}</span>
                                 <div className="flex gap-4">
-                                    <Counter value={goles[j.id] || 0} onDelta={(d) => handleUpdateStat(j.id, 'goles', d)} emoji="⚽" color="#16a34a" />
-                                    <Counter value={asistencias[j.id] || 0} onDelta={(d) => handleUpdateStat(j.id, 'asistencias', d)} emoji="👟" color="#3b82f6" />
+                                    <Counter value={goles[j.id] || 0} onDelta={(d) => handleUpdateStat(j.id, 'goles', d)} emoji="⚽" color="#3b82f6" />
+                                    <Counter value={asistencias[j.id] || 0} onDelta={(d) => handleUpdateStat(j.id, 'asistencias', d)} emoji="👟" color="#6de0f5" />
                                 </div>
                             </div>
                         ))}
@@ -101,17 +128,23 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: 
                 </div>
 
                 {/* Equipo Rojo */}
-                <div>
-                    <h4 className="font-black text-red-500 text-[10px] uppercase tracking-[0.2em] mb-3 border-b border-red-500/10 pb-2">
-                        🔴 EQUIPO ROJO
-                    </h4>
-                    <div className="space-y-3">
+                <div className="bg-red-500/5 rounded-[2.5rem] p-1 border border-red-500/10 backdrop-blur-sm">
+                    <div className="bg-red-600/10 px-6 py-4 rounded-t-[2.2rem] flex items-center justify-between border-b border-red-500/10">
+                        <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
+                            <h4 className="font-black text-red-500 text-xs uppercase tracking-[0.2em]">EQUIPO ROJO</h4>
+                        </div>
+                        <span className="text-xl font-black text-red-500 italic">
+                            {jugadores.filter(j => j.equipo === 'rojo').reduce((acc, j) => acc + (goles[j.id] || 0), 0)}
+                        </span>
+                    </div>
+                    <div className="p-2 space-y-1">
                         {jugadores.filter(j => j.equipo === 'rojo').map(j => (
-                            <div key={j.id} className="flex items-center justify-between bg-[var(--card-bg)] p-3 rounded-2xl border border-[var(--card-border)]">
-                                <span className="font-bold text-sm truncate max-w-[120px]">{j.nombre}</span>
+                            <div key={j.id} className="flex items-center justify-between hover:bg-red-500/5 p-4 rounded-2xl transition-all group">
+                                <span className="font-bold text-sm truncate max-w-[120px] group-hover:translate-x-1 transition-transform">{j.nombre}</span>
                                 <div className="flex gap-4">
-                                    <Counter value={goles[j.id] || 0} onDelta={(d) => handleUpdateStat(j.id, 'goles', d)} emoji="⚽" color="#16a34a" />
-                                    <Counter value={asistencias[j.id] || 0} onDelta={(d) => handleUpdateStat(j.id, 'asistencias', d)} emoji="👟" color="#3b82f6" />
+                                    <Counter value={goles[j.id] || 0} onDelta={(d) => handleUpdateStat(j.id, 'goles', d)} emoji="⚽" color="#ef4444" />
+                                    <Counter value={asistencias[j.id] || 0} onDelta={(d) => handleUpdateStat(j.id, 'asistencias', d)} emoji="👟" color="#ff8a8a" />
                                 </div>
                             </div>
                         ))}
@@ -119,18 +152,86 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: 
                 </div>
             </div>
 
-            {!partido.stats_completed && (
-                <div className="pt-4 sticky bottom-6 z-10">
+            <div className="flex gap-4">
+                {!partido.stats_completed && (
                     <button
-                        onClick={handleSaveStats}
-                        disabled={procesando}
-                        className="w-full bg-[#16a34a] text-white py-4 rounded-3xl font-black uppercase tracking-widest text-sm shadow-xl shadow-[#16a34a]/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                        onClick={() => {
+                            setGoles(Object.fromEntries(jugadores.map(j => [j.id, 0])))
+                            setAsistencias(Object.fromEntries(jugadores.map(j => [j.id, 0])))
+                            showToast('Estadísticas reseteadas 🧹', 'success')
+                        }}
+                        className="flex-1 py-4 bg-gray-500/10 text-gray-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-gray-500/20 transition-all border border-gray-500/10"
                     >
-                        {procesando ? 'Guardando...' : 'Confirmar Resultado'}
+                        Limpiar Todo 🧹
                     </button>
-                    <p className="text-center text-[9px] text-[var(--text-muted)] mt-2 font-black uppercase tracking-widest">
-                        Esto cerrará el partido para todos
-                    </p>
+                )}
+                
+                {partido.stats_completed && (
+                    <button
+                        onClick={async () => {
+                            if (procesando) return
+                            setProcesando(true)
+                            try {
+                                await reabrirEstadisticas(partido.id)
+                                showToast('Estadísticas reabiertas 🔓', 'success')
+                                onUpdate()
+                            } catch (err) {
+                                showToast('Error al reabrir', 'error')
+                            } finally {
+                                setProcesando(false)
+                            }
+                        }}
+                        className="flex-1 py-4 bg-orange-500/10 text-orange-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-orange-500/20 transition-all border border-orange-500/10"
+                    >
+                        Reabrir para Editar 🔓
+                    </button>
+                )}
+            </div>
+
+            {!partido.stats_completed && (
+                <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/95 to-transparent z-50">
+                    <div className="max-w-md mx-auto">
+                        <motion.div 
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[2rem] p-5 shadow-2xl backdrop-blur-xl"
+                        >
+                            <div className="flex items-center justify-between mb-4 px-2">
+                                <div className="text-center">
+                                    <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Azul</p>
+                                    <p className="text-2xl font-black">{jugadores.filter(j => j.equipo === 'azul').reduce((acc, j) => acc + (goles[j.id] || 0), 0)}</p>
+                                </div>
+                                <div className="h-8 w-px bg-[var(--card-border)]" />
+                                <div className="text-center flex flex-col items-center">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30">VS</span>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#16a34a] mt-1 shadow-[0_0_8px_#16a34a]" />
+                                </div>
+                                <div className="h-8 w-px bg-[var(--card-border)]" />
+                                <div className="text-center">
+                                    <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">Rojo</p>
+                                    <p className="text-2xl font-black">{jugadores.filter(j => j.equipo === 'rojo').reduce((acc, j) => acc + (goles[j.id] || 0), 0)}</p>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleSaveStats}
+                                disabled={procesando}
+                                className="w-full relative group overflow-hidden bg-[#16a34a] text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all hover:shadow-[0_0_30px_rgba(22,163,74,0.4)] disabled:opacity-50"
+                            >
+                                <span className="relative z-10 flex items-center justify-center gap-2">
+                                    {procesando ? '⏳ Procesando...' : '🔥 Confirmar y Cerrar'}
+                                </span>
+                                <motion.div 
+                                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full"
+                                    animate={{ translateX: ['100%', '-100%'] }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                                />
+                            </button>
+                            <p className="text-center text-[8px] text-[var(--text-muted)] mt-3 font-black uppercase tracking-[0.2em]">
+                                Finalizará el partido y guardará estadísticas
+                            </p>
+                        </motion.div>
+                    </div>
                 </div>
             )}
         </div>
