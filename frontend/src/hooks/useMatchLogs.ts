@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
-import type { MatchLog, MatchLogPlayerRating } from '@/types'
+import type { MatchLog, MatchLogPlayerRating, PuntuacionProde } from '@/types'
 
 export interface MatchLogFilters {
     liga?: string
@@ -47,15 +47,17 @@ export interface CreateMatchLogData {
     mood?: string
 }
 
+export type FeedItem = 
+    | { type: 'log'; id: string; created_at: string; data: MatchLog }
+    | { type: 'achievement'; id: string; created_at: string; data: PuntuacionProde & { profile: any; partido: any } }
+
 export function useMatchLogs(filters?: MatchLogFilters) {
     const { user } = useAuth()
     const { showToast } = useToast()
-    const [logs, setLogs] = useState<MatchLog[]>([])
+    const [items, setItems] = useState<FeedItem[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [hasMore, setHasMore] = useState(true)
-
-
 
     const fetchLogs = useCallback(async (reset = false) => {
         try {
@@ -65,21 +67,34 @@ export function useMatchLogs(filters?: MatchLogFilters) {
             const limit = filters?.limit || 20
             const offset = reset ? 0 : (filters?.offset || 0)
 
-            let query = supabase
+            // 1. Fetch Match Logs
+            let logQuery = supabase
                 .from('match_logs')
                 .select(`
-          *,
-          profile:profiles!match_logs_user_id_fkey(id, username, avatar_url),
-          player_ratings:match_log_player_ratings(*),
-          tags:match_log_tags(tag),
-          likes_count:match_log_likes(count)
-        `)
+                  *,
+                  profile:profiles!match_logs_user_id_fkey(id, username, avatar_url),
+                  player_ratings:match_log_player_ratings(*),
+                  tags:match_log_tags(tag),
+                  likes_count:match_log_likes(count)
+                `)
 
-            // Feed Type logic
-            if (filters?.feedType === 'popular') {
-                query = query.order('likes_count(count)', { ascending: false })
-            } else if (filters?.feedType === 'following' && user) {
-                // Get followed user IDs
+            // 2. Fetch Prode Achievements (Exact Hits)
+            let prodeQuery = supabase
+                .from('puntuaciones_prode')
+                .select(`
+                    *,
+                    profile:profiles(id, username, avatar_url),
+                    partido:partidos(id, equipo_local, equipo_visitante, logo_local, logo_visitante, goles_local, goles_visitante)
+                `)
+                .eq('tipo_acierto', 'exacto')
+
+            // Apply shared filters
+            if (filters?.userId) {
+                logQuery = logQuery.eq('user_id', filters.userId)
+                prodeQuery = prodeQuery.eq('user_id', filters.userId)
+            }
+
+            if (filters?.feedType === 'following' && user) {
                 const { data: followed } = await supabase
                     .from('user_follows')
                     .select('following_id')
@@ -87,46 +102,33 @@ export function useMatchLogs(filters?: MatchLogFilters) {
 
                 const followedIds = (followed || []).map(f => f.following_id)
                 if (followedIds.length > 0) {
-                    query = query.in('user_id', followedIds)
+                    logQuery = logQuery.in('user_id', followedIds)
+                    prodeQuery = prodeQuery.in('user_id', followedIds)
+                } else if (filters.userId) { 
+                    // userId takes precedence if provided (e.g. profile page)
                 } else {
-                    // If not following anyone, return empty (or we could return empty data later)
-                    setLogs([])
+                    setItems([])
                     setHasMore(false)
                     setLoading(false)
                     return
                 }
-                query = query.order('created_at', { ascending: false })
-            } else {
-                query = query.order('created_at', { ascending: false })
             }
 
-            query = query.range(offset, offset + limit - 1)
+            // Execute both queries
+            const [logsRes, prodeRes] = await Promise.all([
+                logQuery.order('created_at', { ascending: false }).range(offset, offset + Math.floor(limit * 0.8)),
+                prodeQuery.order('calculated_at', { ascending: false }).range(offset, offset + Math.floor(limit * 0.2))
+            ])
 
-            // Apply filters
-            if (filters?.liga) {
-                query = query.eq('liga', filters.liga)
-            }
-            if (filters?.equipo) {
-                query = query.or(`equipo_local.ilike.%${filters.equipo}%,equipo_visitante.ilike.%${filters.equipo}%`)
-            }
-            if (filters?.matchType) {
-                query = query.eq('match_type', filters.matchType)
-            }
-            if (filters?.userId) {
-                query = query.eq('user_id', filters.userId)
-            }
+            if (logsRes.error) throw logsRes.error
 
-            const { data, error: fetchError } = await query
-
-            if (fetchError) throw fetchError
-
-            // Fetch my reactions if user logged in
+            // Prepare reactions
             let myReactions: Record<string, string> = {}
-            if (user && data && data.length > 0) {
+            if (user && logsRes.data && logsRes.data.length > 0) {
                 const { data: likes } = await supabase
                     .from('match_log_likes')
                     .select('match_log_id, reaction_type')
-                    .in('match_log_id', data.map(d => d.id))
+                    .in('match_log_id', logsRes.data.map(d => d.id))
                     .eq('user_id', user.id)
 
                 if (likes) {
@@ -136,26 +138,40 @@ export function useMatchLogs(filters?: MatchLogFilters) {
                 }
             }
 
-            // Process data: flatten tags, check if liked
-            const processedLogs: MatchLog[] = (data || []).map((log: any) => ({
-                ...log,
-                tags: (log.tags || []).map((t: any) => t.tag),
-                likes_count: log.likes_count[0]?.count || 0,
-                profile: log.profile,
-                player_ratings: log.player_ratings,
-                is_liked: !!myReactions[log.id],
-                my_reaction: myReactions[log.id]
+            // Interleave and sort
+            const logItems: FeedItem[] = (logsRes.data || []).map((log: any) => ({
+                type: 'log',
+                id: log.id,
+                created_at: log.created_at,
+                data: {
+                    ...log,
+                    tags: (log.tags || []).map((t: any) => t.tag),
+                    likes_count: log.likes_count[0]?.count || 0,
+                    is_liked: !!myReactions[log.id],
+                    my_reaction: myReactions[log.id]
+                }
             }))
 
+            const progItems: FeedItem[] = (prodeRes.data || []).map((p: any) => ({
+                type: 'achievement',
+                id: p.id,
+                created_at: p.calculated_at,
+                data: p
+            }))
+
+            const combined = [...logItems, ...progItems].sort((a, b) => 
+                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            )
+
             if (reset) {
-                setLogs(processedLogs)
+                setItems(combined)
             } else {
-                setLogs(prev => [...prev, ...processedLogs])
+                setItems(prev => [...prev, ...combined])
             }
-            setHasMore(processedLogs.length === limit)
+            setHasMore(combined.length > 0)
         } catch (err: any) {
-            console.error('Error fetching match logs:', err)
-            setError('Error al cargar las reseñas')
+            console.error('Error fetching feed:', err)
+            setError('Error al cargar el feed')
         } finally {
             setLoading(false)
         }
@@ -305,33 +321,32 @@ export function useMatchLogs(filters?: MatchLogFilters) {
         }
     }
 
-    const toggleLike = async (logId: string, reactionType: string = 'like') => {
+    const toggleLike = async (id: string, reactionType: string = 'like') => {
         if (!user) return
 
-        const log = logs.find(l => l.id === logId)
-        if (!log) return
-
+        const item = items.find(i => i.id === id && i.type === 'log')
+        if (!item || item.type !== 'log') return
+        
+        const log = item.data
         const wasLiked = log.is_liked
         const previousReaction = log.my_reaction
 
         // Optimistic update
-        setLogs(prev => prev.map(l => {
-            if (l.id !== logId) return l
+        setItems(prev => prev.map(i => {
+            if (i.id !== id || i.type !== 'log') return i
             
+            const l = i.data
             let newLikesCount = l.likes_count || 0
             if (wasLiked) {
                 if (previousReaction === reactionType) {
-                    // Remove reaction
                     newLikesCount--
-                    return { ...l, is_liked: false, my_reaction: undefined, likes_count: newLikesCount }
+                    return { ...i, data: { ...l, is_liked: false, my_reaction: undefined, likes_count: newLikesCount } }
                 } else {
-                    // Change reaction (count stays same)
-                    return { ...l, is_liked: true, my_reaction: reactionType }
+                    return { ...i, data: { ...l, is_liked: true, my_reaction: reactionType } }
                 }
             } else {
-                // Add new reaction
                 newLikesCount++
-                return { ...l, is_liked: true, my_reaction: reactionType, likes_count: newLikesCount }
+                return { ...i, data: { ...l, is_liked: true, my_reaction: reactionType, likes_count: newLikesCount } }
             }
         }))
 
@@ -340,14 +355,13 @@ export function useMatchLogs(filters?: MatchLogFilters) {
                 await supabase
                     .from('match_log_likes')
                     .delete()
-                    .eq('match_log_id', logId)
+                    .eq('match_log_id', id)
                     .eq('user_id', user.id)
             } else {
-                // Upsert to handle changing reaction type
                 await supabase
                     .from('match_log_likes')
                     .upsert({ 
-                        match_log_id: logId, 
+                        match_log_id: id, 
                         user_id: user.id, 
                         reaction_type: reactionType 
                     }, { onConflict: 'match_log_id,user_id' })
@@ -355,10 +369,10 @@ export function useMatchLogs(filters?: MatchLogFilters) {
         } catch (err) {
             console.error('Error toggling reaction:', err)
             // Revert on error
-            setLogs(prev => prev.map(l =>
-                l.id === logId
-                    ? { ...l, is_liked: wasLiked, my_reaction: previousReaction, likes_count: log.likes_count }
-                    : l
+            setItems(prev => prev.map(i =>
+                i.id === id && i.type === 'log'
+                    ? { ...i, data: { ...i.data, is_liked: wasLiked, my_reaction: previousReaction, likes_count: log.likes_count } }
+                    : i
             ))
         }
     }
@@ -408,7 +422,8 @@ export function useMatchLogs(filters?: MatchLogFilters) {
     }
 
     return {
-        logs,
+        items,
+        logs: items.filter(i => i.type === 'log').map(i => i.data),
         loading,
         error,
         hasMore,

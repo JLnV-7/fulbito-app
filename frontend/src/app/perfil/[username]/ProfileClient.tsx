@@ -16,6 +16,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/contexts/AuthContext'
 import { useFollows } from '@/hooks/useMatchLogs'
+import { ActivityHeatmap } from '@/components/ActivityHeatmap'
 import { useProfileFollowers } from '@/hooks/useProfileFollowers'
 import { FollowListModal, type FollowListType } from '@/components/FollowListModal'
 import Link from 'next/link'
@@ -146,6 +147,9 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
               </div>
             ))}
           </div>
+
+          {/* Activity Heatmap */}
+          <ActivityHeatmap userId={initialProfile.id} />
 
           {/* Tabs Activity vs Stats */}
           <div className="flex gap-4 border-b border-[var(--card-border)] pb-2 overflow-x-auto no-scrollbar">

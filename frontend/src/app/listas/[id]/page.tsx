@@ -1,209 +1,148 @@
 // src/app/listas/[id]/page.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { DesktopNav } from '@/components/DesktopNav'
+import { NavBar } from '@/components/NavBar'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { TeamLogo } from '@/components/TeamLogo'
+import { ChevronRight, Share2, Calendar, User } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ChevronLeft, Share2, Lock, Trash2, Hash, GripVertical, X } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import { useUserLists, type UserList } from '@/hooks/useUserLists'
-import { useToast } from '@/contexts/ToastContext'
-import { TeamLogo } from '@/components/TeamLogo'
 
-export default function ListDetailPage() {
-    const params = useParams()
-    const router = useRouter()
-    const { user } = useAuth()
-    const { fetchListDetails, deleteList, removeFromList } = useUserLists()
-    const { showToast } = useToast()
+export default function ListViewPage() {
+  const { id } = useParams()
+  const router = useRouter()
+  const [list, setList] = useState<any>(null)
+  const [items, setItems] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
 
-    const [list, setList] = useState<UserList | null>(null)
-    const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    const fetchListData = async () => {
+      setLoading(true)
+      const { data: listData, error: listError } = await supabase
+        .from('user_lists')
+        .select('*, profile:profiles(username, avatar_url)')
+        .eq('id', id)
+        .single()
 
-    const listId = params.id as string
-    const isOwner = user && list && user.id === list.user_id
-
-    useEffect(() => {
-        if (!listId) return
-
-        const load = async () => {
-            const data = await fetchListDetails(listId)
-            setList(data)
-            setLoading(false)
-        }
-        load()
-    }, [listId, fetchListDetails])
-
-    const handleDeleteList = async () => {
-        if (!confirm('¿Seguro que querés eliminar esta lista? Esta acción no se puede deshacer.')) return
-
-        const success = await deleteList(listId)
-        if (success) {
-            showToast('Lista eliminada', 'success')
-            router.push('/perfil')
-        } else {
-            showToast('Error al eliminar', 'error')
-        }
+      if (listData) {
+        setList(listData)
+        const { data: itemData } = await supabase
+          .from('user_list_items')
+          .select('*')
+          .eq('list_id', id)
+          .order('created_at', { ascending: true })
+        
+        if (itemData) setItems(itemData)
+      }
+      setLoading(false)
     }
 
-    const handleRemoveItem = async (itemId: string) => {
-        const success = await removeFromList(itemId, listId)
-        if (success && list) {
-            setList({
-                ...list,
-                items: list.items?.filter(i => i.id !== itemId)
-            })
-            showToast('Partido removido', 'success')
-        }
-    }
+    if (id) fetchListData()
+  }, [id])
 
-    const handleShare = async () => {
-        if (!list) return
-        const url = `${window.location.origin}/listas/${list.id}`
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: list.title,
-                    text: list.description || `Mirá esta lista de partidos en FutLog: ${list.title}`,
-                    url
-                })
-            } catch { /* cancelled */ }
-        } else {
-            navigator.clipboard.writeText(url)
-            showToast('Link copiado al portapapeles', 'success')
-        }
-    }
+  if (loading) return (
+    <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+      <LoadingSpinner />
+    </div>
+  )
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-6">
-                <div className="animate-pulse flex flex-col items-center">
-                    <div className="w-12 h-12 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
-                </div>
-            </div>
-        )
-    }
+  if (!list) return (
+    <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-6 text-center">
+        <div>
+            <h1 className="text-2xl font-black mb-2">Lista no encontrada</h1>
+            <button onClick={() => router.push('/')} className="text-[var(--accent)] font-bold">Volver al inicio</button>
+        </div>
+    </div>
+  )
 
-    if (!list) {
-        return (
-            <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center p-6">
-                <h1 className="text-2xl font-bold mb-2 text-center text-[var(--foreground)]">Lista no encontrada</h1>
-                <p className="text-[var(--text-muted)] text-center mb-6">Puede que haya sido eliminada o sea privada.</p>
-                <button onClick={() => router.back()} className="px-6 py-3 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-full hover:bg-[var(--hover-bg)] transition-colors">
-                    Volver
-                </button>
-            </div>
-        )
-    }
-
-    return (
-        <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24">
-            {/* Header */}
-            <header className="sticky top-0 z-40 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--card-border)]">
-                <div className="flex items-center justify-between p-4 max-w-3xl mx-auto">
-                    <button
-                        onClick={() => router.back()}
-                        className="p-2 hover:bg-[var(--hover-bg)] rounded-full transition-colors"
-                    >
-                        <ChevronLeft size={24} />
-                    </button>
-
+  return (
+    <>
+      <DesktopNav />
+      <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-32 md:pt-20">
+        <div className="max-w-4xl mx-auto px-6 py-8">
+            {/* Header de la Lista */}
+            <div className="mb-10 text-center">
+                <span className="text-4xl mb-4 block">{list.icon}</span>
+                <h1 className="text-4xl font-black tracking-tighter mb-2">{list.title}</h1>
+                <p className="text-[var(--text-muted)] text-sm max-w-lg mx-auto mb-6">{list.description}</p>
+                
+                <div className="flex items-center justify-center gap-6">
                     <div className="flex items-center gap-2">
-                        {list.is_public && (
-                            <button onClick={handleShare} className="p-2 hover:bg-[var(--hover-bg)] text-[var(--text-muted)] rounded-full transition-colors">
-                                <Share2 size={20} />
-                            </button>
-                        )}
-                        {isOwner && (
-                            <button onClick={handleDeleteList} className="p-2 hover:bg-red-500/10 text-red-500 rounded-full transition-colors">
-                                <Trash2 size={20} />
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </header>
-
-            <div className="max-w-xl mx-auto p-6 md:p-8">
-                {/* List Info */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-                    <div className="flex items-center gap-2 mb-2">
-                        {!list.is_public && <Lock size={16} className="text-[var(--text-muted)]" />}
-                        <h1 className="text-3xl sm:text-4xl font-black leading-tight">{list.title}</h1>
-                    </div>
-                    {list.description && (
-                        <p className="text-[var(--text-muted)] whitespace-pre-wrap leading-relaxed mb-4">
-                            {list.description}
-                        </p>
-                    )}
-                    <div className="flex items-center gap-4 text-xs font-semibold text-[var(--text-muted)]">
-                        <span className="bg-[var(--card-bg)] border border-[var(--card-border)] px-3 py-1.5 rounded-full">
-                            {list.items?.length || 0} partidos
-                        </span>
-                        <span>Actualizada {new Date(list.updated_at).toLocaleDateString()}</span>
-                    </div>
-                </motion.div>
-
-                {/* List Items */}
-                <div className="space-y-4">
-                    {(!list.items || list.items.length === 0) ? (
-                        <div className="text-center py-12 border-2 border-dashed border-[var(--card-border)] rounded-3xl">
-                            <span className="text-4xl mb-4 block opacity-50">🏟️</span>
-                            <p className="text-[var(--text-muted)] font-medium">Esta lista está vacía.</p>
+                        <div className="w-6 h-6 rounded-full bg-[var(--card-border)] flex items-center justify-center text-[10px]">
+                            {list.profile?.avatar_url || <User size={12} />}
                         </div>
-                    ) : (
-                        list.items.map((item, index) => (
+                        <span className="text-xs font-bold text-[var(--accent)]">@{list.profile?.username}</span>
+                    </div>
+                    <div className="h-4 w-px bg-[var(--card-border)]" />
+                    <button className="flex items-center gap-2 text-xs font-bold text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors">
+                        <Share2 size={14} /> Compartir
+                    </button>
+                </div>
+            </div>
+
+            {/* Items de la Lista */}
+            <div className="space-y-4">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-4 flex items-center gap-2">
+                    ⚽ {items.length} Partidos en esta lista
+                </h3>
+                
+                {items.length === 0 ? (
+                    <div className="py-20 text-center bg-[var(--card-bg)] rounded-3xl border border-[var(--card-border)] border-dashed">
+                        <p className="text-sm text-[var(--text-muted)] font-bold">Esta lista aún no tiene partidos.</p>
+                    </div>
+                ) : (
+                    items.map((item, i) => {
+                        const m = item.match_data || {}
+                        return (
                             <motion.div
                                 key={item.id}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                                className="group flex gap-4 bg-[var(--card-bg)] border border-[var(--card-border)] p-4 rounded-2xl hover:border-[var(--accent)] hover:shadow-lg hover:shadow-[var(--accent)]/5 transition-all"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.1 }}
                             >
-                                {/* Index Column */}
-                                <div className="flex flex-col items-center justify-center shrink-0 w-8 text-[var(--text-muted)]">
-                                    <span className="font-bold text-lg">{index + 1}</span>
-                                </div>
-
-                                <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                    <Link href={`/partido/${item.partido_id}`} className="block">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2 min-w-0 pr-4">
-                                                <TeamLogo teamName={item.equipo_local} src={item.logo_local} size={28} />
-                                                <span className="font-bold text-sm sm:text-base truncate">{item.equipo_local}</span>
+                                <Link 
+                                    href={`/partido/${item.match_id}`}
+                                    className="block bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-4 hover:border-[var(--accent)]/40 hover:shadow-lg transition-all"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-6 flex-1">
+                                            <div className="flex items-center gap-3 min-w-[120px] justify-end">
+                                                <span className="text-xs font-black truncate">{m.equipo_local}</span>
+                                                <TeamLogo src={m.logo_local} teamName={m.equipo_local} size={32} />
                                             </div>
-                                            <span className="text-[var(--text-muted)] font-black text-xs px-2">VS</span>
-                                            <div className="flex items-center gap-2 min-w-0 pl-4">
-                                                <span className="font-bold text-sm sm:text-base truncate">{item.equipo_visitante}</span>
-                                                <TeamLogo teamName={item.equipo_visitante} src={item.logo_visitante} size={28} />
+                                            
+                                            <div className="bg-[var(--background)] px-3 py-1 rounded-lg border border-[var(--card-border)] shadow-sm font-black text-sm tracking-tighter">
+                                                {m.goles_local} - {m.goles_visitante}
+                                            </div>
+
+                                            <div className="flex items-center gap-3 min-w-[120px]">
+                                                <TeamLogo src={m.logo_visitante} teamName={m.equipo_visitante} size={32} />
+                                                <span className="text-xs font-black truncate">{m.equipo_visitante}</span>
                                             </div>
                                         </div>
-                                    </Link>
-
-                                    {item.comment && (
-                                        <div className="mt-2 text-sm text-[var(--text-muted)] bg-[var(--hover-bg)] p-3 rounded-xl border border-[var(--card-border)]/50">
-                                            "{item.comment}"
+                                        <ChevronRight size={18} className="text-[var(--text-muted)] opacity-30" />
+                                    </div>
+                                    
+                                    {item.note && (
+                                        <div className="mt-4 pt-4 border-t border-[var(--card-border)] flex gap-3 italic">
+                                            <span className="text-lg leading-none text-[var(--accent)] opacity-50">“</span>
+                                            <p className="text-xs font-bold text-[var(--text-muted)] flex-1">{item.note}</p>
                                         </div>
                                     )}
-                                </div>
-
-                                {/* Actions */}
-                                {isOwner && (
-                                    <div className="flex flex-col justify-center shrink-0 border-l border-[var(--card-border)] pl-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button
-                                            onClick={() => handleRemoveItem(item.id)}
-                                            className="text-red-500/50 hover:text-red-500 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
-                                            title="Quitar de la lista"
-                                        >
-                                            <X size={18} />
-                                        </button>
-                                    </div>
-                                )}
+                                </Link>
                             </motion.div>
-                        ))
-                    )}
-                </div>
+                        )
+                    })
+                )}
             </div>
-        </main>
-    )
+        </div>
+      </main>
+      <NavBar />
+    </>
+  )
 }

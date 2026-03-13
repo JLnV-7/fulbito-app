@@ -450,13 +450,27 @@ export default function PartidoPage() {
                   </h3>
                 </div>
               </div>
+
+              {/* Rating comunitario — visible sin scroll */}
+              {estado === 'FINALIZADO' && typeof partido.id === 'number' && (
+                <div className="mt-4 flex flex-col items-center gap-1">
+                    <CommunityRating
+                    partidoId={partido.id}
+                    equipoLocal={partido.equipo_local}
+                    equipoVisitante={partido.equipo_visitante}
+                    equipos={equipos}
+                    compact
+                    />
+                </div>
+              )}
             </div>
           </div>
 
 
-          {/* Integrated Review Section */}
+          {/* Partidos Finalizados: Reseñas first, then stats */}
           {estado === 'FINALIZADO' && (
             <div className="max-w-6xl mx-auto px-6 py-8 space-y-10">
+               {/* 1. SECCIÓN DE RESEÑAS */}
                <div className="flex items-center gap-3 mb-2">
                  <div className="h-px flex-1 bg-[var(--card-border)] opacity-30"></div>
                  <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">SECCIÓN DE RESEÑAS</span>
@@ -467,12 +481,11 @@ export default function PartidoPage() {
                  <FormularioResena
                    partidoId={Number(partido.id)}
                    jugadoresDelPartido={equipos.flatMap(eq => 
-                     eq.titulares.map(j => ({ id: j.id, nombre: j.nombre }))
+                     [...eq.titulares, ...eq.suplentes].map(j => ({ id: j.id, nombre: j.nombre }))
                    )}
                    resenaExistente={miResena}
                    onGuardado={() => {
                      hapticFeedback(50);
-                     // Refetch or update state
                      window.location.reload(); 
                    }}
                  />
@@ -492,6 +505,153 @@ export default function PartidoPage() {
                )}
                
                <ListaResenas partidoId={Number(partido.id)} />
+
+               {/* 2. ACORDEONES (Stats, Cronología, etc) - Moved below reviews */}
+               <div className="space-y-6 pt-10">
+                   <div className="flex items-center gap-3 mb-2">
+                    <div className="h-px flex-1 bg-[var(--card-border)] opacity-30"></div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">ESTADÍSTICAS Y MÁS</span>
+                    <div className="h-px flex-1 bg-[var(--card-border)] opacity-30"></div>
+                  </div>
+
+                  {loadingLineups ? (
+                    <div className="flex justify-center py-10">
+                      <LoadingSpinner />
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {/* Stats Resumen */}
+                      <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] overflow-hidden shadow-sm">
+                        <button
+                          onClick={() => setOpenAccordion(openAccordion === 'resumen' ? null : 'resumen')}
+                          className="w-full flex items-center justify-between p-4 hover:bg-[var(--hover-bg)] transition-colors"
+                        >
+                          <div className="flex items-center gap-2 font-bold text-sm">
+                            <BarChart2 size={16} className="text-[#16a34a]" />
+                            Resumen del Partido
+                          </div>
+                          {openAccordion === 'resumen' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+                        <AnimatePresence>
+                          {openAccordion === 'resumen' && (
+                            <motion.div
+                              initial={{ height: 0 }}
+                              animate={{ height: 'auto' }}
+                              exit={{ height: 0 }}
+                              className="overflow-hidden border-t border-[var(--card-border)]"
+                            >
+                              <div className="p-4">
+                                <MatchStats />
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      {/* Cronología */}
+                      {typeof partido.id === 'number' && (
+                        <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] overflow-hidden shadow-sm">
+                          <button
+                            onClick={() => setOpenAccordion(openAccordion === 'cronologia' ? null : 'cronologia')}
+                            className="w-full flex items-center justify-between p-4 hover:bg-[var(--hover-bg)] transition-colors"
+                          >
+                            <div className="flex items-center gap-2 font-bold text-sm">
+                              <Clock size={16} className="text-[#f59e0b]" />
+                              Cronología
+                            </div>
+                            {openAccordion === 'cronologia' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          </button>
+                          <AnimatePresence>
+                            {openAccordion === 'cronologia' && (
+                              <motion.div
+                                initial={{ height: 0 }}
+                                animate={{ height: 'auto' }}
+                                exit={{ height: 0 }}
+                                className="overflow-hidden border-t border-[var(--card-border)]"
+                              >
+                                <div className="p-4">
+                                  <MatchTimeline fixtureId={partido.id} equipoLocal={partido.equipo_local} equipoVisitante={partido.equipo_visitante} />
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
+
+                      {/* Avanzadas */}
+                      {typeof partido.id === 'number' && (
+                        <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] overflow-hidden shadow-sm">
+                          <button
+                            onClick={() => setOpenAccordion(openAccordion === 'avanzadas' ? null : 'avanzadas')}
+                            className="w-full flex items-center justify-between p-4 hover:bg-[var(--hover-bg)] transition-colors"
+                          >
+                            <div className="flex items-center gap-2 font-bold text-sm">
+                              <Zap size={16} className="text-[#6366f1]" />
+                              Estadísticas Avanzadas
+                            </div>
+                            {openAccordion === 'avanzadas' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          </button>
+                          <AnimatePresence>
+                            {openAccordion === 'avanzadas' && (
+                              <motion.div
+                                initial={{ height: 0 }}
+                                animate={{ height: 'auto' }}
+                                exit={{ height: 0 }}
+                                className="overflow-hidden border-t border-[var(--card-border)]"
+                              >
+                                <div className="p-4">
+                                  <AdvancedStats fixtureId={partido.id} />
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 3. FORMACIONES Y VOTACIÓN */}
+                  {equipos.length > 0 && (
+                    <div className="space-y-6 pt-10">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="h-px flex-1 bg-[var(--card-border)] opacity-30"></div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">FORMACIONES Y VOTACIÓN</span>
+                        <div className="h-px flex-1 bg-[var(--card-border)] opacity-30"></div>
+                      </div>
+                      
+                      <div className="text-center bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] p-4">
+                        <p className="text-sm text-[var(--text-muted)]">
+                          Hacé click en cada jugador para votarlo (1-10)
+                        </p>
+                      </div>
+
+                      <div ref={formacionesRef} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {equipos.map((equipo) => (
+                          <CanchaFormacion
+                            key={equipo.id}
+                            jugadores={equipo.titulares}
+                            nombreEquipo={equipo.nombre}
+                            votos={votos}
+                            onVotar={handleVotar}
+                            partidoFinalizado={estado === 'FINALIZADO'}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Community Rating (Histogram) - Always at the bottom of main scroll */}
+                  {typeof partido.id === 'number' && (
+                    <div className="mt-12">
+                      <CommunityRating 
+                        partidoId={partido.id}
+                        equipoLocal={partido.equipo_local}
+                        equipoVisitante={partido.equipo_visitante}
+                        equipos={equipos}
+                      />
+                    </div>
+                  )}
+               </div>
             </div>
           )}
 
@@ -694,17 +854,6 @@ export default function PartidoPage() {
               )
             ) : null}
 
-            {/* Always show Community Rating below formations if match is finished */}
-            {estado === 'FINALIZADO' && typeof partido.id === 'number' && (
-              <div className="mt-8">
-                <CommunityRating 
-                  partidoId={partido.id}
-                  equipoLocal={partido.equipo_local}
-                  equipoVisitante={partido.equipo_visitante}
-                  equipos={equipos}
-                />
-              </div>
-            )}
             
             {estado !== 'FINALIZADO' && (
               <div className="space-y-6">
@@ -770,22 +919,6 @@ export default function PartidoPage() {
               </div>
             )}
 
-            {estado === 'FINALIZADO' && (
-              <div className="mt-10 space-y-12">
-                <FormularioResena 
-                  partidoId={Number(partido.id)} 
-                  jugadoresDelPartido={equipos.flatMap(eq => 
-                    [...eq.titulares, ...eq.suplentes].map(j => ({ id: j.id, nombre: j.nombre }))
-                  )}
-                  resenaExistente={miResena}
-                  onGuardado={() => {
-                    // Refrescar lista de reseñas o mostrar mensaje de éxito
-                    window.location.reload()
-                  }}
-                />
-                <ListaResenas partidoId={Number(partido.id)} />
-              </div>
-            )}
 
             {/* Selector de Pestañas: Reseñas vs Chat */}
             <div ref={chatRef} className="mt-8 rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)] p-1.5 flex gap-1">

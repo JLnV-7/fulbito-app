@@ -10,9 +10,10 @@ interface CommunityRatingProps {
     equipoLocal: string
     equipoVisitante: string
     equipos?: any[] // Optional so it doesn't break if not passed
+    compact?: boolean
 }
 
-export function CommunityRating({ partidoId, equipoLocal, equipoVisitante, equipos = [] }: CommunityRatingProps) {
+export function CommunityRating({ partidoId, equipoLocal, equipoVisitante, equipos = [], compact = false }: CommunityRatingProps) {
     const [stats, setStats] = useState({
         total_reviews: 0,
         avg_rating: 0,
@@ -108,6 +109,22 @@ export function CommunityRating({ partidoId, equipoLocal, equipoVisitante, equip
     }, [partidoId])
 
     if (loading || stats.total_reviews === 0) return null
+
+    if (compact) {
+        return (
+            <div className="flex items-center gap-3 px-3 py-1.5 bg-[var(--background)] rounded-full border border-[var(--card-border)] shadow-sm">
+                <div className="text-sm font-black text-[#f59e0b] flex items-center gap-1">
+                    <Star size={14} fill="#f59e0b" />
+                    {stats.avg_rating.toFixed(1)}
+                </div>
+                <div className="w-px h-3 bg-[var(--card-border)]" />
+                <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-muted)] font-black uppercase tracking-widest">
+                    <Users size={12} className="text-[#6366f1]" />
+                    {stats.total_reviews} reseñas
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-4">

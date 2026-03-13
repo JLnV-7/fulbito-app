@@ -36,6 +36,7 @@ import { Button } from '@/components/ui/Button'
 import { CommunityHighlights } from '@/components/CommunityHighlights'
 import { NewsTab } from '@/components/NewsTab'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { LiveMatchesStrip } from '@/components/LiveMatchesStrip'
 
 type HomeTab = 'partidos' | 'tabla' | 'goleadores' | 'fixtures' | 'comunidad' | 'noticias'
 
@@ -230,7 +231,8 @@ function HomeContent() {
     setDisplayLimit(24)
   }, [searchQuery, selectedDate, filtroLiga])
 
-  const liveCount = partidos.filter(p => p.estado === 'EN_JUEGO').length
+  const partidosEnVivo = useMemo(() => partidos.filter(p => p.estado === 'EN_JUEGO'), [partidos])
+  const liveCount = partidosEnVivo.length
 
   const currentLigaName = filtroLiga === 'Todos' || filtroLiga === 'Favoritos'
     ? undefined
@@ -271,6 +273,11 @@ function HomeContent() {
               </div>
             </div>
             <div className="max-w-4xl mx-auto px-4 mt-2">
+              {/* Sección "En vivo ahora" */}
+              {activeTab === 'partidos' && (
+                <LiveMatchesStrip partidos={partidosEnVivo} />
+              )}
+
               {/* Categorías de Ligas (Promiedos Style) */}
               <div className="sticky top-0 md:top-[68px] z-20 bg-[var(--background)]/95 backdrop-blur-sm py-3 -mx-4 px-4 border-b border-[var(--card-border)] mb-4">
                 <LeagueChips

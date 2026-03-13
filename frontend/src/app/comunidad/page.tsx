@@ -4,20 +4,22 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Users, MessageCircle, Clock, ChevronRight, Layout, Film } from 'lucide-react'
+import { Users, MessageCircle, Clock, ChevronRight, Layout, Film, Trophy } from 'lucide-react'
+import Link from 'next/link'
 import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { PullToRefresh } from '@/components/PullToRefresh'
 import { CreateGroupModal } from '@/components/CreateGroupModal'
-import { useMatchLogs } from '@/hooks/useMatchLogs'
+import { useMatchLogs, FeedItem } from '@/hooks/useMatchLogs'
 import { MatchLogCard } from '@/components/MatchLogCard'
+import { TopMatchesToday } from '@/components/feed/TopMatchesToday'
 import type { MatchLog } from '@/types'
 
 export default function ComunidadPage() {
     const router = useRouter()
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [feedType, setFeedType] = useState<'recent' | 'following'>('recent')
-    const { logs: realLogs, loading, toggleLike } = useMatchLogs({ limit: 10, feedType })
+    const { items, loading, toggleLike } = useMatchLogs({ limit: 10, feedType })
 
     // Seed data mock para que no se vea vacío
     const mockLogs: MatchLog[] = [
@@ -46,7 +48,7 @@ export default function ComunidadPage() {
         }
     ]
 
-    const logs = realLogs.length > 0 ? realLogs : mockLogs
+    const feedItems = items.length > 0 ? items : (mockLogs.map(l => ({ type: 'log', id: l.id, created_at: l.created_at, data: l })) as FeedItem[])
 
     const options = [
         {
@@ -132,6 +134,9 @@ export default function ComunidadPage() {
                             })}
                         </div>
 
+                        {/* Trending Section */}
+                        <TopMatchesToday />
+
                         {/* Social Feed Section */}
                         <div className="space-y-6">
                             <div className="flex items-center justify-between px-1">
@@ -163,21 +168,25 @@ export default function ComunidadPage() {
                                         <div key={i} className="h-48 bg-[var(--card-bg)] rounded-3xl animate-pulse border border-[var(--card-border)]" />
                                     ))}
                                 </div>
-                            ) : logs.length === 0 ? (
+                            ) : items.length === 0 ? (
                                 <div className="py-20 text-center bg-[var(--card-bg)] rounded-3xl border border-[var(--card-border)] border-dashed">
                                     <Film size={40} className="mx-auto mb-4 text-[var(--text-muted)] opacity-30" />
-                                    <p className="text-sm text-[var(--text-muted)] font-bold">No hay reseñas para mostrar todavía.</p>
+                                    <p className="text-sm text-[var(--text-muted)] font-bold">No hay actividad para mostrar todavía.</p>
                                     <button
                                         onClick={() => router.push('/')}
                                         className="mt-4 text-[10px] text-[var(--accent-green)] font-black capitalize tracking-widest"
                                     >
-                                        ¡Sé el primero en ratear!
+                                        ¡Sé el primero en participar!
                                     </button>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {logs.map((log) => (
-                                        <MatchLogCard key={log.id} log={log} onLike={toggleLike} />
+                                    {feedItems.map((item) => (
+                                        item.type === 'log' ? (
+                                            <MatchLogCard key={item.id} log={item.data} onLike={toggleLike} />
+                                        ) : (
+                                            <AchievementCard key={item.id} achievement={item.data} />
+                                        )
                                     ))}
                                 </div>
                             )}
@@ -189,3 +198,46 @@ export default function ComunidadPage() {
         </>
     )
 }
+
+function AchievementCard({ achievement }: { achievement: any }) {
+    const { profile, partido } = achievement
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-[var(--card-bg)] border border-amber-500/20 rounded-3xl p-5 relative overflow-hidden group"
+        >
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                <Trophy size={60} className="text-amber-500" />
+            </div>
+            
+            <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white text-xs font-bold">
+                    {profile?.avatar_url || '👤'}
+                </div>
+                <div>
+                    <p className="text-xs font-black italic tracking-tighter text-amber-500 uppercase">¡PRODE PERFECTO!</p>
+                    <p className="text-[10px] font-bold text-[var(--text-muted)]">@{profile?.username} la pegó exacto</p>
+                </div>
+            </div>
+
+            <div className="bg-[var(--background)]/50 rounded-2xl p-4 border border-[var(--card-border)]">
+                <div className="flex justify-between items-center gap-2">
+                    <span className="text-xs font-bold truncate flex-1">{partido?.equipo_local}</span>
+                    <div className="flex items-center gap-1.5 font-black text-lg tracking-tighter bg-amber-500 text-white px-3 py-0.5 rounded-lg shadow-lg">
+                        <span>{partido?.goles_local}</span>
+                        <span className="opacity-50 font-light">-</span>
+                        <span>{partido?.goles_visitante}</span>
+                    </div>
+                    <span className="text-xs font-bold truncate flex-1 text-right">{partido?.equipo_visitante}</span>
+                </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between">
+                <span className="text-[10px] font-bold text-[var(--accent)]">+8 Puntos de Ranking</span>
+                <Link href={`/partido/${partido?.id}`} className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] hover:text-amber-500 transition-colors">Ver partido →</Link>
+            </div>
+        </motion.div>
+    )
+}
+

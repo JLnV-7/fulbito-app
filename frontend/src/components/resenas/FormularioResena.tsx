@@ -28,9 +28,10 @@ export function FormularioResena({
   const [mvpNombre, setMvpNombre]         = useState(resenaExistente?.mvp_jugador_nombre ?? '')
   const [loading, setLoading]             = useState(false)
   const [error, setError]                 = useState<string | null>(null)
+  const [playerRatings, setPlayerRatings] = useState<Record<number, number>>({})
 
   const handleSubmit = async () => {
-    if (!rating && !texto && !mvpId) {
+    if (!rating && !texto && !mvpId && Object.keys(playerRatings).length === 0) {
       setError('Completá al menos un campo antes de guardar.')
       return
     }
@@ -41,24 +42,44 @@ export function FormularioResena({
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setError('Tenés que estar logueado.'); setLoading(false); return }
 
-    const payload = {
-      user_id: user.id,
-      partido_id: partidoId,
-      rating,
-      texto: texto.trim() || null,
-      mvp_jugador_id: mvpId,
-      mvp_jugador_nombre: mvpNombre || null,
-    }
+    try {
+      // 1. Save match review
+      const payload = {
+        user_id: user.id,
+        partido_id: partidoId,
+        rating,
+        texto: texto.trim() || null,
+        mvp_jugador_id: mvpId,
+        mvp_jugador_nombre: mvpNombre || null,
+      }
 
-    const { error: sbError } = await supabase
-      .from('resenas')
-      .upsert(payload, { onConflict: 'user_id,partido_id' })
+      const { error: sbError } = await supabase
+        .from('resenas')
+        .upsert(payload, { onConflict: 'user_id,partido_id' })
 
-    if (sbError) {
+      if (sbError) throw sbError
+
+      // 2. Save player-specific ratings to 'votaciones' table
+      if (Object.keys(playerRatings).length > 0) {
+        const votosArray = Object.entries(playerRatings).map(([jId, nota]) => ({
+          user_id: user.id,
+          partido_id: String(partidoId),
+          jugador_id: Number(jId),
+          nota,
+          created_at: new Date().toISOString()
+        }))
+
+        const { error: vError } = await supabase
+          .from('votaciones')
+          .upsert(votosArray, { onConflict: 'user_id,partido_id,jugador_id' })
+
+        if (vError) console.error('[FormularioResena] Player ratings save error:', vError)
+      }
+
+      onGuardado?.()
+    } catch (sbError: any) {
       console.error('[FormularioResena] Save error:', sbError)
       setError('No se pudo guardar la reseña. Intentá de nuevo.')
-    } else {
-      onGuardado?.()
     }
 
     setLoading(false)
@@ -82,6 +103,37 @@ export function FormularioResena({
             >
               {n <= (ratingHover ?? rating ?? 0) ? '⭐' : '☆'}
             </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Player Ratings (Advanced) */}
+      <div className="space-y-4 pt-2">
+        <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+            ⭐ Calificar Jugadores <span className="text-[10px] opacity-50 font-medium">(Opcional)</span>
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto no-scrollbar pr-1">
+          {jugadoresDelPartido.map((jugador) => (
+            <div key={jugador.id} className="flex items-center justify-between p-3 bg-[var(--background)] rounded-xl border border-[var(--card-border)]">
+              <span className="text-xs font-bold truncate max-w-[120px]">{jugador.nombre}</span>
+              <div className="flex items-center gap-1">
+                {[...Array(10)].map((_, i) => (
+                    <button
+                        key={i}
+                        onClick={() => setPlayerRatings(prev => ({
+                            ...prev,
+                            [jugador.id]: prev[jugador.id] === i + 1 ? 0 : i + 1
+                        }))}
+                        className={`w-5 h-5 rounded-[4px] text-[8px] font-black transition-all flex items-center justify-center
+                            ${playerRatings[jugador.id] === i + 1 
+                                ? 'bg-[var(--accent)] text-white scale-110 shadow-sm' 
+                                : 'bg-[var(--card-border)]/30 text-[var(--text-muted)] hover:bg-[var(--card-border)]/60'}`}
+                    >
+                        {i + 1}
+                    </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>

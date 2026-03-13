@@ -16,6 +16,12 @@ export const LEAGUE_IDS = {
     COPA_LIBERTADORES: 13,
     COPA_SUDAMERICANA: 11,
     MLS: 253,
+    CHILE: 265,
+    COLOMBIA: 239,
+    MEXICO: 262,
+    URUGUAY: 268,
+    PERU: 281,
+    ECUADOR: 242,
 } as const
 
 // Temporadas actuales
@@ -40,6 +46,12 @@ export const LIGAS_MAP: Record<string, number> = {
     'Copa Libertadores': LEAGUE_IDS.COPA_LIBERTADORES,
     'Copa Sudamericana': LEAGUE_IDS.COPA_SUDAMERICANA,
     'MLS': LEAGUE_IDS.MLS,
+    'Chile': LEAGUE_IDS.CHILE,
+    'Colombia': LEAGUE_IDS.COLOMBIA,
+    'México': LEAGUE_IDS.MEXICO,
+    'Uruguay': LEAGUE_IDS.URUGUAY,
+    'Perú': LEAGUE_IDS.PERU,
+    'Ecuador': LEAGUE_IDS.ECUADOR,
 }
 
 // Configuración de revalidación (en segundos)
@@ -66,5 +78,32 @@ export const LIGAS = [
     'Ligue 1',
     'Brasileirão',
     'MLS',
+    'Chile',
+    'Colombia',
+    'México',
+    'Uruguay',
+    'Perú',
+    'Ecuador',
 ] as const
+
+export const LIGA_FLAGS: Record<string, string> = {
+    'Liga Profesional': '🇦🇷',
+    'Primera Nacional': '🇦🇷',
+    'La Liga': '🇪🇸',
+    'Premier League': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+    'Serie A': '🇮🇹',
+    'Bundesliga': '🇩🇪',
+    'Ligue 1': '🇫🇷',
+    'Brasileirão': '🇧🇷',
+    'Champions League': '🇪🇺',
+    'Copa Libertadores': '🏆',
+    'Copa Sudamericana': '🏆',
+    'MLS': '🇺🇸',
+    'Chile': '🇨🇱',
+    'Colombia': '🇨🇴',
+    'México': '🇲🇽',
+    'Uruguay': '🇺🇾',
+    'Perú': '🇵🇪',
+    'Ecuador': '🇪🇨',
+}
 export type Liga = typeof LIGAS[number]
