@@ -78,37 +78,27 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
     }
 
     const handleReport = async (e: React.MouseEvent) => {
-        e.stopPropagation()
-        if (!user) {
-            router.push('/login')
-            return
-        }
-
-        if (!showReportConfirm) {
-            setShowReportConfirm(true)
-            return
-        }
-
-        setReporting(true)
-        setShowReportConfirm(false)
-        try {
-            const { error } = await supabase
-                .from('match_log_reports')
-                .insert({
-                    match_log_id: log.id,
-                    reporter_id: user.id,
-                    reason: 'Contenido Inapropiado',
-                    details: 'Reportado desde la card de reseña.'
-                })
-
-            if (error) throw error
-            showToast('Reporte enviado. Lo revisaremos a la brevedad.', 'success')
-        } catch (err) {
-            console.error('Error reporting:', err)
-            showToast('Hubo un error al enviar el reporte.', 'error')
-        } finally {
-            setReporting(false)
-        }
+      e.stopPropagation()
+      if (!user) { router.push('/login'); return }
+      if (!showReportConfirm) { setShowReportConfirm(true); return }
+      setReporting(true)
+      setShowReportConfirm(false)
+      try {
+        const { error } = await supabase
+          .from('match_log_reports')
+          .insert({
+            match_log_id: log.id,
+            reporter_id: user.id,
+            reason: 'Contenido Inapropiado',
+            details: 'Reportado desde la card de reseña.'
+          })
+        if (error) throw error
+        showToast('Reporte enviado. Lo revisaremos a la brevedad.', 'success')
+      } catch {
+        showToast('Hubo un error al enviar el reporte.', 'error')
+      } finally {
+        setReporting(false)
+      }
     }
 
     return (
@@ -407,10 +397,10 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                     <AnimatePresence>
                         {showReportConfirm && (
                             <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                className="absolute bottom-full right-0 mb-2 p-2 bg-[var(--card-bg)] border border-red-500/30 shadow-xl flex items-center gap-2 z-[60]"
+                                initial={{ opacity: 0, scale: 0.9, y: 5 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 5 }}
+                                className="absolute bottom-full right-0 mb-2 p-2 bg-[var(--card-bg)] border border-red-500/30 shadow-xl flex items-center gap-2 z-[60] whitespace-nowrap"
                                 style={{ borderRadius: 'var(--radius)' }}
                                 onClick={e => e.stopPropagation()}
                             >
