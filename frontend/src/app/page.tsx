@@ -368,7 +368,11 @@ function HomeContent() {
               {/* MATCH GRID / SEQUENTIAL CONTENT */}
               <div className="space-y-12 pb-10">
 
-                {/* 1. SECTION: FIXTURE */}
+                {activeTab === 'noticias' ? (
+                   <NewsTab />
+                ) : (
+                  <>
+                    {/* 1. SECTION: FIXTURE */}
                 <section>
                   <div className="flex items-center justify-between mb-3 px-1">
                     <div className="flex items-center gap-2">
@@ -457,6 +461,8 @@ function HomeContent() {
                   </div>
                   <FeedGlobal />
                 </section>
+                </>
+                )}
 
               </div>
             </div>

@@ -28,7 +28,7 @@ export function LayoutClientWrapper({ children }: { children: React.ReactNode })
                         <OnboardingModal />
                         <ServiceWorkerRegistration />
                         <FeedbackModal />
-                        <div className="hidden">
+                        <div>
                             <ChallengesFAB />
                         </div>
                     </ToastProvider>
