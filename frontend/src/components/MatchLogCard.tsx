@@ -55,7 +55,7 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
     const [showAddToList, setShowAddToList] = useState(false)
     const [reporting, setReporting] = useState(false)
     const [showReactions, setShowReactions] = useState(false)
-    const [showConfirmReport, setShowConfirmReport] = useState(false)
+    const [showReportConfirm, setShowReportConfirm] = useState(false)
     const { user } = useAuth()
     const { showToast } = useToast()
 
@@ -84,13 +84,13 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
             return
         }
 
-        if (!showConfirmReport) {
-            setShowConfirmReport(true)
+        if (!showReportConfirm) {
+            setShowReportConfirm(true)
             return
         }
 
         setReporting(true)
-        setShowConfirmReport(false)
+        setShowReportConfirm(false)
         try {
             const { error } = await supabase
                 .from('match_log_reports')
@@ -102,7 +102,7 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                 })
 
             if (error) throw error
-            showToast('Gracias por tu reporte. Lo revisaremos a la brevedad.', 'success')
+            showToast('Reporte enviado. Lo revisaremos a la brevedad.', 'success')
         } catch (err) {
             console.error('Error reporting:', err)
             showToast('Hubo un error al enviar el reporte.', 'error')
@@ -373,7 +373,7 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                                         }}
                                         className={`w-10 h-10 flex items-center justify-center text-lg hover:bg-[var(--hover-bg)] transition-colors
                                             ${log.my_reaction === r.type ? 'bg-[var(--accent)]/10' : ''}`}
-                                        style={{ borderRadius: '9999px' }}
+                                        style={{ borderRadius: '50%' }}
                                         title={r.label}
                                     >
                                         {r.emoji}
@@ -403,45 +403,42 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                     <ListPlus size={14} />
                 </button>
                 <div className="flex-1" />
-                <button
-                    type="button"
-                    onClick={handleShare}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black
-                   text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-all"
-                    style={{ borderRadius: 'var(--radius)' }}
-                >
-                    <Share2 size={14} />
-                </button>
-                <div className="flex items-center gap-1">
-                    {showConfirmReport ? (
-                        <>
-                            <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); handleReport(e) }}
-                                className="px-2 py-1.5 text-[10px] font-black text-white bg-red-600 rounded-lg"
+                <div className="relative">
+                    <AnimatePresence>
+                        {showReportConfirm && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className="absolute bottom-full right-0 mb-2 p-2 bg-[var(--card-bg)] border border-red-500/30 shadow-xl flex items-center gap-2 z-[60]"
+                                style={{ borderRadius: 'var(--radius)' }}
+                                onClick={e => e.stopPropagation()}
                             >
-                                Confirmar
-                            </button>
-                            <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); setShowConfirmReport(false) }}
-                                className="px-2 py-1.5 text-[10px] font-black text-[var(--text-muted)]"
-                            >
-                                Cancelar
-                            </button>
-                        </>
-                    ) : (
-                        <button
-                            type="button"
-                            onClick={handleReport}
-                            disabled={reporting}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black
-                               text-[var(--text-muted)] hover:text-red-600 hover:bg-red-600/5 transition-all disabled:opacity-50"
-                            style={{ borderRadius: 'var(--radius)' }}
-                        >
-                            <Flag size={14} className={reporting ? 'animate-pulse' : ''} />
-                        </button>
-                    )}
+                                <span className="text-xs text-[var(--text-muted)]">¿Reportar?</span>
+                                <button
+                                    onClick={handleReport}
+                                    className="text-xs font-black px-2 py-1 bg-red-600 text-white"
+                                    style={{ borderRadius: 'var(--radius)' }}
+                                >Sí</button>
+                                <button
+                                    onClick={e => { e.stopPropagation(); setShowReportConfirm(false) }}
+                                    className="text-xs font-black px-2 py-1 bg-[var(--hover-bg)] text-[var(--text-muted)]"
+                                    style={{ borderRadius: 'var(--radius)' }}
+                                >No</button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                    <button
+                        type="button"
+                        onClick={handleReport}
+                        disabled={reporting}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black
+                           text-[var(--text-muted)] hover:text-red-600 hover:bg-red-600/5 transition-all disabled:opacity-50"
+                        style={{ borderRadius: 'var(--radius)' }}
+                        title="Reportar contenido"
+                    >
+                        <Flag size={14} className={reporting ? 'animate-pulse' : ''} />
+                    </button>
                 </div>
             </div>
 
