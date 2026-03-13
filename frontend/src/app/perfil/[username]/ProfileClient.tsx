@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  ArrowLeft, UserPlus, UserCheck, Star, Trophy, 
-  MessageSquare, Calendar, ArrowRight, Share2 
+import {
+  ArrowLeft, UserPlus, UserCheck, Star, Trophy,
+  MessageSquare, Calendar, ArrowRight, Share2, TrendingUp
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { NavBar } from '@/components/NavBar'
@@ -15,13 +15,12 @@ import { UserBadgesGallery } from '@/components/UserBadgesGallery'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/contexts/AuthContext'
-import { useFollows } from '@/hooks/useMatchLogs'
 import { useToast } from '@/contexts/ToastContext'
+import { useFollows } from '@/hooks/useMatchLogs'
 import { ActivityHeatmap } from '@/components/ActivityHeatmap'
 import { useProfileFollowers } from '@/hooks/useProfileFollowers'
 import { FollowListModal, type FollowListType } from '@/components/FollowListModal'
 import Link from 'next/link'
-import { TrendingUp } from 'lucide-react'
 
 type Props = {
   initialProfile: any
@@ -33,11 +32,11 @@ type Props = {
 export function ProfileClient({ initialProfile, initialStats, initialResenas, initialProdes }: Props) {
   const router = useRouter()
   const { user } = useAuth()
+  const { showToast } = useToast()
   const { isFollowing, toggleFollow } = useFollows()
   const { followersCount, followingCount } = useProfileFollowers(initialProfile.id)
   const supabase = createClient()
 
-  const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState<'activity' | 'stats' | 'listas'>('activity')
   const [followModal, setFollowModal] = useState<FollowListType | null>(null)
   const [listas, setListas] = useState<any[]>([])
@@ -75,15 +74,15 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
       <DesktopNav />
       <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-28 pt-10 md:pt-24 px-6">
         <div className="max-w-4xl mx-auto space-y-10">
-          
-          {/* Cabecera Estilo 2.0 */}
+
+          {/* Header */}
           <div className="relative bg-[var(--card-bg)] rounded-3xl p-8 border border-[var(--card-border)] overflow-hidden shadow-2xl">
             <div className="absolute inset-0 opacity-5 pointer-events-none overflow-hidden">
-               <div className="absolute -top-10 -right-10 text-[150px] rotate-12">⚽</div>
+              <div className="absolute -top-10 -right-10 text-[150px] rotate-12">⚽</div>
             </div>
 
             <div className="flex flex-col md:flex-row items-center md:items-end gap-8 relative z-10">
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="w-28 h-28 md:w-36 md:h-36 rounded-full bg-[var(--accent)]/10 flex items-center justify-center text-5xl border-4 border-[var(--background)] shadow-xl overflow-hidden shrink-0"
@@ -101,14 +100,14 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
                     @{initialProfile.username}
                   </h1>
                   <div className="flex flex-wrap justify-center md:justify-start gap-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
-                    <button 
+                    <button
                       onClick={() => setFollowModal('followers')}
                       className="hover:text-[var(--accent)] transition-colors"
                     >
                       {followersCount} Seguidores
                     </button>
                     <span>|</span>
-                    <button 
+                    <button
                       onClick={() => setFollowModal('following')}
                       className="hover:text-[var(--accent)] transition-colors"
                     >
@@ -120,7 +119,7 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
                 <div className="flex flex-wrap justify-center md:justify-start gap-3">
                   {initialProfile.equipo_favorito && (
                     <div className="px-4 py-1.5 bg-[var(--background)] border border-[var(--card-border)] rounded-full text-[10px] font-bold uppercase tracking-widest text-[var(--accent)] flex items-center gap-2">
-                       ❤️ {initialProfile.equipo_favorito}
+                      ❤️ {initialProfile.equipo_favorito}
                     </div>
                   )}
                   {initialProfile.bio && (
@@ -141,7 +140,7 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
                     {isFollowing(initialProfile.id) ? 'Siguiendo' : 'Seguir'}
                   </Button>
                 )}
-                <button 
+                <button
                   onClick={handleShare}
                   className="p-3 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl hover:bg-[var(--hover-bg)] transition-all"
                 >
@@ -166,6 +165,7 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
             ))}
           </div>
 
+          {/* Link a mis-stats — solo perfil propio */}
           {isOwnProfile && (
             <Link
               href="/mis-stats"
@@ -187,86 +187,100 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
           {/* Activity Heatmap */}
           <ActivityHeatmap userId={initialProfile.id} />
 
-          {/* Tabs Activity vs Stats */}
+          {/* Tabs */}
           <div className="flex gap-4 border-b border-[var(--card-border)] pb-2 overflow-x-auto no-scrollbar">
-             {['activity', 'stats', 'listas'].map((tab) => (
-               <button
-                 key={tab}
-                 onClick={() => setActiveTab(tab as any)}
-                 className={`px-4 py-2 text-xs font-black uppercase tracking-widest transition-all relative
-                   ${activeTab === tab ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] opacity-50'}`}
-               >
-                 {tab === 'activity' ? 'Actividad' : tab === 'stats' ? 'Estadísticas' : 'Listas'}
-                 {activeTab === tab && (
-                   <motion.div layoutId="tab-active" className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--accent)] rounded-full" />
-                 )}
-               </button>
-             ))}
+            {(['activity', 'stats', 'listas'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 text-xs font-black uppercase tracking-widest transition-all relative whitespace-nowrap
+                  ${activeTab === tab ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] opacity-50'}`}
+              >
+                {tab === 'activity' ? 'Actividad' : tab === 'stats' ? 'Estadísticas' : 'Listas'}
+                {activeTab === tab && (
+                  <motion.div layoutId="tab-active" className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--accent)] rounded-full" />
+                )}
+              </button>
+            ))}
           </div>
 
-          {activeTab === 'activity' ? (
+          {/* Tab: Actividad */}
+          {activeTab === 'activity' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
               <section className="space-y-6">
                 <h2 className="text-xs font-black uppercase tracking-widest opacity-50 flex items-center gap-3">
-                   <MessageSquare size={14} /> Reseñas Recientes
+                  <MessageSquare size={14} /> Reseñas Recientes
                 </h2>
                 <div className="space-y-4">
                   {initialResenas.map((r) => (
-                    <Link key={r.id} href={`/partido/${r.partido_id}`} className="block bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 hover:border-[var(--accent)] transition-all">
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-[9px] font-black opacity-60 uppercase tracking-wider">
-                            {r.partido
-                              ? `${r.partido.equipo_local} ${r.partido.goles_local ?? ''} - ${r.partido.goles_visitante ?? ''} ${r.partido.equipo_visitante}`
-                              : `Partido #${r.partido_id}`
-                            }
-                          </span>
-                          <div className="flex gap-0.5">
-                            {[...Array(r.rating || 0)].map((_, i) => <Star key={i} size={10} className="fill-yellow-400 text-yellow-400" />)}
-                          </div>
-                       </div>
-                       <p className="text-sm font-medium italic">"{r.texto || 'Sin comentario'}"</p>
+                    <Link key={r.id} href={`/partido/${r.partido_id}`}
+                      className="block bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 hover:border-[var(--accent)] transition-all">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-[9px] font-black opacity-60 uppercase tracking-wider">
+                          {r.partido
+                            ? `${r.partido.equipo_local} ${r.partido.goles_local ?? ''} - ${r.partido.goles_visitante ?? ''} ${r.partido.equipo_visitante}`
+                            : `Partido #${r.partido_id}`
+                          }
+                        </span>
+                        <div className="flex gap-0.5">
+                          {[...Array(r.rating || 0)].map((_, i) => (
+                            <Star key={i} size={10} className="fill-yellow-400 text-yellow-400" />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-sm font-medium italic">"{r.texto || 'Sin comentario'}"</p>
                     </Link>
                   ))}
-                  {initialResenas.length === 0 && <p className="text-xs opacity-30 italic text-center py-10">No hay reseñas todavía.</p>}
+                  {initialResenas.length === 0 && (
+                    <p className="text-xs opacity-30 italic text-center py-10">No hay reseñas todavía.</p>
+                  )}
                 </div>
               </section>
 
               <section className="space-y-6">
                 <h2 className="text-xs font-black uppercase tracking-widest opacity-50 flex items-center gap-3">
-                   <Trophy size={14} /> Pronósticos
+                  <Trophy size={14} /> Pronósticos
                 </h2>
                 <div className="space-y-3">
                   {initialProdes.map((p) => (
                     <div key={p.id} className={`p-4 rounded-2xl border ${p.acerto ? 'bg-green-500/5 border-green-500/30' : 'bg-[var(--card-bg)] border-[var(--card-border)]'}`}>
-                       <div className="flex justify-between items-center">
-                          <span className="text-sm font-bold">Partido #{p.partido_id}</span>
-                          <span className="text-lg font-black tracking-widest tabular-nums">{p.goles_local} - {p.goles_visitante}</span>
-                       </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-bold">Partido #{p.partido_id}</span>
+                        <span className="text-lg font-black tracking-widest tabular-nums">
+                          {p.goles_local} - {p.goles_visitante}
+                        </span>
+                      </div>
                     </div>
                   ))}
-                  {initialProdes.length === 0 && <p className="text-xs opacity-30 italic text-center py-10">No hay pronósticos todavía.</p>}
+                  {initialProdes.length === 0 && (
+                    <p className="text-xs opacity-30 italic text-center py-10">No hay pronósticos todavía.</p>
+                  )}
                 </div>
               </section>
             </div>
-          ) : (
+          )}
+
+          {/* Tab: Estadísticas */}
+          {activeTab === 'stats' && (
             <div className="space-y-8">
-               <BadgeDisplay stats={{
-                 total_logs: initialStats?.total_resenas || 0,
-                 reviews_with_text: initialResenas.filter(r => r.texto).length,
-                 total_votos: 0,
-                 grupos_joined: 0,
-                 followers_count: followersCount,
-                 total_likes_received: 0,
-                 distinct_ligas: 0,
-                 prode_aciertos: initialStats?.total_aciertos || 0,
-                 neutral_reviews: 0,
-                 early_logs: 0,
-                 late_logs: 0
-               }} />
-               <UserBadgesGallery userId={initialProfile.id} isOwnProfile={isOwnProfile} />
+              <BadgeDisplay stats={{
+                total_logs: initialStats?.total_resenas || 0,
+                reviews_with_text: initialResenas.filter(r => r.texto).length,
+                total_votos: 0,
+                grupos_joined: 0,
+                followers_count: followersCount,
+                total_likes_received: 0,
+                distinct_ligas: 0,
+                prode_aciertos: initialStats?.total_aciertos || 0,
+                neutral_reviews: 0,
+                early_logs: 0,
+                late_logs: 0
+              }} />
+              <UserBadgesGallery userId={initialProfile.id} isOwnProfile={isOwnProfile} />
             </div>
           )}
 
+          {/* Tab: Listas */}
           {activeTab === 'listas' && (
             <div className="space-y-4">
               {listas.length === 0 ? (
@@ -294,18 +308,19 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
               )}
             </div>
           )}
+
         </div>
       </main>
-      
+
+      {/* Modal seguidores/siguiendo */}
       {followModal && (
         <FollowListModal
-          isOpen={!!followModal}
           userId={initialProfile.id}
           type={followModal}
-          title={followModal === 'followers' ? 'Seguidores' : 'Siguiendo'}
           onClose={() => setFollowModal(null)}
         />
       )}
+
       <NavBar />
     </>
   )

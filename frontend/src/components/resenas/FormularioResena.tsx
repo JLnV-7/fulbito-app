@@ -3,9 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/contexts/ToastContext'
-import { StarRating } from '@/components/StarRating'
 import { PlayerRatingPicker } from '@/components/PlayerRatingPicker'
-import { motion } from 'framer-motion'
 
 type Props = {
   partidoId: number
@@ -38,14 +36,20 @@ export function FormularioResena({
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async () => {
-    if (!rating) { showToast('Poné al menos una calificación al partido.', 'warning'); return }
+    if (!rating) {
+      showToast('Poné al menos una calificación al partido.', 'warning')
+      return
+    }
 
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { showToast('Tenés que estar logueado.', 'error'); setLoading(false); return }
+    if (!user) {
+      showToast('Tenés que estar logueado.', 'error')
+      setLoading(false)
+      return
+    }
 
     try {
-      // Upsert en match_logs
       const { data: newLog, error } = await supabase
         .from('match_logs')
         .upsert({
@@ -67,23 +71,24 @@ export function FormularioResena({
           is_private: false,
           watched_at: new Date().toISOString(),
         }, { onConflict: 'user_id,partido_id' })
-        .select().single()
+        .select()
+        .single()
 
       if (error) throw error
 
-      // Guardar player ratings si hay
       const prEntries = Object.entries(playerRatings)
       if (prEntries.length > 0 && newLog) {
-        const prRows = prEntries.map(([playerId, rating]) => {
+        const prRows = prEntries.map(([playerId, r]) => {
           const jugador = jugadoresDelPartido.find(j => String(j.id) === playerId)
           return {
             match_log_id: newLog.id,
             player_name: jugador?.nombre || playerId,
             player_team: 'local' as const,
-            rating,
+            rating: r,
           }
         })
-        await supabase.from('match_log_player_ratings')
+        await supabase
+          .from('match_log_player_ratings')
           .upsert(prRows, { onConflict: 'match_log_id,player_name' })
       }
 
@@ -114,9 +119,11 @@ export function FormularioResena({
         </div>
       </div>
 
-      {/* Título opcional */}
+      {/* Título */}
       <div className="space-y-2">
-        <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest">Título <span className="opacity-50">(opcional)</span></p>
+        <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest">
+          Título <span className="opacity-50">(opcional)</span>
+        </p>
         <input
           value={titulo}
           onChange={e => setTitulo(e.target.value)}
@@ -144,9 +151,15 @@ export function FormularioResena({
         />
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={isSpoiler} onChange={e => setIsSpoiler(e.target.checked)}
-              className="rounded" />
-            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">Contiene spoilers</span>
+            <input
+              type="checkbox"
+              checked={isSpoiler}
+              onChange={e => setIsSpoiler(e.target.checked)}
+              className="rounded"
+            />
+            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">
+              Contiene spoilers
+            </span>
           </label>
           <p className="text-[var(--text-muted)] text-[10px] font-bold">{texto.length}/500</p>
         </div>
