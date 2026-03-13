@@ -16,7 +16,7 @@ import { PullToRefresh } from '@/components/PullToRefresh'
 export default function GruposPage() {
     const router = useRouter()
     const { user } = useAuth()
-    const { grupos, loading } = useGrupos()
+    const { grupos, loading, refetch } = useGrupos()
 
     const [view, setView] = useState<'list' | 'create' | 'join'>('list')
     const [search, setSearch] = useState('')
@@ -39,7 +39,7 @@ export default function GruposPage() {
     return (
         <>
             <DesktopNav />
-            <PullToRefresh onRefresh={async () => { /* Add refresh logic if useGrupos exposes refetch, else dummy */ window.location.reload() }}>
+            <PullToRefresh onRefresh={async () => { await refetch() }}>
                 <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20">
                     <div className="px-6 py-6 md:py-8">
                         <div className="max-w-4xl mx-auto">
@@ -178,11 +178,17 @@ export default function GruposPage() {
                                                         <div className="mt-4 p-3 bg-[#16a34a]/5 rounded-xl border border-[#16a34a]/10 flex flex-col gap-1 relative overflow-hidden">
                                                             <div className="absolute top-0 right-0 w-8 h-full bg-gradient-to-l from-[var(--card-bg)] to-transparent pointer-events-none" />
                                                             <p className="text-xs text-[var(--text-muted)] line-clamp-1 italic pr-4">
-                                                                <span className="font-bold text-[var(--foreground)] not-italic relative mr-1">
-                                                                    <span className="absolute -left-1.5 top-0.5 w-[3px] h-[3px] rounded-full bg-[#16a34a]" />
-                                                                    Lucas:
-                                                                </span>
-                                                                "Típico que se le escapa en el último minuto..."
+                                                                {(grupo as any).last_message ? (
+                                                                    <>
+                                                                        <span className="font-bold text-[var(--foreground)] not-italic relative mr-1">
+                                                                            <span className="absolute -left-1.5 top-0.5 w-[3px] h-[3px] rounded-full bg-[#16a34a]" />
+                                                                            {(grupo as any).last_message_user}:
+                                                                        </span>
+                                                                        "{(grupo as any).last_message}"
+                                                                    </>
+                                                                ) : (
+                                                                    <span className="opacity-50">¡Sé el primero en comentar! 💬</span>
+                                                                )}
                                                             </p>
                                                         </div>
                                                     </motion.div>

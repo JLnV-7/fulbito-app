@@ -11,6 +11,7 @@ import { PullToRefresh } from '@/components/PullToRefresh'
 import { CreateGroupModal } from '@/components/CreateGroupModal'
 import { useMatchLogs } from '@/hooks/useMatchLogs'
 import { MatchLogCard } from '@/components/MatchLogCard'
+import type { MatchLog } from '@/types'
 
 export default function ComunidadPage() {
     const router = useRouter()
@@ -19,31 +20,33 @@ export default function ComunidadPage() {
     const { logs: realLogs, loading, toggleLike } = useMatchLogs({ limit: 10, feedType })
 
     // Seed data mock para que no se vea vacío
-    const mockLogs = [
+    const mockLogs: MatchLog[] = [
         {
             id: 'mock-1',
             user_id: 'system',
-            username: 'FutLog Bot',
-            avatar_url: '🤖',
-            equipo: 'Talleres',
-            liga: 'Liga Profesional',
-            partido_nombre: 'Boca vs River',
-            rating_partido: 4.5,
-            review_text: '¡Increíble ambiente en el Superclásico! FutLog ya está activo.',
-            likes_count: 3,
-            created_at: new Date().toISOString(),
-            // Propiedades faltantes para cumplir con la interfaz MatchLog
-            match_type: 'liga',
+            match_type: 'tv',
             equipo_local: 'Boca Juniors',
             equipo_visitante: 'River Plate',
             fecha_partido: new Date().toISOString(),
-            is_neutral: false,
-            votos_figura: [],
-            total_unfiltered_likes: 3
+            watched_at: new Date().toISOString(),
+            rating_partido: 4.5,
+            review_text: '¡Increíble ambiente en el Superclásico! FutLog ya está activo.',
+            likes_count: 3,
+            is_spoiler: false,
+            is_private: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            profile: {
+                id: 'system',
+                username: 'FutLog Bot',
+                avatar_url: '🤖',
+                equipo: 'Talleres',
+                created_at: new Date().toISOString()
+            }
         }
-    ] as any[] // Usamos any temporalmente para evitar el error de tipado estricto si faltan campos complejos
+    ]
 
-    const logs = realLogs.length > 0 ? realLogs : (mockLogs as any)
+    const logs = realLogs.length > 0 ? realLogs : mockLogs
 
     const options = [
         {
@@ -173,7 +176,7 @@ export default function ComunidadPage() {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {logs.map((log: any) => (
+                                    {logs.map((log) => (
                                         <MatchLogCard key={log.id} log={log} onLike={toggleLike} />
                                     ))}
                                 </div>

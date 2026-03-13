@@ -10,6 +10,7 @@ import { TeamLogo } from './TeamLogo'
 import { AddToListModal } from './AddToListModal'
 import { hapticFeedback } from '@/lib/helpers'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/contexts/ToastContext'
 import { supabase } from '@/lib/supabase'
 import type { MatchLog } from '@/types'
 
@@ -54,7 +55,9 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
     const [showAddToList, setShowAddToList] = useState(false)
     const [reporting, setReporting] = useState(false)
     const [showReactions, setShowReactions] = useState(false)
+    const [confirmReport, setConfirmReport] = useState(false)
     const { user } = useAuth()
+    const { showToast } = useToast()
 
     const typeMeta = MATCH_TYPE_META[log.match_type] || MATCH_TYPE_META.other
     const TypeIcon = typeMeta.icon
@@ -81,26 +84,32 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
             return
         }
 
-        if (confirm('¿Estás seguro que deseas reportar esta reseña por contenido inapropiado?')) {
-            setReporting(true)
-            try {
-                const { error } = await supabase
-                    .from('match_log_reports')
-                    .insert({
-                        match_log_id: log.id,
-                        reporter_id: user.id,
-                        reason: 'Contenido Inapropiado',
-                        details: 'Reportado desde la card de reseña.'
-                    })
+        if (!confirmReport) {
+            setConfirmReport(true)
+            // Auto-hide after 3 seconds
+            setTimeout(() => setConfirmReport(false), 3000)
+            return
+        }
 
-                if (error) throw error
-                alert('Gracias por tu reporte. Lo revisaremos a la brevedad.')
-            } catch (err) {
-                console.error('Error reporting:', err)
-                alert('Hubo un error al enviar el reporte.')
-            } finally {
-                setReporting(false)
-            }
+        setReporting(true)
+        try {
+            const { error } = await supabase
+                .from('match_log_reports')
+                .insert({
+                    match_log_id: log.id,
+                    reporter_id: user.id,
+                    reason: 'Contenido Inapropiado',
+                    details: 'Reportado desde la card de reseña.'
+                })
+
+            if (error) throw error
+            showToast('Gracias por tu reporte. Lo revisaremos a la brevedad.', 'success')
+            setConfirmReport(false)
+        } catch (err) {
+            console.error('Error reporting:', err)
+            showToast('Hubo un error al enviar el reporte.', 'error')
+        } finally {
+            setReporting(false)
         }
     }
 
@@ -269,14 +278,18 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                             <span>Esta reseña contiene spoilers — tocar para revelar</span>
                         </button>
                     ) : (
-                        <div>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.4 }}
+                        >
                             {log.review_title && (
                                 <h4 className="text-sm font-semibold mb-1">{log.review_title}</h4>
                             )}
                             <p className="text-xs text-[var(--text-muted)] line-clamp-3 leading-relaxed">
                                 {log.review_text}
                             </p>
-                        </div>
+                        </motion.div>
                     )}
                 </div>
             )}
@@ -362,7 +375,7 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                                         }}
                                         className={`w-10 h-10 flex items-center justify-center text-lg hover:bg-[var(--hover-bg)] transition-colors
                                             ${log.my_reaction === r.type ? 'bg-[var(--accent)]/10' : ''}`}
-                                        style={{ borderRadius: 'full' }}
+                                        style={{ borderRadius: '9999px' }}
                                         title={r.label}
                                     >
                                         {r.emoji}
@@ -401,16 +414,17 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                 >
                     <Share2 size={14} />
                 </button>
-                <button
+                 <button
                     type="button"
                     onClick={handleReport}
                     disabled={reporting}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black
-                   text-[var(--text-muted)] hover:text-red-600 hover:bg-red-600/5 transition-all disabled:opacity-50"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-black transition-all disabled:opacity-50
+                      ${confirmReport ? 'bg-red-600 text-white animate-pulse' : 'text-[var(--text-muted)] hover:text-red-600 hover:bg-red-600/5'}`}
                     style={{ borderRadius: 'var(--radius)' }}
-                    title="Reportar contenido"
+                    title={confirmReport ? "Toca de nuevo para confirmar" : "Reportar contenido"}
                 >
                     <Flag size={14} className={reporting ? 'animate-pulse' : ''} />
+                    {confirmReport && <span>¿Confirmar?</span>}
                 </button>
             </div>
 

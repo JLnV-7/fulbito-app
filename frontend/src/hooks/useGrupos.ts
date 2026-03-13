@@ -54,12 +54,23 @@ export function useGrupos() {
                         .eq('partido_id', `grupo-${m.grupo_id}`)
                         .gt('created_at', m.last_read_at || new Date(0).toISOString())
 
+                    // Get last message preview
+                    const { data: lastMsg } = await supabase
+                        .from('comentarios')
+                        .select('mensaje, profiles(username)')
+                        .eq('partido_id', `grupo-${m.grupo_id}`)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .single()
+
                     return {
                         ...m.grupo,
                         mi_puntos: m.puntos_grupo,
                         mi_posicion: m.posicion,
                         miembros_count: count || 0,
-                        unread_count: unreadCount || 0
+                        unread_count: unreadCount || 0,
+                        last_message: lastMsg?.mensaje,
+                        last_message_user: (lastMsg?.profiles as any)?.username
                     }
                 })
             )

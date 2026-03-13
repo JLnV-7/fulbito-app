@@ -137,15 +137,15 @@ export function useMatchLogs(filters?: MatchLogFilters) {
             }
 
             // Process data: flatten tags, check if liked
-            const processedLogs: MatchLog[] = (data || []).map((log: Record<string, any>) => ({
+            const processedLogs: MatchLog[] = (data || []).map((log: any) => ({
                 ...log,
-                tags: ((log.tags as { tag: string }[]) || []).map((t: { tag: string }) => t.tag),
-                likes_count: ((log.likes_count as { count: number }[]) || [{ count: 0 }])[0]?.count || 0,
-                profile: log.profile as MatchLog['profile'],
-                player_ratings: log.player_ratings as MatchLogPlayerRating[],
+                tags: (log.tags || []).map((t: any) => t.tag),
+                likes_count: log.likes_count[0]?.count || 0,
+                profile: log.profile,
+                player_ratings: log.player_ratings,
                 is_liked: !!myReactions[log.id],
                 my_reaction: myReactions[log.id]
-            })) as MatchLog[]
+            }))
 
             if (reset) {
                 setLogs(processedLogs)
@@ -159,7 +159,7 @@ export function useMatchLogs(filters?: MatchLogFilters) {
         } finally {
             setLoading(false)
         }
-    }, [filters?.liga, filters?.equipo, filters?.matchType, filters?.userId, filters?.limit, filters?.offset, user])
+    }, [filters?.liga, filters?.equipo, filters?.matchType, filters?.userId, filters?.feedType, filters?.limit, filters?.offset, user])
 
     useEffect(() => {
         fetchLogs(true)
@@ -247,6 +247,12 @@ export function useMatchLogs(filters?: MatchLogFilters) {
 
         if (typeof window !== 'undefined' && !navigator.onLine) {
             const queue = JSON.parse(localStorage.getItem('futlog_offline_queue') || '[]')
+            
+            // Limit queue to 50 items to avoid localStorage bloat (cleanup 14)
+            if (queue.length >= 50) {
+                queue.shift() // Remove oldest
+            }
+            
             queue.push({ ...data, _queuedAt: new Date().toISOString() })
             localStorage.setItem('futlog_offline_queue', JSON.stringify(queue))
             showToast('Estás sin conexión. La reseña se guardó y se subirá al conectar.', 'info')

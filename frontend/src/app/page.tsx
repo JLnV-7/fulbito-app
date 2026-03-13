@@ -51,53 +51,7 @@ const TABS: { id: HomeTab; label: string; icon: React.ReactNode }[] = [
 // ============================================
 // Example fixtures (last resort fallback)
 // ============================================
-const EXAMPLE_FIXTURES: Partido[] = [
-  {
-    id: 'mock-prev-1', fixture_id: 1001,
-    equipo_local: 'Boca Juniors', equipo_visitante: 'River Plate',
-    logo_local: 'https://media.api-sports.io/football/teams/451.png',
-    logo_visitante: 'https://media.api-sports.io/football/teams/435.png',
-    goles_local: 0, goles_visitante: 0,
-    fecha_inicio: new Date().toISOString().split('T')[0] + 'T20:00:00',
-    estado: 'PREVIA', liga: 'Liga Profesional'
-  },
-  {
-    id: 'mock-prev-2', fixture_id: 1002,
-    equipo_local: 'Racing Club', equipo_visitante: 'Independiente',
-    logo_local: 'https://media.api-sports.io/football/teams/436.png',
-    logo_visitante: 'https://media.api-sports.io/football/teams/438.png',
-    goles_local: 0, goles_visitante: 0,
-    fecha_inicio: new Date().toISOString().split('T')[0] + 'T18:00:00',
-    estado: 'PREVIA', liga: 'Liga Profesional'
-  },
-  {
-    id: 'mock-live-1', fixture_id: 1003,
-    equipo_local: 'Real Madrid', equipo_visitante: 'FC Barcelona',
-    logo_local: 'https://media.api-sports.io/football/teams/541.png',
-    logo_visitante: 'https://media.api-sports.io/football/teams/529.png',
-    goles_local: 2, goles_visitante: 1,
-    fecha_inicio: new Date().toISOString().split('T')[0] + 'T21:00:00',
-    estado: 'EN_JUEGO', liga: 'La Liga'
-  },
-  {
-    id: 'mock-fin-1', fixture_id: 1004,
-    equipo_local: 'Man City', equipo_visitante: 'Liverpool',
-    logo_local: 'https://media.api-sports.io/football/teams/50.png',
-    logo_visitante: 'https://media.api-sports.io/football/teams/40.png',
-    goles_local: 3, goles_visitante: 2,
-    fecha_inicio: new Date().toISOString().split('T')[0] + 'T13:30:00',
-    estado: 'FINALIZADO', liga: 'Premier League'
-  },
-  {
-    id: 'mock-prev-3', fixture_id: 1005,
-    equipo_local: 'San Lorenzo', equipo_visitante: 'Huracán',
-    logo_local: 'https://media.api-sports.io/football/teams/458.png',
-    logo_visitante: 'https://media.api-sports.io/football/teams/440.png',
-    goles_local: 0, goles_visitante: 0,
-    fecha_inicio: new Date().toISOString().split('T')[0] + 'T15:00:00',
-    estado: 'PREVIA', liga: 'Liga Profesional'
-  }
-] as Partido[]
+const EXAMPLE_FIXTURES: Partido[] = []
 
 // ============================================
 // Date helpers
@@ -106,22 +60,29 @@ function toLocalDateStr(date: Date): string {
   return date.toISOString().split('T')[0]
 }
 
-function formatDateLabel(date: Date, t: any, localeFormat: string): string {
+function formatDateLabel(date: Date, t: any, localeFormat: string): { label: string; weekday?: string; day?: number; isRelative: boolean } {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const target = new Date(date)
   target.setHours(0, 0, 0, 0)
   const diff = Math.round((target.getTime() - today.getTime()) / 86400000)
 
-  if (diff === 0) return t('common.today') || 'Hoy'
-  if (diff === -1) return t('common.yesterday') || 'Ayer'
-  if (diff === 1) return t('common.tomorrow') || 'Mañana'
+  const weekday = target.toLocaleDateString(localeFormat, { weekday: 'short' })
+  const day = target.getDate()
 
-  return target.toLocaleDateString(localeFormat, {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  })
+  if (diff === 0) return { label: t('common.today') || 'Hoy', isRelative: true, weekday, day }
+  if (diff === -1) return { label: t('common.yesterday') || 'Ayer', isRelative: true, weekday, day }
+  if (diff === 1) return { label: t('common.tomorrow') || 'Mañana', isRelative: true, weekday, day }
+
+  return {
+    label: target.toLocaleDateString(localeFormat, {
+      day: 'numeric',
+      month: 'short',
+    }),
+    weekday,
+    day,
+    isRelative: false
+  }
 }
 
 function generateDateRange(): Date[] {
@@ -290,7 +251,6 @@ function HomeContent() {
         <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-28 md:pt-20">
           <div className="relative z-10">
             {/* Simple Fixed Branding Header - mobile only (DesktopNav handles desktop) */}
-            {/* Simple Fixed Branding Header - mobile only (DesktopNav handles desktop) */}
             <div className="md:hidden px-4 py-3 flex justify-between items-center border-b border-[var(--card-border)] bg-[var(--card-bg)] z-30 sticky top-0">
               <h1 className="text-xl font-black tracking-tighter text-[var(--foreground)]">FutLog</h1>
               <div className="flex items-center gap-1.5">
@@ -336,7 +296,8 @@ function HomeContent() {
                 <div className="flex items-center gap-1.5 mb-5 overflow-x-auto no-scrollbar py-1">
                   {dateRange.map((date) => {
                     const dateStr = toLocalDateStr(date)
-                    const label = formatDateLabel(date, t, localeFormat)
+                    const dateInfo = formatDateLabel(date, t, localeFormat)
+                    const label = dateInfo.label
                     const isSelected = dateStr === selectedDate
                     const isToday = dateStr === toLocalDateStr(new Date())
                     return (
@@ -354,10 +315,10 @@ function HomeContent() {
                           }`}
                       >
                         <span className={`text-[9px] font-black uppercase tracking-wider ${isSelected ? 'opacity-90' : 'opacity-70'}`}>
-                          {label === t('common.today') || label === t('common.tomorrow') || label === t('common.yesterday') || label === 'Hoy' || label === 'Mañana' || label === 'Ayer' ? ' ' : new Date(dateStr + 'T12:00:00').toLocaleDateString(localeFormat, { weekday: 'short' })}
+                          {dateInfo.isRelative ? ' ' : dateInfo.weekday}
                         </span>
                         <span className={`text-sm font-black tracking-tighter mt-0.5 ${isSelected ? 'text-[var(--background)]' : ''}`}>
-                          {label === t('common.today') || label === t('common.tomorrow') || label === t('common.yesterday') || label === 'Hoy' || label === 'Mañana' || label === 'Ayer' ? label : new Date(dateStr + 'T12:00:00').getDate()}
+                          {label}
                         </span>
                       </button>
                     )
@@ -367,103 +328,92 @@ function HomeContent() {
 
               {/* MATCH GRID / SEQUENTIAL CONTENT */}
               <div className="space-y-12 pb-10">
-
                 {activeTab === 'noticias' ? (
-                   <NewsTab />
+                  <NewsTab />
+                ) : activeTab === 'tabla' ? (
+                  <TablaContent ligaExterna={currentLigaName || 'Liga Profesional'} />
+                ) : activeTab === 'goleadores' ? (
+                  <GoleadoresContent ligaExterna={currentLigaName || 'Liga Profesional'} />
+                ) : activeTab === 'fixtures' ? (
+                  <FixturesContent />
+                ) : activeTab === 'comunidad' ? (
+                  <div className="space-y-12">
+                     <CommunityHighlights />
+                     <FeedGlobal />
+                  </div>
                 ) : (
                   <>
-                    {/* 1. SECTION: FIXTURE */}
-                <section>
-                  <div className="flex items-center justify-between mb-3 px-1">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-[12px] font-bold tracking-tight text-[var(--foreground)] capitalize">
-                        Fixture: {filtroLiga === 'Todos' || filtroLiga === 'Favoritos'
-                          ? formatDateLabel(new Date(selectedDate + 'T12:00:00'), t, localeFormat).toUpperCase()
-                          : filtroLiga.toUpperCase()}
-                      </h2>
-                      {liveCount > 0 && (
-                        <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-600 text-[8px] font-black animate-pulse flex items-center gap-1">
-                          {liveCount} VIVO
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                    {/* 1. SECTION: FIXTURE (Partidos Tab) */}
+                    <section>
+                      <div className="flex items-center justify-between mb-3 px-1">
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-[12px] font-bold tracking-tight text-[var(--foreground)] capitalize">
+                            Fixture: {filtroLiga === 'Todos' || filtroLiga === 'Favoritos'
+                              ? formatDateLabel(new Date(selectedDate + 'T12:00:00'), t, localeFormat).label.toUpperCase()
+                              : filtroLiga.toUpperCase()}
+                          </h2>
+                          {liveCount > 0 && (
+                            <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-600 text-[8px] font-black animate-pulse flex items-center gap-1">
+                              {liveCount} VIVO
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
-                  {loading ? (
-                    <div className="space-y-2">
-                      {Array(4).fill(0).map((_, i) => <div key={i} className="h-12 bg-[var(--card-bg)] border border-[var(--card-border)] animate-shimmer" />)}
-                    </div>
-                  ) : error ? (
-                    <ErrorMessage 
-                        message="No pudimos cargar los partidos. Intentá de nuevo." 
-                        onRetry={refetch} 
-                    />
-                  ) : (
-                    <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
-                      {/* Disclaimer banners */}
-                      {fixtureDisplay.type === 'nearest' && fixtureDisplay.nearestDate && (
-                        <div className="px-4 py-2.5 bg-[var(--accent-green)]/10 border-b border-[var(--card-border)] flex items-center justify-between">
-                          <p className="text-[10px] font-bold text-[var(--accent)] capitalize tracking-tight">
-                            📅 Próximos partidos: {formatDateLabel(new Date(fixtureDisplay.nearestDate + 'T12:00:00'), t, localeFormat)}
-                          </p>
-                          <button
-                            onClick={() => setSelectedDate(fixtureDisplay.nearestDate!)}
-                            className="text-[9px] font-bold text-[var(--accent)] underline capitalize"
-                          >
-                            Ir a esa fecha
-                          </button>
+                      {loading ? (
+                        <div className="space-y-2">
+                          {Array(4).fill(0).map((_, i) => <div key={i} className="h-12 bg-[var(--card-bg)] border border-[var(--card-border)] animate-shimmer" />)}
+                        </div>
+                      ) : error ? (
+                        <ErrorMessage 
+                            message="No pudimos cargar los partidos. Intentá de nuevo." 
+                            onRetry={refetch} 
+                        />
+                      ) : (
+                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
+                          {/* Disclaimer banners */}
+                          {fixtureDisplay.type === 'nearest' && fixtureDisplay.nearestDate && (
+                            <div className="px-4 py-2.5 bg-[var(--accent-green)]/10 border-b border-[var(--card-border)] flex items-center justify-between">
+                              <p className="text-[10px] font-bold text-[var(--accent)] capitalize tracking-tight">
+                                📅 Próximos partidos: {formatDateLabel(new Date(fixtureDisplay.nearestDate + 'T12:00:00'), t, localeFormat).label}
+                              </p>
+                              <button
+                                onClick={() => setSelectedDate(fixtureDisplay.nearestDate!)}
+                                className="text-[9px] font-bold text-[var(--accent)] underline capitalize"
+                              >
+                                Ir a esa fecha
+                              </button>
+                            </div>
+                          )}
+                          {fixtureDisplay.type === 'example' && (
+                            <div className="px-4 py-2.5 bg-[var(--hover-bg)] border-b border-[var(--card-border)]">
+                              <p className="text-[10px] font-bold text-[var(--text-muted)] capitalize tracking-tight text-center">
+                                No hay partidos próximos programados · Mostrando clásicos destacados
+                              </p>
+                            </div>
+                          )}
+                          <FixtureTable partidos={fixtureDisplay.matches} />
                         </div>
                       )}
-                      {fixtureDisplay.type === 'example' && (
-                        <div className="px-4 py-2.5 bg-[var(--hover-bg)] border-b border-[var(--card-border)]">
-                          <p className="text-[10px] font-bold text-[var(--text-muted)] capitalize tracking-tight text-center">
-                            No hay partidos próximos programados · Mostrando clásicos destacados
-                          </p>
-                        </div>
-                      )}
-                      <FixtureTable partidos={fixtureDisplay.matches} />
-                    </div>
-                  )}
-                </section>
+                    </section>
 
-                {/* 2. SECTION: POSITIONS (LPF or Selected) */}
-                <section>
-                  <div className="flex items-center justify-between mb-3 px-1">
-                    <h2 className="text-[12px] font-bold tracking-tight text-[var(--foreground)] capitalize">
-                      Tabla de Posiciones: {currentLigaName || 'Argentina LPF'}
-                    </h2>
-                  </div>
-                  <TablaContent ligaExterna={currentLigaName || 'Liga Profesional'} />
-                </section>
+                    {/* 4. SECTION: COMMUNITY HIGHLIGHTS (Top Rated + Popular Reviews) */}
+                    <section className="pt-6 border-t border-[var(--card-border)]">
+                      <CommunityHighlights />
+                    </section>
 
-                {/* 3. SECTION: TOP SCORERS */}
-                <section>
-                  <div className="flex items-center justify-between mb-3 px-1">
-                    <h2 className="text-[12px] font-bold tracking-tight text-[var(--foreground)] capitalize">
-                      Goleadores: {currentLigaName || 'Argentina LPF'}
-                    </h2>
-                  </div>
-                  <GoleadoresContent ligaExterna={currentLigaName || 'Liga Profesional'} />
-                </section>
-
-                {/* 4. SECTION: COMMUNITY HIGHLIGHTS (Top Rated + Popular Reviews) */}
-                <section className="pt-6 border-t border-[var(--card-border)]">
-                  <CommunityHighlights />
-                </section>
-
-                {/* 5. SECTION: COMMUNITY FEED (New FeedGlobal) */}
-                <section className="pt-8 border-t border-[var(--card-border)]/50">
-                  <div className="flex items-center justify-between mb-6 px-1">
-                    <h2 className="text-[var(--foreground)] font-black text-xl italic tracking-tighter uppercase">
-                      💬 LA TRIBUNA HABLA
-                    </h2>
-                    <Link href="/comunidad" className="text-[10px] font-black text-[var(--accent)] hover:opacity-70 uppercase tracking-widest transition-opacity">Ver muro →</Link>
-                  </div>
-                  <FeedGlobal />
-                </section>
-                </>
+                    {/* 5. SECTION: COMMUNITY FEED (New FeedGlobal) */}
+                    <section className="pt-8 border-t border-[var(--card-border)]/50">
+                      <div className="flex items-center justify-between mb-6 px-1">
+                        <h2 className="text-[var(--foreground)] font-black text-xl italic tracking-tighter uppercase">
+                          💬 LA TRIBUNA HABLA
+                        </h2>
+                        <Link href="/comunidad" className="text-[10px] font-black text-[var(--accent)] hover:opacity-70 uppercase tracking-widest transition-opacity">Ver muro →</Link>
+                      </div>
+                      <FeedGlobal />
+                    </section>
+                  </>
                 )}
-
               </div>
             </div>
 
@@ -474,57 +424,6 @@ function HomeContent() {
       <NavBar />
       {!user && <PublicOnboarding />}
     </>
-  )
-}
-
-function ComunidadFeed({ activeLiga, limit }: { activeLiga?: string; limit?: number }) {
-  const { logs, loading, error, toggleLike } = useMatchLogs({
-     liga: activeLiga,
-     limit: limit || 10,
-     feedType: 'recent'
-  })
-
-    if (loading) {
-      return (
-        <div className="space-y-4">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-48 bg-[var(--card-bg)] animate-pulse border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }} />
-          ))}
-        </div>
-      )
-    }
-
-    if (error) {
-      return (
-        <ErrorMessage 
-            message="No pudimos cargar las reseñas de la comunidad." 
-        />
-      )
-    }
-
-    if (logs.length === 0) {
-    return (
-      <div className="py-20 text-center bg-[var(--card-bg)] border border-[var(--card-border)] border-dashed" style={{ borderRadius: 'var(--radius)' }}>
-        <Users size={40} className="mx-auto mb-4 text-[var(--text-muted)] opacity-30" />
-        <p className="text-sm text-[var(--text-muted)] font-black capitalize italic tracking-tighter">No hay reseñas todavía.</p>
-        <p className="text-[10px] text-[var(--text-muted)] mt-1 capitalize tracking-widest font-bold">¡Sé el primero en ratear un partido!</p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4 px-1">
-        <h2 className="text-[10px] font-black tracking-widest text-[var(--text-muted)] capitalize">
-          RESEÑAS DE LA COMUNIDAD
-        </h2>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {logs.map((log) => (
-          <MatchLogCard key={log.id} log={log} onLike={toggleLike} />
-        ))}
-      </div>
-    </div>
   )
 }
 

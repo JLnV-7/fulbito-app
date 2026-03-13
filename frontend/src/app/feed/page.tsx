@@ -1,7 +1,7 @@
 // src/app/feed/page.tsx
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Plus, TrendingUp, Clock, Star, Filter, X } from 'lucide-react'
@@ -24,13 +24,13 @@ export default function FeedPage() {
     const [filterEquipo, setFilterEquipo] = useState('')
     const [filterType, setFilterType] = useState('')
 
-    const filters: MatchLogFilters = {
+    const filters: MatchLogFilters = useMemo(() => ({
         liga: filterLiga || undefined,
         equipo: filterEquipo || undefined,
         matchType: filterType || undefined,
         feedType: activeTab === 'popular' ? 'popular' : activeTab === 'following' ? 'following' : 'recent',
         limit: 20,
-    }
+    }), [filterLiga, filterEquipo, filterType, activeTab])
 
     const { logs, loading, toggleLike, hasMore, fetchLogs } = useMatchLogs(filters)
     const activeFiltersCount = [filterLiga, filterEquipo, filterType].filter(Boolean).length

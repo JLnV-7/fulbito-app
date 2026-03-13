@@ -56,18 +56,19 @@ export function NavBar() {
                   {active ? item.activeIcon : item.icon}
                 </motion.div>
 
-                {/* Etiqueta solo visible si está activa */}
-                <AnimatePresence>
-                  {active && (
-                    <motion.span
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-[9px] font-black tracking-tight"
-                    >
-                      {item.label}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
+                {/* Etiqueta visible con opacidad/escala en lugar de desaparecer del DOM */}
+                <motion.span
+                  animate={{ 
+                    opacity: active ? 1 : 0,
+                    scale: active ? 1 : 0.8,
+                    width: active ? 'auto' : 0,
+                    marginLeft: active ? 4 : 0
+                  }}
+                  transition={{ duration: 0.2 }}
+                  className="text-[9px] font-black tracking-tight whitespace-nowrap overflow-hidden"
+                >
+                  {item.label}
+                </motion.span>
               </div>
             </button>
           )
