@@ -21,6 +21,7 @@ export const metadata: Metadata = {
   },
   description: "Puntuá partidos, logueá tu experiencia, votá figuras, competí en el prode y compartí reseñas con la comunidad.",
   manifest: "/manifest.json",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://futlog.app'),
   openGraph: {
     title: "FutLog - Tu Letterboxd del Fútbol ⚽",
     description: "Puntuá partidos, logueá tu experiencia, votá figuras y compartí reseñas.",

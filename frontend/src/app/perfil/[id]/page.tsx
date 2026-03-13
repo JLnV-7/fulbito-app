@@ -11,6 +11,7 @@ import { DesktopNav } from '@/components/DesktopNav'
 import { BadgeDisplay } from '@/components/BadgeDisplay'
 import { ShareButton } from '@/components/ShareButton'
 import { MatchLogCard } from '@/components/MatchLogCard'
+import { UserBadgesGallery } from '@/components/UserBadgesGallery'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/contexts/AuthContext'
@@ -237,8 +238,10 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                         </div>
                     </div>
 
-                    {/* Badges */}
+                    {/* Badges Overview (Old) */}
                     <BadgeDisplay stats={badgeStats} />
+                    
+                    <UserBadgesGallery userId={id} isOwnProfile={isOwnProfile} />
 
                     {/* Recent Logs */}
                     {logs.length > 0 && (

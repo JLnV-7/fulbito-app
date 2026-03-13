@@ -27,17 +27,17 @@
 
 /* Default: Classic Light Theme */
 :root {
-  --background: #f5f5f5;
-  --foreground: #333333;
+  --background: #f0f2f5;
+  --foreground: #111827;
   --card-bg: #ffffff;
-  --card-border: #e0e0e0;
-  --hover-bg: #f9f9f9;
-  --text-muted: #666666;
-  --accent: #16a34a; /* Verde césped sobrio */
-  --accent-green: #16a34a;
-  --accent-blue: #2563eb;
-  --accent-yellow: #d97706;
-  --accent-red: #dc2626;
+  --card-border: #d1d5db;
+  --hover-bg: #f3f4f6;
+  --text-muted: #4b5563;
+  --accent: #15803d; /* Verde césped sobrio, darker for contrast */
+  --accent-green: #15803d;
+  --accent-blue: #1d4ed8;
+  --accent-yellow: #b45309;
+  --accent-red: #b91c1c;
   --radius: 0.5rem;
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
@@ -46,12 +46,12 @@
 
 /* Force light theme by default if no data-theme */
 [data-theme="light"] {
-  --background: #f5f5f5;
-  --foreground: #333333;
+  --background: #f0f2f5;
+  --foreground: #111827;
   --card-bg: #ffffff;
-  --card-border: #e0e0e0;
-  --hover-bg: #f9f9f9;
-  --text-muted: #666666;
+  --card-border: #d1d5db;
+  --hover-bg: #f3f4f6;
+  --text-muted: #4b5563;
 }
 
 /* Sober Dark Theme */

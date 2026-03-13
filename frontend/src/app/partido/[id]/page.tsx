@@ -142,6 +142,30 @@ export default function PartidoPage() {
         let { data: dbPartido } = await query.single()
 
         if (dbPartido) {
+          // Si el partido está en juego o acaba de terminar, intentamos actualizar desde la API para tener datos frescos
+          const isLiveOrRecent = calcularEstadoPartido(dbPartido.fecha_inicio) === 'EN_JUEGO' || 
+                                 (calcularEstadoPartido(dbPartido.fecha_inicio) === 'FINALIZADO' && 
+                                  new Date().getTime() - new Date(dbPartido.fecha_inicio).getTime() < 86400000); // menos de 24hs
+                                  
+          if (isLiveOrRecent && !isNaN(matchIdNum) && matchIdNum > 1000) {
+            try {
+               const freshData = await fetchFixtureByIdAction(matchIdNum);
+               if (freshData) {
+                  // Lazy sync
+                  syncPartidosToSupabase([freshData]).catch(e => console.error("Lazy sync failed", e));
+                  
+                  // Keep UUID from DB but use fresh data from API
+                  const mergedData = { ...freshData, id: dbPartido.id };
+                  setPartido(mergedData);
+                  setEstado(calcularEstadoPartido(freshData.fecha_inicio));
+                  setLoading(false);
+                  return;
+               }
+            } catch (e) {
+               console.error("Fetch fresh data failed, using DB fallback", e);
+            }
+          }
+          
           setPartido(dbPartido as Partido)
           setEstado(calcularEstadoPartido(dbPartido.fecha_inicio))
           setLoading(false)

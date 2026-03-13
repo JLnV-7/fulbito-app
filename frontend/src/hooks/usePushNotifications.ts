@@ -21,31 +21,24 @@ export function usePushNotifications() {
                     await OneSignal.init({
                         appId: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '',
                         allowLocalhostAsSecureOrigin: true,
-                        notifyButton: {
-                            enable: false,
-                            prenotify: false,
-                            showCredit: false,
-                            text: {
-                                'tip.state.unsubscribed': 'Subscription Tip',
-                            }
-                        } as any,
                     })
                     setIsInitialized(true)
 
-                    // Deep Linking: Click handler
-                    OneSignal.Notifications.addEventListener('click', (event: any) => {
-                        const data = event.notification.additionalData as any
-                        if (data && data.url) {
-                            router.push(data.url)
-                        } else if (data && data.type) {
-                            // Legacy or specific type handling
-                            if (data.type === 'profile' && data.userId) {
-                                router.push(`/perfil/${data.userId}`)
-                            } else if (data.type === 'match' && data.matchId) {
-                                router.push(`/partido/${data.matchId}`)
+                    // Listeners are already handled safely internally or via the global OneSignal object
+                    if (OneSignal.Notifications) {
+                        OneSignal.Notifications.addEventListener('click', (event: any) => {
+                            const data = event?.notification?.additionalData as any
+                            if (data && data.url) {
+                                router.push(data.url)
+                            } else if (data && data.type) {
+                                if (data.type === 'profile' && data.userId) {
+                                    router.push(`/perfil/${data.userId}`)
+                                } else if (data.type === 'match' && data.matchId) {
+                                    router.push(`/partido/${data.matchId}`)
+                                }
                             }
-                        }
-                    })
+                        })
+                    }
 
                     // Check opt-in status
                     const optedIn = OneSignal.User.PushSubscription.optedIn

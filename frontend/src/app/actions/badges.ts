@@ -53,6 +53,20 @@ export async function checkAndAwardBadges(userId: string) {
                 if (badge) newAwards.push(badge)
             }
         }
+        
+        // Check "Prodista" (10_prode_exactos)
+        if (!existingConditions.has('10_prode_exactos')) {
+             const { data: ranking } = await supabase
+                .from('ranking_prode')
+                .select('aciertos_exactos')
+                .eq('user_id', userId)
+                
+             const stats = ranking?.reduce((acc, curr) => acc + (curr.aciertos_exactos || 0), 0) || 0;
+             if (stats >= 10) {
+                 const badge = allBadges.find(b => b.condition === '10_prode_exactos')
+                 if (badge) newAwards.push(badge)
+             }
+        }
 
         // --- Award Badges ---
         for (const badge of newAwards) {
