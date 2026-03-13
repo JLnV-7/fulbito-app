@@ -45,31 +45,19 @@ export function NavBar() {
                 backgroundColor: 'transparent',
               }}
             >
-              <div
-                className="flex items-center gap-2 transition-all duration-300"
-                style={{ color: active ? item.activeColor : item.defaultColor }}
-              >
-                <motion.div
-                  animate={{ scale: active ? 1.1 : 1 }}
-                  className="text-[18px] leading-none"
-                >
-                  {active ? item.activeIcon : item.icon}
-                </motion.div>
-
-                {/* Etiqueta visible con opacidad/escala en lugar de desaparecer del DOM */}
-                <motion.span
-                  animate={{ 
-                    opacity: active ? 1 : 0,
-                    scale: active ? 1 : 0.8,
-                    width: active ? 'auto' : 0,
-                    marginLeft: active ? 4 : 0
-                  }}
-                  transition={{ duration: 0.2 }}
-                  className="text-[9px] font-black tracking-tight whitespace-nowrap overflow-hidden"
-                >
-                  {item.label}
-                </motion.span>
-              </div>
+                <div className="flex flex-col items-center justify-center gap-0.5 transition-all duration-300"
+                     style={{ color: active ? item.activeColor : item.defaultColor }}>
+                    <motion.div
+                        animate={{ scale: active ? 1.1 : 1 }}
+                        className="text-[18px] leading-none"
+                    >
+                        {active ? item.activeIcon : item.icon}
+                    </motion.div>
+                    <span className={`text-[9px] font-black tracking-tight transition-opacity duration-200
+                        ${active ? 'opacity-100' : 'opacity-40'}`}>
+                        {item.label}
+                    </span>
+                </div>
             </button>
           )
         })}

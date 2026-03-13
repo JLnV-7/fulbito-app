@@ -51,7 +51,6 @@ const TABS: { id: HomeTab; label: string; icon: React.ReactNode }[] = [
 // ============================================
 // Example fixtures (last resort fallback)
 // ============================================
-const EXAMPLE_FIXTURES: Partido[] = []
 
 // ============================================
 // Date helpers
@@ -222,8 +221,8 @@ function HomeContent() {
       }
     }
 
-    // Tier 3: no real matches at all — use example fixtures
-    return { matches: EXAMPLE_FIXTURES, type: 'example' as const, nearestDate: undefined }
+    // Tier 3: no real matches at all
+    return { matches: [], type: 'empty' as const, nearestDate: undefined }
   }, [partidosFiltrados, partidos, selectedDate])
 
   // Reset display limit when filters change
@@ -344,55 +343,14 @@ function HomeContent() {
                 ) : (
                   <>
                     {/* 1. SECTION: FIXTURE (Partidos Tab) */}
-                    <section>
-                      <div className="flex items-center justify-between mb-3 px-1">
-                        <div className="flex items-center gap-2">
-                          <h2 className="text-[12px] font-bold tracking-tight text-[var(--foreground)] capitalize">
-                            Fixture: {filtroLiga === 'Todos' || filtroLiga === 'Favoritos'
-                              ? formatDateLabel(new Date(selectedDate + 'T12:00:00'), t, localeFormat).label.toUpperCase()
-                              : filtroLiga.toUpperCase()}
-                          </h2>
-                          {liveCount > 0 && (
-                            <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-600 text-[8px] font-black animate-pulse flex items-center gap-1">
-                              {liveCount} VIVO
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {loading ? (
-                        <div className="space-y-2">
-                          {Array(4).fill(0).map((_, i) => <div key={i} className="h-12 bg-[var(--card-bg)] border border-[var(--card-border)] animate-shimmer" />)}
-                        </div>
-                      ) : error ? (
-                        <ErrorMessage 
-                            message="No pudimos cargar los partidos. Intentá de nuevo." 
-                            onRetry={refetch} 
-                        />
-                      ) : (
-                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
-                          {/* Disclaimer banners */}
-                          {fixtureDisplay.type === 'nearest' && fixtureDisplay.nearestDate && (
-                            <div className="px-4 py-2.5 bg-[var(--accent-green)]/10 border-b border-[var(--card-border)] flex items-center justify-between">
-                              <p className="text-[10px] font-bold text-[var(--accent)] capitalize tracking-tight">
-                                📅 Próximos partidos: {formatDateLabel(new Date(fixtureDisplay.nearestDate + 'T12:00:00'), t, localeFormat).label}
-                              </p>
-                              <button
-                                onClick={() => setSelectedDate(fixtureDisplay.nearestDate!)}
-                                className="text-[9px] font-bold text-[var(--accent)] underline capitalize"
-                              >
-                                Ir a esa fecha
-                              </button>
-                            </div>
-                          )}
-                          {fixtureDisplay.type === 'example' && (
-                            <div className="px-4 py-2.5 bg-[var(--hover-bg)] border-b border-[var(--card-border)]">
-                              <p className="text-[10px] font-bold text-[var(--text-muted)] capitalize tracking-tight text-center">
-                                No hay partidos próximos programados · Mostrando clásicos destacados
-                              </p>
-                            </div>
-                          )}
                           <FixtureTable partidos={fixtureDisplay.matches} />
+                        </div>
+                      )}
+                      {fixtureDisplay.type === 'empty' && (
+                        <div className="px-4 py-8 text-center">
+                            <p className="text-[var(--text-muted)] text-sm font-bold">
+                                No hay partidos programados para esta fecha.
+                            </p>
                         </div>
                       )}
                     </section>

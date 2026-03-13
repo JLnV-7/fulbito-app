@@ -159,7 +159,7 @@ export function useMatchLogs(filters?: MatchLogFilters) {
         } finally {
             setLoading(false)
         }
-    }, [filters?.liga, filters?.equipo, filters?.matchType, filters?.userId, filters?.feedType, filters?.limit, filters?.offset, user])
+    }, [filters?.liga, filters?.equipo, filters?.matchType, filters?.userId, filters?.limit, filters?.offset, filters?.feedType, user])
 
     useEffect(() => {
         fetchLogs(true)
@@ -247,14 +247,9 @@ export function useMatchLogs(filters?: MatchLogFilters) {
 
         if (typeof window !== 'undefined' && !navigator.onLine) {
             const queue = JSON.parse(localStorage.getItem('futlog_offline_queue') || '[]')
-            
-            // Limit queue to 50 items to avoid localStorage bloat (cleanup 14)
-            if (queue.length >= 50) {
-                queue.shift() // Remove oldest
-            }
-            
-            queue.push({ ...data, _queuedAt: new Date().toISOString() })
-            localStorage.setItem('futlog_offline_queue', JSON.stringify(queue))
+            const trimmedQueue = queue.slice(-49) // mantener solo los últimos 49
+            trimmedQueue.push({ ...data, _queuedAt: new Date().toISOString() })
+            localStorage.setItem('futlog_offline_queue', JSON.stringify(trimmedQueue))
             showToast('Estás sin conexión. La reseña se guardó y se subirá al conectar.', 'info')
             return { id: `offline-${Date.now()}`, ...data } as unknown as MatchLog
         }

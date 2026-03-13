@@ -55,7 +55,7 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
     const [showAddToList, setShowAddToList] = useState(false)
     const [reporting, setReporting] = useState(false)
     const [showReactions, setShowReactions] = useState(false)
-    const [confirmReport, setConfirmReport] = useState(false)
+    const [showConfirmReport, setShowConfirmReport] = useState(false)
     const { user } = useAuth()
     const { showToast } = useToast()
 
@@ -84,14 +84,13 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
             return
         }
 
-        if (!confirmReport) {
-            setConfirmReport(true)
-            // Auto-hide after 3 seconds
-            setTimeout(() => setConfirmReport(false), 3000)
+        if (!showConfirmReport) {
+            setShowConfirmReport(true)
             return
         }
 
         setReporting(true)
+        setShowConfirmReport(false)
         try {
             const { error } = await supabase
                 .from('match_log_reports')
@@ -104,7 +103,6 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
 
             if (error) throw error
             showToast('Gracias por tu reporte. Lo revisaremos a la brevedad.', 'success')
-            setConfirmReport(false)
         } catch (err) {
             console.error('Error reporting:', err)
             showToast('Hubo un error al enviar el reporte.', 'error')
@@ -414,18 +412,37 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                 >
                     <Share2 size={14} />
                 </button>
-                 <button
-                    type="button"
-                    onClick={handleReport}
-                    disabled={reporting}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-black transition-all disabled:opacity-50
-                      ${confirmReport ? 'bg-red-600 text-white animate-pulse' : 'text-[var(--text-muted)] hover:text-red-600 hover:bg-red-600/5'}`}
-                    style={{ borderRadius: 'var(--radius)' }}
-                    title={confirmReport ? "Toca de nuevo para confirmar" : "Reportar contenido"}
-                >
-                    <Flag size={14} className={reporting ? 'animate-pulse' : ''} />
-                    {confirmReport && <span>¿Confirmar?</span>}
-                </button>
+                <div className="flex items-center gap-1">
+                    {showConfirmReport ? (
+                        <>
+                            <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); handleReport(e) }}
+                                className="px-2 py-1.5 text-[10px] font-black text-white bg-red-600 rounded-lg"
+                            >
+                                Confirmar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setShowConfirmReport(false) }}
+                                className="px-2 py-1.5 text-[10px] font-black text-[var(--text-muted)]"
+                            >
+                                Cancelar
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={handleReport}
+                            disabled={reporting}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black
+                               text-[var(--text-muted)] hover:text-red-600 hover:bg-red-600/5 transition-all disabled:opacity-50"
+                            style={{ borderRadius: 'var(--radius)' }}
+                        >
+                            <Flag size={14} className={reporting ? 'animate-pulse' : ''} />
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* List Modal - Mounted only when needed so it doesn't cause hydration or bubbling issues */}
