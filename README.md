@@ -81,21 +81,50 @@ Una vez deployado, tus amigos pueden:
 
 La app va a funcionar con HTTPS y se podrá instalar correctamente como PWA.
 
+## 🏁 Estado Actual y Logros
+
+El proyecto ha alcanzado un estado funcional avanzado con las siguientes características implementadas:
+
+- **Estructura Next.js 15+**: App Router configurado y listo para producción.
+- **Base de Datos Supabase**: Esquema de tablas para usuarios, partidos, prodes y estadísticas globales.
+- **Integración API-Football**: Consumo de datos en tiempo real para fixtures, tablas de posiciones y goleadores.
+- **PWA Ready**: Configuración de manifiesto y service workers básica para instalación en dispositivos.
+- **Sistema de Prodes**: Funcionalidad para que los usuarios guarden sus predicciones.
+- **Auditoría de UX**: Se realizó un análisis exhaustivo de usabilidad y diseño (ver `AUDIT_REPORT.md`).
+
+---
+
+## 🚀 Roadmap de Futuras Mejoras
+
+### Fase 1: Automatización (Próxima Prioridad)
+- **Cron Jobs**: Implementar tareas programadas para sincronizar resultados de la API a la DB automáticamente.
+- **Cálculo de Puntos**: Automatizar la distribución de puntos a los usuarios tras finalizar los partidos.
+
+### Fase 2: Consistencia y UX
+- **Detalle de Partido**: Migrar `/partido/[id]` para consumir datos vivos de la API.
+- **Push Notifications**: Finalizar la integración de avisos de goles y resultados.
+- **Perfil Pro**: Añadir historial detallado, rachas de aciertos y sistema de medallas.
+
+---
+
 ## 🛠️ Stack Técnico
 
-- **Frontend:** Next.js 16 + React + TypeScript
-- **Styling:** Tailwind CSS
-- **Database:** Supabase
+- **Frontend:** Next.js 15 + React + TypeScript
+- **Styling:** Tailwind CSS + Custom Design System
+- **Database:** Supabase (PostgreSQL)
 - **API:** API-Football
-- **PWA:** Service Worker + Manifest
+- **PWA:** Service Worker + Web Manifest
 - **Deploy:** Vercel
+
+---
 
 ## 📁 Estructura
 
 ```
-fulbitoo/
-├── frontend/          # App Next.js (lo que se deploya)
-├── migrations/        # SQL para Supabase
-├── *.py              # Scripts Python para cargar datos
-└── vercel.json       # Config de deploy
+fulbito-app/
+├── frontend/          # Aplicación Next.js (Core)
+├── supabase/          # Configuración y esquemas de base de datos
+├── migrations/        # Scripts SQL de evolución de DB
+├── scripts/           # Herramientas de carga y prueba de datos
+└── vercel.json       # Configuración de despliegue
 ```

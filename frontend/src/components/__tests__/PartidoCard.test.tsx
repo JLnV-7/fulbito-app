@@ -22,6 +22,10 @@ vi.mock('../FavoriteButton', () => ({
     FavoriteButton: () => <div data-testid="favorite-button" />
 }))
 
+vi.mock('@/contexts/ThemeContext', () => ({
+    useTheme: () => ({ classicMode: false })
+}))
+
 const mockPartido: Partido = {
     id: 1,
     liga: 'Liga Profesional',
@@ -53,6 +57,6 @@ describe('PartidoCard', () => {
         const liveMatch = { ...mockPartido, estado: 'EN_JUEGO' as const }
         render(<PartidoCard partido={liveMatch} />)
 
-        expect(screen.getByText('EN VIVO')).toBeDefined()
+        expect(screen.getByText('VIVO')).toBeDefined()
     })
 })

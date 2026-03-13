@@ -23,6 +23,26 @@ vi.mock('framer-motion', () => ({
     AnimatePresence: ({ children }: any) => <>{children}</>,
 }))
 
+vi.mock('@/lib/supabase', () => ({
+    supabase: {
+        from: vi.fn(() => ({
+            select: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                    maybeSingle: vi.fn().mockResolvedValue({ data: null })
+                }))
+            }))
+        }))
+    }
+}))
+
+vi.mock('@/contexts/AuthContext', () => ({
+    useAuth: () => ({ user: { id: 'test-user-id' } })
+}))
+
+vi.mock('@/contexts/ToastContext', () => ({
+    useToast: () => ({ showToast: vi.fn() })
+}))
+
 const mockPartido: Partido = {
     id: 1,
     liga: 'Copa Libertadores',
@@ -63,7 +83,7 @@ describe('ProdeCard', () => {
         // Click + once for visitante
         fireEvent.click(plusVisitante)
 
-        const saveButton = screen.getByText('Guardar pronóstico')
+        const saveButton = screen.getByText('Guardar Pronóstico')
         fireEvent.click(saveButton)
 
         expect(onGuardarMock).toHaveBeenCalledWith(2, 1)
