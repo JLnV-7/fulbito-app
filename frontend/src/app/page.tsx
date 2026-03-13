@@ -38,7 +38,6 @@ const TABS: { id: HomeTab; label: string; icon: React.ReactNode }[] = [
   { id: 'comunidad', label: 'Comunidad', icon: <Users size={14} /> },
   { id: 'tabla', label: 'Tabla', icon: <BarChart3 size={14} /> },
   { id: 'goleadores', label: 'Goleadores', icon: <Trophy size={14} /> },
-  { id: 'fixtures', label: 'Fixtures', icon: <Calendar size={14} /> },
   { id: 'noticias', label: 'Noticias', icon: <Newspaper size={14} /> },
 ]
 
@@ -223,8 +222,8 @@ function HomeContent() {
                 />
               </div>
 
-              {/* Tabs */}
-              <div className="flex gap-1 overflow-x-auto no-scrollbar mb-6 -mx-1 px-1">
+              {/* Tabs — solo mobile, en desktop usa DesktopNav */}
+              <div className="flex md:hidden gap-1 overflow-x-auto no-scrollbar mb-6 -mx-1 px-1">
                 {TABS.map(tab => (
                   <button
                     key={tab.id}
