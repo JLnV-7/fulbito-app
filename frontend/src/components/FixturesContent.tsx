@@ -1,11 +1,12 @@
 // src/components/FixturesContent.tsx
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Calendar } from 'lucide-react'
 import { PartidoCard } from '@/components/PartidoCard'
 import { PartidoCardSkeleton } from '@/components/skeletons/PartidoCardSkeleton'
+import { ErrorMessage } from '@/components/ui/ErrorMessage'
 import { fetchFixturesAction } from '@/app/actions/football'
 import { FixtureTable } from '@/components/FixtureTable'
 import { useTheme } from '@/contexts/ThemeContext'
@@ -25,36 +26,39 @@ export function FixturesContent({ ligaExterna }: FixturesContentProps) {
 
     const [partidos, setPartidos] = useState<Partido[]>([])
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
     const [fechaSeleccionada, setFechaSeleccionada] = useState<string | null>(null)
     const [ligaInterna, setLigaInterna] = useState<Liga>('Liga Profesional')
 
     const liga = ligaExterna || ligaInterna
 
-    useEffect(() => {
-        const fetchPartidos = async (showLoading = true) => {
-            if (showLoading) setLoading(true)
-            try {
-                const ligaParaBuscar = liga === 'Todos' ? 'Liga Profesional' : liga
-                const data = await fetchFixturesAction(ligaParaBuscar)
-                setPartidos(data)
+    const fetchPartidos = useCallback(async (showLoading = true) => {
+        if (showLoading) setLoading(true)
+        setError(null)
+        try {
+            const ligaParaBuscar = liga === 'Todos' ? 'Liga Profesional' : liga
+            const data = await fetchFixturesAction(ligaParaBuscar)
+            setPartidos(data)
 
-                // Si no hay fecha seleccionada, poner la más cercana a hoy o la última
-                if (data.length > 0 && !fechaSeleccionada) {
-                    const today = new Date().toLocaleDateString('sv-SE')
-                    const dates = [...new Set(data.map((p: Partido) =>
-                        new Date(p.fecha_inicio).toLocaleDateString('sv-SE')
-                    ))].sort()
+            // Si no hay fecha seleccionada, poner la más cercana a hoy o la última
+            if (data.length > 0 && !fechaSeleccionada) {
+                const today = new Date().toLocaleDateString('sv-SE')
+                const dates = [...new Set(data.map((p: Partido) =>
+                    new Date(p.fecha_inicio).toLocaleDateString('sv-SE')
+                ))].sort()
 
-                    const nearestDate = dates.find(d => d >= today) || dates[dates.length - 1]
-                    setFechaSeleccionada(nearestDate)
-                }
-            } catch (err: any) {
-                console.error('Error fetching fixtures:', err)
-            } finally {
-                if (showLoading) setLoading(false)
+                const nearestDate = dates.find(d => d >= today) || dates[dates.length - 1]
+                setFechaSeleccionada(nearestDate)
             }
+        } catch (err: any) {
+            console.error('Error fetching fixtures:', err)
+            setError('No pudimos cargar los partidos. Intentá de nuevo.')
+        } finally {
+            if (showLoading) setLoading(false)
         }
+    }, [liga, fechaSeleccionada])
 
+    useEffect(() => {
         fetchPartidos()
 
         // Polling para actualizaciones en vivo cada 2 minutos si hay partidos en juego
@@ -63,7 +67,7 @@ export function FixturesContent({ ligaExterna }: FixturesContentProps) {
         }, 120000)
 
         return () => clearInterval(interval)
-    }, [liga, fechaSeleccionada])
+    }, [fetchPartidos])
 
     const fechasDisponibles = useMemo(() => {
         const dateSet = new Set(partidos.map(p =>
@@ -185,6 +189,8 @@ export function FixturesContent({ ligaExterna }: FixturesContentProps) {
                         <PartidoCardSkeleton key={i} />
                     ))}
                 </div>
+            ) : error ? (
+                <ErrorMessage message={error} onRetry={() => fetchPartidos(true)} />
             ) : partidosFiltrados.length === 0 ? (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}

@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { TeamLogo } from '@/components/TeamLogo'
+import { ResenasMVP } from '@/components/jugadores/ResenasMVP'
 import { Star, TrendingUp, Calendar, MapPin, Scale, Ruler } from 'lucide-react'
 import Link from 'next/link'
 
@@ -184,6 +185,8 @@ async function PlayerContent({ playerId }: { playerId: number }) {
           </div>
         )}
       </div>
+
+      <ResenasMVP jugadorId={playerId} jugadorNombre={player.name} />
     </div>
   )
 }

@@ -25,6 +25,9 @@ import { AiPredictionWidget } from '@/components/AiPredictionWidget'
 import { PullToRefresh } from '@/components/PullToRefresh'
 import { Heatmap } from '@/components/Heatmap'
 import { TeamLogo } from '@/components/TeamLogo'
+import { FormularioResena } from '@/components/resenas/FormularioResena'
+import { ListaResenas } from '@/components/resenas/ListaResenas'
+import { getEstadoPartido } from '@/lib/partido-utils'
 import { MessageSquare, MessagesSquare, ChevronDown, ChevronUp, BarChart2, Clock, Zap, PenLine, Star } from 'lucide-react'
 import type { Partido, EstadoPartido } from '@/types'
 import { fetchFixtureByIdAction } from '@/app/actions/football'
@@ -61,6 +64,7 @@ export default function PartidoPage() {
   const [votosGuardados, setVotosGuardados] = useState(false)
   const [votoExistente, setVotoExistente] = useState(false)
   const [loadingVotos, setLoadingVotos] = useState(false)
+  const [miResena, setMiResena] = useState<any>(null)
   const [activeTab, setActiveTab] = useState<'reviews' | 'chat'>('reviews')
   
   // Set default tab based on match state
@@ -263,6 +267,24 @@ export default function PartidoPage() {
     fetchExistingVotes()
   }, [user, partido, estado])
 
+  // Cargar reseña propia
+  useEffect(() => {
+    const fetchMiResena = async () => {
+      if (!user || !partido || estado !== 'FINALIZADO') return
+      
+      const { data } = await supabase
+        .from('resenas')
+        .select('*')
+        .eq('partido_id', partido.id)
+        .eq('user_id', user.id)
+        .single()
+        
+      if (data) setMiResena(data)
+    }
+    
+    fetchMiResena()
+  }, [user, partido, estado])
+
   const isTooOld = partido ? isMatchTooOld(partido.fecha_inicio) : false
 
   const handleVotar = useCallback((jugadorId: number, nota: number) => {
@@ -431,43 +453,53 @@ export default function PartidoPage() {
             </div>
           </div>
 
-          {/* Letterboxd-style CTA: Log this match */}
-          {user && estado === 'FINALIZADO' && (
-            <div className="max-w-6xl mx-auto px-6 pt-4">
-              <button
-                onClick={() => {
-                  hapticFeedback(15)
-                  router.push(`/log?match=${partido.id}`)
-                }}
-                className="w-full flex items-center justify-between p-4 bg-[var(--card-bg)] border-2 border-dashed border-[var(--accent)] hover:bg-[var(--accent)]/5 transition-all group"
-                style={{ borderRadius: 'var(--radius)' }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[var(--accent)]/10 flex items-center justify-center group-hover:bg-[var(--accent)]/20 transition-colors">
-                    <PenLine size={20} className="text-[var(--accent)]" />
-                  </div>
-                  <div className="text-left">
-                    <div className="text-sm font-black">¿Viste este partido?</div>
-                    <div className="text-xs text-[var(--text-muted)]">Logueá tu experiencia, puntuá y dejá tu reseña</div>
-                  </div>
-                </div>
-                <span className="text-[var(--accent)] font-black text-sm group-hover:translate-x-1 transition-transform">
-                  Loguear →
-                </span>
-              </button>
+
+          {/* Integrated Review Section */}
+          {estado === 'FINALIZADO' && (
+            <div className="max-w-6xl mx-auto px-6 py-8 space-y-10">
+               <div className="flex items-center gap-3 mb-2">
+                 <div className="h-px flex-1 bg-[var(--card-border)] opacity-30"></div>
+                 <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">SECCIÓN DE RESEÑAS</span>
+                 <div className="h-px flex-1 bg-[var(--card-border)] opacity-30"></div>
+               </div>
+               
+               {user ? (
+                 <FormularioResena
+                   partidoId={Number(partido.id)}
+                   jugadoresDelPartido={equipos.flatMap(eq => 
+                     eq.titulares.map(j => ({ id: j.id, nombre: j.nombre }))
+                   )}
+                   resenaExistente={miResena}
+                   onGuardado={() => {
+                     hapticFeedback(50);
+                     // Refetch or update state
+                     window.location.reload(); 
+                   }}
+                 />
+               ) : (
+                 <div className="bg-[var(--card-bg)] rounded-3xl border border-[var(--card-border)] p-8 text-center border-dashed">
+                    <Star size={32} className="mx-auto mb-4 text-[var(--text-muted)] opacity-20" />
+                    <p className="text-sm font-bold text-[var(--text-muted)] mb-4">
+                      Iniciá sesión para dejar tu reseña y puntuar el partido
+                    </p>
+                    <button 
+                      onClick={() => router.push('/login')}
+                      className="px-6 py-2 bg-[var(--accent)] text-white rounded-xl font-bold text-xs uppercase"
+                    >
+                      Ingresar
+                    </button>
+                 </div>
+               )}
+               
+               <ListaResenas partidoId={Number(partido.id)} />
             </div>
           )}
 
-          {!user && estado === 'FINALIZADO' && (
+          {estado === 'EN_JUEGO' && (
             <div className="max-w-6xl mx-auto px-6 pt-4">
-              <button
-                onClick={() => router.push('/login')}
-                className="w-full flex items-center justify-center gap-2 p-3 bg-[var(--card-bg)] border border-[var(--card-border)] hover:border-[var(--accent)] transition-all text-sm text-[var(--text-muted)] hover:text-[var(--foreground)]"
-                style={{ borderRadius: 'var(--radius)' }}
-              >
-                <Star size={14} />
-                <span>Iniciá sesión para loguear y puntuar este partido</span>
-              </button>
+               <p className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 text-center text-amber-500 text-xs font-bold italic">
+                 ⏱ Podrás dejar tu reseña y puntuar el partido cuando finalice
+               </p>
             </div>
           )}
 
@@ -739,11 +771,20 @@ export default function PartidoPage() {
             )}
 
             {estado === 'FINALIZADO' && (
-              <CommunityRating
-                partidoId={String(partido.id)}
-                equipoLocal={partido.equipo_local}
-                equipoVisitante={partido.equipo_visitante}
-              />
+              <div className="mt-10 space-y-12">
+                <FormularioResena 
+                  partidoId={Number(partido.id)} 
+                  jugadoresDelPartido={equipos.flatMap(eq => 
+                    [...eq.titulares, ...eq.suplentes].map(j => ({ id: j.id, nombre: j.nombre }))
+                  )}
+                  resenaExistente={miResena}
+                  onGuardado={() => {
+                    // Refrescar lista de reseñas o mostrar mensaje de éxito
+                    window.location.reload()
+                  }}
+                />
+                <ListaResenas partidoId={Number(partido.id)} />
+              </div>
             )}
 
             {/* Selector de Pestañas: Reseñas vs Chat */}

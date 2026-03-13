@@ -47,9 +47,9 @@ vercel
      - Output Directory: `.next`
    - **Environment Variables:** Agregá las del `.env.local`:
      ```
-     NEXT_PUBLIC_SUPABASE_URL=https://vedoanybvpwjmcalkpmi.supabase.co
-     NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_rFu9FE2av7GQD42qtLnqwQ_yCF1P7Y2
-     API_KEY_FUTBOL=f5b26d9993569070de3e2f5e12ade21c
+      NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key_aqui
+      API_KEY_FUTBOL=tu_api_key_aqui
      ```
    - Click en **Deploy**
 

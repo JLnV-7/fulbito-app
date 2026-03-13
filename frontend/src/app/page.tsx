@@ -22,10 +22,11 @@ import { ReglasPuntajeModal } from '@/components/ReglasPuntajeModal'
 import { TablaContent } from '@/components/TablaContent'
 import { GoleadoresContent } from '@/components/GoleadoresContent'
 import { FixturesContent } from '@/components/FixturesContent'
+import { ErrorMessage } from '@/components/ui/ErrorMessage'
 import { Star, Search, ChevronLeft, ChevronRight, BarChart3, Trophy, Calendar, Globe, Users, Newspaper } from 'lucide-react'
 import { PullToRefresh } from '@/components/PullToRefresh'
+import { FeedGlobal } from '@/components/feed/FeedGlobal'
 import type { Partido } from '@/types'
-
 import { LIGAS, type Liga } from '@/lib/constants'
 import { hapticFeedback } from '@/lib/helpers'
 import { LeagueChips } from '@/components/LeagueChips'
@@ -389,10 +390,10 @@ function HomeContent() {
                       {Array(4).fill(0).map((_, i) => <div key={i} className="h-12 bg-[var(--card-bg)] border border-[var(--card-border)] animate-shimmer" />)}
                     </div>
                   ) : error ? (
-                    <div className="p-8 text-center bg-[var(--card-bg)] border border-[var(--card-border)] border-dashed">
-                      <p className="text-xs text-[var(--text-muted)]">Error al cargar fixture.</p>
-                      <button onClick={refetch} className="mt-2 text-[10px] font-bold text-[var(--accent)] underline">REINTENTAR</button>
-                    </div>
+                    <ErrorMessage 
+                        message="No pudimos cargar los partidos. Intentá de nuevo." 
+                        onRetry={refetch} 
+                    />
                   ) : (
                     <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
                       {/* Disclaimer banners */}
@@ -446,15 +447,15 @@ function HomeContent() {
                   <CommunityHighlights />
                 </section>
 
-                {/* 5. SECTION: COMMUNITY FEED (Latest Reviews) */}
-                <section className="pt-6 border-t border-[var(--card-border)]">
-                  <div className="flex items-center justify-between mb-4 px-1">
-                    <h2 className="text-[12px] font-bold tracking-tight text-[var(--foreground)] capitalize">
-                      Últimas Reseñas de la Comunidad
+                {/* 5. SECTION: COMMUNITY FEED (New FeedGlobal) */}
+                <section className="pt-8 border-t border-[var(--card-border)]/50">
+                  <div className="flex items-center justify-between mb-6 px-1">
+                    <h2 className="text-[var(--foreground)] font-black text-xl italic tracking-tighter uppercase">
+                      💬 LA TRIBUNA HABLA
                     </h2>
-                    <Link href="/comunidad" className="text-[10px] font-bold text-[var(--accent)] hover:underline capitalize">Ver todas →</Link>
+                    <Link href="/comunidad" className="text-[10px] font-black text-[var(--accent)] hover:opacity-70 uppercase tracking-widest transition-opacity">Ver muro →</Link>
                   </div>
-                  <ComunidadFeed activeLiga={filtroLiga === 'Todos' || filtroLiga === 'Favoritos' ? undefined : filtroLiga} limit={3} />
+                  <FeedGlobal />
                 </section>
 
               </div>
@@ -471,23 +472,31 @@ function HomeContent() {
 }
 
 function ComunidadFeed({ activeLiga, limit }: { activeLiga?: string; limit?: number }) {
-  const { logs, loading, toggleLike } = useMatchLogs({
-    liga: activeLiga,
-    limit: limit || 10,
-    feedType: 'recent'
+  const { logs, loading, error, toggleLike } = useMatchLogs({
+     liga: activeLiga,
+     limit: limit || 10,
+     feedType: 'recent'
   })
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="h-48 bg-[var(--card-bg)] animate-pulse border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }} />
-        ))}
-      </div>
-    )
-  }
+    if (loading) {
+      return (
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-48 bg-[var(--card-bg)] animate-pulse border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }} />
+          ))}
+        </div>
+      )
+    }
 
-  if (logs.length === 0) {
+    if (error) {
+      return (
+        <ErrorMessage 
+            message="No pudimos cargar las reseñas de la comunidad." 
+        />
+      )
+    }
+
+    if (logs.length === 0) {
     return (
       <div className="py-20 text-center bg-[var(--card-bg)] border border-[var(--card-border)] border-dashed" style={{ borderRadius: 'var(--radius)' }}>
         <Users size={40} className="mx-auto mb-4 text-[var(--text-muted)] opacity-30" />
