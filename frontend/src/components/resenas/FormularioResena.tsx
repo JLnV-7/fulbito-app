@@ -2,193 +2,173 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import type { ResenaForm } from '@/types/resena'
+import { useToast } from '@/contexts/ToastContext'
+import { StarRating } from '@/components/StarRating'
+import { PlayerRatingPicker } from '@/components/PlayerRatingPicker'
+import { motion } from 'framer-motion'
 
 type Props = {
   partidoId: number
+  equipoLocal: string
+  equipoVisitante: string
+  logoLocal?: string
+  logoVisitante?: string
+  liga?: string
+  golesLocal?: number
+  golesVisitante?: number
   jugadoresDelPartido: { id: number; nombre: string }[]
-  resenaExistente?: ResenaForm | null   // para modo edición
+  resenaExistente?: any
   onGuardado?: () => void
 }
 
-const ESTRELLAS = [1, 2, 3, 4, 5]
-
 export function FormularioResena({
-  partidoId,
-  jugadoresDelPartido,
-  resenaExistente,
-  onGuardado,
+  partidoId, equipoLocal, equipoVisitante,
+  logoLocal, logoVisitante, liga,
+  golesLocal, golesVisitante,
+  jugadoresDelPartido, resenaExistente, onGuardado
 }: Props) {
   const supabase = createClient()
+  const { showToast } = useToast()
 
-  const [rating, setRating]               = useState<number | null>(resenaExistente?.rating ?? null)
-  const [ratingHover, setRatingHover]     = useState<number | null>(null)
-  const [texto, setTexto]                 = useState(resenaExistente?.texto ?? '')
-  const [mvpId, setMvpId]                 = useState<number | null>(resenaExistente?.mvp_jugador_id ?? null)
-  const [mvpNombre, setMvpNombre]         = useState(resenaExistente?.mvp_jugador_nombre ?? '')
-  const [loading, setLoading]             = useState(false)
-  const [error, setError]                 = useState<string | null>(null)
-  const [playerRatings, setPlayerRatings] = useState<Record<number, number>>({})
+  const [rating, setRating] = useState<number>(resenaExistente?.rating_partido ?? 0)
+  const [texto, setTexto] = useState(resenaExistente?.review_text ?? '')
+  const [titulo, setTitulo] = useState(resenaExistente?.review_title ?? '')
+  const [isSpoiler, setIsSpoiler] = useState(resenaExistente?.is_spoiler ?? false)
+  const [playerRatings, setPlayerRatings] = useState<Record<string, number>>({})
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async () => {
-    if (!rating && !texto && !mvpId && Object.keys(playerRatings).length === 0) {
-      setError('Completá al menos un campo antes de guardar.')
-      return
-    }
+    if (!rating) { showToast('Poné al menos una calificación al partido.', 'warning'); return }
 
     setLoading(true)
-    setError(null)
-
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setError('Tenés que estar logueado.'); setLoading(false); return }
+    if (!user) { showToast('Tenés que estar logueado.', 'error'); setLoading(false); return }
 
     try {
-      // 1. Save match review
-      const payload = {
-        user_id: user.id,
-        partido_id: partidoId,
-        rating,
-        texto: texto.trim() || null,
-        mvp_jugador_id: mvpId,
-        mvp_jugador_nombre: mvpNombre || null,
-      }
-
-      const { error: sbError } = await supabase
-        .from('resenas')
-        .upsert(payload, { onConflict: 'user_id,partido_id' })
-
-      if (sbError) throw sbError
-
-      // 2. Save player-specific ratings to 'votaciones' table
-      if (Object.keys(playerRatings).length > 0) {
-        const votosArray = Object.entries(playerRatings).map(([jId, nota]) => ({
+      // Upsert en match_logs
+      const { data: newLog, error } = await supabase
+        .from('match_logs')
+        .upsert({
           user_id: user.id,
           partido_id: String(partidoId),
-          jugador_id: Number(jId),
-          nota,
-          created_at: new Date().toISOString()
-        }))
+          match_type: 'tv',
+          equipo_local: equipoLocal,
+          equipo_visitante: equipoVisitante,
+          logo_local: logoLocal,
+          logo_visitante: logoVisitante,
+          liga: liga,
+          goles_local: golesLocal,
+          goles_visitante: golesVisitante,
+          fecha_partido: new Date().toISOString(),
+          rating_partido: rating,
+          review_title: titulo.trim() || null,
+          review_text: texto.trim() || null,
+          is_spoiler: isSpoiler,
+          is_private: false,
+          watched_at: new Date().toISOString(),
+        }, { onConflict: 'user_id,partido_id' })
+        .select().single()
 
-        const { error: vError } = await supabase
-          .from('votaciones')
-          .upsert(votosArray, { onConflict: 'user_id,partido_id,jugador_id' })
+      if (error) throw error
 
-        if (vError) console.error('[FormularioResena] Player ratings save error:', vError)
+      // Guardar player ratings si hay
+      const prEntries = Object.entries(playerRatings)
+      if (prEntries.length > 0 && newLog) {
+        const prRows = prEntries.map(([playerId, rating]) => {
+          const jugador = jugadoresDelPartido.find(j => String(j.id) === playerId)
+          return {
+            match_log_id: newLog.id,
+            player_name: jugador?.nombre || playerId,
+            player_team: 'local' as const,
+            rating,
+          }
+        })
+        await supabase.from('match_log_player_ratings')
+          .upsert(prRows, { onConflict: 'match_log_id,player_name' })
       }
 
+      showToast('¡Reseña guardada!', 'success')
       onGuardado?.()
-    } catch (sbError: any) {
-      console.error('[FormularioResena] Save error:', sbError)
-      setError('No se pudo guardar la reseña. Intentá de nuevo.')
+    } catch (err) {
+      console.error(err)
+      showToast('No se pudo guardar la reseña.', 'error')
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   return (
     <div className="bg-[var(--card-bg)] rounded-2xl p-6 border border-[var(--card-border)] space-y-6 shadow-sm">
-      <h3 className="text-[var(--foreground)] font-black text-xl italic tracking-tighter">TU RESEÑA DEL PARTIDO</h3>
+      <h3 className="font-black text-xl italic tracking-tighter">TU RESEÑA DEL PARTIDO</h3>
 
-      {/* Rating con estrellas */}
-      <div className="space-y-3">
+      {/* Rating principal */}
+      <div className="space-y-2">
         <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest">¿Cómo estuvo el partido?</p>
         <div className="flex gap-2">
-          {ESTRELLAS.map((n) => (
-            <button
-              key={n}
-              onMouseEnter={() => setRatingHover(n)}
-              onMouseLeave={() => setRatingHover(null)}
-              onClick={() => setRating(rating === n ? null : n)}
-              className="text-3xl transition-all duration-200 hover:scale-125"
-            >
-              {n <= (ratingHover ?? rating ?? 0) ? '⭐' : '☆'}
+          {[1,2,3,4,5].map(n => (
+            <button key={n} onClick={() => setRating(rating === n ? 0 : n)}
+              className="text-3xl transition-all hover:scale-125">
+              {n <= rating ? '⭐' : '☆'}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Player Ratings (Advanced) */}
-      <div className="space-y-4 pt-2">
-        <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-            ⭐ Calificar Jugadores <span className="text-[10px] opacity-50 font-medium">(Opcional)</span>
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto no-scrollbar pr-1">
-          {jugadoresDelPartido.map((jugador) => (
-            <div key={jugador.id} className="flex items-center justify-between p-3 bg-[var(--background)] rounded-xl border border-[var(--card-border)]">
-              <span className="text-xs font-bold truncate max-w-[120px]">{jugador.nombre}</span>
-              <div className="flex items-center gap-1">
-                {[...Array(10)].map((_, i) => (
-                    <button
-                        key={i}
-                        onClick={() => setPlayerRatings(prev => ({
-                            ...prev,
-                            [jugador.id]: prev[jugador.id] === i + 1 ? 0 : i + 1
-                        }))}
-                        className={`w-5 h-5 rounded-[4px] text-[8px] font-black transition-all flex items-center justify-center
-                            ${playerRatings[jugador.id] === i + 1 
-                                ? 'bg-[var(--accent)] text-white scale-110 shadow-sm' 
-                                : 'bg-[var(--card-border)]/30 text-[var(--text-muted)] hover:bg-[var(--card-border)]/60'}`}
-                    >
-                        {i + 1}
-                    </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* Título opcional */}
+      <div className="space-y-2">
+        <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest">Título <span className="opacity-50">(opcional)</span></p>
+        <input
+          value={titulo}
+          onChange={e => setTitulo(e.target.value)}
+          maxLength={100}
+          placeholder="Un resumen en una línea..."
+          className="w-full bg-[var(--background)] text-[var(--foreground)] rounded-xl p-4 text-sm
+                     border border-[var(--card-border)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+        />
       </div>
 
-      {/* Texto libre */}
-      <div className="space-y-3">
+      {/* Texto */}
+      <div className="space-y-2">
         <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest">
-          Escribí algo sobre este partido{' '}
-          <span className="opacity-50">(opcional)</span>
+          Tu reseña <span className="opacity-50">(opcional)</span>
         </p>
         <textarea
           value={texto}
-          onChange={(e) => setTexto(e.target.value)}
+          onChange={e => setTexto(e.target.value)}
           maxLength={500}
           rows={3}
-          placeholder="Un golazo de media cancha, un arquero que salvó todo..."
+          placeholder="Un golazo de media cancha, un árbitro que arruinó todo..."
           className="w-full bg-[var(--background)] text-[var(--foreground)] rounded-xl p-4 text-sm
                      placeholder:text-[var(--text-muted)]/50 border border-[var(--card-border)]
                      focus:outline-none focus:border-[var(--accent)] transition-colors resize-none"
         />
-        <div className="flex justify-end">
-          <p className="text-[var(--text-muted)] text-[10px] font-bold">
-            {texto.length}/500
-          </p>
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={isSpoiler} onChange={e => setIsSpoiler(e.target.checked)}
+              className="rounded" />
+            <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">Contiene spoilers</span>
+          </label>
+          <p className="text-[var(--text-muted)] text-[10px] font-bold">{texto.length}/500</p>
         </div>
       </div>
 
-      {/* MVP */}
-      <div className="space-y-3">
-        <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest">
-          Tu mejor del partido{' '}
-          <span className="opacity-50">(opcional)</span>
-        </p>
-        <select
-          value={mvpId ?? ''}
-          onChange={(e) => {
-            const id = Number(e.target.value)
-            const jugador = jugadoresDelPartido.find((j) => j.id === id)
-            setMvpId(id || null)
-            setMvpNombre(jugador?.nombre ?? '')
-          }}
-          className="w-full bg-[var(--background)] text-[var(--foreground)] rounded-xl p-4 text-sm
-                     border border-[var(--card-border)] focus:outline-none focus:border-[var(--accent)] 
-                     transition-colors appearance-none cursor-pointer"
-        >
-          <option value="">— Elegí un jugador —</option>
-          {jugadoresDelPartido.map((j) => (
-            <option key={j.id} value={j.id}>{j.nombre}</option>
-          ))}
-        </select>
-      </div>
-
-      {error && (
-        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-          <p className="text-red-500 text-xs font-bold">{error}</p>
+      {/* Player ratings */}
+      {jugadoresDelPartido.length > 0 && (
+        <div className="space-y-3 pt-2 border-t border-[var(--card-border)]">
+          <p className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest">
+            Calificá jugadores <span className="opacity-50">(opcional)</span>
+          </p>
+          <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+            {jugadoresDelPartido.map(j => (
+              <div key={j.id} className="flex items-center justify-between gap-3">
+                <span className="text-xs font-semibold truncate flex-1 min-w-0">{j.nombre}</span>
+                <PlayerRatingPicker
+                  value={playerRatings[String(j.id)]}
+                  onChange={val => setPlayerRatings(prev => ({ ...prev, [String(j.id)]: val }))}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -196,7 +176,7 @@ export function FormularioResena({
         onClick={handleSubmit}
         disabled={loading}
         className="w-full bg-[var(--foreground)] hover:opacity-90 disabled:opacity-50
-                   text-[var(--background)] font-black text-sm uppercase tracking-widest 
+                   text-[var(--background)] font-black text-sm uppercase tracking-widest
                    py-4 rounded-xl transition-all shadow-lg active:scale-95"
       >
         {loading ? 'Guardando...' : resenaExistente ? 'Actualizar reseña' : 'Guardar reseña'}

@@ -49,9 +49,6 @@ const TABS: { id: HomeTab; label: string; icon: React.ReactNode }[] = [
   { id: 'noticias', label: 'Noticias', icon: <Newspaper size={14} /> },
 ]
 
-// ============================================
-// Example fixtures (last resort fallback)
-// ============================================
 
 // ============================================
 // Date helpers
@@ -222,8 +219,8 @@ function HomeContent() {
       }
     }
 
-    // Tier 3: no real matches at all
-    return { matches: [], type: 'empty' as const, nearestDate: undefined }
+    // Tier 3: no hay partidos
+    return { matches: [], type: 'example' as const, nearestDate: undefined }
   }, [partidosFiltrados, partidos, selectedDate])
 
   // Reset display limit when filters change
@@ -336,19 +333,32 @@ function HomeContent() {
               <div className="space-y-12 pb-10">
                 {activeTab === 'noticias' ? (
                   <NewsTab />
+                ) : activeTab === 'comunidad' ? (
+                  <div className="space-y-8">
+                    <CommunityHighlights />
+                    <div className="pt-4 border-t border-[var(--card-border)]/50">
+                      <div className="flex items-center justify-between mb-6 px-1">
+                        <h2 className="text-[var(--foreground)] font-black text-xl italic tracking-tighter uppercase">
+                          💬 LA TRIBUNA HABLA
+                        </h2>
+                        <Link href="/comunidad" className="text-[10px] font-black text-[var(--accent)] hover:opacity-70 uppercase tracking-widest transition-opacity">
+                          Ver todo →
+                        </Link>
+                      </div>
+                      <FeedGlobal />
+                    </div>
+                  </div>
                 ) : activeTab === 'tabla' ? (
                   <TablaContent ligaExterna={currentLigaName || 'Liga Profesional'} />
                 ) : activeTab === 'goleadores' ? (
                   <GoleadoresContent ligaExterna={currentLigaName || 'Liga Profesional'} />
                 ) : activeTab === 'fixtures' ? (
                   <FixturesContent />
-                ) : activeTab === 'comunidad' ? (
-                  <div className="space-y-12">
-                     <CommunityHighlights />
-                     <FeedGlobal />
-                  </div>
                 ) : (
                   <>
+                    {/* LIVE STRIP */}
+                    <LiveMatchesStrip partidos={partidos.filter(p => p.estado === 'EN_JUEGO')} />
+
                     {/* 1. SECTION: FIXTURE (Partidos Tab) */}
                     <section>
                       <div className="flex items-center justify-between mb-3 px-1">
@@ -394,7 +404,7 @@ function HomeContent() {
                           <FixtureTable partidos={fixtureDisplay.matches} />
                         </div>
                       )}
-                      {fixtureDisplay.type === 'empty' && (
+                      {fixtureDisplay.type === 'example' && (
                         <div className="px-4 py-8 text-center">
                             <p className="text-[var(--text-muted)] text-sm font-bold">
                                 No hay partidos programados para esta fecha.
@@ -403,20 +413,28 @@ function HomeContent() {
                       )}
                     </section>
 
-                    {/* 4. SECTION: COMMUNITY HIGHLIGHTS (Top Rated + Popular Reviews) */}
-                    <section className="pt-6 border-t border-[var(--card-border)]">
-                      <CommunityHighlights />
+                    {/* 2. SECTION: POSITIONS (Desktop Only) */}
+                    <section className="hidden md:block pt-12 border-t border-[var(--card-border)]/50">
+                        <div className="flex items-center justify-between mb-6 px-1">
+                            <h2 className="text-[var(--foreground)] font-black text-xl italic tracking-tighter uppercase flex items-center gap-2">
+                                <BarChart3 size={20} className="text-[var(--accent)]" />
+                                Tabla de Posiciones
+                            </h2>
+                            <Link href="/posiciones" className="text-[10px] font-black text-[var(--accent)] hover:opacity-70 uppercase tracking-widest transition-opacity">Ver completa →</Link>
+                        </div>
+                        <TablaContent compact ligaExterna={currentLigaName || 'Liga Profesional'} />
                     </section>
 
-                    {/* 5. SECTION: COMMUNITY FEED (New FeedGlobal) */}
-                    <section className="pt-8 border-t border-[var(--card-border)]/50">
-                      <div className="flex items-center justify-between mb-6 px-1">
-                        <h2 className="text-[var(--foreground)] font-black text-xl italic tracking-tighter uppercase">
-                          💬 LA TRIBUNA HABLA
-                        </h2>
-                        <Link href="/comunidad" className="text-[10px] font-black text-[var(--accent)] hover:opacity-70 uppercase tracking-widest transition-opacity">Ver muro →</Link>
-                      </div>
-                      <FeedGlobal />
+                    {/* 3. SECTION: TOP SCORERS (Desktop Only) */}
+                    <section className="hidden md:block pt-12 border-t border-[var(--card-border)]/50">
+                        <div className="flex items-center justify-between mb-6 px-1">
+                            <h2 className="text-[var(--foreground)] font-black text-xl italic tracking-tighter uppercase flex items-center gap-2">
+                                <Trophy size={20} className="text-[var(--accent)]" />
+                                Goleadores
+                            </h2>
+                            <Link href="/goleadores" className="text-[10px] font-black text-[var(--accent)] hover:opacity-70 uppercase tracking-widest transition-opacity">Ver todos →</Link>
+                        </div>
+                        <GoleadoresContent compact ligaExterna={currentLigaName || 'Liga Profesional'} />
                     </section>
                   </>
                 )}

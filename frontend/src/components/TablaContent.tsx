@@ -27,9 +27,10 @@ const LIGAS_POSICIONES = ['Liga Profesional', 'Primera Nacional', 'La Liga', 'Pr
 
 interface TablaContentProps {
     ligaExterna?: string
+    compact?: boolean
 }
 
-export function TablaContent({ ligaExterna }: TablaContentProps) {
+export function TablaContent({ ligaExterna, compact }: TablaContentProps) {
     const [ligaInterna, setLigaInterna] = useState<string>('Liga Profesional')
     const [standings, setStandings] = useState<TeamStanding[]>([])
     const [loading, setLoading] = useState(true)

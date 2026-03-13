@@ -57,9 +57,10 @@ function getFallbackGoleadores(liga: string): Goleador[] {
 
 interface GoleadoresContentProps {
     ligaExterna?: string
+    compact?: boolean
 }
 
-export function GoleadoresContent({ ligaExterna }: GoleadoresContentProps) {
+export function GoleadoresContent({ ligaExterna, compact }: GoleadoresContentProps) {
     const [ligaInterna, setLigaInterna] = useState('Liga Profesional')
     const [goleadores, setGoleadores] = useState<Goleador[]>([])
     const [loading, setLoading] = useState(true)

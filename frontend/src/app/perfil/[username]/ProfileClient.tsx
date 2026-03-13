@@ -16,10 +16,12 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/contexts/AuthContext'
 import { useFollows } from '@/hooks/useMatchLogs'
+import { useToast } from '@/contexts/ToastContext'
 import { ActivityHeatmap } from '@/components/ActivityHeatmap'
 import { useProfileFollowers } from '@/hooks/useProfileFollowers'
 import { FollowListModal, type FollowListType } from '@/components/FollowListModal'
 import Link from 'next/link'
+import { TrendingUp } from 'lucide-react'
 
 type Props = {
   initialProfile: any
@@ -35,8 +37,24 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
   const { followersCount, followingCount } = useProfileFollowers(initialProfile.id)
   const supabase = createClient()
 
-  const [activeTab, setActiveTab] = useState<'activity' | 'stats'>('activity')
+  const { showToast } = useToast()
+  const [activeTab, setActiveTab] = useState<'activity' | 'stats' | 'listas'>('activity')
+  const [followModal, setFollowModal] = useState<FollowListType | null>(null)
+  const [listas, setListas] = useState<any[]>([])
   const isOwnProfile = user?.id === initialProfile.id
+
+  useEffect(() => {
+    const fetchListas = async () => {
+      const { data } = await supabase
+        .from('user_lists')
+        .select('id, title, description, created_at, items_count:user_list_items(count)')
+        .eq('user_id', initialProfile.id)
+        .eq('is_public', true)
+        .order('created_at', { ascending: false })
+      if (data) setListas(data)
+    }
+    fetchListas()
+  }, [initialProfile.id])
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -48,7 +66,7 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
       } catch {}
     } else {
       navigator.clipboard.writeText(window.location.href)
-      alert('Link copiado al portapapeles')
+      showToast('Link copiado al portapapeles', 'success')
     }
   }
 
@@ -84,14 +102,14 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
                   </h1>
                   <div className="flex flex-wrap justify-center md:justify-start gap-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
                     <button 
-                      onClick={() => {}} // Abrir modal seguidores
+                      onClick={() => setFollowModal('followers')}
                       className="hover:text-[var(--accent)] transition-colors"
                     >
                       {followersCount} Seguidores
                     </button>
                     <span>|</span>
                     <button 
-                      onClick={() => {}} // Abrir modal siguiendo
+                      onClick={() => setFollowModal('following')}
                       className="hover:text-[var(--accent)] transition-colors"
                     >
                       {followingCount} Siguiendo
@@ -148,19 +166,37 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
             ))}
           </div>
 
+          {isOwnProfile && (
+            <Link
+              href="/mis-stats"
+              className="flex items-center justify-between p-4 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl hover:border-[var(--accent)] transition-all group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center">
+                  <TrendingUp size={18} className="text-[var(--accent)]" />
+                </div>
+                <div>
+                  <p className="text-sm font-black">Mi Resumen 2025</p>
+                  <p className="text-[10px] text-[var(--text-muted)]">Tu temporada en números</p>
+                </div>
+              </div>
+              <ArrowRight size={16} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors" />
+            </Link>
+          )}
+
           {/* Activity Heatmap */}
           <ActivityHeatmap userId={initialProfile.id} />
 
           {/* Tabs Activity vs Stats */}
           <div className="flex gap-4 border-b border-[var(--card-border)] pb-2 overflow-x-auto no-scrollbar">
-             {['activity', 'stats'].map((tab) => (
+             {['activity', 'stats', 'listas'].map((tab) => (
                <button
                  key={tab}
                  onClick={() => setActiveTab(tab as any)}
                  className={`px-4 py-2 text-xs font-black uppercase tracking-widest transition-all relative
                    ${activeTab === tab ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] opacity-50'}`}
                >
-                 {tab === 'activity' ? 'Actividad' : 'Estadísticas'}
+                 {tab === 'activity' ? 'Actividad' : tab === 'stats' ? 'Estadísticas' : 'Listas'}
                  {activeTab === tab && (
                    <motion.div layoutId="tab-active" className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--accent)] rounded-full" />
                  )}
@@ -177,8 +213,13 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
                 <div className="space-y-4">
                   {initialResenas.map((r) => (
                     <Link key={r.id} href={`/partido/${r.partido_id}`} className="block bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 hover:border-[var(--accent)] transition-all">
-                       <div className="flex justify-between items-center mb-3">
-                          <span className="text-[9px] font-black opacity-30">FECHA #{r.partido_id}</span>
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-[9px] font-black opacity-60 uppercase tracking-wider">
+                            {r.partido
+                              ? `${r.partido.equipo_local} ${r.partido.goles_local ?? ''} - ${r.partido.goles_visitante ?? ''} ${r.partido.equipo_visitante}`
+                              : `Partido #${r.partido_id}`
+                            }
+                          </span>
                           <div className="flex gap-0.5">
                             {[...Array(r.rating || 0)].map((_, i) => <Star key={i} size={10} className="fill-yellow-400 text-yellow-400" />)}
                           </div>
@@ -225,8 +266,46 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
                <UserBadgesGallery userId={initialProfile.id} isOwnProfile={isOwnProfile} />
             </div>
           )}
+
+          {activeTab === 'listas' && (
+            <div className="space-y-4">
+              {listas.length === 0 ? (
+                <div className="py-16 text-center border border-dashed border-[var(--card-border)] rounded-2xl">
+                  <p className="text-xs text-[var(--text-muted)] font-bold">
+                    {isOwnProfile ? 'No creaste listas todavía.' : 'Este usuario no tiene listas públicas.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {listas.map((lista: any) => (
+                    <Link key={lista.id} href={`/listas/${lista.id}`}>
+                      <div className="p-4 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl hover:border-[var(--foreground)] transition-all">
+                        <h3 className="font-black text-sm mb-1 truncate">{lista.title}</h3>
+                        {lista.description && (
+                          <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2">{lista.description}</p>
+                        )}
+                        <span className="text-[10px] text-[var(--text-muted)] font-bold">
+                          {lista.items_count?.[0]?.count || 0} partidos
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
+      
+      {followModal && (
+        <FollowListModal
+          isOpen={!!followModal}
+          userId={initialProfile.id}
+          type={followModal}
+          title={followModal === 'followers' ? 'Seguidores' : 'Siguiendo'}
+          onClose={() => setFollowModal(null)}
+        />
+      )}
       <NavBar />
     </>
   )

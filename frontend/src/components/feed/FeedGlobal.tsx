@@ -27,12 +27,25 @@ export function FeedGlobal() {
     const fetchFeed = async () => {
       try {
         const { data, error } = await supabase
-          .from('feed_global')
-          .select('*')
+          .from('match_logs')
+          .select('*, profiles(username, avatar_url)')
+          .order('created_at', { ascending: false })
           .limit(30)
 
         if (error) throw error
-        setItems(data ?? [])
+        
+        const adaptedData = (data ?? []).map((item: any) => ({
+          id: item.id,
+          partido_id: item.match_id || item.partido_id,
+          rating: item.rating,
+          texto: item.content || item.texto,
+          mvp_jugador_nombre: item.mvp_name,
+          created_at: item.created_at,
+          username: item.profiles?.username || 'Anónimo',
+          avatar_url: item.profiles?.avatar_url
+        }))
+
+        setItems(adaptedData)
       } catch (err) {
         console.error('[FeedGlobal] Fetch error:', err)
         setError('No se pudo cargar el feed de la tribuna.')
@@ -43,13 +56,13 @@ export function FeedGlobal() {
 
     fetchFeed()
 
-    // Realtime: escuchar nuevas reseñas
+    // Realtime: escuchar nuevos logs
     const channel = supabase
-      .channel('feed_global_changes')
+      .channel('match_logs_changes')
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
-        table: 'resenas',
+        table: 'match_logs',
       }, () => fetchFeed())
       .subscribe()
 

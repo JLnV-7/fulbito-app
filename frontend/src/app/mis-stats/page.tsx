@@ -14,6 +14,7 @@ import { hapticFeedback } from '@/lib/helpers'
 export default function MyStatsPage() {
   const { user } = useAuth()
   const [stats, setStats] = useState<any>(null)
+  const [topTeam, setTopTeam] = useState<{ name: string; logo?: string; count: number } | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
@@ -29,7 +30,35 @@ export default function MyStatsPage() {
         .eq('user_id', user.id)
         .single()
 
-      if (data) setStats(data)
+      if (data) {
+        setStats(data)
+        
+        // Ranking real
+        const { count: rankingPos } = await supabase
+          .from('stats_usuario')
+          .select('*', { count: 'exact', head: true })
+          .gt('total_resenas', data.total_resenas || 0)
+
+        setStats((prev: any) => ({ ...prev, ranking_pos: (rankingPos || 0) + 1 }))
+
+        // Equipo más visto
+        const { data: logsData } = await supabase
+          .from('match_logs')
+          .select('equipo_local, equipo_visitante, logo_local, logo_visitante')
+          .eq('user_id', user.id)
+
+        if (logsData) {
+          const teamCount: Record<string, { count: number; logo?: string }> = {}
+          logsData.forEach(l => {
+            teamCount[l.equipo_local] = { count: (teamCount[l.equipo_local]?.count || 0) + 1, logo: l.logo_local }
+            teamCount[l.equipo_visitante] = { count: (teamCount[l.equipo_visitante]?.count || 0) + 1, logo: l.logo_visitante }
+          })
+          const topTeamEntry = Object.entries(teamCount).sort((a, b) => b[1].count - a[1].count)[0]
+          if (topTeamEntry) {
+            setTopTeam({ name: topTeamEntry[0], logo: topTeamEntry[1].logo, count: topTeamEntry[1].count })
+          }
+        }
+      }
       setLoading(false)
     }
 
@@ -66,7 +95,7 @@ export default function MyStatsPage() {
     },
     {
       title: 'Ranking Global',
-      value: '#' + (Math.floor(Math.random() * 100) + 1), // Placeholder for actual ranking logic
+      value: stats?.ranking_pos ? `#${stats.ranking_pos}` : '—',
       icon: Trophy,
       color: 'text-emerald-500',
       bg: 'bg-emerald-500/10'
@@ -112,6 +141,28 @@ export default function MyStatsPage() {
               )
             })}
           </div>
+
+          {topTeam && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-6 flex items-center gap-4 mb-12"
+            >
+              <img 
+                src={topTeam.logo} 
+                alt={topTeam.name} 
+                className="w-12 h-12 object-contain" 
+                onError={e => e.currentTarget.style.display='none'} 
+              />
+              <div>
+                <p className="text-2xl font-black tracking-tighter">{topTeam.name}</p>
+                <p className="text-xs text-[var(--text-muted)] font-bold uppercase tracking-widest">
+                  Tu equipo más visto · {topTeam.count} partidos
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-8 relative overflow-hidden">
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">

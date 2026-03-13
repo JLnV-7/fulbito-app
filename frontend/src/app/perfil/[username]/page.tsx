@@ -39,7 +39,7 @@ export default async function PerfilPage({
   // 4. Últimas reseñas del usuario
   const { data: resenas } = await supabase
     .from('resenas')
-    .select('*')
+    .select('*, partido:partidos(equipo_local, equipo_visitante, goles_local, goles_visitante, liga)')
     .eq('user_id', perfil.id)
     .order('created_at', { ascending: false })
     .limit(10)

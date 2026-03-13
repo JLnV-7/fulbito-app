@@ -480,6 +480,13 @@ export default function PartidoPage() {
                {user ? (
                  <FormularioResena
                    partidoId={Number(partido.id)}
+                   equipoLocal={partido.equipo_local}
+                   equipoVisitante={partido.equipo_visitante}
+                   logoLocal={partido.logo_local}
+                   logoVisitante={partido.logo_visitante}
+                   liga={partido.liga}
+                   golesLocal={partido.goles_local}
+                   golesVisitante={partido.goles_visitante}
                    jugadoresDelPartido={equipos.flatMap(eq => 
                      [...eq.titulares, ...eq.suplentes].map(j => ({ id: j.id, nombre: j.nombre }))
                    )}
