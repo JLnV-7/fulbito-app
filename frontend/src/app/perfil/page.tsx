@@ -119,14 +119,14 @@ export default function Perfil() {
           }
 
           try {
-            const { data: prodeData } = await supabase
+            const { data: prodeData, error: prodeError } = await supabase
               .from('ranking_prode')
               .select('*')
               .eq('user_id', user.id)
-              .single()
+              .limit(1)
 
-            if (prodeData) {
-              setProdeStats(prodeData)
+            if (prodeData && prodeData.length > 0) {
+              setProdeStats(prodeData[0])
             }
           } catch (prodeError) {
             console.log('Stats de prode no disponibles')

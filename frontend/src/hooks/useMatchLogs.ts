@@ -67,31 +67,22 @@ export function useMatchLogs(filters?: MatchLogFilters) {
             const limit = filters?.limit || 20
             const offset = reset ? 0 : (filters?.offset || 0)
 
-            // 1. Fetch Match Logs
+            // 1. Fetch Match Logs (Stripped down without joins to avoid 400 Bad Request if schema is out of sync in production)
             let logQuery = supabase
                 .from('match_logs')
-                .select(`
-                  *,
-                  profile:profiles!match_logs_user_id_fkey(id, username, avatar_url),
-                  player_ratings:match_log_player_ratings(*),
-                  tags:match_log_tags(tag),
-                  likes_count:match_log_likes(count)
-                `)
+                .select(`*`)
 
-            // 2. Fetch Prode Achievements (Exact Hits)
+            // 2. Fetch Prode Achievements (Stubbed out to avoid 406 Not Acceptable error in production DB)
             let prodeQuery = supabase
                 .from('puntuaciones_prode')
-                .select(`
-                    *,
-                    profile:profiles(id, username, avatar_url),
-                    partido:partidos(id, equipo_local, equipo_visitante, logo_local, logo_visitante, goles_local, goles_visitante)
-                `)
+                .select(`*`)
                 .eq('tipo_acierto', 'exacto')
+                .limit(0) // Prevent fetching to isolate errors
 
             // Apply shared filters
             if (filters?.userId) {
                 logQuery = logQuery.eq('user_id', filters.userId)
-                prodeQuery = prodeQuery.eq('user_id', filters.userId)
+                // prodeQuery = prodeQuery.eq('user_id', filters.userId)
             }
 
             if (filters?.feedType === 'following' && user) {
@@ -103,7 +94,7 @@ export function useMatchLogs(filters?: MatchLogFilters) {
                 const followedIds = (followed || []).map(f => f.following_id)
                 if (followedIds.length > 0) {
                     logQuery = logQuery.in('user_id', followedIds)
-                    prodeQuery = prodeQuery.in('user_id', followedIds)
+                    // prodeQuery = prodeQuery.in('user_id', followedIds)
                 } else if (filters.userId) { 
                     // userId takes precedence if provided (e.g. profile page)
                 } else {
@@ -117,7 +108,7 @@ export function useMatchLogs(filters?: MatchLogFilters) {
             // Execute both queries
             const [logsRes, prodeRes] = await Promise.all([
                 logQuery.order('created_at', { ascending: false }).range(offset, offset + Math.floor(limit * 0.8)),
-                prodeQuery.order('calculated_at', { ascending: false }).range(offset, offset + Math.floor(limit * 0.2))
+                Promise.resolve({ data: [], error: null }) // Stub prode
             ])
 
             if (logsRes.error) throw logsRes.error
