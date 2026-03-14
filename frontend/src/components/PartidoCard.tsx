@@ -15,8 +15,7 @@ interface PartidoCardProps {
 }
 
 export const PartidoCard = memo(({ partido }: PartidoCardProps) => {
-  const router = useRouter()
-  const { classicMode } = useTheme()
+    const router = useRouter()
   // Utilidad para extraer color "glow" semialeatorio según el nombre
   const getGlowColor = (teamName: string) => {
     let hash = 0

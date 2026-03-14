@@ -7,16 +7,13 @@ type Theme = 'dark' | 'light'
 
 interface ThemeContextType {
     theme: Theme
-    classicMode: boolean
     toggleTheme: () => void
-    toggleClassicMode: () => void
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [theme, setTheme] = useState<Theme>('light')
-    const [classicMode, setClassicMode] = useState(false)
     const [mounted, setMounted] = useState(false)
 
     // Cargar tema desde localStorage al montar
@@ -34,13 +31,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
         setTheme(initialTheme)
         document.documentElement.setAttribute('data-theme', initialTheme)
-
-        // Load classic mode preference
-        const savedClassic = localStorage.getItem('FutLog-classic-mode')
-        if (savedClassic === 'true') {
-            setClassicMode(true)
-            document.documentElement.classList.add('classic-mode')
-        }
 
         setMounted(true)
 
@@ -75,31 +65,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         })
     }
 
-    const toggleClassicMode = () => {
-        setClassicMode(prev => {
-            const next = !prev
-            localStorage.setItem('FutLog-classic-mode', String(next))
-            if (next) {
-                document.documentElement.classList.add('classic-mode')
-            } else {
-                document.documentElement.classList.remove('classic-mode')
-            }
-            return next
-        })
-    }
-
     // Evitar flash dando un render inicial seguro
     if (!mounted) {
         // En SSR o primer render, asume dark
         return (
-            <ThemeContext.Provider value={{ theme: 'light', classicMode: false, toggleTheme, toggleClassicMode }}>
+            <ThemeContext.Provider value={{ theme: 'light', toggleTheme }}>
                 {children}
             </ThemeContext.Provider>
         )
     }
 
     return (
-        <ThemeContext.Provider value={{ theme, classicMode, toggleTheme, toggleClassicMode }}>
+        <ThemeContext.Provider value={{ theme, toggleTheme }}>
             {children}
         </ThemeContext.Provider>
     )

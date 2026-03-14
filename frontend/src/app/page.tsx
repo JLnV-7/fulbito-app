@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { PublicOnboarding } from '@/components/PublicOnboarding'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { usePartidos } from '@/hooks/usePartidos'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -253,141 +253,150 @@ function HomeContent() {
 
               {/* Contenido por tab */}
               <div className="space-y-10 pb-10">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                    className="w-full"
+                  >
+                    {/* TAB: NOTICIAS */}
+                    {activeTab === 'noticias' && <NewsTab />}
 
-                {/* TAB: NOTICIAS */}
-                {activeTab === 'noticias' && <NewsTab />}
-
-                {/* TAB: COMUNIDAD */}
-                {activeTab === 'comunidad' && (
-                  <div className="space-y-8">
-                    <CommunityHighlights />
-                    <div className="pt-4 border-t border-[var(--card-border)]/50">
-                      <div className="flex items-center justify-between mb-6 px-1">
-                        <h2 className="text-[var(--foreground)] font-black text-xl italic tracking-tighter uppercase">
-                          💬 La Tribuna Habla
-                        </h2>
-                        <Link
-                          href="/comunidad"
-                          className="text-[10px] font-black text-[var(--accent)] hover:opacity-70 uppercase tracking-widest transition-opacity"
-                        >
-                          Ver todo →
-                        </Link>
-                      </div>
-                      <FeedGlobal />
-                    </div>
-                  </div>
-                )}
-
-                {/* TAB: TABLA */}
-                {activeTab === 'tabla' && (
-                  <TablaContent ligaExterna={currentLigaName || 'Liga Profesional'} />
-                )}
-
-                {/* TAB: GOLEADORES */}
-                {activeTab === 'goleadores' && (
-                  <GoleadoresContent ligaExterna={currentLigaName || 'Liga Profesional'} />
-                )}
-
-                {/* TAB: PARTIDOS (default) */}
-                {(activeTab === 'partidos' || activeTab === 'fixtures') && (
-                  <>
-                    {/* Live strip */}
-                    <LiveMatchesStrip partidos={livePartidos} />
-
-                    {/* Date navigation */}
-                    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-                      {dateRange.map((date) => {
-                        const dateStr = toLocalDateStr(date)
-                        const label = formatDateLabel(date, t, localeFormat)
-                        const isSelected = dateStr === selectedDate
-                        const isToday = dateStr === toLocalDateStr(new Date())
-                        return (
-                          <button
-                            key={dateStr}
-                            onClick={() => {
-                              hapticFeedback(5)
-                              setSelectedDate(dateStr)
-                            }}
-                            className={`flex flex-col items-center justify-center min-w-[3.5rem] py-1.5 px-2 rounded-xl border transition-all
-                              ${isSelected
-                                ? 'bg-[var(--foreground)] border-[var(--foreground)] text-[var(--background)] shadow-md'
-                                : isToday
-                                  ? 'bg-[var(--card-bg)] border-[var(--accent)]/50 text-[var(--foreground)]'
-                                  : 'bg-[var(--card-bg)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--card-border-hover)]'
-                              }`}
-                          >
-                            <span className={`text-[9px] font-black uppercase tracking-wider ${isSelected ? 'opacity-90' : 'opacity-70'}`}>
-                              {['Hoy','Mañana','Ayer'].includes(label) ? ' ' : new Date(dateStr + 'T12:00:00').toLocaleDateString(localeFormat, { weekday: 'short' })}
-                            </span>
-                            <span className={`text-sm font-black tracking-tighter mt-0.5 ${isSelected ? 'text-[var(--background)]' : ''}`}>
-                              {['Hoy','Mañana','Ayer'].includes(label) ? label : new Date(dateStr + 'T12:00:00').getDate()}
-                            </span>
-                          </button>
-                        )
-                      })}
-                    </div>
-
-                    {/* Fixture */}
-                    <section>
-                      <div className="flex items-center justify-between mb-3 px-1">
-                        <div className="flex items-center gap-2">
-                          <h2 className="text-[12px] font-bold tracking-tight capitalize">
-                            Fixture: {filtroLiga === 'Todos' || filtroLiga === 'Favoritos'
-                              ? formatDateLabel(new Date(selectedDate + 'T12:00:00'), t, localeFormat).toUpperCase()
-                              : filtroLiga.toUpperCase()}
-                          </h2>
-                          {liveCount > 0 && (
-                            <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-600 text-[8px] font-black animate-pulse flex items-center gap-1">
-                              {liveCount} VIVO
-                            </span>
-                          )}
+                    {/* TAB: COMUNIDAD */}
+                    {activeTab === 'comunidad' && (
+                      <div className="space-y-8">
+                        <CommunityHighlights />
+                        <div className="pt-4 border-t border-[var(--card-border)]/50">
+                          <div className="flex items-center justify-between mb-6 px-1">
+                            <h2 className="text-[var(--foreground)] font-black text-xl italic tracking-tighter uppercase">
+                              💬 La Tribuna Habla
+                            </h2>
+                            <Link
+                              href="/comunidad"
+                              className="text-[10px] font-black text-[var(--accent)] hover:opacity-70 uppercase tracking-widest transition-opacity"
+                            >
+                              Ver todo →
+                            </Link>
+                          </div>
+                          <FeedGlobal />
                         </div>
                       </div>
+                    )}
 
-                      {loading ? (
-                        <div className="space-y-2">
-                          {Array(4).fill(0).map((_, i) => (
-                            <div key={i} className="h-12 bg-[var(--card-bg)] border border-[var(--card-border)] animate-shimmer" />
-                          ))}
-                        </div>
-                      ) : error ? (
-                        <ErrorMessage message="No pudimos cargar los partidos." onRetry={refetch} />
-                      ) : (
-                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
-                          {fixtureDisplay.type === 'nearest' && fixtureDisplay.nearestDate && (
-                            <div className="px-4 py-2.5 bg-[var(--accent-green)]/10 border-b border-[var(--card-border)] flex items-center justify-between">
-                              <p className="text-[10px] font-bold text-[var(--accent)] capitalize tracking-tight">
-                                📅 Próximos: {formatDateLabel(new Date(fixtureDisplay.nearestDate + 'T12:00:00'), t, localeFormat)}
-                              </p>
+                    {/* TAB: TABLA */}
+                    {activeTab === 'tabla' && (
+                      <TablaContent ligaExterna={currentLigaName || 'Liga Profesional'} />
+                    )}
+
+                    {/* TAB: GOLEADORES */}
+                    {activeTab === 'goleadores' && (
+                      <GoleadoresContent ligaExterna={currentLigaName || 'Liga Profesional'} />
+                    )}
+
+                    {/* TAB: PARTIDOS (default) */}
+                    {(activeTab === 'partidos' || activeTab === 'fixtures') && (
+                      <>
+                        {/* Live strip */}
+                        <LiveMatchesStrip partidos={livePartidos} />
+
+                        {/* Date navigation */}
+                        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+                          {dateRange.map((date) => {
+                            const dateStr = toLocalDateStr(date)
+                            const label = formatDateLabel(date, t, localeFormat)
+                            const isSelected = dateStr === selectedDate
+                            const isToday = dateStr === toLocalDateStr(new Date())
+                            return (
                               <button
-                                onClick={() => setSelectedDate(fixtureDisplay.nearestDate!)}
-                                className="text-[9px] font-bold text-[var(--accent)] underline capitalize"
+                                key={dateStr}
+                                onClick={() => {
+                                  hapticFeedback(5)
+                                  setSelectedDate(dateStr)
+                                }}
+                                className={`flex flex-col items-center justify-center min-w-[3.5rem] py-1.5 px-2 rounded-xl border transition-all
+                                  ${isSelected
+                                    ? 'bg-[var(--foreground)] border-[var(--foreground)] text-[var(--background)] shadow-md'
+                                    : isToday
+                                      ? 'bg-[var(--card-bg)] border-[var(--accent)]/50 text-[var(--foreground)]'
+                                      : 'bg-[var(--card-bg)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--card-border-hover)]'
+                                  }`}
                               >
-                                Ir a esa fecha
+                                <span className={`text-[9px] font-black uppercase tracking-wider ${isSelected ? 'opacity-90' : 'opacity-70'}`}>
+                                  {['Hoy','Mañana','Ayer'].includes(label) ? ' ' : new Date(dateStr + 'T12:00:00').toLocaleDateString(localeFormat, { weekday: 'short' })}
+                                </span>
+                                <span className={`text-sm font-black tracking-tighter mt-0.5 ${isSelected ? 'text-[var(--background)]' : ''}`}>
+                                  {['Hoy','Mañana','Ayer'].includes(label) ? label : new Date(dateStr + 'T12:00:00').getDate()}
+                                </span>
                               </button>
-                            </div>
-                          )}
-                          {fixtureDisplay.type === 'example' && (
-                            <div className="px-4 py-2.5 bg-[var(--hover-bg)] border-b border-[var(--card-border)]">
-                              <p className="text-[10px] font-bold text-[var(--text-muted)] text-center">
-                                No hay partidos programados para esta fecha
-                              </p>
-                            </div>
-                          )}
-                          {fixtureDisplay.matches.length > 0
-                            ? <FixtureTable partidos={fixtureDisplay.matches} />
-                            : (
-                              <div className="p-8 text-center">
-                                <p className="text-[var(--text-muted)] text-sm">Sin partidos para esta fecha</p>
-                              </div>
                             )
-                          }
+                          })}
                         </div>
-                      )}
-                    </section>
-                  </>
-                )}
 
+                        {/* Fixture */}
+                        <section>
+                          <div className="flex items-center justify-between mb-3 px-1">
+                            <div className="flex items-center gap-2">
+                              <h2 className="text-[12px] font-bold tracking-tight capitalize">
+                                Fixture: {filtroLiga === 'Todos' || filtroLiga === 'Favoritos'
+                                  ? formatDateLabel(new Date(selectedDate + 'T12:00:00'), t, localeFormat).toUpperCase()
+                                  : filtroLiga.toUpperCase()}
+                              </h2>
+                              {liveCount > 0 && (
+                                <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-600 text-[8px] font-black animate-pulse flex items-center gap-1">
+                                  {liveCount} VIVO
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {loading ? (
+                            <div className="space-y-2">
+                              {Array(4).fill(0).map((_, i) => (
+                                <div key={i} className="h-12 bg-[var(--card-bg)] border border-[var(--card-border)] animate-shimmer" />
+                              ))}
+                            </div>
+                          ) : error ? (
+                            <ErrorMessage message="No pudimos cargar los partidos." onRetry={refetch} />
+                          ) : (
+                            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
+                              {fixtureDisplay.type === 'nearest' && fixtureDisplay.nearestDate && (
+                                <div className="px-4 py-2.5 bg-[var(--accent-green)]/10 border-b border-[var(--card-border)] flex items-center justify-between">
+                                  <p className="text-[10px] font-bold text-[var(--accent)] capitalize tracking-tight">
+                                    📅 Próximos: {formatDateLabel(new Date(fixtureDisplay.nearestDate + 'T12:00:00'), t, localeFormat)}
+                                  </p>
+                                  <button
+                                    onClick={() => setSelectedDate(fixtureDisplay.nearestDate!)}
+                                    className="text-[9px] font-bold text-[var(--accent)] underline capitalize"
+                                  >
+                                    Ir a esa fecha
+                                  </button>
+                                </div>
+                              )}
+                              {fixtureDisplay.type === 'example' && (
+                                <div className="px-4 py-2.5 bg-[var(--hover-bg)] border-b border-[var(--card-border)]">
+                                  <p className="text-[10px] font-bold text-[var(--text-muted)] text-center">
+                                    No hay partidos programados para esta fecha
+                                  </p>
+                                </div>
+                              )}
+                              {fixtureDisplay.matches.length > 0
+                                ? <FixtureTable partidos={fixtureDisplay.matches} />
+                                : (
+                                  <div className="p-8 text-center">
+                                    <p className="text-[var(--text-muted)] text-sm">Sin partidos para esta fecha</p>
+                                  </div>
+                                )
+                              }
+                            </div>
+                          )}
+                        </section>
+                      </>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </div>
           </div>

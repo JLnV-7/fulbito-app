@@ -45,7 +45,7 @@ export default function Perfil() {
   const router = useRouter()
   const { user, signOut, loading: authLoading } = useAuth()
   const { language, setLanguage, t } = useLanguage()
-  const { theme, toggleTheme, classicMode, toggleClassicMode } = useTheme()
+  const { theme, toggleTheme } = useTheme()
   const { followersCount, followingCount } = useProfileFollowers(user?.id || '')
 
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -590,14 +590,14 @@ export default function Perfil() {
               >
                 {/* Tus Equipos / Notificaciones básicas */}
                 <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl">
-                  <div className="flex items-center justify-between mb-5 border-b border-[var(--card-border)] pb-3">
+                  <div className="flex items-center justify-between mb-4 border-b border-[var(--card-border)] pb-3">
                     <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2">
-                      {t('profile.teams.favorite')}
+                      🏆 {t('profile.teams.favorite')}
                     </h3>
                   </div>
                   {profile?.equipo ? (
-                    <div className="flex items-center justify-between bg-[var(--background)] p-4 border border-[var(--card-border)] rounded-2xl">
-                      <div className="flex items-center gap-4">
+                    <div className="flex flex-col h-full justify-between bg-[var(--background)] p-4 border border-[var(--card-border)] rounded-2xl flex-1">
+                      <div className="flex items-center gap-4 mb-4">
                         <div className="w-10 h-10 bg-[var(--hover-bg)] border border-[var(--card-border)] flex items-center justify-center text-xl rounded-xl">
                           🛡️
                         </div>
@@ -628,8 +628,10 @@ export default function Perfil() {
                   )}
                 </div>
 
-                {/* Sincronización Offline */}
-                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 mt-4 rounded-3xl">
+                {/* Grid layout for Settings */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Sincronización Offline */}
+                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl flex flex-col justify-between">
                   <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2 mb-4 border-b border-[var(--card-border)] pb-3">
                     🔄 {t('profile.settings.sync.title')}
                   </h3>
@@ -653,29 +655,14 @@ export default function Perfil() {
                 </div>
 
                 {/* Ajustes de Apariencia */}
-                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 mt-4 rounded-3xl">
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl flex flex-col justify-between">
                   <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2 mb-5 border-b border-[var(--card-border)] pb-3">
                     🎨 {t('profile.settings.appearance.title')}
                   </h3>
 
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-bold text-xs capitalize tracking-tight">{t('profile.settings.appearance.classic')}</p>
-                        <p className="text-[10px] text-[var(--text-muted)] font-medium capitalize mt-0.5">{t('profile.settings.appearance.classicDesc')}</p>
-                      </div>
-                      <button
-                        onClick={() => { hapticFeedback(10); toggleClassicMode(); }}
-                        className={`w-12 h-6 border-2 border-[var(--card-border)] transition-colors relative rounded-full ${classicMode ? 'bg-[var(--accent-green)] border-[var(--accent-green)]' : 'bg-[var(--hover-bg)]'}`}
-                      >
-                        <motion.div
-                          animate={{ x: classicMode ? 24 : 0 }}
-                          className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-all ${classicMode ? 'bg-white' : 'bg-[var(--text-muted)]'}`}
-                        />
-                      </button>
-                    </div>
 
-                    <div className="flex items-center justify-between border-t border-[var(--card-border)] pt-5">
+                    <div className="flex items-center justify-between">
                       <div>
                         <p className="font-bold text-xs capitalize tracking-tight">{t('profile.settings.appearance.dark')}</p>
                         <p className="text-[10px] text-[var(--text-muted)] font-medium capitalize mt-0.5">{t('profile.settings.appearance.darkDesc')}</p>
@@ -692,44 +679,50 @@ export default function Perfil() {
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Participación & Comunidad */}
-                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 mt-4 rounded-3xl">
-                  <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2 mb-2 border-b border-[var(--card-border)] pb-3">
-                    ⭐ Participación & Feedback
-                  </h3>
-                  <div className="flex flex-col">
-                    <ChallengesFAB inline={true} />
-                    <FeedbackWidget inline={true} />
+              {/* Grid layout for Settings 2 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl flex flex-col justify-between">
+                    <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2 mb-2 border-b border-[var(--card-border)] pb-3">
+                      ⭐ Participación & Feedback
+                    </h3>
+                    <div className="flex flex-col">
+                      <FeedbackWidget inline={true} />
+                    </div>
+                  </div>
+
+                  {/* Preferencias Push Granulares */}
+                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl flex flex-col justify-between">
+                    <NotificationSettings />
                   </div>
                 </div>
 
-                {/* Preferencias Push Granulares */}
-                <NotificationSettings />
-
-                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 mt-4" style={{ borderRadius: 'var(--radius)' }}>
-                  <h3 className="text-[10px] font-black capitalize tracking-widest flex items-center gap-2 mb-4 border-b border-[var(--card-border)] pb-2 border-dashed text-[#ff4d4d]">
-                    {t('profile.settings.danger.title')}
-                  </h3>
-                  <Button variant="destructive" fullWidth onClick={handleSignOut} size="sm">
-                    {t('profile.settings.logout')}
-                  </Button>
-                </div>
-
-                {/* PWA Widget Info */}
-                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 mt-6" style={{ borderRadius: 'var(--radius)' }}>
-                  <div className="flex items-start gap-4">
-                    <span className="text-2xl">📱</span>
-                    <div>
-                      <h4 className="text-[10px] font-black capitalize mb-1 text-[var(--foreground)]">{t('profile.settings.pwa.title')}</h4>
-                      <p className="text-[9px] font-bold text-[var(--text-muted)] capitalize mb-3 leading-tight">
-                        {t('profile.settings.pwa.desc')}
-                      </p>
-                      <div className="flex flex-wrap gap-1 text-[8px] font-black capitalize">
-                        <span className="bg-[var(--background)] px-1.5 py-0.5 border border-[var(--card-border)]">{t('profile.settings.pwa.offline')}</span>
-                        <span className="bg-[var(--background)] px-1.5 py-0.5 border border-[var(--card-border)]">{t('profile.settings.pwa.fast')}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* PWA Widget Info */}
+                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 rounded-3xl">
+                    <div className="flex items-start gap-4">
+                      <span className="text-2xl">📱</span>
+                      <div>
+                        <h4 className="text-[10px] font-black capitalize mb-1 text-[var(--foreground)]">{t('profile.settings.pwa.title')}</h4>
+                        <p className="text-[9px] font-bold text-[var(--text-muted)] capitalize mb-3 leading-tight">
+                          {t('profile.settings.pwa.desc')}
+                        </p>
+                        <div className="flex flex-wrap gap-1 text-[8px] font-black capitalize">
+                          <span className="bg-[var(--background)] px-1.5 py-0.5 border border-[var(--card-border)] rounded-md">{t('profile.settings.pwa.offline')}</span>
+                          <span className="bg-[var(--background)] px-1.5 py-0.5 border border-[var(--card-border)] rounded-md">{t('profile.settings.pwa.fast')}</span>
+                        </div>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 rounded-3xl flex flex-col justify-center">
+                    <h3 className="text-[10px] font-black capitalize tracking-widest flex items-center gap-2 mb-4 border-b border-[var(--card-border)] pb-2 border-dashed text-[#ff4d4d]">
+                      {t('profile.settings.danger.title')}
+                    </h3>
+                    <Button variant="destructive" fullWidth onClick={handleSignOut} size="sm">
+                      {t('profile.settings.logout')}
+                    </Button>
                   </div>
                 </div>
 

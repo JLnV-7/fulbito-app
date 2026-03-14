@@ -9,7 +9,6 @@ import { PartidoCardSkeleton } from '@/components/skeletons/PartidoCardSkeleton'
 import { ErrorMessage } from '@/components/ui/ErrorMessage'
 import { fetchFixturesAction } from '@/app/actions/football'
 import { FixtureTable } from '@/components/FixtureTable'
-import { useTheme } from '@/contexts/ThemeContext'
 import type { Partido } from '@/types'
 import { LIGAS, type Liga } from '@/lib/constants'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -20,7 +19,6 @@ interface FixturesContentProps {
 }
 
 export function FixturesContent({ ligaExterna }: FixturesContentProps) {
-    const { classicMode } = useTheme()
     const { language } = useLanguage()
     const localeFormat = language === 'en' ? 'en-US' : language === 'pt' ? 'pt-BR' : 'es-AR'
 
@@ -205,30 +203,7 @@ export function FixturesContent({ ligaExterna }: FixturesContentProps) {
                     </p>
                 </motion.div>
             ) : (
-                classicMode ? (
-                    <FixtureTable partidos={partidosFiltrados} />
-                ) : (
-                    <div className="space-y-6">
-                        {partidosPorHora.map(([hora, partidosHora]) => (
-                            <div key={hora}>
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="px-3 py-1 bg-[var(--foreground)]/10 border border-[var(--foreground)]/20" style={{ borderRadius: 'var(--radius)' }}>
-                                        <span className="text-[10px] font-black text-[var(--foreground)]">{hora}</span>
-                                    </div>
-                                    <div className="flex-1 h-px bg-[var(--card-border)] opacity-30"></div>
-                                    <span className="text-[9px] font-bold text-[var(--text-muted)] capitalize tracking-tighter">
-                                        {partidosHora.length} partido{partidosHora.length !== 1 ? 's' : ''}
-                                    </span>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {partidosHora.map(partido => (
-                                        <PartidoCard key={partido.id} partido={partido} />
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )
+                <FixtureTable partidos={partidosFiltrados} />
             )}
         </div>
     )

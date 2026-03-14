@@ -26,6 +26,7 @@ export function NewsTab() {
     const [news, setNews] = useState<NewsItem[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(false)
+    const [errorMessage, setErrorMessage] = useState('')
     const [filterQuery, setFilterQuery] = useState('')
     const [activeFilter, setActiveFilter] = useState<'all' | 'my_teams'>('all')
 
@@ -33,6 +34,7 @@ export function NewsTab() {
         const fetchNews = async () => {
             setLoading(true)
             setError(false)
+            setErrorMessage('')
             try {
                 const data = await fetchTyCNewsAction()
                 if (data && data.length > 0) {
@@ -46,11 +48,12 @@ export function NewsTab() {
                     }))
                     setNews(mappedNews)
                 } else {
-                    throw new Error('RSS Error Data Null')
+                    throw new Error('La fuente de noticias no devolvió artículos válidos.')
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Error fetching news:", err)
                 setError(true)
+                setErrorMessage(err.message || 'Error de conexión')
             } finally {
                 setLoading(false)
             }
@@ -117,11 +120,16 @@ export function NewsTab() {
                     ))}
                 </div>
             ) : error ? (
-                <div className="text-center py-12 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl border-dashed">
-                    <Newspaper size={48} className="mx-auto text-[var(--text-muted)] mb-3 opacity-50" />
-                    <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">Error al cargar noticias</p>
-                    <button onClick={() => window.location.reload()} className="mt-4 text-[10px] font-black text-[var(--accent)] hover:underline">Reintentar</button>
-                </div>
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-12 bg-[var(--card-bg)] border border-red-500/20 rounded-xl">
+                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Newspaper size={32} className="text-red-500/70" />
+                    </div>
+                    <p className="text-sm font-black text-[var(--foreground)] uppercase tracking-widest leading-tight mb-2">No pudimos cargar las noticias</p>
+                    <p className="text-xs text-[var(--text-muted)] font-medium max-w-xs mx-auto mb-6">{errorMessage || 'Parece que el servidor de origen (TyC Sports) no está respondiendo. Intentá de nuevo en un rato.'}</p>
+                    <button onClick={() => window.location.reload()} className="px-6 py-2.5 bg-[var(--background)] border border-[var(--card-border)] text-[10px] font-black tracking-widest uppercase rounded-full hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-colors shadow-sm">
+                        Reintentar Conexión
+                    </button>
+                </motion.div>
             ) : filteredNews.length === 0 ? (
                 <div className="text-center py-12 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl border-dashed">
                     <Filter size={48} className="mx-auto text-[var(--text-muted)] mb-3 opacity-50" />

@@ -52,13 +52,13 @@ export function NewsFeed({ userTeams }: NewsFeedProps) {
                         title: item.title,
                         link: item.link,
                         pubDate: new Date(item.pubDate).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' }),
-                        thumbnail: item.enclosure?.link || '',
+                        thumbnail: item.enclosure?.link || item.thumbnail || '',
                         source: 'TyC Sports'
                     })).slice(0, 15)
 
                     setNews(mappedNews)
                 } else {
-                    throw new Error('RSS Error')
+                    throw new Error('API RSS Error')
                 }
             } catch (err) {
                 console.error("Error fetching news:", err)
@@ -87,8 +87,9 @@ export function NewsFeed({ userTeams }: NewsFeedProps) {
         )
     }
 
+    // Don't show if broken
     if (error || news.length === 0) {
-        return null // Fallback: don't show the section if it fails, to maintain a clean UI
+        return null 
     }
 
     return (

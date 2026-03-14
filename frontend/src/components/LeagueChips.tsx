@@ -6,7 +6,6 @@ import { LIGAS, type Liga } from '@/lib/constants'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { hapticFeedback } from '@/lib/helpers'
-import { useTheme } from '@/contexts/ThemeContext'
 
 interface LeagueChipsProps {
     activeLiga: Liga | 'Favoritos'
@@ -16,7 +15,6 @@ interface LeagueChipsProps {
 
 export function LeagueChips({ activeLiga, onSelect, favorites = [] }: LeagueChipsProps) {
     const router = useRouter()
-    const { classicMode } = useTheme()
 
     // Mapear slugs legibles para las URLs (ej: "Liga Profesional" -> "liga-profesional")
     const getSlug = (liga: string) => liga.toLowerCase().replace(/\s+/g, '-')

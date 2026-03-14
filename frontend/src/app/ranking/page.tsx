@@ -309,21 +309,21 @@ export default function RankingPage() {
                                             onClick={() => router.push(`/perfil/${ranking[1].user_id}`)}
                                         >
                                             <div className="relative mb-4">
-                                                <span className="text-3xl absolute -top-5 -right-2 z-10">🥈</span>
-                                                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-[var(--card-bg)] border-4 border-slate-300 p-1 shadow-2xl group-hover:scale-110 transition-transform">
+                                                <span className="text-3xl absolute -top-5 -right-2 z-10 drop-shadow-md">🥈</span>
+                                                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-[var(--card-bg)] border-4 border-slate-300 p-1 shadow-[0_10px_30px_rgba(203,213,225,0.3)] group-hover:scale-110 group-hover:shadow-[0_10px_40px_rgba(203,213,225,0.5)] transition-all">
                                                     <div className="w-full h-full rounded-full bg-[var(--background)] flex items-center justify-center text-3xl overflow-hidden grayscale">
                                                         {ranking[1].profile?.avatar_url || '👤'}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[1.5rem] p-4 text-center min-w-[120px] shadow-lg">
+                                            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[1.5rem] p-4 text-center min-w-[120px] shadow-lg group-hover:border-slate-300/50 transition-colors">
                                                 <div className="text-[11px] font-bold truncate max-w-[100px] capitalize tracking-tight mb-1">
                                                     {ranking[1].profile?.username || 'Usuario'}
                                                 </div>
-                                                <div className="text-2xl font-bold text-slate-300">
+                                                <div className="text-2xl font-black text-slate-400">
                                                     {ranking[1].puntos_totales}
                                                 </div>
-                                                <div className="text-[9px] font-medium text-[var(--text-muted)] capitalize tracking-tight opacity-60">PUNTOS</div>
+                                                <div className="text-[9px] font-black text-[var(--text-muted)] capitalize tracking-widest opacity-60">PUNTOS</div>
                                             </div>
                                         </motion.div>
                                     )}
@@ -337,21 +337,21 @@ export default function RankingPage() {
                                             onClick={() => router.push(`/perfil/${ranking[0].user_id}`)}
                                         >
                                             <div className="relative mb-6">
-                                                <motion.div animate={{ y: [-5, 0, -5] }} transition={{ repeat: Infinity, duration: 3 }} className="text-6xl absolute -top-12 left-1/2 -translate-x-1/2 z-10">👑</motion.div>
-                                                <div className="w-28 h-28 md:w-36 md:h-36 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 p-1 shadow-[0_20px_50px_rgba(251,191,36,0.4)] group-hover:scale-105 transition-transform">
+                                                <motion.div animate={{ y: [-5, 0, -5] }} transition={{ repeat: Infinity, duration: 3 }} className="text-6xl absolute -top-12 left-1/2 -translate-x-1/2 z-10 drop-shadow-lg">👑</motion.div>
+                                                <div className="w-28 h-28 md:w-36 md:h-36 rounded-full bg-gradient-to-br from-amber-300 to-amber-600 p-1 shadow-[0_20px_50px_rgba(251,191,36,0.6)] group-hover:scale-105 group-hover:shadow-[0_20px_60px_rgba(251,191,36,0.8)] transition-all">
                                                     <div className="w-full h-full rounded-full bg-[var(--background)] flex items-center justify-center text-5xl md:text-6xl overflow-hidden">
                                                         {ranking[0].profile?.avatar_url || '👤'}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="bg-[var(--card-bg)] border-2 border-amber-400/50 rounded-[2rem] p-6 text-center min-w-[160px] md:min-w-[180px] shadow-2xl backdrop-blur-xl">
-                                                <div className="text-sm font-bold truncate max-w-[140px] capitalize tracking-tight text-amber-500 mb-1">
+                                            <div className="bg-[var(--card-bg)] border-2 border-amber-400 rounded-[2rem] p-6 text-center min-w-[160px] md:min-w-[180px] shadow-2xl backdrop-blur-xl group-hover:border-amber-300 transition-colors">
+                                                <div className="text-sm font-black truncate max-w-[140px] capitalize tracking-tight text-amber-500 mb-1">
                                                     {ranking[0].profile?.username || 'Usuario'}
                                                 </div>
-                                                <div className="text-4xl font-bold text-amber-500">
+                                                <div className="text-4xl font-black text-amber-500 tracking-tighter">
                                                     {ranking[0].puntos_totales}
                                                 </div>
-                                                <div className="text-[10px] font-medium text-amber-500/60 capitalize tracking-tight">PUNTOS</div>
+                                                <div className="text-[10px] font-black text-amber-500/60 capitalize tracking-widest mt-1">PUNTOS</div>
                                             </div>
                                         </motion.div>
                                     )}
@@ -366,21 +366,21 @@ export default function RankingPage() {
                                             onClick={() => router.push(`/perfil/${ranking[2].user_id}`)}
                                         >
                                             <div className="relative mb-4">
-                                                <span className="text-3xl absolute -top-5 -left-2 z-10">🥉</span>
-                                                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-[var(--card-bg)] border-4 border-orange-400 p-1 shadow-2xl group-hover:scale-110 transition-transform">
+                                                <span className="text-3xl absolute -top-5 -left-2 z-10 drop-shadow-md">🥉</span>
+                                                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-[var(--card-bg)] border-4 border-orange-400 p-1 shadow-[0_10px_30px_rgba(251,146,60,0.3)] group-hover:scale-110 group-hover:shadow-[0_10px_40px_rgba(251,146,60,0.5)] transition-all">
                                                     <div className="w-full h-full rounded-full bg-[var(--background)] flex items-center justify-center text-3xl overflow-hidden sepia-[.2]">
                                                         {ranking[2].profile?.avatar_url || '👤'}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[1.5rem] p-4 text-center min-w-[120px] shadow-lg">
+                                            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[1.5rem] p-4 text-center min-w-[120px] shadow-lg group-hover:border-orange-400/50 transition-colors">
                                                 <div className="text-[11px] font-bold truncate max-w-[100px] capitalize tracking-tight mb-1">
                                                     {ranking[2].profile?.username || 'Usuario'}
                                                 </div>
-                                                <div className="text-2xl font-bold text-orange-400">
+                                                <div className="text-2xl font-black text-orange-400">
                                                     {ranking[2].puntos_totales}
                                                 </div>
-                                                <div className="text-[9px] font-medium text-[var(--text-muted)] capitalize tracking-tight opacity-60">PUNTOS</div>
+                                                <div className="text-[9px] font-black text-[var(--text-muted)] capitalize tracking-widest opacity-60">PUNTOS</div>
                                             </div>
                                         </motion.div>
                                     )}

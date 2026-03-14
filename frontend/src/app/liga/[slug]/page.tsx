@@ -10,7 +10,6 @@ import { TablaContent } from '@/components/TablaContent'
 import { GoleadoresContent } from '@/components/GoleadoresContent'
 import { ComunidadContent } from '@/components/ComunidadContent'
 import { useAuth } from '@/contexts/AuthContext'
-import { useTheme } from '@/contexts/ThemeContext'
 import Link from 'next/link'
 import { hapticFeedback } from '@/lib/helpers'
 
@@ -20,7 +19,6 @@ export default function LigaPage() {
     const { slug } = useParams()
     const router = useRouter()
     const { user } = useAuth()
-    const { classicMode } = useTheme()
     const [activeTab, setActiveTab] = useState<LigaTab>('fixture')
     const [ligaName, setLigaName] = useState<Liga | null>(null)
 
