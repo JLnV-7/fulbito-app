@@ -123,7 +123,7 @@ export function useMatchLogs(filters?: MatchLogFilters) {
             if (logsRes.error) throw logsRes.error
 
             // Prepare reactions
-            let myReactions: Record<string, string> = {}
+            const myReactions: Record<string, string> = {}
             if (user && logsRes.data && logsRes.data.length > 0) {
                 const { data: likes } = await supabase
                     .from('match_log_likes')

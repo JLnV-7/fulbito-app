@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
         const today = new Date().toISOString().split('T')[0] // 'YYYY-MM-DD'
         let updatedCount = 0
-        let errors: string[] = []
+        const errors: string[] = []
 
         // 2. Iterar por cada liga configurada
         for (const [nombreLiga, idLiga] of Object.entries(LIGAS_MAP)) {

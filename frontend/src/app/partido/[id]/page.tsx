@@ -143,7 +143,7 @@ export default function PartidoPage() {
           query = query.eq('fixture_id', isNaN(matchIdNum) ? -1 : matchIdNum)
         }
         
-        let { data: dbPartido } = await query.single()
+        const { data: dbPartido } = await query.single()
 
         if (dbPartido) {
           // Si el partido está en juego o acaba de terminar, intentamos actualizar desde la API para tener datos frescos

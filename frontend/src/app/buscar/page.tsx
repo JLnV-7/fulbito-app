@@ -215,9 +215,12 @@ export default function BuscarPage() {
 
     // Auto-search on tab/filter change
     useEffect(() => {
-        if (hasSearched || filterLiga || query) {
-            handleSearch()
+        const triggerSearch = async () => {
+            if (hasSearched || filterLiga || query) {
+                await handleSearch()
+            }
         }
+        triggerSearch()
     }, [tab, filterLiga]) // eslint-disable-line react-hooks/exhaustive-deps
 
     // Debounced search on query change

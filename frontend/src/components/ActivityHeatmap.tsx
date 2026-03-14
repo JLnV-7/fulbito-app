@@ -49,7 +49,7 @@ export function ActivityHeatmap({ userId }: Props) {
     // Adjust to nearest Sunday
     start.setDate(start.getDate() - start.getDay())
 
-    let current = new Date(start)
+    const current = new Date(start)
     for (let w = 0; w <= 52; w++) {
       const week: string[] = []
       for (let d = 0; d < 7; d++) {

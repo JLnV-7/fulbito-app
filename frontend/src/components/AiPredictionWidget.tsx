@@ -29,7 +29,7 @@ export function AiPredictionWidget({ partidoId, equipoLocal, equipoVisitante }: 
 
             // Determine probabilities (making sure they add up to 100)
             let localWin = 30 + (seed % 40)
-            let awayWin = 15 + ((seed * 2) % 35)
+            const awayWin = 15 + ((seed * 2) % 35)
             let draw = 100 - localWin - awayWin
 
             // Ensure no negative or crazy numbers
