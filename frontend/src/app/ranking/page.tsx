@@ -22,6 +22,16 @@ export default function RankingPage() {
     const [loading, setLoading] = useState(true)
     const [periodo, setPeriodo] = useState<'semanal' | 'mensual' | 'global'>('global')
     const [filtroSocial, setFiltroSocial] = useState<'global' | 'amigos'>('global')
+    const [rankingTab, setRankingTab] = useState<'prode' | 'resenas'>('prode')
+    const [rankingResenas, setRankingResenas] = useState<{
+      user_id: string
+      username: string
+      avatar_url?: string
+      total_logs: number
+      avg_rating: number
+      total_likes: number
+    }[]>([])
+    const [loadingResenas, setLoadingResenas] = useState(false)
 
     useEffect(() => {
         fetchRanking()
@@ -89,6 +99,68 @@ export default function RankingPage() {
         if (pos === 3) return '🥉'
         return pos
     }
+
+    const fetchRankingResenas = async () => {
+        setLoadingResenas(true)
+        try {
+            const { data: logs } = await supabase
+                .from('match_logs')
+                .select(`
+                    user_id,
+                    rating_partido,
+                    likes_count:match_log_likes(count),
+                    profile:profiles!match_logs_user_id_fkey(username, avatar_url)
+                `)
+                .eq('is_private', false)
+                .not('review_text', 'is', null)
+
+            if (!logs) return
+
+            const userMap = new Map<string, {
+                username: string
+                avatar_url?: string
+                total_logs: number
+                sum_rating: number
+                total_likes: number
+            }>()
+
+            logs.forEach((log: any) => {
+                const existing = userMap.get(log.user_id) || {
+                    username: log.profile?.username || 'Anónimo',
+                    avatar_url: log.profile?.avatar_url,
+                    total_logs: 0,
+                    sum_rating: 0,
+                    total_likes: 0
+                }
+                existing.total_logs++
+                existing.sum_rating += log.rating_partido || 0
+                existing.total_likes += log.likes_count?.[0]?.count || 0
+                userMap.set(log.user_id, existing)
+            })
+
+            const result = Array.from(userMap.entries())
+                .map(([user_id, data]) => ({
+                    user_id,
+                    username: data.username,
+                    avatar_url: data.avatar_url,
+                    total_logs: data.total_logs,
+                    avg_rating: data.total_logs > 0 ? data.sum_rating / data.total_logs : 0,
+                    total_likes: data.total_likes
+                }))
+                .sort((a, b) => b.total_logs - a.total_logs)
+                .slice(0, 50)
+
+            setRankingResenas(result)
+        } catch (err) {
+            console.error('Error fetching resenas ranking:', err)
+        } finally {
+            setLoadingResenas(false)
+        }
+    }
+
+    useEffect(() => {
+        if (rankingTab === 'resenas') fetchRankingResenas()
+    }, [rankingTab])
 
     return (
         <>
@@ -164,6 +236,36 @@ export default function RankingPage() {
                         </div>
                     </div>
 
+                    {/* Tab selector: Prode vs Reseñas */}
+                    <div className="px-6 mb-8">
+                        <div className="max-w-4xl mx-auto">
+                            <div className="flex gap-2 bg-[var(--card-bg)] p-1.5 rounded-2xl border border-[var(--card-border)] w-fit">
+                                <button
+                                    onClick={() => setRankingTab('prode')}
+                                    className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
+                                      ${rankingTab === 'prode'
+                                        ? 'bg-[var(--foreground)] text-[var(--background)] shadow-sm'
+                                        : 'text-[var(--text-muted)]'
+                                      }`}
+                                >
+                                    🎯 Prode
+                                </button>
+                                <button
+                                    onClick={() => setRankingTab('resenas')}
+                                    className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
+                                      ${rankingTab === 'resenas'
+                                        ? 'bg-[var(--foreground)] text-[var(--background)] shadow-sm'
+                                        : 'text-[var(--text-muted)]'
+                                      }`}
+                                >
+                                    ⭐ Reseñas
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {rankingTab === 'prode' ? (
+                    <>
                     {/* Tu Posición */}
                     {user && !loading && (
                         <div className="px-6 mb-12">
@@ -360,6 +462,67 @@ export default function RankingPage() {
                             )}
                         </div>
                     </div>
+                    </>
+                    ) : (
+                    <div className="px-6 mb-12">
+                        <div className="max-w-4xl mx-auto">
+                            {loadingResenas ? (
+                                <div className="text-center py-20 animate-pulse text-[var(--text-muted)] font-black italic tracking-widest">
+                                    Calculando críticos...
+                                </div>
+                            ) : rankingResenas.length === 0 ? (
+                                <div className="text-center py-20 bg-[var(--card-bg)] rounded-3xl border border-[var(--card-border)]">
+                                    <p className="text-4xl mb-4">⭐</p>
+                                    <p className="font-black italic text-[var(--text-muted)]">No hay reseñas todavía</p>
+                                </div>
+                            ) : (
+                                <div className="bg-[var(--card-bg)] rounded-[2.5rem] border border-[var(--card-border)] overflow-hidden shadow-2xl">
+                                    <table className="w-full text-left">
+                                        <thead className="bg-[var(--background)]/50 border-b border-[var(--card-border)]">
+                                            <tr>
+                                                <th className="p-5 text-[10px] font-black tracking-widest text-[var(--text-muted)]">POS</th>
+                                                <th className="p-5 text-[10px] font-black tracking-widest text-[var(--text-muted)]">CRÍTICO</th>
+                                                <th className="p-5 text-center text-[10px] font-black tracking-widest text-[var(--text-muted)]">RESEÑAS</th>
+                                                <th className="p-5 text-center text-[10px] font-black tracking-widest text-[var(--text-muted)]">RATING PROM</th>
+                                                <th className="p-5 text-center text-[10px] font-black tracking-widest text-[var(--text-muted)]">❤️</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-[var(--card-border)]">
+                                            {rankingResenas.map((r, idx) => {
+                                                const isMe = user?.id === r.user_id
+                                                return (
+                                                    <tr
+                                                        key={r.user_id}
+                                                        onClick={() => router.push(`/perfil/${r.user_id}`)}
+                                                        className={`cursor-pointer transition-colors ${isMe ? 'bg-[var(--accent)]/5 hover:bg-[var(--accent)]/10' : 'hover:bg-[var(--hover-bg)]'}`}
+                                                    >
+                                                        <td className="p-5 text-center font-black text-[var(--text-muted)]">
+                                                            {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}
+                                                        </td>
+                                                        <td className="p-5">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 rounded-full bg-[var(--background)] border border-[var(--card-border)] flex items-center justify-center overflow-hidden">
+                                                                    {r.avatar_url
+                                                                        ? <img src={r.avatar_url} alt="" className="w-full h-full object-cover" />
+                                                                        : <span className="text-sm font-black">{r.username[0]?.toUpperCase()}</span>
+                                                                    }
+                                                                </div>
+                                                                <span className="font-bold text-sm">{r.username}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-5 text-center font-black text-lg text-[var(--accent)]">{r.total_logs}</td>
+                                                        <td className="p-5 text-center font-black text-sm">⭐ {r.avg_rating.toFixed(1)}</td>
+                                                        <td className="p-5 text-center font-bold text-sm text-[var(--text-muted)]">{r.total_likes}</td>
+                                                    </tr>
+                                                )
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    )}
 
                     <div className="px-6 mt-12 mb-8">
                         <div className="max-w-4xl mx-auto">

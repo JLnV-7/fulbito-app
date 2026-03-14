@@ -15,7 +15,7 @@ import { MatchLogCard } from '@/components/MatchLogCard'
 import { SearchSkeleton } from '@/components/SearchSkeleton'
 import { FollowButton } from '@/components/FollowButton'
 
-type SearchTab = 'partidos' | 'usuarios' | 'resenas'
+type SearchTab = 'partidos' | 'usuarios' | 'resenas' | 'jugadores'
 
 const COMMON_TEAMS = [
     'River Plate', 'Boca Juniors', 'Racing Club', 'Independiente', 'San Lorenzo',
@@ -32,6 +32,12 @@ export default function BuscarPage() {
     const [partidos, setPartidos] = useState<Partido[]>([])
     const [usuarios, setUsuarios] = useState<(Profile & { logs_count?: number })[]>([])
     const [resenas, setResenas] = useState<MatchLog[]>([])
+    const [jugadores, setJugadores] = useState<{
+      player_name: string
+      avg_rating: number
+      total_ratings: number
+      best_log_id?: string
+    }[]>([])
     const [loading, setLoading] = useState(false)
     const [hasSearched, setHasSearched] = useState(false)
     const [showSuggestions, setShowSuggestions] = useState(false)
@@ -141,6 +147,49 @@ export default function BuscarPage() {
         setResenas(processedResenas)
     }, [])
 
+    const searchJugadores = useCallback(async (q: string) => {
+        if (!q || q.length < 2) { setJugadores([]); return }
+
+        const { data } = await supabase
+            .from('match_log_player_ratings')
+            .select('player_name, rating, match_log_id')
+            .ilike('player_name', `%${q}%`)
+
+        if (!data) return
+
+        const playerMap = new Map<string, {
+            total: number
+            count: number
+            best_log_id?: string
+            best_rating: number
+        }>()
+
+        data.forEach((r: any) => {
+            const existing = playerMap.get(r.player_name) || {
+                total: 0, count: 0, best_rating: 0
+            }
+            existing.total += r.rating
+            existing.count++
+            if (r.rating > existing.best_rating) {
+                existing.best_rating = r.rating
+                existing.best_log_id = r.match_log_id
+            }
+            playerMap.set(r.player_name, existing)
+        })
+
+        const result = Array.from(playerMap.entries())
+            .map(([player_name, d]) => ({
+                player_name,
+                avg_rating: d.total / d.count,
+                total_ratings: d.count,
+                best_log_id: d.best_log_id
+            }))
+            .sort((a, b) => b.total_ratings - a.total_ratings)
+            .slice(0, 20)
+
+        setJugadores(result)
+    }, [])
+
     const handleSearch = useCallback(async () => {
         // Permitir búsqueda vacía si hay filtro de liga o si estamos en Partidos (para ver recientes)
         if (!query && !filterLiga && tab !== 'partidos') {
@@ -155,12 +204,14 @@ export default function BuscarPage() {
             await searchPartidos(query)
         } else if (tab === 'usuarios') {
             await searchUsuarios(query)
+        } else if (tab === 'jugadores') {
+            await searchJugadores(query)
         } else {
             await searchResenas(query)
         }
 
         setLoading(false)
-    }, [query, tab, filterLiga, searchPartidos, searchUsuarios, searchResenas])
+    }, [query, tab, filterLiga, searchPartidos, searchUsuarios, searchResenas, searchJugadores])
 
     // Auto-search on tab/filter change
     useEffect(() => {
@@ -190,6 +241,7 @@ export default function BuscarPage() {
         { id: 'partidos' as SearchTab, label: 'Partidos', icon: Trophy },
         { id: 'usuarios' as SearchTab, label: 'Usuarios', icon: Users },
         { id: 'resenas' as SearchTab, label: 'Reseñas', icon: Film },
+        { id: 'jugadores' as SearchTab, label: 'Jugadores', icon: TrendingUp },
     ]
 
     return (
@@ -306,33 +358,32 @@ export default function BuscarPage() {
                         </div>
                     )}
 
-                    {/* No search yet - show trending */}
                     {!hasSearched && !loading && (
-                        <div className="py-6">
-                            <div className="flex items-center gap-2 mb-4">
-                                <span className="text-[9px] font-black text-[var(--text-muted)] capitalize tracking-widest">TENDENCIAS</span>
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                                {trendingTags.map(tag => (
-                                    <button
-                                        key={tag}
-                                        onClick={() => { setQuery(tag); if (tab === 'usuarios') setTab('resenas'); }}
-                                        className="px-3 py-1.5 border border-[var(--card-border)] text-[10px] font-black capitalize hover:bg-[var(--hover-bg)] transition-all"
-                                        style={{ borderRadius: 'var(--radius)' }}
-                                    >
-                                        #{tag}
-                                    </button>
-                                ))}
+                        <div className="py-4 space-y-6">
+                            {/* Tags trending */}
+                            <div>
+                                <p className="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-3">
+                                    Tendencias
+                                </p>
+                                <div className="flex flex-wrap gap-1">
+                                    {trendingTags.map(tag => (
+                                        <button
+                                            key={tag}
+                                            onClick={() => { setQuery(tag); if (tab === 'usuarios') setTab('resenas') }}
+                                            className="px-3 py-1.5 border border-[var(--card-border)] text-[10px] font-black capitalize hover:bg-[var(--hover-bg)] transition-all"
+                                            style={{ borderRadius: 'var(--radius)' }}
+                                        >
+                                            #{tag}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
 
-                            <div className="mt-8 text-center py-10 bg-[var(--card-bg)] border border-[var(--card-border)] border-dashed" style={{ borderRadius: 'var(--radius)' }}>
-                                <div className="w-12 h-12 border border-[var(--card-border)] flex items-center justify-center mx-auto mb-4 opacity-30">
-                                    <Search size={20} />
-                                </div>
-                                <p className="text-[10px] font-black capitalize tracking-widest text-[var(--text-muted)]">
-                                    Buscá partidos, equipos o usuarios
-                                </p>
-                            </div>
+                            {/* Top reseñas de la semana */}
+                            <TopResenasSemana />
+
+                            {/* Top usuarios activos */}
+                            <TopUsuariosActivos />
                         </div>
                     )}
 
@@ -423,9 +474,170 @@ export default function BuscarPage() {
                             )}
                         </div>
                     )}
+
+                    {/* Results: Jugadores */}
+                    {!loading && hasSearched && tab === 'jugadores' && (
+                        <div className="space-y-2">
+                            {jugadores.length === 0 ? (
+                                <div className="text-center py-12 border border-[var(--card-border)] border-dashed" style={{ borderRadius: 'var(--radius)' }}>
+                                    <p className="text-[10px] font-black capitalize text-[var(--text-muted)]">
+                                        {query.length < 2 ? 'ESCRIBÍ AL MENOS 2 CARACTERES' : 'SIN RESULTADOS'}
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="border border-[var(--card-border)] bg-[var(--card-bg)] divide-y divide-[var(--card-border)] overflow-hidden" style={{ borderRadius: 'var(--radius)' }}>
+                                    {jugadores.map((j) => (
+                                        <div
+                                            key={j.player_name}
+                                            className="flex items-center gap-3 p-3 hover:bg-[var(--background)] transition-colors cursor-pointer"
+                                            onClick={() => j.best_log_id && router.push(`/log/${j.best_log_id}`)}
+                                        >
+                                            <div className="w-10 h-10 rounded-full bg-[var(--accent)]/10 flex items-center justify-center text-lg font-black shrink-0">
+                                                ⚽
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-sm font-black truncate">{j.player_name}</div>
+                                                <div className="text-[10px] text-[var(--text-muted)]">
+                                                    {j.total_ratings} calificación{j.total_ratings !== 1 ? 'es' : ''}
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-1 px-2 py-1 bg-[var(--hover-bg)] rounded-lg">
+                                                <span className="text-xs font-black">⭐ {j.avg_rating.toFixed(1)}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </main>
             <NavBar />
         </>
+    )
+}
+
+function TopResenasSemana() {
+    const [resenas, setResenas] = useState<any[]>([])
+    const router = useRouter()
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const unaSemanAtras = new Date(Date.now() - 7 * 86400000).toISOString()
+            const { data } = await supabase
+                .from('match_logs')
+                .select(`
+                    id, equipo_local, equipo_visitante, rating_partido, review_title,
+                    likes_count:match_log_likes(count),
+                    profile:profiles!match_logs_user_id_fkey(username)
+                `)
+                .eq('is_private', false)
+                .not('review_text', 'is', null)
+                .gte('created_at', unaSemanAtras)
+                .order('created_at', { ascending: false })
+                .limit(3)
+
+            if (data) setResenas(data.map((r: any) => ({
+                ...r,
+                likes_count: r.likes_count?.[0]?.count || 0
+            })))
+        }
+        fetchData()
+    }, [])
+
+    if (!resenas.length) return null
+
+    return (
+        <div>
+            <p className="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-3">
+                🔥 Reseñas populares esta semana
+            </p>
+            <div className="space-y-2">
+                {resenas.map(r => (
+                    <button
+                        key={r.id}
+                        onClick={() => router.push(`/log/${r.id}`)}
+                        className="w-full flex items-center gap-3 p-3 bg-[var(--card-bg)] border border-[var(--card-border)] hover:border-[var(--foreground)] transition-all text-left"
+                        style={{ borderRadius: 'var(--radius)' }}
+                    >
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-black truncate">
+                                {r.equipo_local} vs {r.equipo_visitante}
+                            </p>
+                            <p className="text-[10px] text-[var(--text-muted)] truncate">
+                                por @{r.profile?.username} · ⭐ {r.rating_partido?.toFixed(1)}
+                            </p>
+                        </div>
+                        <span className="text-[10px] text-[var(--text-muted)] shrink-0">
+                            ❤️ {r.likes_count}
+                        </span>
+                    </button>
+                ))}
+            </div>
+        </div>
+    )
+}
+
+function TopUsuariosActivos() {
+    const [usuarios, setUsuarios] = useState<any[]>([])
+    const router = useRouter()
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const { data } = await supabase
+                .from('match_logs')
+                .select(`
+                    user_id,
+                    profile:profiles!match_logs_user_id_fkey(username, avatar_url)
+                `)
+                .eq('is_private', false)
+                .gte('created_at', new Date(Date.now() - 30 * 86400000).toISOString())
+
+            if (!data) return
+
+            const counts = new Map<string, { username: string; avatar_url?: string; count: number }>()
+            data.forEach((d: any) => {
+                const cur = counts.get(d.user_id) || { username: d.profile?.username, avatar_url: d.profile?.avatar_url, count: 0 }
+                cur.count++
+                counts.set(d.user_id, cur)
+            })
+
+            const sorted = Array.from(counts.entries())
+                .map(([user_id, d]) => ({ user_id, ...d }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 5)
+
+            setUsuarios(sorted)
+        }
+        fetchData()
+    }, [])
+
+    if (!usuarios.length) return null
+
+    return (
+        <div>
+            <p className="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-3">
+                👤 Más activos este mes
+            </p>
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                {usuarios.map(u => (
+                    <button
+                        key={u.user_id}
+                        onClick={() => router.push(`/perfil/${u.user_id}`)}
+                        className="flex flex-col items-center gap-1.5 p-3 bg-[var(--card-bg)] border border-[var(--card-border)] hover:border-[var(--foreground)] transition-all shrink-0 min-w-[70px]"
+                        style={{ borderRadius: 'var(--radius)' }}
+                    >
+                        <div className="w-10 h-10 rounded-full bg-[var(--accent)]/10 flex items-center justify-center overflow-hidden border border-[var(--card-border)]">
+                            {u.avatar_url
+                                ? <img src={u.avatar_url} alt="" className="w-full h-full object-cover" />
+                                : <span className="text-sm font-black">{u.username?.[0]?.toUpperCase()}</span>
+                            }
+                        </div>
+                        <span className="text-[9px] font-black truncate max-w-[60px]">{u.username}</span>
+                        <span className="text-[8px] text-[var(--text-muted)]">{u.count} reseñas</span>
+                    </button>
+                ))}
+            </div>
+        </div>
     )
 }

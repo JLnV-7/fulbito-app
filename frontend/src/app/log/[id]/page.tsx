@@ -203,6 +203,16 @@ export default function LogDetailPage({ params }: { params: Promise<{ id: string
                                 <span className="text-xs font-semibold text-center">{log.equipo_visitante}</span>
                             </div>
                         </div>
+                        {log.partido_id && (
+                            <div className="mt-4 pt-3 border-t border-[var(--card-border)] flex justify-center">
+                                <button
+                                    onClick={() => router.push(`/partido/${log.partido_id}`)}
+                                    className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--accent)] hover:opacity-70 transition-opacity"
+                                >
+                                    Ver partido completo →
+                                </button>
+                            </div>
+                        )}
                     </motion.div>
 
                     {/* Ratings Breakdown */}
@@ -302,14 +312,18 @@ export default function LogDetailPage({ params }: { params: Promise<{ id: string
                                     <span>Esta reseña contiene spoilers — tocar para revelar</span>
                                 </button>
                             ) : (
-                                <div>
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.4 }}
+                                >
                                     {log.review_title && (
                                         <h3 className="text-base font-bold mb-3">{log.review_title}</h3>
                                     )}
                                     <p className="text-sm leading-relaxed whitespace-pre-wrap text-[var(--foreground)]/90">
                                         {log.review_text}
                                     </p>
-                                </div>
+                                </motion.div>
                             )}
                         </motion.div>
                     )}

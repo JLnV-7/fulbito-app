@@ -4,51 +4,18 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Users, MessageCircle, Clock, ChevronRight, Layout, Film, Trophy } from 'lucide-react'
+import { Users, MessageCircle, ChevronRight, Layout, Trophy } from 'lucide-react'
 import Link from 'next/link'
 import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { PullToRefresh } from '@/components/PullToRefresh'
 import { CreateGroupModal } from '@/components/CreateGroupModal'
-import { useMatchLogs, FeedItem } from '@/hooks/useMatchLogs'
-import { MatchLogCard } from '@/components/MatchLogCard'
 import { TopMatchesToday } from '@/components/feed/TopMatchesToday'
-import type { MatchLog } from '@/types'
+import { FeedGlobal } from '@/components/feed/FeedGlobal'
 
 export default function ComunidadPage() {
     const router = useRouter()
     const [showCreateModal, setShowCreateModal] = useState(false)
-    const [feedType, setFeedType] = useState<'recent' | 'following'>('recent')
-    const { items, loading, toggleLike } = useMatchLogs({ limit: 10, feedType })
-
-    // Seed data mock para que no se vea vacío
-    const mockLogs: MatchLog[] = [
-        {
-            id: 'mock-1',
-            user_id: 'system',
-            match_type: 'tv',
-            equipo_local: 'Boca Juniors',
-            equipo_visitante: 'River Plate',
-            fecha_partido: new Date().toISOString(),
-            watched_at: new Date().toISOString(),
-            rating_partido: 4.5,
-            review_text: '¡Increíble ambiente en el Superclásico! FutLog ya está activo.',
-            likes_count: 3,
-            is_spoiler: false,
-            is_private: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            profile: {
-                id: 'system',
-                username: 'FutLog Bot',
-                avatar_url: '🤖',
-                equipo: 'Talleres',
-                created_at: new Date().toISOString()
-            }
-        }
-    ]
-
-    const feedItems = items.length > 0 ? items : (mockLogs.map(l => ({ type: 'log', id: l.id, created_at: l.created_at, data: l })) as FeedItem[])
 
     const options = [
         {
@@ -140,56 +107,11 @@ export default function ComunidadPage() {
                         {/* Social Feed Section */}
                         <div className="space-y-6">
                             <div className="flex items-center justify-between px-1">
-                                <div className="flex gap-4">
-                                    <button 
-                                        onClick={() => setFeedType('recent')}
-                                        className={`text-xs font-black tracking-widest uppercase pb-1 transition-all ${feedType === 'recent' ? 'text-[var(--foreground)] border-b-2 border-[var(--accent)]' : 'text-[var(--text-muted)]'}`}
-                                    >
-                                        Global
-                                    </button>
-                                    <button 
-                                        onClick={() => setFeedType('following')}
-                                        className={`text-xs font-black tracking-widest uppercase pb-1 transition-all ${feedType === 'following' ? 'text-[var(--foreground)] border-b-2 border-[var(--accent)]' : 'text-[var(--text-muted)]'}`}
-                                    >
-                                        Siguiendo
-                                    </button>
-                                </div>
-                                <button
-                                    onClick={() => router.push('/buscar?tab=resenas')}
-                                    className="text-[10px] font-bold text-[var(--accent-green)] capitalize tracking-wider"
-                                >
-                                    Ver todas
-                                </button>
+                                <h2 className="text-xs font-black uppercase tracking-widest text-[var(--text-muted)]">
+                                    Feed global
+                                </h2>
                             </div>
-
-                            {loading ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {[1, 2, 4].map(i => (
-                                        <div key={i} className="h-48 bg-[var(--card-bg)] rounded-3xl animate-pulse border border-[var(--card-border)]" />
-                                    ))}
-                                </div>
-                            ) : items.length === 0 ? (
-                                <div className="py-20 text-center bg-[var(--card-bg)] rounded-3xl border border-[var(--card-border)] border-dashed">
-                                    <Film size={40} className="mx-auto mb-4 text-[var(--text-muted)] opacity-30" />
-                                    <p className="text-sm text-[var(--text-muted)] font-bold">No hay actividad para mostrar todavía.</p>
-                                    <button
-                                        onClick={() => router.push('/')}
-                                        className="mt-4 text-[10px] text-[var(--accent-green)] font-black capitalize tracking-widest"
-                                    >
-                                        ¡Sé el primero en participar!
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {feedItems.map((item) => (
-                                        item.type === 'log' ? (
-                                            <MatchLogCard key={item.id} log={item.data} onLike={toggleLike} />
-                                        ) : (
-                                            <AchievementCard key={item.id} achievement={item.data} />
-                                        )
-                                    ))}
-                                </div>
-                            )}
+                            <FeedGlobal />
                         </div>
                     </div>
                 </main>

@@ -20,6 +20,7 @@ import { useFollows } from '@/hooks/useMatchLogs'
 import { ActivityHeatmap } from '@/components/ActivityHeatmap'
 import { useProfileFollowers } from '@/hooks/useProfileFollowers'
 import { FollowListModal, type FollowListType } from '@/components/FollowListModal'
+import { MatchLogCard } from '@/components/MatchLogCard'
 import Link from 'next/link'
 
 type Props = {
@@ -212,25 +213,14 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
                   <MessageSquare size={14} /> Reseñas Recientes
                 </h2>
                 <div className="space-y-4">
-                  {initialResenas.map((r) => (
-                    <Link key={r.id} href={`/partido/${r.partido_id}`}
-                      className="block bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 hover:border-[var(--accent)] transition-all">
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="text-[9px] font-black opacity-60 uppercase tracking-wider">
-                          {r.partido
-                            ? `${r.partido.equipo_local} ${r.partido.goles_local ?? ''} - ${r.partido.goles_visitante ?? ''} ${r.partido.equipo_visitante}`
-                            : `Partido #${r.partido_id}`
-                          }
-                        </span>
-                        <div className="flex gap-0.5">
-                          {[...Array(r.rating || 0)].map((_, i) => (
-                            <Star key={i} size={10} className="fill-yellow-400 text-yellow-400" />
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-sm font-medium italic">"{r.texto || 'Sin comentario'}"</p>
-                    </Link>
-                  ))}
+                  {initialResenas.map((log: any) => {
+                    const processed = {
+                      ...log,
+                      tags: (log.tags || []).map((t: any) => typeof t === 'string' ? t : t.tag),
+                      likes_count: log.likes_count?.[0]?.count || log.likes_count || 0
+                    }
+                    return <MatchLogCard key={log.id} log={processed} />
+                  })}
                   {initialResenas.length === 0 && (
                     <p className="text-xs opacity-30 italic text-center py-10">No hay reseñas todavía.</p>
                   )}
@@ -265,7 +255,7 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
             <div className="space-y-8">
               <BadgeDisplay stats={{
                 total_logs: initialStats?.total_resenas || 0,
-                reviews_with_text: initialResenas.filter(r => r.texto).length,
+                reviews_with_text: initialResenas.filter((r: any) => r.review_text).length,
                 total_votos: 0,
                 grupos_joined: 0,
                 followers_count: followersCount,

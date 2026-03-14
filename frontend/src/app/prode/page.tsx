@@ -14,7 +14,9 @@ import { ReglasPuntajeModal } from '@/components/ReglasPuntajeModal'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/contexts/ToastContext'
 import { fetchFixturesWithSyncAction } from '@/app/actions/football'
+import { supabase } from '@/lib/supabase'
 import type { Partido } from '@/types'
+import confetti from 'canvas-confetti'
 
 
 import { LIGAS, type Liga } from '@/lib/constants'
@@ -29,6 +31,12 @@ export default function ProdePage() {
     const [partidos, setPartidos] = useState<Partido[]>([])
     const [loadingPartidos, setLoadingPartidos] = useState(true)
     const { pronosticos, loading: loadingPronosticos, guardarPronostico } = usePronosticos()
+    const [historialReciente, setHistorialReciente] = useState<{
+      partido_id: string
+      tipo_acierto: string
+      puntos: number
+      partido?: { equipo_local: string; equipo_visitante: string }
+    }[]>([])
 
     // Fetch partidos synced with Supabase (returns UUIDs)
     const fetchPartidos = useCallback(async () => {
@@ -54,6 +62,53 @@ export default function ProdePage() {
             router.push('/login')
         }
     }, [user, loadingPronosticos, router])
+
+    // Confetti on new hits
+    useEffect(() => {
+      const checkNewAciertos = async () => {
+        if (!user) return
+        const lastVisit = localStorage.getItem('prode_last_visit')
+        const now = new Date().toISOString()
+        const { data } = await supabase
+          .from('puntuacion_prode')
+          .select('tipo_acierto, puntos')
+          .eq('user_id', user.id)
+          .in('tipo_acierto', ['exacto', 'ganador_diferencia'])
+          .gte('calculated_at', lastVisit || new Date(Date.now() - 86400000).toISOString())
+        if (data && data.length > 0) {
+          const hasExacto = data.some(d => d.tipo_acierto === 'exacto')
+          setTimeout(() => {
+            if (hasExacto) {
+              confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#16a34a', '#f59e0b', '#ffffff'] })
+              showToast(`🎯 ¡Acertaste exacto! +${data[0].puntos} puntos`, 'success')
+            } else {
+              confetti({ particleCount: 80, spread: 50, origin: { y: 0.6 } })
+              showToast(`✅ ¡Acertaste el resultado! +${data[0].puntos} puntos`, 'success')
+            }
+          }, 800)
+        }
+        localStorage.setItem('prode_last_visit', now)
+      }
+      checkNewAciertos()
+    }, [user])
+
+    // Fetch historial
+    useEffect(() => {
+      const fetchHistorial = async () => {
+        if (!user) return
+        const { data } = await supabase
+          .from('puntuacion_prode')
+          .select(`
+            partido_id, tipo_acierto, puntos,
+            partido:partidos(equipo_local, equipo_visitante)
+          `)
+          .eq('user_id', user.id)
+          .order('calculated_at', { ascending: false })
+          .limit(5)
+        if (data) setHistorialReciente(data as any)
+      }
+      fetchHistorial()
+    }, [user])
 
     // Filtrar solo partidos en PREVIA o próximos
     const partidosDisponibles = useMemo(() => {
@@ -191,6 +246,43 @@ export default function ProdePage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Historial reciente */}
+                {historialReciente.length > 0 && (
+                    <div className="px-6 mb-8">
+                        <div className="max-w-4xl mx-auto">
+                            <h3 className="text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-3">
+                                Mis últimos resultados
+                            </h3>
+                            <div className="flex flex-col gap-2">
+                                {historialReciente.map((h, i) => {
+                                    const icono = h.tipo_acierto === 'exacto' ? '🎯'
+                                        : h.tipo_acierto === 'ganador_diferencia' ? '✅'
+                                        : h.tipo_acierto === 'ganador' ? '🟡'
+                                        : '❌'
+                                    const color = h.tipo_acierto === 'exacto' ? 'border-green-500/30 bg-green-500/5'
+                                        : h.tipo_acierto === 'ganador_diferencia' ? 'border-blue-500/30 bg-blue-500/5'
+                                        : h.tipo_acierto === 'ganador' ? 'border-yellow-500/30 bg-yellow-500/5'
+                                        : 'border-[var(--card-border)] bg-[var(--card-bg)]'
+                                    return (
+                                        <div key={i} className={`flex items-center gap-3 p-3 rounded-2xl border ${color}`}>
+                                            <span className="text-xl">{icono}</span>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-xs font-bold truncate">
+                                                    {(h.partido as any)?.equipo_local} vs {(h.partido as any)?.equipo_visitante}
+                                                </p>
+                                                <p className="text-[10px] text-[var(--text-muted)] capitalize">{h.tipo_acierto.replace('_', ' ')}</p>
+                                            </div>
+                                            {h.puntos > 0 && (
+                                                <span className="text-xs font-black text-green-500">+{h.puntos} pts</span>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Grid de partidos */}
                 <div className="px-6">
