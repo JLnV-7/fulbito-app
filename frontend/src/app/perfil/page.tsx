@@ -335,107 +335,120 @@ export default function Perfil() {
 
       <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20">
 
-        {/* Hero Header - simplified classic style */}
-        <div className="bg-[var(--card-bg)] pt-8 pb-10 px-6 border-b border-[var(--card-border)] relative overflow-hidden">
+        {/* Hero Header - Bento Grid Style */}
+        <div className="bg-[var(--card-bg)] pt-6 pb-8 px-4 md:px-6 border-b border-[var(--card-border)] relative overflow-hidden">
           {profile?.equipo && (
             <div 
               className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-60 blur-[100px] pointer-events-none opacity-20 dark:opacity-[0.15]"
               style={{ backgroundColor: getTeamColor(profile.equipo) }}
             />
           )}
-          <div className="max-w-2xl mx-auto relative z-10">
-            <div className="flex justify-between items-center mb-6">
-              <button onClick={() => router.push('/')} className="border border-[var(--card-border)] p-2 bg-[var(--background)] text-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-all rounded-full w-9 h-9 flex items-center justify-center">
+          
+          <div className="max-w-4xl mx-auto relative z-10 flex flex-col gap-5">
+            {/* Top Toolbar */}
+            <div className="flex justify-between items-center w-full">
+              <button onClick={() => router.push('/')} className="border border-[var(--card-border)] p-2 bg-[var(--background)] text-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-all rounded-full w-9 h-9 flex items-center justify-center shadow-sm">
                 ←
               </button>
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowQRModal(true)}
-                  className="border border-[var(--card-border)] p-2 bg-[var(--background)] text-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-all rounded-full w-9 h-9 flex items-center justify-center"
-                  aria-label="Mostrar código QR para compartir"
+                  className="border border-[var(--card-border)] p-2 bg-[var(--background)] text-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-all rounded-full w-9 h-9 flex items-center justify-center shadow-sm"
+                  aria-label="QR"
                   title="Código QR"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="5" height="5" x="3" y="3" rx="1" /><rect width="5" height="5" x="16" y="3" rx="1" /><rect width="5" height="5" x="3" y="16" rx="1" /><path d="M21 16h-3a2 2 0 0 0-2 2v3" /><path d="M21 21v.01" /><path d="M12 7v3a2 2 0 0 1-2 2H7" /><path d="M3 12h.01" /><path d="M12 3h.01" /><path d="M12 16v.01" /><path d="M16 12h1" /><path d="M21 12v.01" /><path d="M12 21v-1" /></svg>
                 </button>
                 <button
                   onClick={() => setShowEditor(true)}
-                  className="border border-[var(--card-border)] px-4 py-2 bg-[var(--background)] text-[var(--foreground)] text-[10px] font-bold capitalize tracking-tight hover:bg-[var(--hover-bg)] transition-all rounded-full"
+                  className="border border-[var(--card-border)] px-4 py-2 bg-[var(--background)] text-[var(--foreground)] text-[10px] font-bold capitalize tracking-tight hover:bg-[var(--hover-bg)] transition-all rounded-full shadow-sm"
                 >
                   EDITAR
                 </button>
-                <button onClick={handleSignOut} className="border border-[var(--card-border)] px-4 py-2 bg-[var(--background)] text-[var(--text-muted)] text-[10px] font-bold capitalize tracking-tight hover:bg-[var(--hover-bg)] transition-all rounded-full">
+                <button onClick={handleSignOut} className="border border-[var(--card-border)] px-4 py-2 bg-[var(--background)] text-[var(--text-muted)] text-[10px] font-bold capitalize tracking-tight hover:bg-[var(--hover-bg)] transition-all rounded-full shadow-sm hidden md:block">
                   SALIR
                 </button>
               </div>
             </div>
 
-            <div className="text-center relative">
-              <div className="relative inline-block mx-auto mb-4">
-                <div className="absolute -top-1 -right-1 bg-[var(--foreground)] text-[var(--background)] text-[9px] font-bold px-2 py-0.5 border border-[var(--card-border)] z-10 capitalize rounded-full">
-                  LVL {userLevel}
-                </div>
-                <div className="w-24 h-24 bg-[var(--background)] border-2 border-[var(--card-border)] flex items-center justify-center relative z-0 text-5xl overflow-hidden shadow-2xl" style={{ borderRadius: '2rem' }}>
-                  {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    '👤'
-                  )}
-                </div>
-              </div>
-
-              <h1 className="text-2xl font-bold mb-1 capitalize tracking-tight">{profile?.username || 'Usuario'}</h1>
-
-              <div className="flex flex-col items-center gap-1 opacity-70 text-[10px] font-bold capitalize mb-4 tracking-wider">
-                <span>{user.email}</span>
-                <span className="bg-[var(--background)] border border-[var(--card-border)] px-3 py-1 rounded-full">
-                  {userXp} / {nextLevelXp} XP
-                </span>
-              </div>
-
-              {/* Follower Stats */}
-              <div className="flex justify-center gap-8 mb-6 border-t border-b border-[var(--card-border)] py-4 border-dashed">
-                <div
-                  className="text-center cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => setFollowModalState({
-                    isOpen: true,
-                    type: 'followers',
-                    title: 'Seguidores'
-                  })}
-                >
-                  <div className="font-bold text-xl">
-                    {followersCount}
+            {/* Bento Grid Header */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              {/* Columna Izquierda: Identidad */}
+              <div className="md:col-span-5 bg-[var(--background)] border border-[var(--card-border)] rounded-3xl p-6 flex flex-col items-center justify-center text-center shadow-md relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/10 blur-3xl rounded-full" />
+                <div className="relative inline-block mb-4">
+                  <div className="absolute -top-2 -right-2 bg-[var(--foreground)] text-[var(--background)] text-[9px] font-black px-2.5 py-1 border border-[var(--card-border)] z-10 capitalize rounded-full shadow-lg">
+                    LVL {userLevel}
                   </div>
-                  <div className="text-[10px] capitalize font-bold text-[var(--text-muted)] tracking-tight">Seguidores</div>
-                </div>
-                <div
-                  className="text-center cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => setFollowModalState({
-                    isOpen: true,
-                    type: 'following',
-                    title: 'Siguiendo'
-                  })}
-                >
-                  <div className="font-bold text-xl">
-                    {followingCount}
+                  <div className="w-24 h-24 md:w-28 md:h-28 bg-[var(--card-bg)] border-4 border-[var(--card-border)] flex items-center justify-center relative z-0 text-5xl overflow-hidden shadow-xl" style={{ borderRadius: '2rem' }}>
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      '👤'
+                    )}
                   </div>
-                  <div className="text-[10px] capitalize font-bold text-[var(--text-muted)] tracking-tight">Siguiendo</div>
+                </div>
+
+                <h1 className="text-xl font-black mb-1 capitalize tracking-tight text-[var(--foreground)] truncate max-w-[200px]">{profile?.username || 'Usuario'}</h1>
+                <span className="text-[10px] font-bold text-[var(--text-muted)] tracking-wider mb-4 opacity-70 truncate max-w-[200px] block">{user.email}</span>
+
+                {profile?.equipo && (
+                  <div className="inline-flex items-center gap-2 bg-[var(--card-bg)] px-3 py-1.5 border border-[var(--card-border)] rounded-full mb-4 shadow-sm">
+                    <span className="text-xs">❤️</span>
+                    <span className="font-bold text-[10px] capitalize tracking-wider">{profile.equipo}</span>
+                  </div>
+                )}
+                
+                <div className="w-full max-w-[180px]">
+                  <ShareButton
+                    titulo={`Perfil de ${profile?.username || 'Usuario'} en FutLog`}
+                    texto="Mostrale a tus amigos lo que rateaste"
+                    url={typeof window !== 'undefined' ? window.location.href : ''}
+                    label="Compartir Perfil"
+                  />
                 </div>
               </div>
 
-              {profile?.equipo && (
-                <div className="inline-flex items-center gap-2 bg-[var(--background)] px-4 py-2 border border-[var(--card-border)] mb-4 rounded-full shadow-sm">
-                  <span className="text-xs">❤️</span>
-                  <span className="font-bold text-[10px] capitalize tracking-wider">{profile.equipo}</span>
+              {/* Columna Derecha: Stats Bento */}
+              <div className="md:col-span-7 grid grid-cols-2 gap-4">
+                {/* Experiencia (Full Width) */}
+                <div className="col-span-2 bg-[var(--background)] border border-[var(--card-border)] rounded-3xl p-5 shadow-sm flex flex-col justify-center">
+                  <div className="flex justify-between items-end mb-3">
+                    <div>
+                      <h3 className="text-[10px] font-black text-[var(--text-muted)] capitalize tracking-widest">PROGRESO</h3>
+                      <div className="text-2xl font-black leading-none mt-1">Nivel {userLevel}</div>
+                    </div>
+                    <div className="text-[10px] font-bold bg-[var(--card-bg)] px-3 py-1.5 rounded-full border border-[var(--card-border)] shadow-sm">
+                      {userXp} / {nextLevelXp} XP
+                    </div>
+                  </div>
+                  <div className="w-full h-2.5 bg-[var(--card-bg)] rounded-full overflow-hidden border border-[var(--card-border)]">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-[var(--accent)] to-purple-500 rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${xpProgress}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                    />
+                  </div>
                 </div>
-              )}
 
-              <div className="max-w-[240px] mx-auto mt-2 opacity-90 scale-95">
-                <ShareButton
-                  titulo={`Perfil de ${profile?.username || 'Usuario'} en FutLog`}
-                  texto="Mostrale a tus amigos lo que rateaste"
-                  url={typeof window !== 'undefined' ? window.location.href : ''}
-                  label="Compartir mi Perfil"
-                />
+                {/* Seguidores */}
+                <div 
+                  className="bg-[var(--background)] border border-[var(--card-border)] rounded-3xl p-5 shadow-sm flex flex-col justify-center items-center cursor-pointer hover:bg-[var(--card-bg)] transition-colors group"
+                  onClick={() => setFollowModalState({ isOpen: true, type: 'followers', title: 'Seguidores' })}
+                >
+                  <span className="text-3xl font-black group-hover:scale-110 transition-transform">{followersCount}</span>
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] capitalize tracking-widest mt-1">SEGUIDORES</span>
+                </div>
+
+                {/* Siguiendo */}
+                <div 
+                  className="bg-[var(--background)] border border-[var(--card-border)] rounded-3xl p-5 shadow-sm flex flex-col justify-center items-center cursor-pointer hover:bg-[var(--card-bg)] transition-colors group"
+                  onClick={() => setFollowModalState({ isOpen: true, type: 'following', title: 'Siguiendo' })}
+                >
+                  <span className="text-3xl font-black group-hover:scale-110 transition-transform">{followingCount}</span>
+                  <span className="text-[10px] font-bold text-[var(--text-muted)] capitalize tracking-widest mt-1">SIGUIENDO</span>
+                </div>
               </div>
             </div>
           </div>
