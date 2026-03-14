@@ -38,7 +38,12 @@ export function NavBar() {
               key={item.path}
               onClick={() => {
                 hapticFeedback(10) // Light native vibration tap
-                router.push(item.authRequired && !user ? '/login' : item.path)
+                if (item.path === '/perfil') {
+                  // Force a hard navigation bypassing Next.js cache and triggering a full page reload for PWA Cache Bust
+                  window.location.href = `/perfil?_cb=${Date.now()}`
+                } else {
+                  router.push(item.authRequired && !user ? '/login' : item.path)
+                }
               }}
               className="relative flex-1 flex flex-col items-center justify-center transition-all outline-none"
               style={{
