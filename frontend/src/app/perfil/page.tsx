@@ -589,102 +589,116 @@ export default function Perfil() {
                 className="space-y-6"
               >
                 {/* Tus Equipos / Notificaciones básicas */}
-                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl">
-                  <div className="flex items-center justify-between mb-4 border-b border-[var(--card-border)] pb-3">
-                    <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2">
-                      🏆 {t('profile.teams.favorite')}
-                    </h3>
-                  </div>
-                  {profile?.equipo ? (
-                    <div className="flex flex-col h-full justify-between bg-[var(--background)] p-4 border border-[var(--card-border)] rounded-2xl flex-1">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-10 h-10 bg-[var(--hover-bg)] border border-[var(--card-border)] flex items-center justify-center text-xl rounded-xl">
-                          🛡️
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Tus Equipos / Notificaciones básicas */}
+                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl flex flex-col h-full">
+                    <div className="flex items-center justify-between mb-4 border-b border-[var(--card-border)] pb-3">
+                      <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2">
+                        🏆 {t('profile.teams.favorite')}
+                      </h3>
+                    </div>
+                    {profile?.equipo ? (
+                      <div className="flex flex-col h-full justify-between bg-[var(--background)] p-4 border border-[var(--card-border)] rounded-2xl flex-1">
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="w-10 h-10 bg-[var(--hover-bg)] border border-[var(--card-border)] flex items-center justify-center text-xl rounded-xl">
+                            🛡️
+                          </div>
+                          <div>
+                            <p className="font-bold text-xs capitalize tracking-tight">{profile.equipo}</p>
+                            <p className="text-[10px] text-[var(--text-muted)] font-black capitalize mt-1 tracking-widest">{t('profile.stats.matchesRated')}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-xs capitalize tracking-tight">{profile.equipo}</p>
-                          <p className="text-[10px] text-[var(--text-muted)] font-black capitalize mt-1 tracking-widest">{t('profile.stats.matchesRated')}</p>
+                        <div className="flex flex-col gap-2 mt-auto">
+                          <button onClick={() => setShowEditor(true)} className="text-[10px] font-bold text-[var(--accent-green)] hover:underline capitalize tracking-tight text-center">
+                            {t('common.change')}
+                          </button>
                         </div>
                       </div>
-                      <div className="flex flex-col gap-2">
-                        <button onClick={() => setShowEditor(true)} className="text-[10px] font-bold text-[var(--accent-green)] hover:underline capitalize tracking-tight text-center">
-                          {t('common.change')}
+                    ) : (
+                      <div className="text-center py-8 bg-[var(--background)] border border-[var(--card-border)] border-dashed rounded-2xl flex-1 flex flex-col justify-center">
+                        <p className="text-[var(--text-muted)] text-[10px] font-bold capitalize mb-3 tracking-tight">{t('profile.teams.noTeam')}</p>
+                        <button onClick={() => setShowEditor(true)} className="text-[10px] font-bold text-[var(--accent-green)] hover:underline capitalize tracking-tight">
+                          {t('profile.teams.configure')}
                         </button>
-                        <Button
-                          onClick={() => signOut()}
-                          className="bg-red-500 hover:bg-red-600 text-white font-bold w-full capitalize tracking-widest text-xs"
-                        >
-                          {t('profile.settings.logout')}
-                        </Button>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 bg-[var(--background)] border border-[var(--card-border)] border-dashed rounded-2xl">
-                      <p className="text-[var(--text-muted)] text-[10px] font-bold capitalize mb-3 tracking-tight">{t('profile.teams.noTeam')}</p>
-                      <button onClick={() => setShowEditor(true)} className="text-[10px] font-bold text-[var(--accent-green)] hover:underline capitalize tracking-tight">
-                        {t('profile.teams.configure')}
-                      </button>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
 
-                {/* Grid layout for Settings */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Sincronización Offline */}
-                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl flex flex-col justify-between">
-                  <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2 mb-4 border-b border-[var(--card-border)] pb-3">
-                    🔄 {t('profile.settings.sync.title')}
-                  </h3>
-                  <p className="text-[10px] font-medium text-[var(--text-muted)] capitalize mb-5 leading-relaxed tracking-tight">
-                    {t('profile.settings.sync.desc')}
-                  </p>
-                  <Button
-                    variant="outline"
-                    fullWidth
-                    onClick={async () => {
-                      setSyncing(true)
-                      await syncOfflineLogs()
-                      setSyncing(false)
-                    }}
-                    loading={syncing}
-                    size="sm"
-                    className="rounded-xl"
-                  >
-                    {t('profile.settings.sync.action')}
-                  </Button>
-                </div>
-
-                {/* Ajustes de Apariencia */}
-                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl flex flex-col justify-between">
-                  <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2 mb-5 border-b border-[var(--card-border)] pb-3">
-                    🎨 {t('profile.settings.appearance.title')}
-                  </h3>
-
-                  <div className="space-y-6">
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-bold text-xs capitalize tracking-tight">{t('profile.settings.appearance.dark')}</p>
-                        <p className="text-[10px] text-[var(--text-muted)] font-medium capitalize mt-0.5">{t('profile.settings.appearance.darkDesc')}</p>
-                      </div>
-                      <button
-                        onClick={() => { hapticFeedback(10); toggleTheme(); }}
-                        className={`w-12 h-6 border-2 border-[var(--card-border)] transition-colors relative rounded-full ${theme === 'dark' ? 'bg-[var(--accent-green)] border-[var(--accent-green)]' : 'bg-[var(--hover-bg)]'}`}
+                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl flex flex-col h-full">
+                    <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2 mb-4 border-b border-[var(--card-border)] pb-3">
+                      🔄 {t('profile.settings.sync.title')}
+                    </h3>
+                    <div className="flex flex-col justify-between flex-1">
+                      <p className="text-[10px] font-medium text-[var(--text-muted)] capitalize mb-5 leading-relaxed tracking-tight">
+                        {t('profile.settings.sync.desc')}
+                      </p>
+                      <Button
+                        variant="outline"
+                        fullWidth
+                        onClick={async () => {
+                          setSyncing(true)
+                          await syncOfflineLogs()
+                          setSyncing(false)
+                        }}
+                        loading={syncing}
+                        size="sm"
+                        className="rounded-xl mt-auto"
                       >
-                        <motion.div
-                          animate={{ x: theme === 'dark' ? 24 : 0 }}
-                          className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-all ${theme === 'dark' ? 'bg-white' : 'bg-[var(--text-muted)]'}`}
-                        />
-                      </button>
+                        {t('profile.settings.sync.action')}
+                      </Button>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Grid layout for Settings 2 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl flex flex-col justify-between">
-                    <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2 mb-2 border-b border-[var(--card-border)] pb-3">
+                  {/* Ajustes de Apariencia */}
+                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl flex flex-col h-full">
+                    <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2 mb-5 border-b border-[var(--card-border)] pb-3">
+                      🎨 {t('profile.settings.appearance.title')}
+                    </h3>
+
+                    <div className="flex flex-col justify-center flex-1 space-y-6">
+                      <div className="flex items-center justify-between bg-[var(--background)] p-4 border border-[var(--card-border)] rounded-2xl">
+                        <div>
+                          <p className="font-bold text-xs capitalize tracking-tight">{t('profile.settings.appearance.dark')}</p>
+                          <p className="text-[10px] text-[var(--text-muted)] font-medium capitalize mt-0.5">{t('profile.settings.appearance.darkDesc')}</p>
+                        </div>
+                        <button
+                          onClick={() => { hapticFeedback(10); toggleTheme(); }}
+                          className={`w-12 h-6 border-2 border-[var(--card-border)] transition-colors relative rounded-full ${theme === 'dark' ? 'bg-[var(--accent-green)] border-[var(--accent-green)]' : 'bg-[var(--hover-bg)]'}`}
+                        >
+                          <motion.div
+                            animate={{ x: theme === 'dark' ? 24 : 0 }}
+                            className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-all ${theme === 'dark' ? 'bg-white' : 'bg-[var(--text-muted)]'}`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* PWA Widget Info */}
+                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl flex flex-col h-full">
+                    <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2 mb-4 border-b border-[var(--card-border)] pb-3">
+                      📱 {t('profile.settings.pwa.title')}
+                    </h3>
+                    <div className="flex flex-col justify-center flex-1">
+                      <p className="text-[10px] font-medium text-[var(--text-muted)] capitalize mb-4 leading-relaxed tracking-tight">
+                        {t('profile.settings.pwa.desc')}
+                      </p>
+                      <div className="flex flex-wrap gap-2 text-[9px] font-black capitalize mt-auto">
+                        <span className="bg-[var(--background)] px-2.5 py-1.5 border border-[var(--card-border)] rounded-lg">{t('profile.settings.pwa.offline')}</span>
+                        <span className="bg-[var(--background)] px-2.5 py-1.5 border border-[var(--card-border)] rounded-lg">{t('profile.settings.pwa.fast')}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Notificaciones */}
+                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl flex flex-col h-full md:col-span-2">
+                    <NotificationSettings />
+                  </div>
+
+                  {/* Participación & Feedback */}
+                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl flex flex-col h-full md:col-span-2">
+                    <h3 className="text-xs font-bold capitalize tracking-tight flex items-center gap-2 mb-4 border-b border-[var(--card-border)] pb-3">
                       ⭐ Participación & Feedback
                     </h3>
                     <div className="flex flex-col">
@@ -692,37 +706,16 @@ export default function Perfil() {
                     </div>
                   </div>
 
-                  {/* Preferencias Push Granulares */}
-                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl flex flex-col justify-between">
-                    <NotificationSettings />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* PWA Widget Info */}
-                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 rounded-3xl">
-                    <div className="flex items-start gap-4">
-                      <span className="text-2xl">📱</span>
-                      <div>
-                        <h4 className="text-[10px] font-black capitalize mb-1 text-[var(--foreground)]">{t('profile.settings.pwa.title')}</h4>
-                        <p className="text-[9px] font-bold text-[var(--text-muted)] capitalize mb-3 leading-tight">
-                          {t('profile.settings.pwa.desc')}
-                        </p>
-                        <div className="flex flex-wrap gap-1 text-[8px] font-black capitalize">
-                          <span className="bg-[var(--background)] px-1.5 py-0.5 border border-[var(--card-border)] rounded-md">{t('profile.settings.pwa.offline')}</span>
-                          <span className="bg-[var(--background)] px-1.5 py-0.5 border border-[var(--card-border)] rounded-md">{t('profile.settings.pwa.fast')}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 rounded-3xl flex flex-col justify-center">
-                    <h3 className="text-[10px] font-black capitalize tracking-widest flex items-center gap-2 mb-4 border-b border-[var(--card-border)] pb-2 border-dashed text-[#ff4d4d]">
+                  {/* Danger Zone - Logout */}
+                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-6 rounded-3xl flex flex-col justify-center md:col-span-2 mt-4">
+                    <h3 className="text-xs font-black capitalize tracking-widest flex items-center justify-center gap-2 mb-4 border-b border-[var(--card-border)] pb-3 border-dashed text-[#ff4d4d]">
                       {t('profile.settings.danger.title')}
                     </h3>
-                    <Button variant="destructive" fullWidth onClick={handleSignOut} size="sm">
-                      {t('profile.settings.logout')}
-                    </Button>
+                    <div className="max-w-xs mx-auto w-full">
+                      <Button variant="destructive" fullWidth onClick={handleSignOut} size="md" className="rounded-xl font-bold tracking-widest text-[#ff4d4d] bg-[#ff4d4d]/10 hover:bg-[#ff4d4d] hover:text-white border border-[#ff4d4d]/20 transition-all">
+                        {t('profile.settings.logout')}
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
