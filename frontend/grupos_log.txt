@@ -1,0 +1,1094 @@
+﻿commit 07826108ef7b5ad0e7bc9c78981eea449d3940dd
+Author: Julia <julia@example.com>
+Date:   Tue Mar 17 22:40:07 2026 -0300
+
+    fix: voting system - public results, optimistic updates, localStorage persistence
+
+diff --git a/frontend/src/components/grupos/MatchDetailTabs.tsx b/frontend/src/components/grupos/MatchDetailTabs.tsx
+index 5620488..24fc493 100644
+--- a/frontend/src/components/grupos/MatchDetailTabs.tsx
++++ b/frontend/src/components/grupos/MatchDetailTabs.tsx
+@@ -12,6 +12,7 @@ import { MatchStatisticsPanel } from './MatchStatisticsPanel'
+ import { CanchaSeleccion } from './CanchaSeleccion'
+ import { VotarModal } from './VotarModal'
+ import { VotacionRapida } from './VotacionRapida'
++import { DetalleJugadorAmigo } from './DetalleJugadorAmigo'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { supabase } from '@/lib/supabase'
+ import { FORMACIONES, Formacion } from '@/lib/formaciones'
+@@ -45,6 +46,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
+     // States for Voting
+     const [votandoA, setVotandoA] = useState<JugadorPartidoAmigo | null>(null)
+     const [showRapida, setShowRapida] = useState(false)
++    const [jugadorDetalle, setJugadorDetalle] = useState<JugadorPartidoAmigo | null>(null)
+ 
+     const { 
+         fetchJugadoresConVotos, 
+@@ -86,12 +88,28 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
+         }
+     }
+ 
++    // --- Optimistic local state helpers ---
++    const updateJugadorVotoLocal = (jugadorId: string, nota: number, comentario?: string) => {
++        setJugadores(prev => prev.map(j => {
++            if (j.id !== jugadorId) return j
++            const yaVotado = !!j.mi_voto
++            const oldNota = j.mi_voto?.nota || 0
++            const nuevoMiVoto = { id: 'local', partido_amigo_id: partido.id, jugador_id: jugadorId, user_id: user!.id, nota, comentario: comentario || null, created_at: new Date().toISOString() }
++            const currentTotal = j.total_votos || 0
++            const newTotalVotos = yaVotado ? currentTotal : currentTotal + 1
++            const sumaAnterior = (j.promedio || 0) * currentTotal
++            const nuevaSuma = yaVotado ? sumaAnterior - oldNota + nota : sumaAnterior + nota
++            const nuevoPromedio = newTotalVotos > 0 ? Math.round((nuevaSuma / newTotalVotos) * 10) / 10 : 0
++            return { ...j, mi_voto: nuevoMiVoto as any, total_votos: newTotalVotos, promedio: nuevoPromedio }
++        }))
++    }
++
+     const handleVotar = async (nota: number, comentario?: string) => {
+         if (!votandoA) return
+         try {
+             await votarJugador(partido.id, votandoA.id, nota, comentario)
++            updateJugadorVotoLocal(votandoA.id, nota, comentario)
+             showToast(`Voto guardado para ${votandoA.nombre} Ô¡É`, 'success')
+-            loadData()
+         } catch {
+             showToast('Error al guardar voto', 'error')
+         }
+@@ -100,8 +118,16 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
+     const handleEliminarVoto = async (jugadorId: string) => {
+         try {
+             await eliminarVotoJugador(partido.id, jugadorId)
++            setJugadores(prev => prev.map(j => {
++                if (j.id !== jugadorId) return j
++                const oldNota = j.mi_voto?.nota || 0
++                const newTotalVotos = Math.max((j.total_votos || 0) - 1, 0)
++                const sumaAnterior = (j.promedio || 0) * (j.total_votos || 0)
++                const nuevaSuma = sumaAnterior - oldNota
++                const nuevoPromedio = newTotalVotos > 0 ? Math.round((nuevaSuma / newTotalVotos) * 10) / 10 : 0
++                return { ...j, mi_voto: null as any, total_votos: newTotalVotos, promedio: nuevoPromedio }
++            }))
+             showToast('Voto eliminado ­ƒùæ´©Å', 'success')
+-            loadData()
+         } catch {
+             showToast('Error al eliminar voto', 'error')
+         }
+@@ -112,8 +138,8 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
+             for (const v of votos) {
+                 await votarJugador(partido.id, v.jugadorId, v.nota)
+             }
++            votos.forEach(v => updateJugadorVotoLocal(v.jugadorId, v.nota))
+             showToast(`${votos.length} votos guardados ÔÜí`, 'success')
+-            await loadData()
+         } catch {
+             showToast('Error al guardar votos', 'error')
+         }
+@@ -499,11 +525,21 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
+                                     </div>
+                                 )}
+ 
+-                                {activeTab === 'resultados' && (
++                                {activeTab === 'resultados' && (() => {
++                                    const sorted = [...jugadores].sort((a, b) => (b.promedio || 0) - (a.promedio || 0))
++                                    const mvp = sorted[0]
++                                    const azulesRes = jugadores.filter(j => j.equipo === 'azul').sort((a, b) => (b.promedio || 0) - (a.promedio || 0))
++                                    const rojosRes = jugadores.filter(j => j.equipo === 'rojo').sort((a, b) => (b.promedio || 0) - (a.promedio || 0))
++                                    const promedioEquipo = (equipo: JugadorPartidoAmigo[]) => {
++                                        const conVotos = equipo.filter(j => (j.promedio || 0) > 0)
++                                        if (conVotos.length === 0) return 0
++                                        return Math.round(conVotos.reduce((sum, j) => sum + (j.promedio || 0), 0) / conVotos.length * 10) / 10
++                                    }
++                                    return (
+                                     <div className="space-y-6">
++                                         {/* Marcador Final */}
+                                          <div className="bg-gradient-to-br from-[#16a34a] to-emerald-600 p-8 rounded-3xl text-white text-center shadow-xl">
+                                             <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 opacity-80">Marcador Final</p>
+-                                             {/* Marcador Final Autocalculado con Casting Forzado */}
+                                              <div className="flex items-center justify-center gap-8">
+                                                  <div className="text-center">
+                                                      <p className="text-4xl font-black tabular-nums">
+@@ -520,7 +556,85 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
+                                                  </div>
+                                              </div>
+                                          </div>
+-                                          {/* Estad├¡sticas Reales (Auto-calculadas) */}
++
++                                         {/* MVP */}
++                                         {mvp && (mvp.promedio || 0) > 0 && (
++                                             <motion.div
++                                                 initial={{ scale: 0.9, opacity: 0 }}
++                                                 animate={{ scale: 1, opacity: 1 }}
++                                                 transition={{ delay: 0.2, type: 'spring' }}
++                                                 className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-3xl p-8 text-center shadow-2xl relative overflow-hidden shadow-amber-500/30 cursor-pointer"
++                                                 onClick={() => setJugadorDetalle(mvp)}
++                                             >
++                                                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
++                                                 <p className="text-[10px] text-white/80 capitalize font-black tracking-[0.4em] mb-4">MEMBER OF THE MATCH</p>
++                                                 <div className="relative inline-block mb-4">
++                                                     <div className="absolute inset-0 bg-white/20 blur-xl rounded-full" />
++                                                     <div className="text-5xl relative">­ƒææ</div>
++                                                 </div>
++                                                 <h2 className="text-3xl font-black text-white italic tracking-tighter capitalize">{mvp.nombre}</h2>
++                                                 <p className="text-4xl font-black text-white mt-2 drop-shadow-lg">Ô¡É {mvp.promedio}</p>
++                                                 <p className="text-[10px] text-white/80 font-bold capitalize mt-4">{mvp.total_votos} VOTOS EN TOTAL</p>
++                                                 <p className="text-[10px] text-white/60 mt-1">Toc├í para ver detalle</p>
++                                             </motion.div>
++                                         )}
++
++                                         {/* Rankings por Equipo */}
++                                         {[{ equipo: 'azul', color: '#3b82f6', emoji: '­ƒöÁ', lista: azulesRes, prom: promedioEquipo(azulesRes) },
++                                           { equipo: 'rojo', color: '#ef4444', emoji: '­ƒö┤', lista: rojosRes, prom: promedioEquipo(rojosRes) }].map(team => (
++                                             <div key={team.equipo} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--card-border)] overflow-hidden shadow-xl">
++                                                 <div className="p-5 border-b border-[var(--card-border)] bg-[var(--background)]/50" style={{ borderLeftColor: team.color, borderLeftWidth: 6 }}>
++                                                     <div className="flex justify-between items-end">
++                                                         <div>
++                                                             <h3 className="text-xs font-black capitalize tracking-[0.2em] mb-1" style={{ color: team.color }}>
++                                                                 {team.emoji} EQUIPO {team.equipo.toUpperCase()}
++                                                             </h3>
++                                                             <p className="text-2xl font-black italic tracking-tighter">RANKING</p>
++                                                         </div>
++                                                         <div className="text-right">
++                                                             <span className="text-[10px] text-[var(--text-muted)] font-black capitalize tracking-widest">PROM EQUIPO</span>
++                                                             <p className="text-xl font-black" style={{ color: team.color }}>{team.prom}</p>
++                                                         </div>
++                                                     </div>
++                                                 </div>
++                                                 <div>
++                                                     {team.lista.map((j, i) => (
++                                                         <button
++                                                             key={j.id}
++                                                             onClick={() => setJugadorDetalle(j)}
++                                                             className={`w-full flex items-center gap-4 p-5 border-b border-[var(--card-border)] last:border-0 hover:bg-[var(--hover-bg)] transition-all text-left ${i === 0 ? 'bg-amber-400/5' : ''}`}
++                                                         >
++                                                             <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${i === 0 ? 'bg-amber-400 text-amber-900 shadow-md' : 'bg-[var(--background)] text-[var(--text-muted)]'}`}>
++                                                                 {i + 1}
++                                                             </span>
++                                                             <div className="flex-1 min-w-0">
++                                                                 <span className="font-bold text-sm block">
++                                                                     {i === 0 && '­ƒææ '}{j.nombre}
++                                                                 </span>
++                                                                 <div className="w-full h-1.5 bg-[var(--background)] rounded-full mt-2 overflow-hidden shadow-inner">
++                                                                     <motion.div
++                                                                         initial={{ width: 0 }}
++                                                                         animate={{ width: `${((j.promedio || 0) / 10) * 100}%` }}
++                                                                         transition={{ duration: 0.8 }}
++                                                                         className="h-full rounded-full"
++                                                                         style={{ backgroundColor: team.color }}
++                                                                     />
++                                                                 </div>
++                                                             </div>
++                                                             <div className="text-right">
++                                                                 <span className="text-sm font-black italic" style={{ color: team.color }}>{j.promedio || '-'}</span>
++                                                                 <p className="text-[8px] text-[var(--text-muted)] font-bold capitalize">{j.total_votos} V</p>
++                                                             </div>
++                                                         </button>
++                                                     ))}
++                                                     {team.lista.length === 0 && (
++                                                         <p className="p-5 text-center text-xs text-[var(--text-muted)] italic">Sin jugadores</p>
++                                                     )}
++                                                 </div>
++                                             </div>
++                                         ))}
++
++                                          {/* Estad├¡sticas Reales */}
+                                           <h3 className="font-black italic uppercase tracking-tighter text-sm pt-4">­ƒôê Estad├¡sticas del Partido</h3>
+                                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                               {[
+@@ -570,7 +684,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
+                                                  { id: 'patadas', label: 'Pegapatadas', emoji: '­ƒªÁ' },
+                                                  { id: 'arquero', label: 'Buen Arquero', emoji: '­ƒºñ' },
+                                              ].map(facet => {
+-                                                 // Count votes for this facet
+                                                  const counts = facetVotes
+                                                      .filter(v => v.facet === facet.id)
+                                                      .reduce((acc, v) => {
+@@ -605,7 +718,8 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
+                                              )}
+                                           </div>
+                                     </div>
+-                                )}
++                                    )
++                                })()}
+                             </motion.div>
+                         </AnimatePresence>
+                     )}
+@@ -628,6 +742,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
+                 {showRapida && (
+                     <VotacionRapida
+                         jugadores={jugadores}
++                        partidoId={partido.id}
+                         onVotarTodos={handleVotarTodos}
+                         onClose={() => setShowRapida(false)}
+                     />
+@@ -715,6 +830,17 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
+                     </motion.div>
+                 )}
+             </AnimatePresence>
++
++            {/* Player Detail Modal */}
++            <AnimatePresence>
++                {jugadorDetalle && (
++                    <DetalleJugadorAmigo
++                        jugador={jugadorDetalle}
++                        grupoId={grupoId}
++                        onClose={() => setJugadorDetalle(null)}
++                    />
++                )}
++            </AnimatePresence>
+         </motion.div>
+     )
+ }
+
+commit c558bce89f9f20626faea462b7935976df77cee8
+Author: Julia <julia@example.com>
+Date:   Wed Mar 11 20:19:48 2026 -0300
+
+    FutLog: Implementing Social Feed, Reactions and Player Profiles
+
+diff --git a/frontend/src/components/grupos/ResultadosPartidoAmigo.tsx b/frontend/src/components/grupos/ResultadosPartidoAmigo.tsx
+index 70f9a0e..3a1d35c 100644
+--- a/frontend/src/components/grupos/ResultadosPartidoAmigo.tsx
++++ b/frontend/src/components/grupos/ResultadosPartidoAmigo.tsx
+@@ -63,111 +63,54 @@ export function ResultadosPartidoAmigo({ partido, grupoId, onClose }: Resultados
+             className="fixed inset-0 bg-[var(--background)] z-[60] overflow-y-auto"
+         >
+             {/* Header */}
+-            <div className="bg-gradient-to-b from-[#8b5cf6] to-[#7c3aed] text-white pt-10 pb-6 px-6">
++            <div className="bg-gradient-to-b from-[#3b82f6] to-[#2563eb] text-white pt-10 pb-12 px-6 rounded-b-[3rem] shadow-2xl">
+                 <div className="max-w-lg mx-auto">
+-                    <button onClick={onClose} className="bg-white/20 p-2 rounded-full mb-3 backdrop-blur-md">ÔåÉ Volver</button>
+-                    <h1 className="text-2xl font-black">­ƒôè Resultados</h1>
+-                    <p className="text-white/80 text-sm">
+-                        {fechaDisplay} - {resultado || partido.cancha || 'Partido'}
++                    <button onClick={onClose} className="bg-white/20 p-2 rounded-full mb-6 backdrop-blur-md hover:bg-white/30 transition-all">ÔåÉ Volver</button>
++                    <h1 className="text-3xl font-black italic tracking-tighter capitalize mb-2">­ƒôè Estad├¡sticas</h1>
++                    <p className="text-white/80 text-sm font-bold capitalize tracking-widest bg-black/20 inline-block px-3 py-1 rounded-full backdrop-blur-sm">
++                        {fechaDisplay} ÔÇó {partido.cancha || 'Partido Amigo'}
+                     </p>
+                     {resultado && (
+-                        <p className="text-white/80 text-sm">{partido.cancha}</p>
++                        <div className="mt-8 flex items-center justify-center gap-6 text-4xl font-black italic">
++                            <div className="flex flex-col items-center">
++                                <span className="text-xs capitalize tracking-[0.3em] font-black text-white/60 mb-2">AZUL</span>
++                                <span>{partido.resultado_azul}</span>
++                            </div>
++                            <div className="text-white/30 text-2xl">VS</div>
++                            <div className="flex flex-col items-center">
++                                <span className="text-xs capitalize tracking-[0.3em] font-black text-white/60 mb-2">ROJO</span>
++                                <span>{partido.resultado_rojo}</span>
++                            </div>
++                        </div>
+                     )}
+                 </div>
+             </div>
+ 
+             {loading ? (
+-                <div className="text-center py-20 text-[var(--text-muted)]">ÔÅ│ Cargando resultados...</div>
++                <div className="text-center py-20 font-black italic capitalize tracking-widest text-[var(--text-muted)] animate-pulse">Cargando resultados...</div>
+             ) : (
+-                <div className="max-w-lg mx-auto px-4 -mt-3 pb-10 space-y-4">
+-                    {/* Mis Votos */}
+-                    {jugadores.some(j => j.mi_voto) && (
+-                        <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--card-border)]">
+-                            <h3 className="font-black text-sm mb-3">­ƒù│´©Å MIS VOTOS</h3>
+-                            <div className="space-y-1">
+-                                {jugadores
+-                                    .filter(j => j.mi_voto)
+-                                    .sort((a, b) => (b.mi_voto?.nota || 0) - (a.mi_voto?.nota || 0))
+-                                    .map(j => {
+-                                        const dif = (j.mi_voto?.nota || 0) - (j.promedio || 0)
+-                                        const difColor = dif > 0 ? 'text-[#22c55e]' : dif < 0 ? 'text-[#ef4444]' : 'text-[var(--text-muted)]'
+-
+-                                        return (
+-                                            <div key={j.id} className="flex items-start justify-between p-3 rounded-xl hover:bg-[var(--hover-bg)] transition-all">
+-                                                <div>
+-                                                    <div className="flex items-center gap-2">
+-                                                        <span className="font-bold text-sm">{j.nombre}</span>
+-                                                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${j.equipo === 'azul' ? 'bg-blue-500/10 text-blue-500' : 'bg-red-500/10 text-red-500'
+-                                                            }`}>
+-                                                            {j.equipo}
+-                                                        </span>
+-                                                    </div>
+-                                                    <div className="flex items-center gap-2 mt-1">
+-                                                        <div className="flex gap-0.5">
+-                                                            {Array.from({ length: 5 }, (_, i) => (
+-                                                                <span key={i} className={`text-[10px] ${i < Math.round((j.mi_voto?.nota || 0) / 2) ? 'text-[#fbbf24]' : 'text-[var(--card-border)]'}`}>
+-                                                                    Ôÿà
+-                                                                </span>
+-                                                            ))}
+-                                                        </div>
+-                                                        <span className="text-xs font-bold">{j.mi_voto?.nota}</span>
+-                                                        <span className="text-[10px] text-[var(--text-muted)]">ÔÇó Promedio: {j.promedio}</span>
+-                                                    </div>
+-                                                    {j.mi_voto?.comentario && (
+-                                                        <p className="text-xs text-[var(--text-muted)] mt-1 italic pl-2 border-l-2 border-[var(--card-border)]">
+-                                                            "{j.mi_voto.comentario}"
+-                                                        </p>
+-                                                    )}
+-                                                </div>
+-                                                <div className="text-center min-w-[3rem]">
+-                                                    <div className={`text-sm font-black ${difColor}`}>
+-                                                        {dif > 0 ? '+' : ''}{dif.toFixed(1)}
+-                                                    </div>
+-                                                    <div className="text-[9px] text-[var(--text-muted)] uppercase">vs Prom</div>
+-                                                </div>
+-                                            </div>
+-                                        )
+-                                    })}
+-                            </div>
+-                        </div>
+-                    )}
+-
++                <div className="max-w-lg mx-auto px-4 -mt-6 pb-20 space-y-6">
+                     {/* MVP */}
+                     {mvp && mvp.promedio! > 0 && (
+                         <motion.div
+-                            initial={{ scale: 0.8, opacity: 0 }}
++                            initial={{ scale: 0.9, opacity: 0 }}
+                             animate={{ scale: 1, opacity: 1 }}
+                             transition={{ delay: 0.2, type: 'spring' }}
+-                            className="bg-gradient-to-br from-[#fbbf24]/20 to-[#f59e0b]/10 border border-[#fbbf24]/30 rounded-2xl p-6 text-center shadow-lg"
++                            className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-[2.5rem] p-8 text-center shadow-2xl relative overflow-hidden group shadow-amber-500/30"
+                         >
+-                            <p className="text-xs text-[var(--text-muted)] uppercase font-bold mb-2">­ƒÅå MVP del Partido</p>
+-                            <div className="text-4xl mb-2">­ƒææ</div>
+-                            <h2 className="text-2xl font-black">{mvp.nombre}</h2>
+-                            <p className="text-3xl font-black text-[#fbbf24] mt-1">Ô¡É {mvp.promedio}</p>
+-                            <p className="text-xs text-[var(--text-muted)]">{mvp.total_votos} votos</p>
++                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
++                            <p className="text-[10px] text-white/80 capitalize font-black tracking-[0.4em] mb-4">MEMBER OF THE MATCH</p>
++                            <div className="relative inline-block mb-4">
++                                <div className="absolute inset-0 bg-white/20 blur-xl rounded-full" />
++                                <div className="text-5xl relative">­ƒææ</div>
++                            </div>
++                            <h2 className="text-3xl font-black text-white italic tracking-tighter capitalize">{mvp.nombre}</h2>
++                            <p className="text-4xl font-black text-white mt-2 drop-shadow-lg">Ô¡É {mvp.promedio}</p>
++                            <p className="text-[10px] text-white/80 font-bold capitalize mt-4">{mvp.total_votos} VOTOS EN TOTAL</p>
+                         </motion.div>
+                     )}
+ 
+-                    {/* Top 3 */}
+-                    {top3.length >= 2 && (
+-                        <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--card-border)]">
+-                            <h3 className="font-black text-sm mb-3">­ƒÑê TOP 3</h3>
+-                            {top3.slice(1, 3).map((j, i) => (
+-                                <button
+-                                    key={j.id}
+-                                    onClick={() => setJugadorDetalle(j)}
+-                                    className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-[var(--hover-bg)] transition-all text-left"
+-                                >
+-                                    <span className="text-sm font-bold text-[var(--text-muted)]">{i + 2}.</span>
+-                                    <span className="font-bold flex-1">{j.nombre}</span>
+-                                    <span className="text-sm font-black text-[#fbbf24]">{j.promedio} Ô¡É</span>
+-                                    <span className="text-xs text-[var(--text-muted)]">({j.total_votos})</span>
+-                                </button>
+-                            ))}
+-                        </div>
+-                    )}
+-
+-                    {/* Equipo Azul */}
++                    {/* Team Results */}
+                     <TeamResults
+                         equipo="azul"
+                         color="#3b82f6"
+@@ -177,7 +120,6 @@ export function ResultadosPartidoAmigo({ partido, grupoId, onClose }: Resultados
+                         onClickJugador={setJugadorDetalle}
+                     />
+ 
+-                    {/* Equipo Rojo */}
+                     <TeamResults
+                         equipo="rojo"
+                         color="#ef4444"
+@@ -189,7 +131,6 @@ export function ResultadosPartidoAmigo({ partido, grupoId, onClose }: Resultados
+                 </div>
+             )}
+ 
+-            {/* Player detail modal */}
+             {jugadorDetalle && (
+                 <DetalleJugadorAmigo
+                     jugador={jugadorDetalle}
+@@ -209,20 +150,20 @@ function TeamResults({ equipo, color, emoji, jugadores, promedio, onClickJugador
+     promedio: number
+     onClickJugador: (j: JugadorPartidoAmigo) => void
+ }) {
+-    const getNotaColor = (nota: number) => {
+-        if (nota >= 7) return '#22c55e'
+-        if (nota >= 4) return '#fbbf24'
+-        return '#ef4444'
+-    }
+-
+     return (
+-        <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] overflow-hidden">
+-            <div className="p-4 border-b border-[var(--card-border)]" style={{ borderLeftColor: color, borderLeftWidth: 4 }}>
+-                <div className="flex justify-between items-center">
+-                    <h3 className="font-black text-sm" style={{ color }}>
+-                        {emoji} EQUIPO {equipo.toUpperCase()}
+-                    </h3>
+-                    <span className="text-xs text-[var(--text-muted)]">Promedio: <strong style={{ color }}>{promedio}</strong></span>
++        <div className="bg-[var(--card-bg)] rounded-[2rem] border border-[var(--card-border)] overflow-hidden shadow-xl">
++            <div className="p-5 border-b border-[var(--card-border)] bg-[var(--background)]/50" style={{ borderLeftColor: color, borderLeftWidth: 6 }}>
++                <div className="flex justify-between items-end">
++                    <div>
++                        <h3 className="text-xs font-black capitalize tracking-[0.2em] mb-1" style={{ color }}>
++                            {emoji} EQUIPO {equipo.toUpperCase()}
++                        </h3>
++                        <p className="text-2xl font-black italic tracking-tighter">ESTAD├ìSTICAS</p>
++                    </div>
++                    <div className="text-right">
++                        <span className="text-[10px] text-[var(--text-muted)] font-black capitalize tracking-widest">PROM EQUIPO</span>
++                        <p className="text-xl font-black" style={{ color }}>{promedio}</p>
++                    </div>
+                 </div>
+             </div>
+             <div>
+@@ -230,30 +171,29 @@ function TeamResults({ equipo, color, emoji, jugadores, promedio, onClickJugador
+                     <button
+                         key={j.id}
+                         onClick={() => onClickJugador(j)}
+-                        className={`w-full flex items-center gap-3 p-4 border-b border-[var(--card-border)] last:border-0 hover:bg-[var(--hover-bg)] transition-all text-left ${i === 0 ? 'bg-[#ffd700]/5' : ''}`}
++                        className={`w-full flex items-center gap-4 p-5 border-b border-[var(--card-border)] last:border-0 hover:bg-[var(--hover-bg)] transition-all text-left ${i === 0 ? 'bg-amber-400/5' : ''}`}
+                     >
+-                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-[#ffd700] text-black' : 'bg-[var(--background)] text-[var(--text-muted)]'}`}>
++                        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${i === 0 ? 'bg-amber-400 text-amber-900 shadow-md' : 'bg-[var(--background)] text-[var(--text-muted)]'}`}>
+                             {i + 1}
+                         </span>
+                         <div className="flex-1 min-w-0">
+                             <span className="font-bold text-sm block">
+                                 {i === 0 && '­ƒææ '}{j.nombre}
+                             </span>
+-                            {/* Barra visual de nota */}
+-                            <div className="flex items-center gap-2 mt-1">
+-                                <div className="flex-1 h-1.5 bg-[var(--background)] rounded-full overflow-hidden">
+-                                    <motion.div
+-                                        initial={{ width: 0 }}
+-                                        animate={{ width: `${((j.promedio || 0) / 10) * 100}%` }}
+-                                        transition={{ delay: 0.1 * i, duration: 0.5 }}
+-                                        className="h-full rounded-full"
+-                                        style={{ backgroundColor: getNotaColor(j.promedio || 0) }}
+-                                    />
+-                                </div>
++                            <div className="w-full h-1.5 bg-[var(--background)] rounded-full mt-2 overflow-hidden shadow-inner">
++                                <motion.div
++                                    initial={{ width: 0 }}
++                                    animate={{ width: `${((j.promedio || 0) / 10) * 100}%` }}
++                                    transition={{ duration: 0.8 }}
++                                    className="h-full rounded-full"
++                                    style={{ backgroundColor: color }}
++                                />
+                             </div>
+                         </div>
+-                        <span className="text-sm font-black" style={{ color: getNotaColor(j.promedio || 0) }}>{j.promedio}</span>
+-                        <span className="text-xs text-[var(--text-muted)]">({j.total_votos})</span>
++                        <div className="text-right">
++                            <span className="text-sm font-black italic" style={{ color }}>{j.promedio || '-'}</span>
++                            <p className="text-[8px] text-[var(--text-muted)] font-bold capitalize">{j.total_votos} V</p>
++                        </div>
+                     </button>
+                 ))}
+             </div>
+
+commit 40eeef1e07014cd4a5019f293d1a5c2c8e4e95b8
+Author: Julia <julia@example.com>
+Date:   Sun Feb 15 02:08:08 2026 -0300
+
+    Fix: Add frontend files correctly (removed submodule)
+
+diff --git a/frontend/src/components/grupos/DetalleJugadorAmigo.tsx b/frontend/src/components/grupos/DetalleJugadorAmigo.tsx
+new file mode 100644
+index 0000000..69b13f2
+--- /dev/null
++++ b/frontend/src/components/grupos/DetalleJugadorAmigo.tsx
+@@ -0,0 +1,136 @@
++// src/components/grupos/DetalleJugadorAmigo.tsx
++'use client'
++
++import { useState, useEffect } from 'react'
++import { motion } from 'framer-motion'
++import { usePartidosAmigos } from '@/hooks/usePartidosAmigos'
++import type { JugadorPartidoAmigo, VotoPartidoAmigo } from '@/types'
++
++interface DetalleJugadorProps {
++    jugador: JugadorPartidoAmigo
++    grupoId: string
++    onClose: () => void
++}
++
++export function DetalleJugadorAmigo({ jugador, grupoId, onClose }: DetalleJugadorProps) {
++    const { fetchDetalleJugador } = usePartidosAmigos(grupoId)
++    const [detalle, setDetalle] = useState<{
++        votos: (VotoPartidoAmigo & { profile?: any })[]
++        distribucion: Record<number, number>
++        promedio: number
++        totalVotos: number
++    } | null>(null)
++    const [loading, setLoading] = useState(true)
++
++    useEffect(() => {
++        loadDetalle()
++    }, [jugador.id])
++
++    const loadDetalle = async () => {
++        try {
++            const data = await fetchDetalleJugador(jugador.id)
++            setDetalle(data)
++        } catch (e) {
++            console.error(e)
++        } finally {
++            setLoading(false)
++        }
++    }
++
++    const maxDistribucion = detalle
++        ? Math.max(...Object.values(detalle.distribucion), 1)
++        : 1
++
++    return (
++        <motion.div
++            initial={{ opacity: 0 }}
++            animate={{ opacity: 1 }}
++            exit={{ opacity: 0 }}
++            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center"
++            onClick={onClose}
++        >
++            <motion.div
++                initial={{ y: 100, opacity: 0 }}
++                animate={{ y: 0, opacity: 1 }}
++                className="bg-[var(--card-bg)] rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-[var(--card-border)] shadow-2xl"
++                onClick={e => e.stopPropagation()}
++            >
++                {/* Header */}
++                <div className="p-5 border-b border-[var(--card-border)] flex items-center justify-between">
++                    <div>
++                        <h3 className="text-xl font-black">­ƒæñ {jugador.nombre}</h3>
++                        <p className="text-xs text-[var(--text-muted)]">
++                            Equipo {jugador.equipo === 'azul' ? '­ƒöÁ Azul' : '­ƒö┤ Rojo'}
++                        </p>
++                    </div>
++                    <button onClick={onClose}
++                        className="w-8 h-8 rounded-full bg-[var(--background)] flex items-center justify-center text-[var(--text-muted)]"
++                    >Ô£ò</button>
++                </div>
++
++                {loading ? (
++                    <div className="p-10 text-center text-[var(--text-muted)]">ÔÅ│ Cargando...</div>
++                ) : detalle && (
++                    <div className="p-5 space-y-5">
++                        {/* Nota final */}
++                        <div className="text-center">
++                            <div className="text-5xl font-black text-[#fbbf24]">Ô¡É {detalle.promedio}</div>
++                            <p className="text-sm text-[var(--text-muted)] mt-1">
++                                Basada en {detalle.totalVotos} voto{detalle.totalVotos !== 1 ? 's' : ''}
++                            </p>
++                        </div>
++
++                        {/* Distribuci├│n de votos */}
++                        <div className="bg-[var(--background)] rounded-2xl p-4">
++                            <h4 className="font-bold text-sm mb-3">Distribuci├│n de votos</h4>
++                            <div className="space-y-1.5">
++                                {Array.from({ length: 10 }, (_, i) => 10 - i).map(n => {
++                                    const count = detalle.distribucion[n] || 0
++                                    const width = (count / maxDistribucion) * 100
++                                    return (
++                                        <div key={n} className="flex items-center gap-2 text-xs">
++                                            <span className="w-8 text-right font-bold text-[#fbbf24]">{n} Ô¡É</span>
++                                            <div className="flex-1 h-5 bg-[var(--card-bg)] rounded-full overflow-hidden">
++                                                <motion.div
++                                                    initial={{ width: 0 }}
++                                                    animate={{ width: `${width}%` }}
++                                                    transition={{ delay: 0.1 * (10 - n), duration: 0.5 }}
++                                                    className={`h-full rounded-full ${n >= 8 ? 'bg-[#22c55e]' : n >= 5 ? 'bg-[#fbbf24]' : 'bg-[#ef4444]'}`}
++                                                />
++                                            </div>
++                                            <span className="w-6 text-[var(--text-muted)]">({count})</span>
++                                        </div>
++                                    )
++                                })}
++                            </div>
++                        </div>
++
++                        {/* Comentarios */}
++                        {detalle.votos.filter(v => v.comentario).length > 0 && (
++                            <div>
++                                <h4 className="font-bold text-sm mb-3">
++                                    ­ƒÆ¼ Comentarios ({detalle.votos.filter(v => v.comentario).length})
++                                </h4>
++                                <div className="space-y-3">
++                                    {detalle.votos
++                                        .filter(v => v.comentario)
++                                        .map(v => (
++                                            <div key={v.id} className="bg-[var(--background)] rounded-xl p-3">
++                                                <div className="flex items-center justify-between mb-1">
++                                                    <span className="text-xs font-bold">
++                                                        {v.profile?.username || 'An├│nimo'}
++                                                    </span>
++                                                    <span className="text-xs text-[#fbbf24] font-bold">{v.nota}/10 Ô¡É</span>
++                                                </div>
++                                                <p className="text-sm text-[var(--text-muted)]">&ldquo;{v.comentario}&rdquo;</p>
++                                            </div>
++                                        ))}
++                                </div>
++                            </div>
++                        )}
++                    </div>
++                )}
++            </motion.div>
++        </motion.div>
++    )
++}
+diff --git a/frontend/src/components/grupos/ResultadosPartidoAmigo.tsx b/frontend/src/components/grupos/ResultadosPartidoAmigo.tsx
+new file mode 100644
+index 0000000..d088df0
+--- /dev/null
++++ b/frontend/src/components/grupos/ResultadosPartidoAmigo.tsx
+@@ -0,0 +1,262 @@
++// src/components/grupos/ResultadosPartidoAmigo.tsx
++'use client'
++
++import { useState, useEffect } from 'react'
++import { motion } from 'framer-motion'
++import { usePartidosAmigos } from '@/hooks/usePartidosAmigos'
++import { useToast } from '@/contexts/ToastContext'
++import { DetalleJugadorAmigo } from './DetalleJugadorAmigo'
++import type { PartidoAmigo, JugadorPartidoAmigo } from '@/types'
++
++interface ResultadosProps {
++    partido: PartidoAmigo
++    grupoId: string
++    onClose: () => void
++}
++
++export function ResultadosPartidoAmigo({ partido, grupoId, onClose }: ResultadosProps) {
++    const { fetchJugadoresConVotos } = usePartidosAmigos(grupoId)
++    const { showToast } = useToast()
++    const [jugadores, setJugadores] = useState<JugadorPartidoAmigo[]>([])
++    const [loading, setLoading] = useState(true)
++    const [jugadorDetalle, setJugadorDetalle] = useState<JugadorPartidoAmigo | null>(null)
++
++    useEffect(() => {
++        loadResultados()
++    }, [partido.id])
++
++    const loadResultados = async () => {
++        try {
++            const data = await fetchJugadoresConVotos(partido.id)
++            setJugadores(data)
++        } catch {
++            showToast('Error cargando resultados', 'error')
++        } finally {
++            setLoading(false)
++        }
++    }
++
++    const sorted = [...jugadores].sort((a, b) => (b.promedio || 0) - (a.promedio || 0))
++    const mvp = sorted[0]
++    const top3 = sorted.slice(0, 3)
++    const azules = jugadores.filter(j => j.equipo === 'azul').sort((a, b) => (b.promedio || 0) - (a.promedio || 0))
++    const rojos = jugadores.filter(j => j.equipo === 'rojo').sort((a, b) => (b.promedio || 0) - (a.promedio || 0))
++
++    const promedioEquipo = (equipo: JugadorPartidoAmigo[]) => {
++        const conVotos = equipo.filter(j => (j.promedio || 0) > 0)
++        if (conVotos.length === 0) return 0
++        return Math.round(conVotos.reduce((sum, j) => sum + (j.promedio || 0), 0) / conVotos.length * 10) / 10
++    }
++
++    const fechaDisplay = new Date(partido.fecha + 'T00:00:00').toLocaleDateString('es-AR', {
++        weekday: 'short', day: 'numeric', month: 'short'
++    })
++
++    const resultado = partido.resultado_azul !== undefined && partido.resultado_rojo !== undefined
++        ? `Azul ${partido.resultado_azul}-${partido.resultado_rojo} Rojo`
++        : null
++
++    return (
++        <motion.div
++            initial={{ opacity: 0 }}
++            animate={{ opacity: 1 }}
++            className="fixed inset-0 bg-[var(--background)] z-40 overflow-y-auto"
++        >
++            {/* Header */}
++            <div className="bg-gradient-to-b from-[#8b5cf6] to-[#7c3aed] text-white pt-10 pb-6 px-6">
++                <div className="max-w-lg mx-auto">
++                    <button onClick={onClose} className="bg-white/20 p-2 rounded-full mb-3 backdrop-blur-md">ÔåÉ Volver</button>
++                    <h1 className="text-2xl font-black">­ƒôè Resultados</h1>
++                    <p className="text-white/80 text-sm">
++                        {fechaDisplay} - {resultado || partido.cancha || 'Partido'}
++                    </p>
++                    {resultado && (
++                        <p className="text-white/80 text-sm">{partido.cancha}</p>
++                    )}
++                </div>
++            </div>
++
++            {loading ? (
++                <div className="text-center py-20 text-[var(--text-muted)]">ÔÅ│ Cargando resultados...</div>
++            ) : (
++                <div className="max-w-lg mx-auto px-4 -mt-3 pb-10 space-y-4">
++                    {/* Mis Votos */}
++                    {jugadores.some(j => j.mi_voto) && (
++                        <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--card-border)]">
++                            <h3 className="font-black text-sm mb-3">­ƒù│´©Å MIS VOTOS</h3>
++                            <div className="space-y-1">
++                                {jugadores
++                                    .filter(j => j.mi_voto)
++                                    .sort((a, b) => (b.mi_voto?.nota || 0) - (a.mi_voto?.nota || 0))
++                                    .map(j => {
++                                        const dif = (j.mi_voto?.nota || 0) - (j.promedio || 0)
++                                        const difColor = dif > 0 ? 'text-[#22c55e]' : dif < 0 ? 'text-[#ef4444]' : 'text-[var(--text-muted)]'
++
++                                        return (
++                                            <div key={j.id} className="flex items-start justify-between p-3 rounded-xl hover:bg-[var(--hover-bg)] transition-all">
++                                                <div>
++                                                    <div className="flex items-center gap-2">
++                                                        <span className="font-bold text-sm">{j.nombre}</span>
++                                                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${j.equipo === 'azul' ? 'bg-blue-500/10 text-blue-500' : 'bg-red-500/10 text-red-500'
++                                                            }`}>
++                                                            {j.equipo}
++                                                        </span>
++                                                    </div>
++                                                    <div className="flex items-center gap-2 mt-1">
++                                                        <div className="flex gap-0.5">
++                                                            {Array.from({ length: 5 }, (_, i) => (
++                                                                <span key={i} className={`text-[10px] ${i < Math.round((j.mi_voto?.nota || 0) / 2) ? 'text-[#fbbf24]' : 'text-[var(--card-border)]'}`}>
++                                                                    Ôÿà
++                                                                </span>
++                                                            ))}
++                                                        </div>
++                                                        <span className="text-xs font-bold">{j.mi_voto?.nota}</span>
++                                                        <span className="text-[10px] text-[var(--text-muted)]">ÔÇó Promedio: {j.promedio}</span>
++                                                    </div>
++                                                    {j.mi_voto?.comentario && (
++                                                        <p className="text-xs text-[var(--text-muted)] mt-1 italic pl-2 border-l-2 border-[var(--card-border)]">
++                                                            "{j.mi_voto.comentario}"
++                                                        </p>
++                                                    )}
++                                                </div>
++                                                <div className="text-center min-w-[3rem]">
++                                                    <div className={`text-sm font-black ${difColor}`}>
++                                                        {dif > 0 ? '+' : ''}{dif.toFixed(1)}
++                                                    </div>
++                                                    <div className="text-[9px] text-[var(--text-muted)] uppercase">vs Prom</div>
++                                                </div>
++                                            </div>
++                                        )
++                                    })}
++                            </div>
++                        </div>
++                    )}
++
++                    {/* MVP */}
++                    {mvp && mvp.promedio! > 0 && (
++                        <motion.div
++                            initial={{ scale: 0.8, opacity: 0 }}
++                            animate={{ scale: 1, opacity: 1 }}
++                            transition={{ delay: 0.2, type: 'spring' }}
++                            className="bg-gradient-to-br from-[#fbbf24]/20 to-[#f59e0b]/10 border border-[#fbbf24]/30 rounded-2xl p-6 text-center shadow-lg"
++                        >
++                            <p className="text-xs text-[var(--text-muted)] uppercase font-bold mb-2">­ƒÅå MVP del Partido</p>
++                            <div className="text-4xl mb-2">­ƒææ</div>
++                            <h2 className="text-2xl font-black">{mvp.nombre}</h2>
++                            <p className="text-3xl font-black text-[#fbbf24] mt-1">Ô¡É {mvp.promedio}</p>
++                            <p className="text-xs text-[var(--text-muted)]">{mvp.total_votos} votos</p>
++                        </motion.div>
++                    )}
++
++                    {/* Top 3 */}
++                    {top3.length >= 2 && (
++                        <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--card-border)]">
++                            <h3 className="font-black text-sm mb-3">­ƒÑê TOP 3</h3>
++                            {top3.slice(1, 3).map((j, i) => (
++                                <button
++                                    key={j.id}
++                                    onClick={() => setJugadorDetalle(j)}
++                                    className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-[var(--hover-bg)] transition-all text-left"
++                                >
++                                    <span className="text-sm font-bold text-[var(--text-muted)]">{i + 2}.</span>
++                                    <span className="font-bold flex-1">{j.nombre}</span>
++                                    <span className="text-sm font-black text-[#fbbf24]">{j.promedio} Ô¡É</span>
++                                    <span className="text-xs text-[var(--text-muted)]">({j.total_votos})</span>
++                                </button>
++                            ))}
++                        </div>
++                    )}
++
++                    {/* Equipo Azul */}
++                    <TeamResults
++                        equipo="azul"
++                        color="#3b82f6"
++                        emoji="­ƒöÁ"
++                        jugadores={azules}
++                        promedio={promedioEquipo(azules)}
++                        onClickJugador={setJugadorDetalle}
++                    />
++
++                    {/* Equipo Rojo */}
++                    <TeamResults
++                        equipo="rojo"
++                        color="#ef4444"
++                        emoji="­ƒö┤"
++                        jugadores={rojos}
++                        promedio={promedioEquipo(rojos)}
++                        onClickJugador={setJugadorDetalle}
++                    />
++                </div>
++            )}
++
++            {/* Player detail modal */}
++            {jugadorDetalle && (
++                <DetalleJugadorAmigo
++                    jugador={jugadorDetalle}
++                    grupoId={grupoId}
++                    onClose={() => setJugadorDetalle(null)}
++                />
++            )}
++        </motion.div>
++    )
++}
++
++function TeamResults({ equipo, color, emoji, jugadores, promedio, onClickJugador }: {
++    equipo: string
++    color: string
++    emoji: string
++    jugadores: JugadorPartidoAmigo[]
++    promedio: number
++    onClickJugador: (j: JugadorPartidoAmigo) => void
++}) {
++    const getNotaColor = (nota: number) => {
++        if (nota >= 7) return '#22c55e'
++        if (nota >= 4) return '#fbbf24'
++        return '#ef4444'
++    }
++
++    return (
++        <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] overflow-hidden">
++            <div className="p-4 border-b border-[var(--card-border)]" style={{ borderLeftColor: color, borderLeftWidth: 4 }}>
++                <div className="flex justify-between items-center">
++                    <h3 className="font-black text-sm" style={{ color }}>
++                        {emoji} EQUIPO {equipo.toUpperCase()}
++                    </h3>
++                    <span className="text-xs text-[var(--text-muted)]">Promedio: <strong style={{ color }}>{promedio}</strong></span>
++                </div>
++            </div>
++            <div>
++                {jugadores.map((j, i) => (
++                    <button
++                        key={j.id}
++                        onClick={() => onClickJugador(j)}
++                        className={`w-full flex items-center gap-3 p-4 border-b border-[var(--card-border)] last:border-0 hover:bg-[var(--hover-bg)] transition-all text-left ${i === 0 ? 'bg-[#ffd700]/5' : ''}`}
++                    >
++                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-[#ffd700] text-black' : 'bg-[var(--background)] text-[var(--text-muted)]'}`}>
++                            {i + 1}
++                        </span>
++                        <div className="flex-1 min-w-0">
++                            <span className="font-bold text-sm block">
++                                {i === 0 && '­ƒææ '}{j.nombre}
++                            </span>
++                            {/* Barra visual de nota */}
++                            <div className="flex items-center gap-2 mt-1">
++                                <div className="flex-1 h-1.5 bg-[var(--background)] rounded-full overflow-hidden">
++                                    <motion.div
++                                        initial={{ width: 0 }}
++                                        animate={{ width: `${((j.promedio || 0) / 10) * 100}%` }}
++                                        transition={{ delay: 0.1 * i, duration: 0.5 }}
++                                        className="h-full rounded-full"
++                                        style={{ backgroundColor: getNotaColor(j.promedio || 0) }}
++                                    />
++                                </div>
++                            </div>
++                        </div>
++                        <span className="text-sm font-black" style={{ color: getNotaColor(j.promedio || 0) }}>{j.promedio}</span>
++                        <span className="text-xs text-[var(--text-muted)]">({j.total_votos})</span>
++                    </button>
++                ))}
++            </div>
++        </div>
++    )
++}
+diff --git a/frontend/src/components/grupos/TablaEstadisticas.tsx b/frontend/src/components/grupos/TablaEstadisticas.tsx
+new file mode 100644
+index 0000000..5193a93
+--- /dev/null
++++ b/frontend/src/components/grupos/TablaEstadisticas.tsx
+@@ -0,0 +1,184 @@
++'use client'
++
++import { useState, useEffect } from 'react'
++import { motion } from 'framer-motion'
++import { supabase } from '@/lib/supabase'
++
++interface TablaEstadisticasProps {
++    grupoId: string
++    miembros: any[]
++}
++
++interface EstadisticaJugador {
++    userId: string
++    nombre: string
++    foto?: string
++    pj: number
++    goles: number
++    asistencias: number
++    promedio: number
++    mvps: number // Opcional, por ahora 0
++}
++
++export function TablaEstadisticas({ grupoId, miembros }: TablaEstadisticasProps) {
++    const [stats, setStats] = useState<EstadisticaJugador[]>([])
++    const [loading, setLoading] = useState(true)
++    const [orden, setOrden] = useState<'goles' | 'asistencias' | 'promedio' | 'pj'>('goles')
++
++    useEffect(() => {
++        fetchStats()
++    }, [grupoId])
++
++    const fetchStats = async () => {
++        setLoading(true)
++        try {
++            // ... (ommited fetch logic for brevity)
++            // 1. Obtener todos los partidos del grupo
++            const { data: partidos } = await supabase
++                .from('partidos_amigos')
++                .select('id')
++                .eq('grupo_id', grupoId)
++                .eq('estado', 'finalizado')
++
++            if (!partidos || partidos.length === 0) {
++                setStats([])
++                setLoading(false)
++                return
++            }
++
++            const partidoIds = partidos.map(p => p.id)
++
++            // 2. Obtener todos los jugadores de esos partidos (que tengan usuario real)
++            const { data: jugadoresHistorial } = await supabase
++                .from('jugadores_partido_amigo')
++                .select('user_id, goles, asistencias, nombre')
++                .in('partido_amigo_id', partidoIds)
++                .not('user_id', 'is', null)
++
++            // 3. Obtener votos
++            const { data: votos } = await supabase
++                .from('votos_partido_amigo')
++                .select('jugador_id, nota, jugadores_partido_amigo!inner(user_id)')
++                .in('partido_amigo_id', partidoIds)
++
++            // 4. Agregar datos
++            const statsMap: Record<string, EstadisticaJugador> = {}
++
++            // Inicializar con miembros
++            miembros.forEach(m => {
++                if (m.user_id) {
++                    statsMap[m.user_id] = {
++                        userId: m.user_id,
++                        nombre: m.profile?.username || 'Usuario',
++                        foto: m.profile?.avatar_url,
++                        pj: 0,
++                        goles: 0,
++                        asistencias: 0,
++                        promedio: 0,
++                        mvps: 0
++                    }
++                }
++            })
++
++            // Procesar historial
++            jugadoresHistorial?.forEach((j: any) => {
++                const uid = j.user_id
++                if (!statsMap[uid]) return
++
++                statsMap[uid].pj += 1
++                statsMap[uid].goles += (j.goles || 0)
++                statsMap[uid].asistencias += (j.asistencias || 0)
++            })
++
++            // Procesar votos
++            const notasSum: Record<string, number> = {}
++            const notasCount: Record<string, number> = {}
++
++            votos?.forEach((v: any) => {
++                const uid = v.jugadores_partido_amigo?.user_id
++                if (!uid || !statsMap[uid]) return
++
++                notasSum[uid] = (notasSum[uid] || 0) + v.nota
++                notasCount[uid] = (notasCount[uid] || 0) + 1
++            })
++
++            Object.values(statsMap).forEach(s => {
++                if (notasCount[s.userId]) {
++                    s.promedio = Number((notasSum[s.userId] / notasCount[s.userId]).toFixed(1))
++                }
++            })
++
++            setStats(Object.values(statsMap))
++
++        } catch (error) {
++            console.error('Error stats', error)
++        } finally {
++            setLoading(false)
++        }
++    }
++
++    const sortedStats = [...stats].sort((a, b) => b[orden] - a[orden])
++
++    if (loading) return <div className="text-center py-10">ÔÅ│ Calculando estad├¡sticas...</div>
++
++    if (stats.length === 0) return (
++        <div className="text-center py-10 text-[var(--text-muted)]">
++            ­ƒôë A├║n no hay estad├¡sticas. ┬íJueguen partidos para generar datos!
++        </div>
++    )
++
++    return (
++        <div className="space-y-4">
++            {/* Filtros Orden */}
++            <div className="flex gap-2 justify-center pb-4">
++                <FilterButton active={orden === 'goles'} onClick={() => setOrden('goles')} label="ÔÜ¢ Goles" />
++                <FilterButton active={orden === 'asistencias'} onClick={() => setOrden('asistencias')} label="­ƒæƒ Asistencias" />
++                <FilterButton active={orden === 'promedio'} onClick={() => setOrden('promedio')} label="Ô¡É Promedio" />
++                <FilterButton active={orden === 'pj'} onClick={() => setOrden('pj')} label="­ƒôà PJ" />
++            </div>
++
++            <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] overflow-hidden">
++                <table className="w-full text-sm">
++                    <thead className="bg-[#10b981]/10 text-[#10b981]">
++                        <tr>
++                            <th className="p-3 text-left">Jugador</th>
++                            <th className="p-3 text-center">PJ</th>
++                            <th className="p-3 text-center">ÔÜ¢</th>
++                            <th className="p-3 text-center">­ƒæƒ</th>
++                            <th className="p-3 text-center">Ô¡É</th>
++                        </tr>
++                    </thead>
++                    <tbody>
++                        {sortedStats.map((s, i) => (
++                            <tr key={s.userId} className="border-b border-[var(--card-border)] last:border-0 hover:bg-[var(--hover-bg)]">
++                                <td className="p-3 flex items-center gap-2 font-bold">
++                                    <span className={`text-xs w-5 text-[var(--text-muted)]`}>#{i + 1}</span>
++                                    <div className="w-8 h-8 rounded-full bg-[var(--background)] overflow-hidden border border-[var(--card-border)] flex items-center justify-center">
++                                        {s.foto || '­ƒæñ'}
++                                    </div>
++                                    <span className="truncate max-w-[100px]">{s.nombre}</span>
++                                </td>
++                                <td className={`p-3 text-center ${orden === 'pj' ? 'font-black text-white' : ''}`}>{s.pj}</td>
++                                <td className={`p-3 text-center ${orden === 'goles' ? 'font-black text-[#10b981]' : ''}`}>{s.goles}</td>
++                                <td className={`p-3 text-center ${orden === 'asistencias' ? 'font-black text-blue-400' : ''}`}>{s.asistencias}</td>
++                                <td className={`p-3 text-center ${orden === 'promedio' ? 'font-black text-yellow-400' : ''}`}>{s.promedio || '-'}</td>
++                            </tr>
++                        ))}
++                    </tbody>
++                </table>
++            </div>
++        </div>
++    )
++}
++
++function FilterButton({ active, onClick, label }: { active: boolean, onClick: () => void, label: string }) {
++    return (
++        <button
++            onClick={onClick}
++            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${active ? 'bg-[#10b981] text-white shadow-lg' : 'bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-muted)]'
++                }`}
++        >
++            {label}
++        </button>
++    )
++}

@@ -400,7 +400,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                                     <div className="min-w-0">
                                                                         <p className="font-bold text-sm truncate">{j.nombre}</p>
                                                                         {j.mi_voto ? (
-                                                                            <div className="flex items-center gap-2">
+                                                                            <div className="flex items-center gap-2 mt-1">
                                                                                 <div className="flex gap-0.5">
                                                                                     {Array.from({ length: 5 }).map((_, i) => (
                                                                                         <span key={i} className={`text-[8px] ${i < Math.round(j.mi_voto!.nota / 2) ? 'grayscale-0' : 'grayscale opacity-20'}`}>⭐</span>
@@ -409,7 +409,12 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                                                 <span className="text-[10px] font-bold text-blue-500">{j.mi_voto.nota}/10</span>
                                                                             </div>
                                                                         ) : (
-                                                                            <p className="text-[10px] text-[var(--text-muted)] font-medium">Sin votar aún</p>
+                                                                            <p className="text-[10px] text-[var(--text-muted)] font-medium mt-1">Sin votar aún</p>
+                                                                        )}
+                                                                        {(j.promedio || 0) > 0 && (
+                                                                            <p className="text-[10px] text-[var(--text-muted)] mt-1">
+                                                                                Promedio: <strong className="text-blue-500">{j.promedio}</strong> <span className="opacity-50 font-medium">({j.total_votos} Votos)</span>
+                                                                            </p>
                                                                         )}
                                                                     </div>
                                                                 </div>
@@ -453,7 +458,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                                     <div className="min-w-0">
                                                                         <p className="font-bold text-sm truncate">{j.nombre}</p>
                                                                         {j.mi_voto ? (
-                                                                            <div className="flex items-center gap-2">
+                                                                            <div className="flex items-center gap-2 mt-1">
                                                                                 <div className="flex gap-0.5">
                                                                                     {Array.from({ length: 5 }).map((_, i) => (
                                                                                         <span key={i} className={`text-[8px] ${i < Math.round(j.mi_voto!.nota / 2) ? 'grayscale-0' : 'grayscale opacity-20'}`}>⭐</span>
@@ -462,7 +467,12 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                                                 <span className="text-[10px] font-bold text-red-500">{j.mi_voto.nota}/10</span>
                                                                             </div>
                                                                         ) : (
-                                                                            <p className="text-[10px] text-[var(--text-muted)] font-medium">Sin votar aún</p>
+                                                                            <p className="text-[10px] text-[var(--text-muted)] font-medium mt-1">Sin votar aún</p>
+                                                                        )}
+                                                                        {(j.promedio || 0) > 0 && (
+                                                                            <p className="text-[10px] text-[var(--text-muted)] mt-1">
+                                                                                Promedio: <strong className="text-red-500">{j.promedio}</strong> <span className="opacity-50 font-medium">({j.total_votos} Votos)</span>
+                                                                            </p>
                                                                         )}
                                                                     </div>
                                                                 </div>

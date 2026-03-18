@@ -1,0 +1,380 @@
+﻿commit 07826108ef7b5ad0e7bc9c78981eea449d3940dd
+Author: Julia <julia@example.com>
+Date:   Tue Mar 17 22:40:07 2026 -0300
+
+    fix: voting system - public results, optimistic updates, localStorage persistence
+
+diff --git a/frontend/src/components/grupos/VotarJugadores.tsx b/frontend/src/components/grupos/VotarJugadores.tsx
+index e920b53..a8c05fe 100644
+--- a/frontend/src/components/grupos/VotarJugadores.tsx
++++ b/frontend/src/components/grupos/VotarJugadores.tsx
+@@ -156,6 +156,7 @@ export function VotarJugadores({ partido, grupoId, onClose }: VotarJugadoresProp
+             {showRapida && (
+                 <VotacionRapida
+                     jugadores={jugadores}
++                    partidoId={partido.id}
+                     onVotarTodos={handleVotarTodos}
+                     onClose={() => setShowRapida(false)}
+                 />
+
+commit c558bce89f9f20626faea462b7935976df77cee8
+Author: Julia <julia@example.com>
+Date:   Wed Mar 11 20:19:48 2026 -0300
+
+    FutLog: Implementing Social Feed, Reactions and Player Profiles
+
+diff --git a/frontend/src/components/grupos/VotarJugadores.tsx b/frontend/src/components/grupos/VotarJugadores.tsx
+index a31545d..e920b53 100644
+--- a/frontend/src/components/grupos/VotarJugadores.tsx
++++ b/frontend/src/components/grupos/VotarJugadores.tsx
+@@ -79,29 +79,29 @@ export function VotarJugadores({ partido, grupoId, onClose }: VotarJugadoresProp
+             className="fixed inset-0 bg-[var(--background)] z-[60] overflow-y-auto"
+         >
+             {/* Header */}
+-            <div className="bg-gradient-to-b from-[#10b981] to-[#059669] text-white pt-10 pb-6 px-6">
++            <div className="bg-[#16a34a] text-white pt-10 pb-6 px-6 border-b border-black/10">
+                 <div className="max-w-lg mx-auto">
+-                    <button onClick={onClose} className="bg-white/20 p-2 rounded-full mb-3 backdrop-blur-md">ÔåÉ Volver</button>
+-                    <h1 className="text-2xl font-black">­ƒù│´©Å Votar Jugadores</h1>
+-                    <p className="text-white/80 text-sm">{fechaDisplay} - {partido.cancha || 'Sin cancha'}</p>
++                    <button onClick={onClose} className="bg-black/20 p-2 mb-3 font-black capitalize tracking-widest text-[10px] hover:bg-black/30 transition-all" style={{ borderRadius: 'var(--radius)' }}>ÔåÉ Volver</button>
++                    <h1 className="text-2xl font-black capitalize italic tracking-tighter">­ƒù│´©Å Votar Jugadores</h1>
++                    <p className="text-white/80 text-[10px] font-bold capitalize tracking-widest leading-none mt-1">{fechaDisplay} - {partido.cancha || 'Sin cancha'}</p>
+                 </div>
+             </div>
+ 
+             <div className="max-w-lg mx-auto px-4 -mt-3 pb-28 space-y-4">
+                 {/* Progress */}
+-                <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--card-border)] shadow-lg">
+-                    <div className="flex justify-between text-sm mb-2">
+-                        <span className="font-bold">­ƒôè Tu Progreso:</span>
+-                        <span className="font-black text-[#10b981]">{votados}/{total} votados</span>
++                <div className="bg-[var(--card-bg)] p-4 border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}>
++                    <div className="flex justify-between text-[10px] font-black capitalize tracking-widest mb-2">
++                        <span>­ƒôè Tu Progreso</span>
++                        <span className="text-[#16a34a]">{votados}/{total} votados</span>
+                     </div>
+-                    <div className="w-full h-3 bg-[var(--background)] rounded-full overflow-hidden">
++                    <div className="w-full h-3 bg-[var(--background)] border border-[var(--card-border)] overflow-hidden" style={{ borderRadius: 'var(--radius)' }}>
+                         <motion.div
+                             initial={{ width: 0 }}
+                             animate={{ width: `${progreso}%` }}
+-                            className="h-full bg-gradient-to-r from-[#10b981] to-[#fbbf24] rounded-full"
++                            className="h-full bg-[#16a34a]"
+                         />
+                     </div>
+-                    <p className="text-right text-xs text-[var(--text-muted)] mt-1">{progreso}%</p>
++                    <p className="text-right text-[10px] font-black tabular-nums text-[var(--text-muted)] mt-1">{progreso}%</p>
+                 </div>
+ 
+                 {loading ? (
+@@ -128,11 +128,12 @@ export function VotarJugadores({ partido, grupoId, onClose }: VotarJugadoresProp
+ 
+                         {/* Quick vote CTA */}
+                         {votados < total && (
+-                            <div className="bg-[#fbbf24]/10 border border-[#fbbf24]/30 rounded-2xl p-4 text-center">
+-                                <p className="text-sm mb-2">ÔÜá´©Å Te faltan <strong>{total - votados}</strong> jugadores</p>
++                            <div className="bg-[var(--card-bg)] border border-[#d97706]/30 p-4 text-center" style={{ borderRadius: 'var(--radius)' }}>
++                                <p className="text-[10px] font-black capitalize tracking-widest mb-3">ÔÜá´©Å Te faltan <span className="text-[#d97706]">{total - votados}</span> jugadores</p>
+                                 <button
+                                     onClick={() => setShowRapida(true)}
+-                                    className="bg-[#fbbf24] text-black px-6 py-3 rounded-xl font-black hover:shadow-lg hover:shadow-[#fbbf24]/30 transition-all"
++                                    className="w-full bg-[#d97706] text-white px-6 py-3 font-black capitalize tracking-widest italic text-sm hover:brightness-110 transition-all"
++                                    style={{ borderRadius: 'var(--radius)' }}
+                                 >
+                                     ÔÜí Votar Todos
+                                 </button>
+@@ -182,7 +183,8 @@ function TeamVoteSection({ equipo, color, emoji, jugadores, onVotar }: {
+                         initial={{ x: -20, opacity: 0 }}
+                         animate={{ x: 0, opacity: 1 }}
+                         transition={{ delay: i * 0.05 }}
+-                        className="bg-[var(--card-bg)] rounded-xl p-4 border border-[var(--card-border)]"
++                        className="bg-[var(--card-bg)] p-4 border border-[var(--card-border)]"
++                        style={{ borderRadius: 'var(--radius)' }}
+                     >
+                         <div className="flex items-center justify-between">
+                             <div>
+@@ -198,20 +200,21 @@ function TeamVoteSection({ equipo, color, emoji, jugadores, onVotar }: {
+                                         {j.mi_voto.comentario && (
+                                             <p className="text-xs text-[var(--text-muted)] mt-0.5">­ƒÆ¼ &ldquo;{j.mi_voto.comentario}&rdquo;</p>
+                                         )}
+-                                        <p className="text-[10px] text-[#10b981] font-bold mt-0.5">Ô£à Ya votaste</p>
++                                        <p className="text-[10px] text-[#16a34a] font-black capitalize tracking-widest mt-0.5">Ô£à Ya votaste</p>
+                                     </div>
+                                 ) : (
+-                                    <p className="text-xs text-[var(--text-muted)] mt-1">
++                                    <p className="text-[10px] text-[var(--text-muted)] font-black capitalize tracking-widest mt-1">
+                                         {'Ôùï'.repeat(10)} Sin votar
+                                     </p>
+                                 )}
+                             </div>
+                             <button
+                                 onClick={() => onVotar(j)}
+-                                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${j.mi_voto
+-                                    ? 'bg-[var(--background)] text-[var(--text-muted)] hover:bg-[var(--hover-bg)]'
+-                                    : 'bg-[#10b981] text-white hover:bg-[#059669]'
++                                className={`px-4 py-2 text-xs font-black capitalize tracking-widest transition-all ${j.mi_voto
++                                    ? 'bg-[var(--hover-bg)] text-[var(--text-muted)] border border-[var(--card-border)]'
++                                    : 'bg-[#16a34a] text-white'
+                                     }`}
++                                style={{ borderRadius: 'var(--radius)' }}
+                             >
+                                 {j.mi_voto ? 'Editar' : 'Votar ÔåÆ'}
+                             </button>
+
+commit 6d4288ee71b3629d721077c2242f9d7ed4916879
+Author: Julia <julia@example.com>
+Date:   Wed Mar 4 23:45:10 2026 -0300
+
+    feat: Phase 2-4 features - QuickPoll, MatchTimeline, StatsRadar, ClubRanking, ReplyThreads, AdvancedStats
+
+diff --git a/frontend/src/components/grupos/VotarJugadores.tsx b/frontend/src/components/grupos/VotarJugadores.tsx
+index f7488fd..a31545d 100644
+--- a/frontend/src/components/grupos/VotarJugadores.tsx
++++ b/frontend/src/components/grupos/VotarJugadores.tsx
+@@ -76,7 +76,7 @@ export function VotarJugadores({ partido, grupoId, onClose }: VotarJugadoresProp
+             initial={{ opacity: 0 }}
+             animate={{ opacity: 1 }}
+             exit={{ opacity: 0 }}
+-            className="fixed inset-0 bg-[var(--background)] z-40 overflow-y-auto"
++            className="fixed inset-0 bg-[var(--background)] z-[60] overflow-y-auto"
+         >
+             {/* Header */}
+             <div className="bg-gradient-to-b from-[#10b981] to-[#059669] text-white pt-10 pb-6 px-6">
+
+commit 40eeef1e07014cd4a5019f293d1a5c2c8e4e95b8
+Author: Julia <julia@example.com>
+Date:   Sun Feb 15 02:08:08 2026 -0300
+
+    Fix: Add frontend files correctly (removed submodule)
+
+diff --git a/frontend/src/components/grupos/VotarJugadores.tsx b/frontend/src/components/grupos/VotarJugadores.tsx
+new file mode 100644
+index 0000000..f7488fd
+--- /dev/null
++++ b/frontend/src/components/grupos/VotarJugadores.tsx
+@@ -0,0 +1,224 @@
++// src/components/grupos/VotarJugadores.tsx
++'use client'
++
++import { useState, useEffect } from 'react'
++import { motion } from 'framer-motion'
++import { usePartidosAmigos } from '@/hooks/usePartidosAmigos'
++import { useToast } from '@/contexts/ToastContext'
++import { VotarModal } from './VotarModal'
++import { VotacionRapida } from './VotacionRapida'
++import type { PartidoAmigo, JugadorPartidoAmigo } from '@/types'
++
++interface VotarJugadoresProps {
++    partido: PartidoAmigo
++    grupoId: string
++    onClose: () => void
++}
++
++export function VotarJugadores({ partido, grupoId, onClose }: VotarJugadoresProps) {
++    const { fetchJugadoresConVotos, votarJugador } = usePartidosAmigos(grupoId)
++    const { showToast } = useToast()
++    const [jugadores, setJugadores] = useState<JugadorPartidoAmigo[]>([])
++    const [loading, setLoading] = useState(true)
++    const [votandoA, setVotandoA] = useState<JugadorPartidoAmigo | null>(null)
++    const [showRapida, setShowRapida] = useState(false)
++
++    useEffect(() => {
++        loadJugadores()
++    }, [partido.id])
++
++    const loadJugadores = async () => {
++        try {
++            const data = await fetchJugadoresConVotos(partido.id)
++            setJugadores(data)
++        } catch {
++            showToast('Error cargando jugadores', 'error')
++        } finally {
++            setLoading(false)
++        }
++    }
++
++    const handleVotar = async (nota: number, comentario?: string) => {
++        if (!votandoA) return
++        try {
++            await votarJugador(partido.id, votandoA.id, nota, comentario)
++            showToast(`Voto guardado para ${votandoA.nombre} Ô¡É`, 'success')
++            await loadJugadores()
++        } catch {
++            showToast('Error al votar', 'error')
++        }
++    }
++
++    const handleVotarTodos = async (votos: { jugadorId: string; nota: number }[]) => {
++        try {
++            for (const v of votos) {
++                await votarJugador(partido.id, v.jugadorId, v.nota)
++            }
++            showToast(`${votos.length} votos guardados ÔÜí`, 'success')
++            await loadJugadores()
++        } catch {
++            showToast('Error al guardar votos', 'error')
++        }
++    }
++
++    const azules = jugadores.filter(j => j.equipo === 'azul')
++    const rojos = jugadores.filter(j => j.equipo === 'rojo')
++    const votados = jugadores.filter(j => j.mi_voto).length
++    const total = jugadores.length
++    const progreso = total > 0 ? Math.round((votados / total) * 100) : 0
++
++    const fechaDisplay = new Date(partido.fecha + 'T00:00:00').toLocaleDateString('es-AR', {
++        weekday: 'short', day: 'numeric', month: 'short'
++    })
++
++    return (
++        <motion.div
++            initial={{ opacity: 0 }}
++            animate={{ opacity: 1 }}
++            exit={{ opacity: 0 }}
++            className="fixed inset-0 bg-[var(--background)] z-40 overflow-y-auto"
++        >
++            {/* Header */}
++            <div className="bg-gradient-to-b from-[#10b981] to-[#059669] text-white pt-10 pb-6 px-6">
++                <div className="max-w-lg mx-auto">
++                    <button onClick={onClose} className="bg-white/20 p-2 rounded-full mb-3 backdrop-blur-md">ÔåÉ Volver</button>
++                    <h1 className="text-2xl font-black">­ƒù│´©Å Votar Jugadores</h1>
++                    <p className="text-white/80 text-sm">{fechaDisplay} - {partido.cancha || 'Sin cancha'}</p>
++                </div>
++            </div>
++
++            <div className="max-w-lg mx-auto px-4 -mt-3 pb-28 space-y-4">
++                {/* Progress */}
++                <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--card-border)] shadow-lg">
++                    <div className="flex justify-between text-sm mb-2">
++                        <span className="font-bold">­ƒôè Tu Progreso:</span>
++                        <span className="font-black text-[#10b981]">{votados}/{total} votados</span>
++                    </div>
++                    <div className="w-full h-3 bg-[var(--background)] rounded-full overflow-hidden">
++                        <motion.div
++                            initial={{ width: 0 }}
++                            animate={{ width: `${progreso}%` }}
++                            className="h-full bg-gradient-to-r from-[#10b981] to-[#fbbf24] rounded-full"
++                        />
++                    </div>
++                    <p className="text-right text-xs text-[var(--text-muted)] mt-1">{progreso}%</p>
++                </div>
++
++                {loading ? (
++                    <div className="text-center py-10 text-[var(--text-muted)]">ÔÅ│ Cargando jugadores...</div>
++                ) : (
++                    <>
++                        {/* Equipo Azul */}
++                        <TeamVoteSection
++                            equipo="azul"
++                            color="#3b82f6"
++                            emoji="­ƒöÁ"
++                            jugadores={azules}
++                            onVotar={setVotandoA}
++                        />
++
++                        {/* Equipo Rojo */}
++                        <TeamVoteSection
++                            equipo="rojo"
++                            color="#ef4444"
++                            emoji="­ƒö┤"
++                            jugadores={rojos}
++                            onVotar={setVotandoA}
++                        />
++
++                        {/* Quick vote CTA */}
++                        {votados < total && (
++                            <div className="bg-[#fbbf24]/10 border border-[#fbbf24]/30 rounded-2xl p-4 text-center">
++                                <p className="text-sm mb-2">ÔÜá´©Å Te faltan <strong>{total - votados}</strong> jugadores</p>
++                                <button
++                                    onClick={() => setShowRapida(true)}
++                                    className="bg-[#fbbf24] text-black px-6 py-3 rounded-xl font-black hover:shadow-lg hover:shadow-[#fbbf24]/30 transition-all"
++                                >
++                                    ÔÜí Votar Todos
++                                </button>
++                            </div>
++                        )}
++                    </>
++                )}
++            </div>
++
++            {/* Individual vote modal */}
++            {votandoA && (
++                <VotarModal
++                    jugador={votandoA}
++                    onVotar={handleVotar}
++                    onClose={() => setVotandoA(null)}
++                />
++            )}
++
++            {/* Quick vote modal */}
++            {showRapida && (
++                <VotacionRapida
++                    jugadores={jugadores}
++                    onVotarTodos={handleVotarTodos}
++                    onClose={() => setShowRapida(false)}
++                />
++            )}
++        </motion.div>
++    )
++}
++
++function TeamVoteSection({ equipo, color, emoji, jugadores, onVotar }: {
++    equipo: 'azul' | 'rojo'
++    color: string
++    emoji: string
++    jugadores: JugadorPartidoAmigo[]
++    onVotar: (j: JugadorPartidoAmigo) => void
++}) {
++    return (
++        <div>
++            <h3 className="font-black text-sm mb-2" style={{ color }}>
++                {emoji} EQUIPO {equipo.toUpperCase()}
++            </h3>
++            <div className="space-y-2">
++                {jugadores.map((j, i) => (
++                    <motion.div
++                        key={j.id}
++                        initial={{ x: -20, opacity: 0 }}
++                        animate={{ x: 0, opacity: 1 }}
++                        transition={{ delay: i * 0.05 }}
++                        className="bg-[var(--card-bg)] rounded-xl p-4 border border-[var(--card-border)]"
++                    >
++                        <div className="flex items-center justify-between">
++                            <div>
++                                <p className="font-bold">­ƒæñ {j.nombre}</p>
++                                {j.mi_voto ? (
++                                    <div className="mt-1">
++                                        <span className="text-xs">
++                                            {Array.from({ length: 10 }, (_, i) => (
++                                                <span key={i} className={i < j.mi_voto!.nota ? 'opacity-100' : 'opacity-20'}>Ô¡É</span>
++                                            ))}
++                                            {' '}{j.mi_voto.nota}/10
++                                        </span>
++                                        {j.mi_voto.comentario && (
++                                            <p className="text-xs text-[var(--text-muted)] mt-0.5">­ƒÆ¼ &ldquo;{j.mi_voto.comentario}&rdquo;</p>
++                                        )}
++                                        <p className="text-[10px] text-[#10b981] font-bold mt-0.5">Ô£à Ya votaste</p>
++                                    </div>
++                                ) : (
++                                    <p className="text-xs text-[var(--text-muted)] mt-1">
++                                        {'Ôùï'.repeat(10)} Sin votar
++                                    </p>
++                                )}
++                            </div>
++                            <button
++                                onClick={() => onVotar(j)}
++                                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${j.mi_voto
++                                    ? 'bg-[var(--background)] text-[var(--text-muted)] hover:bg-[var(--hover-bg)]'
++                                    : 'bg-[#10b981] text-white hover:bg-[#059669]'
++                                    }`}
++                            >
++                                {j.mi_voto ? 'Editar' : 'Votar ÔåÆ'}
++                            </button>
++                        </div>
++                    </motion.div>
++                ))}
++            </div>
++        </div>
++    )
++}
