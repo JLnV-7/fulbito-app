@@ -4,21 +4,27 @@ import { getFixturesByDate } from '@/lib/api'
 import { LIGAS_MAP, CURRENT_SEASONS } from '@/lib/constants'
 import type { ApiFixture } from '@/types/api'
 
-// Inicializar Supabase Admin client (bypass RLS)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-        autoRefreshToken: false,
-        persistSession: false
-    }
-})
+// Se inicializa Supabase Admin client (bypass RLS) dentro del handler para evitar crashear el build
 
 export const dynamic = 'force-dynamic' // No cachear
 
 export async function GET(request: Request) {
     try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+        
+        if (!supabaseUrl || !supabaseServiceKey) {
+            console.error('Missing Supabase env vars')
+            return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+        }
+
+        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
+            }
+        })
+
         // 1. Validar autorización
         const authHeader = request.headers.get('authorization')
         if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {

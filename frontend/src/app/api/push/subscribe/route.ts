@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! // Using ANON key with RLS policy "Users can insert their own subscriptions"
-
-const supabase = createClient(supabaseUrl, supabaseKey)
+// Cliente de Supabase se inicializa dentro del handler
 
 export async function POST(request: Request) {
     try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY 
+        
+        if (!supabaseUrl || !supabaseKey) {
+            return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+        }
+        
+        const supabase = createClient(supabaseUrl, supabaseKey)
+
         const subscription = await request.json()
         const { endpoint, keys, userId } = subscription
 

@@ -5,13 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 import type { Partido } from '@/types'
 import { scrapeSofascoreLiveEvents, normalizeTeamName } from '@/lib/scraper_sofascore'
 
-// Use service role to bypass RLS for upserts
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-})
+// supabaseAdmin se instanciará localmente en cada función
 
 /**
  * Upserts partidos from the scraper into Supabase using fixture_id as the conflict key.
@@ -21,6 +15,11 @@ export async function syncPartidosToSupabase(
     scrapedPartidos: Omit<Partido, 'created_at'>[]
 ): Promise<Partido[]> {
     if (!scrapedPartidos || scrapedPartidos.length === 0) return []
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    if (!supabaseUrl || !supabaseKey) return []
+    const supabaseAdmin = createClient(supabaseUrl, supabaseKey, { auth: { autoRefreshToken: false, persistSession: false } })
 
     const rows = scrapedPartidos
         .map(p => {
@@ -88,6 +87,11 @@ export async function syncPartidosToSupabase(
 export async function syncLivePartidosToSupabase() {
     const liveEvents = await scrapeSofascoreLiveEvents()
     if (!liveEvents || liveEvents.length === 0) return { updated: 0 }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    if (!supabaseUrl || !supabaseKey) return { updated: 0 }
+    const supabaseAdmin = createClient(supabaseUrl, supabaseKey, { auth: { autoRefreshToken: false, persistSession: false } })
 
     // Get active matches from Supabase
     const { data: activeMatches } = await supabaseAdmin

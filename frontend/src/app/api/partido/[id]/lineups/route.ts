@@ -3,10 +3,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 const API_KEY = process.env.API_FOOTBALL_KEY
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 interface APIPlayer {
     player: {
@@ -33,6 +29,13 @@ export async function GET(
 ) {
     try {
         const { id } = await params
+
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        if (!supabaseUrl || !supabaseKey) {
+            return NextResponse.json({ error: 'Supabase no configurado' }, { status: 500 })
+        }
+        const supabase = createClient(supabaseUrl, supabaseKey)
 
         if (!API_KEY) {
             return NextResponse.json(

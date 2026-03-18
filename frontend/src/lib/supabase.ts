@@ -6,14 +6,12 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    '⚠️ Faltan variables de entorno de Supabase.\n' +
-    'Asegurate de tener NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en .env.local\n' +
-    'Copiá .env.local.example y renombralo a .env.local'
+  console.warn(
+    '⚠️ Faltan variables de entorno de Supabase. (NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY)'
   )
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder')
 
 // 🔧 Helper para verificar si el usuario está autenticado
 export async function getCurrentUser() {
