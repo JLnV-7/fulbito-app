@@ -12,6 +12,7 @@ import { MatchStatisticsPanel } from './MatchStatisticsPanel'
 import { CanchaSeleccion } from './CanchaSeleccion'
 import { VotarModal } from './VotarModal'
 import { VotacionRapida } from './VotacionRapida'
+import { DetalleJugadorAmigo } from './DetalleJugadorAmigo'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { FORMACIONES, Formacion } from '@/lib/formaciones'
@@ -45,6 +46,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
     // States for Voting
     const [votandoA, setVotandoA] = useState<JugadorPartidoAmigo | null>(null)
     const [showRapida, setShowRapida] = useState(false)
+    const [jugadorDetalle, setJugadorDetalle] = useState<JugadorPartidoAmigo | null>(null)
 
     const { 
         fetchJugadoresConVotos, 
@@ -86,12 +88,28 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
         }
     }
 
+    // --- Optimistic local state helpers ---
+    const updateJugadorVotoLocal = (jugadorId: string, nota: number, comentario?: string) => {
+        setJugadores(prev => prev.map(j => {
+            if (j.id !== jugadorId) return j
+            const yaVotado = !!j.mi_voto
+            const oldNota = j.mi_voto?.nota || 0
+            const nuevoMiVoto = { id: 'local', partido_amigo_id: partido.id, jugador_id: jugadorId, user_id: user!.id, nota, comentario: comentario || null, created_at: new Date().toISOString() }
+            const currentTotal = j.total_votos || 0
+            const newTotalVotos = yaVotado ? currentTotal : currentTotal + 1
+            const sumaAnterior = (j.promedio || 0) * currentTotal
+            const nuevaSuma = yaVotado ? sumaAnterior - oldNota + nota : sumaAnterior + nota
+            const nuevoPromedio = newTotalVotos > 0 ? Math.round((nuevaSuma / newTotalVotos) * 10) / 10 : 0
+            return { ...j, mi_voto: nuevoMiVoto as any, total_votos: newTotalVotos, promedio: nuevoPromedio }
+        }))
+    }
+
     const handleVotar = async (nota: number, comentario?: string) => {
         if (!votandoA) return
         try {
             await votarJugador(partido.id, votandoA.id, nota, comentario)
+            updateJugadorVotoLocal(votandoA.id, nota, comentario)
             showToast(`Voto guardado para ${votandoA.nombre} ⭐`, 'success')
-            loadData()
         } catch {
             showToast('Error al guardar voto', 'error')
         }
@@ -100,8 +118,16 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
     const handleEliminarVoto = async (jugadorId: string) => {
         try {
             await eliminarVotoJugador(partido.id, jugadorId)
+            setJugadores(prev => prev.map(j => {
+                if (j.id !== jugadorId) return j
+                const oldNota = j.mi_voto?.nota || 0
+                const newTotalVotos = Math.max((j.total_votos || 0) - 1, 0)
+                const sumaAnterior = (j.promedio || 0) * (j.total_votos || 0)
+                const nuevaSuma = sumaAnterior - oldNota
+                const nuevoPromedio = newTotalVotos > 0 ? Math.round((nuevaSuma / newTotalVotos) * 10) / 10 : 0
+                return { ...j, mi_voto: null as any, total_votos: newTotalVotos, promedio: nuevoPromedio }
+            }))
             showToast('Voto eliminado 🗑️', 'success')
-            loadData()
         } catch {
             showToast('Error al eliminar voto', 'error')
         }
@@ -112,8 +138,8 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
             for (const v of votos) {
                 await votarJugador(partido.id, v.jugadorId, v.nota)
             }
+            votos.forEach(v => updateJugadorVotoLocal(v.jugadorId, v.nota))
             showToast(`${votos.length} votos guardados ⚡`, 'success')
-            await loadData()
         } catch {
             showToast('Error al guardar votos', 'error')
         }
@@ -499,11 +525,21 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                     </div>
                                 )}
 
-                                {activeTab === 'resultados' && (
+                                {activeTab === 'resultados' && (() => {
+                                    const sorted = [...jugadores].sort((a, b) => (b.promedio || 0) - (a.promedio || 0))
+                                    const mvp = sorted[0]
+                                    const azulesRes = jugadores.filter(j => j.equipo === 'azul').sort((a, b) => (b.promedio || 0) - (a.promedio || 0))
+                                    const rojosRes = jugadores.filter(j => j.equipo === 'rojo').sort((a, b) => (b.promedio || 0) - (a.promedio || 0))
+                                    const promedioEquipo = (equipo: JugadorPartidoAmigo[]) => {
+                                        const conVotos = equipo.filter(j => (j.promedio || 0) > 0)
+                                        if (conVotos.length === 0) return 0
+                                        return Math.round(conVotos.reduce((sum, j) => sum + (j.promedio || 0), 0) / conVotos.length * 10) / 10
+                                    }
+                                    return (
                                     <div className="space-y-6">
+                                         {/* Marcador Final */}
                                          <div className="bg-gradient-to-br from-[#16a34a] to-emerald-600 p-8 rounded-3xl text-white text-center shadow-xl">
                                             <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 opacity-80">Marcador Final</p>
-                                             {/* Marcador Final Autocalculado con Casting Forzado */}
                                              <div className="flex items-center justify-center gap-8">
                                                  <div className="text-center">
                                                      <p className="text-4xl font-black tabular-nums">
@@ -520,7 +556,85 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                  </div>
                                              </div>
                                          </div>
-                                          {/* Estadísticas Reales (Auto-calculadas) */}
+
+                                         {/* MVP */}
+                                         {mvp && (mvp.promedio || 0) > 0 && (
+                                             <motion.div
+                                                 initial={{ scale: 0.9, opacity: 0 }}
+                                                 animate={{ scale: 1, opacity: 1 }}
+                                                 transition={{ delay: 0.2, type: 'spring' }}
+                                                 className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-3xl p-8 text-center shadow-2xl relative overflow-hidden shadow-amber-500/30 cursor-pointer"
+                                                 onClick={() => setJugadorDetalle(mvp)}
+                                             >
+                                                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
+                                                 <p className="text-[10px] text-white/80 capitalize font-black tracking-[0.4em] mb-4">MEMBER OF THE MATCH</p>
+                                                 <div className="relative inline-block mb-4">
+                                                     <div className="absolute inset-0 bg-white/20 blur-xl rounded-full" />
+                                                     <div className="text-5xl relative">👑</div>
+                                                 </div>
+                                                 <h2 className="text-3xl font-black text-white italic tracking-tighter capitalize">{mvp.nombre}</h2>
+                                                 <p className="text-4xl font-black text-white mt-2 drop-shadow-lg">⭐ {mvp.promedio}</p>
+                                                 <p className="text-[10px] text-white/80 font-bold capitalize mt-4">{mvp.total_votos} VOTOS EN TOTAL</p>
+                                                 <p className="text-[10px] text-white/60 mt-1">Tocá para ver detalle</p>
+                                             </motion.div>
+                                         )}
+
+                                         {/* Rankings por Equipo */}
+                                         {[{ equipo: 'azul', color: '#3b82f6', emoji: '🔵', lista: azulesRes, prom: promedioEquipo(azulesRes) },
+                                           { equipo: 'rojo', color: '#ef4444', emoji: '🔴', lista: rojosRes, prom: promedioEquipo(rojosRes) }].map(team => (
+                                             <div key={team.equipo} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--card-border)] overflow-hidden shadow-xl">
+                                                 <div className="p-5 border-b border-[var(--card-border)] bg-[var(--background)]/50" style={{ borderLeftColor: team.color, borderLeftWidth: 6 }}>
+                                                     <div className="flex justify-between items-end">
+                                                         <div>
+                                                             <h3 className="text-xs font-black capitalize tracking-[0.2em] mb-1" style={{ color: team.color }}>
+                                                                 {team.emoji} EQUIPO {team.equipo.toUpperCase()}
+                                                             </h3>
+                                                             <p className="text-2xl font-black italic tracking-tighter">RANKING</p>
+                                                         </div>
+                                                         <div className="text-right">
+                                                             <span className="text-[10px] text-[var(--text-muted)] font-black capitalize tracking-widest">PROM EQUIPO</span>
+                                                             <p className="text-xl font-black" style={{ color: team.color }}>{team.prom}</p>
+                                                         </div>
+                                                     </div>
+                                                 </div>
+                                                 <div>
+                                                     {team.lista.map((j, i) => (
+                                                         <button
+                                                             key={j.id}
+                                                             onClick={() => setJugadorDetalle(j)}
+                                                             className={`w-full flex items-center gap-4 p-5 border-b border-[var(--card-border)] last:border-0 hover:bg-[var(--hover-bg)] transition-all text-left ${i === 0 ? 'bg-amber-400/5' : ''}`}
+                                                         >
+                                                             <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${i === 0 ? 'bg-amber-400 text-amber-900 shadow-md' : 'bg-[var(--background)] text-[var(--text-muted)]'}`}>
+                                                                 {i + 1}
+                                                             </span>
+                                                             <div className="flex-1 min-w-0">
+                                                                 <span className="font-bold text-sm block">
+                                                                     {i === 0 && '👑 '}{j.nombre}
+                                                                 </span>
+                                                                 <div className="w-full h-1.5 bg-[var(--background)] rounded-full mt-2 overflow-hidden shadow-inner">
+                                                                     <motion.div
+                                                                         initial={{ width: 0 }}
+                                                                         animate={{ width: `${((j.promedio || 0) / 10) * 100}%` }}
+                                                                         transition={{ duration: 0.8 }}
+                                                                         className="h-full rounded-full"
+                                                                         style={{ backgroundColor: team.color }}
+                                                                     />
+                                                                 </div>
+                                                             </div>
+                                                             <div className="text-right">
+                                                                 <span className="text-sm font-black italic" style={{ color: team.color }}>{j.promedio || '-'}</span>
+                                                                 <p className="text-[8px] text-[var(--text-muted)] font-bold capitalize">{j.total_votos} V</p>
+                                                             </div>
+                                                         </button>
+                                                     ))}
+                                                     {team.lista.length === 0 && (
+                                                         <p className="p-5 text-center text-xs text-[var(--text-muted)] italic">Sin jugadores</p>
+                                                     )}
+                                                 </div>
+                                             </div>
+                                         ))}
+
+                                          {/* Estadísticas Reales */}
                                           <h3 className="font-black italic uppercase tracking-tighter text-sm pt-4">📈 Estadísticas del Partido</h3>
                                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                               {[
@@ -570,7 +684,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                  { id: 'patadas', label: 'Pegapatadas', emoji: '🦵' },
                                                  { id: 'arquero', label: 'Buen Arquero', emoji: '🧤' },
                                              ].map(facet => {
-                                                 // Count votes for this facet
                                                  const counts = facetVotes
                                                      .filter(v => v.facet === facet.id)
                                                      .reduce((acc, v) => {
@@ -605,7 +718,8 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                              )}
                                           </div>
                                     </div>
-                                )}
+                                    )
+                                })()}
                             </motion.div>
                         </AnimatePresence>
                     )}
@@ -628,6 +742,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                 {showRapida && (
                     <VotacionRapida
                         jugadores={jugadores}
+                        partidoId={partido.id}
                         onVotarTodos={handleVotarTodos}
                         onClose={() => setShowRapida(false)}
                     />
@@ -713,6 +828,17 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                             </div>
                         </motion.div>
                     </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Player Detail Modal */}
+            <AnimatePresence>
+                {jugadorDetalle && (
+                    <DetalleJugadorAmigo
+                        jugador={jugadorDetalle}
+                        grupoId={grupoId}
+                        onClose={() => setJugadorDetalle(null)}
+                    />
                 )}
             </AnimatePresence>
         </motion.div>

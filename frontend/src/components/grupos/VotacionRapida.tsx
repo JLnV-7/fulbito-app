@@ -8,13 +8,22 @@ import type { JugadorPartidoAmigo } from '@/types'
 
 interface VotacionRapidaProps {
     jugadores: JugadorPartidoAmigo[]
+    partidoId: string
     onVotarTodos: (votos: { jugadorId: string; nota: number }[]) => Promise<void>
     onClose: () => void
 }
 
-export function VotacionRapida({ jugadores, onVotarTodos, onClose }: VotacionRapidaProps) {
+export function VotacionRapida({ jugadores, partidoId, onVotarTodos, onClose }: VotacionRapidaProps) {
     const { showToast } = useToast()
+    const storageKey = `votacion_rapida_${partidoId}`
+
     const [votosRapidos, setVotosRapidos] = useState<Record<string, number>>(() => {
+        // Restore from localStorage if available
+        try {
+            const saved = typeof window !== 'undefined' ? localStorage.getItem(storageKey) : null
+            if (saved) return JSON.parse(saved)
+        } catch { /* ignore */ }
+        // Fallback: initialize from existing votes
         const initial: Record<string, number> = {}
         jugadores.forEach(j => {
             if (j.mi_voto) initial[j.id] = j.mi_voto.nota
@@ -24,7 +33,15 @@ export function VotacionRapida({ jugadores, onVotarTodos, onClose }: VotacionRap
     const [guardando, setGuardando] = useState(false)
 
     const setVoto = (jugadorId: string, nota: number) => {
-        setVotosRapidos(prev => ({ ...prev, [jugadorId]: nota }))
+        setVotosRapidos(prev => {
+            const next = { ...prev, [jugadorId]: nota }
+            try { localStorage.setItem(storageKey, JSON.stringify(next)) } catch { /* ignore */ }
+            return next
+        })
+    }
+
+    const clearStorage = () => {
+        try { localStorage.removeItem(storageKey) } catch { /* ignore */ }
     }
 
     const handleGuardar = async () => {
@@ -36,6 +53,7 @@ export function VotacionRapida({ jugadores, onVotarTodos, onClose }: VotacionRap
         setGuardando(true)
         try {
             await onVotarTodos(votos)
+            clearStorage()
             onClose()
         } catch (error: unknown) {
             showToast('Error al guardar votos. Intentá de nuevo.', 'error')

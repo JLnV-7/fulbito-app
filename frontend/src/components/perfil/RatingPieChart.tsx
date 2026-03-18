@@ -38,7 +38,7 @@ export function RatingPieChart({ userId }: RatingPieChartProps) {
             try {
                 const { data: logs, error } = await supabase
                     .from('match_logs')
-                    .select('rating')
+                    .select('rating_partido')
                     .eq('user_id', userId)
 
                 if (error) throw error
@@ -53,9 +53,11 @@ export function RatingPieChart({ userId }: RatingPieChartProps) {
                 let totalWithRating = 0
 
                 logs.forEach(log => {
-                    if (log.rating && log.rating >= 1 && log.rating <= 5) {
-                        distribution[log.rating] += 1
-                        sum += log.rating
+                    const r = log.rating_partido
+                    if (r && r >= 1 && r <= 5) {
+                        const roundedRating = Math.round(r)
+                        distribution[roundedRating] += 1
+                        sum += r
                         totalWithRating += 1
                     }
                 })

@@ -156,6 +156,7 @@ export function VotarJugadores({ partido, grupoId, onClose }: VotarJugadoresProp
             {showRapida && (
                 <VotacionRapida
                     jugadores={jugadores}
+                    partidoId={partido.id}
                     onVotarTodos={handleVotarTodos}
                     onClose={() => setShowRapida(false)}
                 />
