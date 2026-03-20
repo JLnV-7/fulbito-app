@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { usePartidosAmigos } from '@/hooks/usePartidosAmigos'
 import { useToast } from '@/contexts/ToastContext'
+import { useAuth } from '@/contexts/AuthContext'
 import type { JugadorPartidoAmigo, PartidoAmigo } from '@/types'
 
 interface MatchStatisticsPanelProps {
@@ -16,6 +17,8 @@ interface MatchStatisticsPanelProps {
 export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: MatchStatisticsPanelProps) {
     const { cerrarPartidoMundial, reabrirEstadisticas } = usePartidosAmigos(grupoId)
     const { showToast } = useToast()
+    const { user } = useAuth()
+    const esAutor = user?.id === partido.creado_por
 
     // Internal state for unsaved stats
     const [goles, setGoles] = useState<Record<string, number>>(
@@ -25,6 +28,12 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: 
         Object.fromEntries(jugadores.map(j => [j.id, j.asistencias || 0]))
     )
     const [procesando, setProcesando] = useState(false)
+
+    // Sincronizar stats si los jugadores llegan asincrónicamente
+    useEffect(() => {
+        setGoles(Object.fromEntries(jugadores.map(j => [j.id, j.goles || 0])))
+        setAsistencias(Object.fromEntries(jugadores.map(j => [j.id, j.asistencias || 0])))
+    }, [jugadores])
 
     const handleUpdateStat = (id: string, type: 'goles' | 'asistencias', delta: number) => {
         if (partido.stats_completed) return
@@ -153,7 +162,7 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: 
             </div>
 
             <div className="flex gap-4">
-                {!partido.stats_completed && (
+                {!partido.stats_completed && esAutor && (
                     <button
                         onClick={() => {
                             setGoles(Object.fromEntries(jugadores.map(j => [j.id, 0])))
@@ -166,7 +175,7 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: 
                     </button>
                 )}
                 
-                {partido.stats_completed && (
+                {partido.stats_completed && esAutor && (
                     <button
                         onClick={async () => {
                             if (procesando) return
@@ -188,7 +197,7 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: 
                 )}
             </div>
 
-            {!partido.stats_completed && (
+            {!partido.stats_completed && esAutor && (
                 <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/95 to-transparent z-50">
                     <div className="max-w-md mx-auto">
                         <motion.div 

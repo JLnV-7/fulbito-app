@@ -12,6 +12,7 @@ import { MatchStatisticsPanel } from './MatchStatisticsPanel'
 import { CanchaSeleccion } from './CanchaSeleccion'
 import { VotarModal } from './VotarModal'
 import { VotacionRapida } from './VotacionRapida'
+import { RankingEnVivo } from './RankingEnVivo'
 import { DetalleJugadorAmigo } from './DetalleJugadorAmigo'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
@@ -370,6 +371,8 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                             </div>
                                         </div>
 
+                                        <RankingEnVivo jugadores={jugadores} totalMiembros={miembros.length} />
+
                                         {/* Lista de Jugadores para Votar */}
                                         <div className="space-y-6">
                                             <div className="flex items-center justify-between">
@@ -553,14 +556,14 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                              <div className="flex items-center justify-center gap-8">
                                                  <div className="text-center">
                                                      <p className="text-4xl font-black tabular-nums">
-                                                         {jugadores.filter(j => j.equipo === 'azul').reduce((acc, j) => acc + Number(j.goles || 0), 0)}
+                                                         {partido.resultado_azul ?? jugadores.filter(j => j.equipo === 'azul').reduce((acc, j) => acc + Number(j.goles || 0), 0)}
                                                      </p>
                                                      <p className="text-[9px] font-bold uppercase opacity-70 mt-1">AZUL</p>
                                                  </div>
                                                  <div className="text-2xl font-light opacity-50">-</div>
                                                  <div className="text-center">
                                                      <p className="text-4xl font-black tabular-nums">
-                                                         {jugadores.filter(j => j.equipo === 'rojo').reduce((acc, j) => acc + Number(j.goles || 0), 0)}
+                                                         {partido.resultado_rojo ?? jugadores.filter(j => j.equipo === 'rojo').reduce((acc, j) => acc + Number(j.goles || 0), 0)}
                                                      </p>
                                                      <p className="text-[9px] font-bold uppercase opacity-70 mt-1">ROJO</p>
                                                  </div>
