@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 
 interface TablaEstadisticasProps {
@@ -48,13 +47,14 @@ export function TablaEstadisticas({ grupoId, miembros }: TablaEstadisticasProps)
 
             const { data: jugadoresHistorial } = await supabase
                 .from('jugadores_partido_amigo')
-                .select('user_id, goles, asistencias, nombre')
+                .select('id, user_id, goles, asistencias, nombre')
                 .in('partido_amigo_id', partidoIds)
                 .not('user_id', 'is', null)
 
+            // Fix: dos queries separadas en vez del join embebido que fallaba con PGRST200
             const { data: votos } = await supabase
                 .from('votos_partido_amigo')
-                .select('jugador_id, nota, jugadores_partido_amigo!inner(user_id)')
+                .select('jugador_id, nota, user_id')
                 .in('partido_amigo_id', partidoIds)
 
             const statsMap: Record<string, EstadisticaJugador> = {}
@@ -82,11 +82,17 @@ export function TablaEstadisticas({ grupoId, miembros }: TablaEstadisticasProps)
                 statsMap[uid].asistencias += (j.asistencias || 0)
             })
 
+            // Mapeamos votos usando jugadores como tabla de lookup
+            const jugadorToUser: Record<string, string> = {}
+            jugadoresHistorial?.forEach((j: any) => {
+                if (j.user_id) jugadorToUser[j.id] = j.user_id
+            })
+
             const notasSum: Record<string, number> = {}
             const notasCount: Record<string, number> = {}
 
             votos?.forEach((v: any) => {
-                const uid = v.jugadores_partido_amigo?.user_id
+                const uid = jugadorToUser[v.jugador_id]
                 if (!uid || !statsMap[uid]) return
                 notasSum[uid] = (notasSum[uid] || 0) + v.nota
                 notasCount[uid] = (notasCount[uid] || 0) + 1
