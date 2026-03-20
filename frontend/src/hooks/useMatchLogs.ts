@@ -1,11 +1,10 @@
-// src/hooks/useMatchLogs.ts
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
-import type { MatchLog, MatchLogPlayerRating, PuntuacionProde } from '@/types'
+import type { MatchLog, MatchLogPlayerRating } from '@/types'
 
 export interface MatchLogFilters {
     liga?: string
@@ -47,14 +46,10 @@ export interface CreateMatchLogData {
     mood?: string
 }
 
-export type FeedItem = 
-    | { type: 'log'; id: string; created_at: string; data: MatchLog }
-    | { type: 'achievement'; id: string; created_at: string; data: PuntuacionProde & { profile: any; partido: any } }
-
 export function useMatchLogs(filters?: MatchLogFilters) {
     const { user } = useAuth()
     const { showToast } = useToast()
-    const [items, setItems] = useState<FeedItem[]>([])
+    const [logs, setLogs] = useState<MatchLog[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [hasMore, setHasMore] = useState(true)
@@ -67,25 +62,21 @@ export function useMatchLogs(filters?: MatchLogFilters) {
             const limit = filters?.limit || 20
             const offset = reset ? 0 : (filters?.offset || 0)
 
-            // 1. Fetch Match Logs (Stripped down without joins to avoid 400 Bad Request if schema is out of sync in production)
-            let logQuery = supabase
+            let query = supabase
                 .from('match_logs')
-                .select(`*`)
+                .select(`
+          *,
+          profile:profiles!match_logs_user_id_fkey(id, username, avatar_url),
+          player_ratings:match_log_player_ratings(*),
+          tags:match_log_tags(tag),
+          likes_count:match_log_likes(count)
+        `)
 
-            // 2. Fetch Prode Achievements (Stubbed out to avoid 406 Not Acceptable error in production DB)
-            let prodeQuery = supabase
-                .from('puntuaciones_prode')
-                .select(`*`)
-                .eq('tipo_acierto', 'exacto')
-                .limit(0) // Prevent fetching to isolate errors
-
-            // Apply shared filters
-            if (filters?.userId) {
-                logQuery = logQuery.eq('user_id', filters.userId)
-                // prodeQuery = prodeQuery.eq('user_id', filters.userId)
-            }
-
-            if (filters?.feedType === 'following' && user) {
+            // Feed Type logic
+            if (filters?.feedType === 'popular') {
+                query = query.order('likes_count(count)', { ascending: false })
+            } else if (filters?.feedType === 'following' && user) {
+                // Get followed user IDs
                 const { data: followed } = await supabase
                     .from('user_follows')
                     .select('following_id')
@@ -93,33 +84,45 @@ export function useMatchLogs(filters?: MatchLogFilters) {
 
                 const followedIds = (followed || []).map(f => f.following_id)
                 if (followedIds.length > 0) {
-                    logQuery = logQuery.in('user_id', followedIds)
-                    // prodeQuery = prodeQuery.in('user_id', followedIds)
-                } else if (filters.userId) { 
-                    // userId takes precedence if provided (e.g. profile page)
+                    query = query.in('user_id', followedIds)
                 } else {
-                    setItems([])
+                    setLogs([])
                     setHasMore(false)
                     setLoading(false)
                     return
                 }
+                query = query.order('created_at', { ascending: false })
+            } else {
+                query = query.order('created_at', { ascending: false })
             }
 
-            // Execute both queries
-            const [logsRes, prodeRes] = await Promise.all([
-                logQuery.order('created_at', { ascending: false }).range(offset, offset + Math.floor(limit * 0.8)),
-                Promise.resolve({ data: [], error: null }) // Stub prode
-            ])
+            query = query.range(offset, offset + limit - 1)
 
-            if (logsRes.error) throw logsRes.error
+            // Apply filters
+            if (filters?.liga) {
+                query = query.eq('liga', filters.liga)
+            }
+            if (filters?.equipo) {
+                query = query.or(`equipo_local.ilike.%${filters.equipo}%,equipo_visitante.ilike.%${filters.equipo}%`)
+            }
+            if (filters?.matchType) {
+                query = query.eq('match_type', filters.matchType)
+            }
+            if (filters?.userId) {
+                query = query.eq('user_id', filters.userId)
+            }
 
-            // Prepare reactions
-            const myReactions: Record<string, string> = {}
-            if (user && logsRes.data && logsRes.data.length > 0) {
+            const { data, error: fetchError } = await query
+
+            if (fetchError) throw fetchError
+
+            // Fetch my reactions if user logged in
+            let myReactions: Record<string, string> = {}
+            if (user && data && data.length > 0) {
                 const { data: likes } = await supabase
                     .from('match_log_likes')
                     .select('match_log_id, reaction_type')
-                    .in('match_log_id', logsRes.data.map(d => d.id))
+                    .in('match_log_id', data.map(d => d.id))
                     .eq('user_id', user.id)
 
                 if (likes) {
@@ -129,44 +132,32 @@ export function useMatchLogs(filters?: MatchLogFilters) {
                 }
             }
 
-            // Interleave and sort
-            const logItems: FeedItem[] = (logsRes.data || []).map((log: any) => ({
-                type: 'log',
-                id: log.id,
-                created_at: log.created_at,
-                data: {
-                    ...log,
-                    tags: (log.tags || []).map((t: any) => t.tag),
-                    likes_count: log.likes_count[0]?.count || 0,
-                    is_liked: !!myReactions[log.id],
-                    my_reaction: myReactions[log.id]
-                }
-            }))
-
-            const progItems: FeedItem[] = (prodeRes.data || []).map((p: any) => ({
-                type: 'achievement',
-                id: p.id,
-                created_at: p.calculated_at,
-                data: p
-            }))
-
-            const combined = [...logItems, ...progItems].sort((a, b) => 
-                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-            )
+            // Process data: flatten tags, check if liked
+            const processedLogs: MatchLog[] = (data || []).map((log: Record<string, any>) => ({
+                ...log,
+                tags: ((log.tags as { tag: string }[]) || []).map((t: { tag: string }) => t.tag),
+                likes_count: ((log.likes_count as { count: number }[]) || [{ count: 0 }])[0]?.count || 0,
+                profile: log.profile as MatchLog['profile'],
+                player_ratings: log.player_ratings as MatchLogPlayerRating[],
+                is_liked: !!myReactions[log.id],
+                my_reaction: myReactions[log.id]
+            })) as MatchLog[]
 
             if (reset) {
-                setItems(combined)
+                setLogs(processedLogs)
             } else {
-                setItems(prev => [...prev, ...combined])
+                setLogs(prev => [...prev, ...processedLogs])
             }
-            setHasMore(combined.length > 0)
+            setHasMore(processedLogs.length === limit)
         } catch (err: any) {
-            console.error('Error fetching feed:', err)
-            setError('Error al cargar el feed')
+            console.error('Error fetching match logs:', err)
+            setError('Error al cargar las reseñas')
         } finally {
             setLoading(false)
         }
-    }, [filters?.liga, filters?.equipo, filters?.matchType, filters?.userId, filters?.limit, filters?.offset, filters?.feedType, user])
+    // FIX BUG 2: feedType agregado a las dependencias para que el feed se
+    // recargue cuando el usuario cambia entre Recientes / Popular / Siguiendo.
+    }, [filters?.feedType, filters?.liga, filters?.equipo, filters?.matchType, filters?.userId, filters?.limit, filters?.offset, user])
 
     useEffect(() => {
         fetchLogs(true)
@@ -241,7 +232,6 @@ export function useMatchLogs(filters?: MatchLogFilters) {
     useEffect(() => {
         if (typeof window !== 'undefined') {
             window.addEventListener('online', syncOfflineLogs)
-            // Trigger sync on mount in case they are online and there's queue
             if (navigator.onLine) {
                 syncOfflineLogs()
             }
@@ -254,9 +244,13 @@ export function useMatchLogs(filters?: MatchLogFilters) {
 
         if (typeof window !== 'undefined' && !navigator.onLine) {
             const queue = JSON.parse(localStorage.getItem('futlog_offline_queue') || '[]')
-            const trimmedQueue = queue.slice(-49) // mantener solo los últimos 49
-            trimmedQueue.push({ ...data, _queuedAt: new Date().toISOString() })
-            localStorage.setItem('futlog_offline_queue', JSON.stringify(trimmedQueue))
+            // Límite de 50 items para evitar quota errors
+            if (queue.length >= 50) {
+                showToast('Cola offline llena. Conectate a internet para sincronizar.', 'error')
+                return null
+            }
+            queue.push({ ...data, _queuedAt: new Date().toISOString() })
+            localStorage.setItem('futlog_offline_queue', JSON.stringify(queue))
             showToast('Estás sin conexión. La reseña se guardó y se subirá al conectar.', 'info')
             return { id: `offline-${Date.now()}`, ...data } as unknown as MatchLog
         }
@@ -264,7 +258,6 @@ export function useMatchLogs(filters?: MatchLogFilters) {
         try {
             const { player_ratings, tags, ...logData } = data
 
-            // Insert the main log
             const { data: newLog, error: insertError } = await supabase
                 .from('match_logs')
                 .insert({
@@ -277,7 +270,6 @@ export function useMatchLogs(filters?: MatchLogFilters) {
 
             if (insertError) throw insertError
 
-            // Insert player ratings if any
             if (player_ratings && player_ratings.length > 0) {
                 const { error: ratingsError } = await supabase
                     .from('match_log_player_ratings')
@@ -290,7 +282,6 @@ export function useMatchLogs(filters?: MatchLogFilters) {
                 if (ratingsError) console.error('Error inserting player ratings:', ratingsError)
             }
 
-            // Insert tags if any
             if (tags && tags.length > 0) {
                 const { error: tagsError } = await supabase
                     .from('match_log_tags')
@@ -303,7 +294,6 @@ export function useMatchLogs(filters?: MatchLogFilters) {
                 if (tagsError) console.error('Error inserting tags:', tagsError)
             }
 
-            // Refresh the list
             fetchLogs(true)
             return newLog as MatchLog
         } catch (err: any) {
@@ -312,32 +302,30 @@ export function useMatchLogs(filters?: MatchLogFilters) {
         }
     }
 
-    const toggleLike = async (id: string, reactionType: string = 'like') => {
+    const toggleLike = async (logId: string, reactionType: string = 'like') => {
         if (!user) return
 
-        const item = items.find(i => i.id === id && i.type === 'log')
-        if (!item || item.type !== 'log') return
-        
-        const log = item.data
+        const log = logs.find(l => l.id === logId)
+        if (!log) return
+
         const wasLiked = log.is_liked
         const previousReaction = log.my_reaction
 
         // Optimistic update
-        setItems(prev => prev.map(i => {
-            if (i.id !== id || i.type !== 'log') return i
+        setLogs(prev => prev.map(l => {
+            if (l.id !== logId) return l
             
-            const l = i.data
             let newLikesCount = l.likes_count || 0
             if (wasLiked) {
                 if (previousReaction === reactionType) {
                     newLikesCount--
-                    return { ...i, data: { ...l, is_liked: false, my_reaction: undefined, likes_count: newLikesCount } }
+                    return { ...l, is_liked: false, my_reaction: undefined, likes_count: newLikesCount }
                 } else {
-                    return { ...i, data: { ...l, is_liked: true, my_reaction: reactionType } }
+                    return { ...l, is_liked: true, my_reaction: reactionType }
                 }
             } else {
                 newLikesCount++
-                return { ...i, data: { ...l, is_liked: true, my_reaction: reactionType, likes_count: newLikesCount } }
+                return { ...l, is_liked: true, my_reaction: reactionType, likes_count: newLikesCount }
             }
         }))
 
@@ -346,24 +334,23 @@ export function useMatchLogs(filters?: MatchLogFilters) {
                 await supabase
                     .from('match_log_likes')
                     .delete()
-                    .eq('match_log_id', id)
+                    .eq('match_log_id', logId)
                     .eq('user_id', user.id)
             } else {
                 await supabase
                     .from('match_log_likes')
                     .upsert({ 
-                        match_log_id: id, 
+                        match_log_id: logId, 
                         user_id: user.id, 
                         reaction_type: reactionType 
                     }, { onConflict: 'match_log_id,user_id' })
             }
         } catch (err) {
             console.error('Error toggling reaction:', err)
-            // Revert on error
-            setItems(prev => prev.map(i =>
-                i.id === id && i.type === 'log'
-                    ? { ...i, data: { ...i.data, is_liked: wasLiked, my_reaction: previousReaction, likes_count: log.likes_count } }
-                    : i
+            setLogs(prev => prev.map(l =>
+                l.id === logId
+                    ? { ...l, is_liked: wasLiked, my_reaction: previousReaction, likes_count: log.likes_count }
+                    : l
             ))
         }
     }
@@ -393,7 +380,6 @@ export function useMatchLogs(filters?: MatchLogFilters) {
                 player_ratings: log.player_ratings as MatchLogPlayerRating[],
             } as MatchLog
 
-            // Check if liked
             if (user) {
                 const { data: likeData } = await supabase
                     .from('match_log_likes')
@@ -413,8 +399,7 @@ export function useMatchLogs(filters?: MatchLogFilters) {
     }
 
     return {
-        items,
-        logs: items.filter(i => i.type === 'log').map(i => i.data),
+        logs,
         loading,
         error,
         hasMore,
@@ -454,7 +439,6 @@ export function useFollows() {
 
         const isFollowing = following.includes(targetUserId)
 
-        // Optimistic update
         setFollowing(prev =>
             isFollowing ? prev.filter(id => id !== targetUserId) : [...prev, targetUserId]
         )
@@ -472,7 +456,6 @@ export function useFollows() {
                     .insert({ follower_id: user.id, following_id: targetUserId })
             }
         } catch {
-            // Revert
             setFollowing(prev =>
                 isFollowing ? [...prev, targetUserId] : prev.filter(id => id !== targetUserId)
             )

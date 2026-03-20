@@ -452,10 +452,10 @@ export default function PartidoPage() {
               </div>
 
               {/* Rating comunitario — visible sin scroll */}
-              {estado === 'FINALIZADO' && typeof partido.id === 'number' && (
+              {estado === 'FINALIZADO' && numericId !== null && (
                 <div className="mt-4 flex flex-col items-center gap-1">
                     <CommunityRating
-                    partidoId={partido.id}
+                    partidoId={numericId}
                     equipoLocal={partido.equipo_local}
                     equipoVisitante={partido.equipo_visitante}
                     equipos={equipos}
@@ -556,7 +556,7 @@ export default function PartidoPage() {
                       </div>
 
                       {/* Cronología */}
-                      {typeof partido.id === 'number' && (
+                      {numericId !== null && (
                         <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] overflow-hidden shadow-sm">
                           <button
                             onClick={() => setOpenAccordion(openAccordion === 'cronologia' ? null : 'cronologia')}
@@ -577,7 +577,7 @@ export default function PartidoPage() {
                                 className="overflow-hidden border-t border-[var(--card-border)]"
                               >
                                 <div className="p-4">
-                                  <MatchTimeline fixtureId={partido.id} equipoLocal={partido.equipo_local} equipoVisitante={partido.equipo_visitante} />
+                                  <MatchTimeline fixtureId={numericId} equipoLocal={partido.equipo_local} equipoVisitante={partido.equipo_visitante} />
                                 </div>
                               </motion.div>
                             )}
@@ -586,7 +586,7 @@ export default function PartidoPage() {
                       )}
 
                       {/* Avanzadas */}
-                      {typeof partido.id === 'number' && (
+                      {numericId !== null && (
                         <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] overflow-hidden shadow-sm">
                           <button
                             onClick={() => setOpenAccordion(openAccordion === 'avanzadas' ? null : 'avanzadas')}
@@ -607,7 +607,7 @@ export default function PartidoPage() {
                                 className="overflow-hidden border-t border-[var(--card-border)]"
                               >
                                 <div className="p-4">
-                                  <AdvancedStats fixtureId={partido.id} />
+                                  <AdvancedStats fixtureId={numericId} />
                                 </div>
                               </motion.div>
                             )}
@@ -648,10 +648,10 @@ export default function PartidoPage() {
                   )}
 
                   {/* Community Rating (Histogram) - Always at the bottom of main scroll */}
-                  {typeof partido.id === 'number' && (
+                  {numericId !== null && (
                     <div className="mt-12">
                       <CommunityRating 
-                        partidoId={partido.id}
+                        partidoId={numericId}
                         equipoLocal={partido.equipo_local}
                         equipoVisitante={partido.equipo_visitante}
                         equipos={equipos}
@@ -713,7 +713,7 @@ export default function PartidoPage() {
                     </div>
 
                     {/* Accordion: Cronología */}
-                    {typeof partido.id === 'number' && (
+                    {numericId !== null && (
                       <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] overflow-hidden shadow-sm">
                         <button
                           onClick={() => setOpenAccordion(openAccordion === 'cronologia' ? null : 'cronologia')}
@@ -735,7 +735,7 @@ export default function PartidoPage() {
                             >
                               <div className="p-4">
                                 <MatchTimeline
-                                  fixtureId={partido.id}
+                                  fixtureId={numericId}
                                   equipoLocal={partido.equipo_local}
                                   equipoVisitante={partido.equipo_visitante}
                                 />
@@ -747,7 +747,7 @@ export default function PartidoPage() {
                     )}
 
                     {/* Accordion: Stats Avanzadas */}
-                    {typeof partido.id === 'number' && (
+                    {numericId !== null && (
                       <div className="bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] overflow-hidden shadow-sm">
                         <button
                           onClick={() => setOpenAccordion(openAccordion === 'avanzadas' ? null : 'avanzadas')}
@@ -768,7 +768,7 @@ export default function PartidoPage() {
                               className="overflow-hidden border-t border-[var(--card-border)]"
                             >
                               <div className="p-4">
-                                <AdvancedStats fixtureId={partido.id} />
+                                <AdvancedStats fixtureId={numericId} />
                               </div>
                             </motion.div>
                           )}
@@ -900,24 +900,24 @@ export default function PartidoPage() {
                       </h3>
                       <Heatmap />
                     </div>
-                    {typeof partido.id === 'number' && (
+                    {numericId !== null && (
                       <MatchTimeline
-                        fixtureId={partido.id}
+                        fixtureId={numericId}
                         equipoLocal={partido.equipo_local}
                         equipoVisitante={partido.equipo_visitante}
                       />
                     )}
-                    {typeof partido.id === 'number' && (
-                      <AdvancedStats fixtureId={partido.id} />
+                    {numericId !== null && (
+                      <AdvancedStats fixtureId={numericId} />
                     )}
                   </div>
                 )}
 
                 {/* Quick Poll for PREVIA matches */}
-                {estado === 'PREVIA' && typeof partido.id === 'number' && (
+                {estado === 'PREVIA' && numericId !== null && (
                   <div ref={pollRef}>
                     <QuickPoll
-                      fixtureId={partido.id}
+                      fixtureId={numericId}
                       equipoLocal={partido.equipo_local}
                       equipoVisitante={partido.equipo_visitante}
                     />

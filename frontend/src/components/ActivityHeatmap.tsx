@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase'
 import { motion } from 'framer-motion'
 
 interface Props {
@@ -12,7 +12,6 @@ interface Props {
 export function ActivityHeatmap({ userId }: Props) {
   const [activity, setActivity] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
     const fetchActivity = async () => {
@@ -24,10 +23,12 @@ export function ActivityHeatmap({ userId }: Props) {
         .select('watched_at')
         .eq('user_id', userId)
         .gte('watched_at', oneYearAgo.toISOString())
+        .not('watched_at', 'is', null)
 
       if (data) {
         const counts: Record<string, number> = {}
         data.forEach(log => {
+          if (!log.watched_at) return
           const date = new Date(log.watched_at).toISOString().split('T')[0]
           counts[date] = (counts[date] || 0) + 1
         })
