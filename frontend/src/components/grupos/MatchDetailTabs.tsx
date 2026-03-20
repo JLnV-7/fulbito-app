@@ -24,9 +24,10 @@ interface MatchDetailTabsProps {
     onClose: () => void
     onUpdate: () => void
     initialTab?: 'info' | 'stats' | 'votos' | 'resultados'
+    adminId?: string
 }
 
-export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTab = 'info' }: MatchDetailTabsProps) {
+export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTab = 'info', adminId }: MatchDetailTabsProps) {
     const { user } = useAuth()
     const { showToast } = useToast()
     const [activeTab, setActiveTab] = useState<'info' | 'stats' | 'votos' | 'resultados'>(initialTab)
@@ -182,7 +183,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
         }
     }
 
-    const esAutor = user?.id === partido.creado_por
+    const canEdit = user?.id === partido.creado_por || user?.id === adminId
     const votados = jugadores.filter(j => j.mi_voto).length
     const totalJugadores = jugadores.length
     const progreso = totalJugadores > 0 ? Math.round((votados / totalJugadores) * 100) : 0
@@ -285,7 +286,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                             </div>
                                         </div>
 
-                                        {(partido.estado === 'borrador' && (esAutor || user?.id === partido.creado_por)) ? (
+                                        {(partido.estado === 'borrador' && canEdit) ? (
                                             <div className="space-y-8 pt-4">
                                                 <div className="flex flex-col gap-8">
                                                     <div className="flex-1">
@@ -345,6 +346,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                         partido={partido}
                                         jugadores={jugadores}
                                         grupoId={grupoId}
+                                        canEdit={canEdit}
                                         onUpdate={() => { onUpdate(); loadData(); }}
                                     />
                                 )}
@@ -371,7 +373,17 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                             </div>
                                         </div>
 
-                                        <RankingEnVivo jugadores={jugadores} totalMiembros={miembros.length} />
+                                        {/* Ranking en vivo */}
+                                        <div>
+                                            <h3 className="font-black italic uppercase tracking-tighter text-sm mb-4">
+                                                📊 Ranking acumulado
+                                            </h3>
+                                            <RankingEnVivo 
+                                                jugadores={jugadores} 
+                                                totalMiembros={partido.total_miembros || 0}
+                                            />
+                                        </div>
+                                        <div className="border-t border-[var(--card-border)]" />
 
                                         {/* Lista de Jugadores para Votar */}
                                         <div className="space-y-6">

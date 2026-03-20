@@ -200,6 +200,7 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
                     <MatchDetailTabs
                         partido={detalleVisible}
                         grupoId={grupo.id}
+                        adminId={grupo.admin_id}
                         initialTab={tabInicial}
                         onClose={() => { setDetalleVisible(null); refetch() }}
                         onUpdate={refetch}

@@ -12,13 +12,14 @@ interface MatchStatisticsPanelProps {
     jugadores: JugadorPartidoAmigo[]
     grupoId: string
     onUpdate: () => void
+    canEdit?: boolean
 }
 
-export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: MatchStatisticsPanelProps) {
+export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate, canEdit }: MatchStatisticsPanelProps) {
     const { cerrarPartidoMundial, reabrirEstadisticas } = usePartidosAmigos(grupoId)
     const { showToast } = useToast()
     const { user } = useAuth()
-    const esAutor = user?.id === partido.creado_por
+
 
     // Internal state for unsaved stats
     const [goles, setGoles] = useState<Record<string, number>>(
@@ -33,7 +34,7 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: 
     useEffect(() => {
         setGoles(Object.fromEntries(jugadores.map(j => [j.id, j.goles || 0])))
         setAsistencias(Object.fromEntries(jugadores.map(j => [j.id, j.asistencias || 0])))
-    }, [jugadores])
+    }, [jugadores.map(j => j.id + (j.goles || 0) + (j.asistencias || 0)).join(',')])
 
     const handleUpdateStat = (id: string, type: 'goles' | 'asistencias', delta: number) => {
         if (partido.stats_completed) return
@@ -162,7 +163,7 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: 
             </div>
 
             <div className="flex gap-4">
-                {!partido.stats_completed && esAutor && (
+                {!partido.stats_completed && (
                     <button
                         onClick={() => {
                             setGoles(Object.fromEntries(jugadores.map(j => [j.id, 0])))
@@ -175,7 +176,7 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: 
                     </button>
                 )}
                 
-                {partido.stats_completed && esAutor && (
+                {partido.stats_completed && canEdit && (
                     <button
                         onClick={async () => {
                             if (procesando) return
@@ -197,7 +198,7 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate }: 
                 )}
             </div>
 
-            {!partido.stats_completed && esAutor && (
+            {!partido.stats_completed && canEdit && (
                 <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/95 to-transparent z-50">
                     <div className="max-w-md mx-auto">
                         <motion.div 
