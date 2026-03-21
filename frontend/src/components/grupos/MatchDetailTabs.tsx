@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePartidosAmigos } from '@/hooks/usePartidosAmigos'
 import { useToast } from '@/contexts/ToastContext'
@@ -58,20 +58,8 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
         eliminarJugador
     } = usePartidosAmigos(grupoId)
 
-    useEffect(() => {
-        loadData()
-        fetchMiembros()
-    }, [partido.id])
-
-    const fetchMiembros = async () => {
-        const { data } = await supabase
-            .from('miembros_grupo')
-            .select('user_id, profile:profiles(username)')
-            .eq('grupo_id', grupoId)
-        setMiembros(data || [])
-    }
-
-    const loadData = async () => {
+    // ── Carga de datos ──────────────────────────────────────────────
+    const loadData = useCallback(async () => {
         try {
             setLoading(true)
             const [jugs, fVotes] = await Promise.all([
@@ -85,14 +73,42 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
         } finally {
             setLoading(false)
         }
-    }
+    }, [partido.id])
 
+    const fetchMiembros = useCallback(async () => {
+        const { data } = await supabase
+            .from('miembros_grupo')
+            .select('user_id, profile:profiles(username)')
+            .eq('grupo_id', grupoId)
+        setMiembros(data || [])
+    }, [grupoId])
+
+    useEffect(() => {
+        loadData()
+        fetchMiembros()
+    }, [partido.id])
+
+    // Refrescar al cambiar de tab a votos o resultados
+    useEffect(() => {
+        if (activeTab === 'votos' || activeTab === 'resultados') {
+            loadData()
+        }
+    }, [activeTab])
+
+    // ── Permisos ────────────────────────────────────────────────────
+    const canEdit = user?.id === partido.creado_por || user?.id === adminId
+
+    // ── Votos helpers ───────────────────────────────────────────────
     const updateJugadorVotoLocal = (jugadorId: string, nota: number, comentario?: string) => {
         setJugadores(prev => prev.map(j => {
             if (j.id !== jugadorId) return j
             const yaVotado = !!j.mi_voto
             const oldNota = j.mi_voto?.nota || 0
-            const nuevoMiVoto = { id: 'local', partido_amigo_id: partido.id, jugador_id: jugadorId, user_id: user!.id, nota, comentario: comentario || null, created_at: new Date().toISOString() }
+            const nuevoMiVoto = {
+                id: 'local', partido_amigo_id: partido.id, jugador_id: jugadorId,
+                user_id: user!.id, nota, comentario: comentario || null,
+                created_at: new Date().toISOString()
+            }
             const currentTotal = j.total_votos || 0
             const newTotalVotos = yaVotado ? currentTotal : currentTotal + 1
             const sumaAnterior = (j.promedio || 0) * currentTotal
@@ -133,9 +149,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
 
     const handleVotarTodos = async (votos: { jugadorId: string; nota: number }[]) => {
         try {
-            for (const v of votos) {
-                await votarJugador(partido.id, v.jugadorId, v.nota)
-            }
+            for (const v of votos) await votarJugador(partido.id, v.jugadorId, v.nota)
             votos.forEach(v => updateJugadorVotoLocal(v.jugadorId, v.nota))
             showToast(`${votos.length} votos guardados ⚡`, 'success')
         } catch {
@@ -172,12 +186,11 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
         }
     }
 
-    const canEdit = user?.id === partido.creado_por || user?.id === adminId
+    // ── Cálculos para ranking ───────────────────────────────────────
     const votados = jugadores.filter(j => j.mi_voto).length
     const totalJugadores = jugadores.length
     const progreso = totalJugadores > 0 ? Math.round((votados / totalJugadores) * 100) : 0
 
-    // Ranking inline helpers
     const jugadoresConVotos = [...jugadores]
         .filter(j => (j.total_votos || 0) > 0)
         .sort((a, b) => (b.promedio || 0) - (a.promedio || 0))
@@ -190,7 +203,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
 
     const tabs = [
         { id: 'info', label: 'Info', icon: Info },
-        { id: 'stats', label: 'Estadísticas', icon: BarChart2 },
+        { id: 'stats', label: 'Stats', icon: BarChart2 },
         { id: 'votos', label: 'Votos', icon: Inbox },
         { id: 'resultados', label: 'Resultados', icon: Trophy },
     ] as const
@@ -250,7 +263,8 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                 exit={{ opacity: 0, x: -10 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                {/* ── TAB INFO ── */}
+
+                                {/* ══ TAB INFO ══ */}
                                 {activeTab === 'info' && (
                                     <div className="space-y-6">
                                         <div className="bg-[var(--card-bg)] p-6 rounded-3xl border border-[var(--card-border)] text-center">
@@ -272,6 +286,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                 <p className="text-2xl font-black mt-1">{jugadores.filter(j => j.equipo === 'rojo').length}</p>
                                             </div>
                                         </div>
+
                                         {(partido.estado === 'borrador' && canEdit) ? (
                                             <div className="space-y-8 pt-4">
                                                 <div className="flex flex-col gap-8">
@@ -303,7 +318,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                             </div>
                                         ) : (
                                             <div className="bg-[var(--card-bg)] p-6 rounded-3xl border border-[var(--card-border)]">
-                                                <h4 className="font-black text-xs uppercase tracking-widest mb-4 opacity-50">Equipos Confirmados</h4>
+                                                <h4 className="font-black text-xs uppercase tracking-widest mb-4 opacity-50">Equipos</h4>
                                                 <div className="grid grid-cols-2 gap-8">
                                                     <div className="space-y-2">
                                                         {jugadores.filter(j => j.equipo === 'azul').map(j => (
@@ -321,7 +336,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                     </div>
                                 )}
 
-                                {/* ── TAB STATS ── */}
+                                {/* ══ TAB STATS ══ */}
                                 {activeTab === 'stats' && (
                                     <MatchStatisticsPanel
                                         partido={partido}
@@ -332,14 +347,15 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                     />
                                 )}
 
-                                {/* ── TAB VOTOS ── */}
+                                {/* ══ TAB VOTOS ══ */}
                                 {activeTab === 'votos' && (
                                     <div className="space-y-8">
-                                        {/* Progreso */}
+
+                                        {/* Progreso personal */}
                                         <div className="bg-[var(--card-bg)] p-5 rounded-3xl border border-[var(--card-border)] shadow-sm">
                                             <div className="flex justify-between items-end mb-3">
                                                 <div>
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Tu Progreso</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Tus Votos</p>
                                                     <p className="text-lg font-black italic">{votados} / {totalJugadores}</p>
                                                 </div>
                                                 <p className="text-2xl font-black text-[#16a34a] leading-none">{progreso}%</p>
@@ -349,75 +365,93 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                             </div>
                                         </div>
 
-                                        {/* ── RANKING EN VIVO (inline, sin componente externo) ── */}
+                                        {/* ── RANKING EN VIVO — visible para todos ── */}
                                         <div>
-                                            <h3 className="font-black italic uppercase tracking-tighter text-sm mb-4">📊 Ranking acumulado</h3>
-                                            <div className="space-y-3">
-                                                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl overflow-hidden">
-                                                    <div className="flex">
-                                                        {(['azul', 'rojo'] as const).map(eq => (
-                                                            <div key={eq} className={`flex-1 p-4 text-center ${eq === 'azul' ? 'border-r' : 'border-l'} border-[var(--card-border)]`}>
-                                                                <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1 ${eq === 'azul' ? 'text-blue-500' : 'text-red-500'}`}>
-                                                                    {eq === 'azul' ? '🔵 Azul' : '🔴 Rojo'}
-                                                                </p>
-                                                                <p className={`text-3xl font-black tabular-nums ${eq === 'azul' ? 'text-blue-500' : 'text-red-500'}`}>
-                                                                    {promEquipo(eq) || '–'}
-                                                                </p>
-                                                                <p className="text-[9px] text-[var(--text-muted)] mt-1">prom. equipo</p>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl overflow-hidden">
-                                                    <div className="px-5 py-3 border-b border-[var(--card-border)] flex justify-between items-center">
-                                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Ranking en vivo</span>
-                                                        <span className="text-[9px] font-black bg-[#16a34a]/10 text-[#16a34a] px-2 py-0.5 rounded-full border border-[#16a34a]/20">LIVE</span>
-                                                    </div>
-                                                    {jugadoresConVotos.length === 0 ? (
-                                                        <p className="text-center py-6 text-xs text-[var(--text-muted)] opacity-50">👀 Esperando los primeros votos...</p>
-                                                    ) : (
-                                                        <div>
-                                                            {jugadoresConVotos.map((j, i) => (
-                                                                <div key={j.id} className={`flex items-center gap-3 px-5 py-3 border-b border-[var(--card-border)] last:border-0 ${i === 0 ? 'bg-amber-400/5' : ''}`}>
-                                                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${i === 0 ? 'bg-amber-400 text-amber-900' : 'bg-[var(--background)] text-[var(--text-muted)]'}`}>
-                                                                        {i === 0 ? '👑' : i + 1}
-                                                                    </div>
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <div className="flex items-center justify-between mb-1">
-                                                                            <span className="text-sm font-bold truncate">{j.nombre}</span>
-                                                                            <div className="flex items-center gap-1.5 ml-2 shrink-0">
-                                                                                <span style={{ color: j.equipo === 'azul' ? '#3b82f6' : '#ef4444' }} className="text-[9px]">
-                                                                                    {j.equipo === 'azul' ? '🔵' : '🔴'}
-                                                                                </span>
-                                                                                <span className="text-base font-black tabular-nums" style={{ color: i === 0 ? '#f59e0b' : j.equipo === 'azul' ? '#3b82f6' : '#ef4444' }}>
-                                                                                    {j.promedio}
-                                                                                </span>
-                                                                                <span className="text-[9px] text-[var(--text-muted)]">({j.total_votos}v)</span>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="h-1.5 bg-[var(--background)] rounded-full overflow-hidden">
-                                                                            <div
-                                                                                className="h-full rounded-full transition-all duration-700"
-                                                                                style={{
-                                                                                    width: `${((j.promedio || 0) / 10) * 100}%`,
-                                                                                    backgroundColor: i === 0 ? '#f59e0b' : j.equipo === 'azul' ? '#3b82f6' : '#ef4444'
-                                                                                }}
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="font-black italic uppercase tracking-tighter text-sm">📊 Ranking acumulado</h3>
+                                                <button
+                                                    onClick={loadData}
+                                                    className="text-[9px] font-black uppercase tracking-widest text-[#16a34a] border border-[#16a34a]/30 px-3 py-1 rounded-full hover:bg-[#16a34a]/10 transition-all"
+                                                >
+                                                    🔄 Refrescar
+                                                </button>
+                                            </div>
+
+                                            {/* Promedio por equipo */}
+                                            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl overflow-hidden mb-3">
+                                                <div className="flex">
+                                                    {(['azul', 'rojo'] as const).map(eq => (
+                                                        <div key={eq} className={`flex-1 p-4 text-center ${eq === 'azul' ? 'border-r' : ''} border-[var(--card-border)]`}>
+                                                            <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1 ${eq === 'azul' ? 'text-blue-500' : 'text-red-500'}`}>
+                                                                {eq === 'azul' ? '🔵 Azul' : '🔴 Rojo'}
+                                                            </p>
+                                                            <p className={`text-3xl font-black tabular-nums ${eq === 'azul' ? 'text-blue-500' : 'text-red-500'}`}>
+                                                                {promEquipo(eq) || '–'}
+                                                            </p>
+                                                            <p className="text-[9px] text-[var(--text-muted)] mt-1">prom. equipo</p>
                                                         </div>
-                                                    )}
+                                                    ))}
                                                 </div>
                                             </div>
+
+                                            {/* Lista de jugadores ordenada por promedio */}
+                                            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl overflow-hidden">
+                                                <div className="px-5 py-3 border-b border-[var(--card-border)] flex justify-between items-center">
+                                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Ranking en vivo</span>
+                                                    <span className="text-[9px] font-black bg-[#16a34a]/10 text-[#16a34a] px-2 py-0.5 rounded-full border border-[#16a34a]/20">
+                                                        {jugadoresConVotos.length} votados
+                                                    </span>
+                                                </div>
+
+                                                {jugadoresConVotos.length === 0 ? (
+                                                    <div className="py-10 text-center">
+                                                        <p className="text-2xl mb-2">👀</p>
+                                                        <p className="text-xs text-[var(--text-muted)] font-bold">Esperando los primeros votos...</p>
+                                                        <p className="text-[10px] text-[var(--text-muted)] opacity-50 mt-1">Votá a los jugadores más abajo</p>
+                                                    </div>
+                                                ) : (
+                                                    jugadoresConVotos.map((j, i) => (
+                                                        <button
+                                                            key={j.id}
+                                                            onClick={() => setJugadorDetalle(j)}
+                                                            className={`w-full flex items-center gap-3 px-5 py-3 border-b border-[var(--card-border)] last:border-0 text-left hover:bg-[var(--hover-bg)] transition-all ${i === 0 ? 'bg-amber-400/5' : ''}`}
+                                                        >
+                                                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${i === 0 ? 'bg-amber-400 text-amber-900' : 'bg-[var(--background)] text-[var(--text-muted)]'}`}>
+                                                                {i === 0 ? '👑' : i + 1}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center justify-between mb-1">
+                                                                    <span className="text-sm font-bold truncate">{j.nombre}</span>
+                                                                    <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                                                                        <span className="text-[9px]">{j.equipo === 'azul' ? '🔵' : '🔴'}</span>
+                                                                        <span className="text-base font-black tabular-nums" style={{ color: i === 0 ? '#f59e0b' : j.equipo === 'azul' ? '#3b82f6' : '#ef4444' }}>
+                                                                            {j.promedio}
+                                                                        </span>
+                                                                        <span className="text-[9px] text-[var(--text-muted)]">({j.total_votos}v)</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="h-1.5 bg-[var(--background)] rounded-full overflow-hidden">
+                                                                    <div
+                                                                        className="h-full rounded-full transition-all duration-700"
+                                                                        style={{
+                                                                            width: `${((j.promedio || 0) / 10) * 100}%`,
+                                                                            backgroundColor: i === 0 ? '#f59e0b' : j.equipo === 'azul' ? '#3b82f6' : '#ef4444'
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </button>
+                                                    ))
+                                                )}
+                                            </div>
                                         </div>
+
                                         <div className="border-t border-[var(--card-border)]" />
 
                                         {/* Lista para votar */}
                                         <div className="space-y-6">
                                             <div className="flex items-center justify-between">
-                                                <h3 className="font-black italic uppercase tracking-tighter text-sm">⭐ Puntuar Rendimiento (1-10)</h3>
+                                                <h3 className="font-black italic uppercase tracking-tighter text-sm">⭐ Puntuar (1–10)</h3>
                                                 {votados < totalJugadores && (
                                                     <button
                                                         onClick={() => setShowRapida(true)}
@@ -427,42 +461,51 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                     </button>
                                                 )}
                                             </div>
-                                            <div className="grid grid-cols-1 gap-6">
-                                                {/* Azul */}
-                                                <div className="space-y-3">
-                                                    <h4 className="font-black text-blue-500 text-[10px] uppercase tracking-[0.2em] mb-3 border-b border-blue-500/10 pb-2 flex items-center gap-2">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500" /> EQUIPO AZUL
+
+                                            {(['azul', 'rojo'] as const).map(eq => (
+                                                <div key={eq} className="space-y-3">
+                                                    <h4 className={`font-black text-[10px] uppercase tracking-[0.2em] mb-3 border-b pb-2 flex items-center gap-2 ${eq === 'azul' ? 'text-blue-500 border-blue-500/10' : 'text-red-500 border-red-500/10'}`}>
+                                                        <div className={`w-1.5 h-1.5 rounded-full ${eq === 'azul' ? 'bg-blue-500' : 'bg-red-500'}`} />
+                                                        EQUIPO {eq.toUpperCase()}
                                                     </h4>
                                                     <div className="grid grid-cols-1 gap-2">
-                                                        {jugadores.filter(j => j.equipo === 'azul').map((j) => (
-                                                            <div key={j.id} className="bg-blue-500/5 p-4 rounded-2xl border border-blue-500/10 flex items-center justify-between gap-4 hover:bg-blue-500/10 transition-all">
-                                                                <div className="min-w-0">
+                                                        {jugadores.filter(j => j.equipo === eq).map(j => (
+                                                            <div
+                                                                key={j.id}
+                                                                className={`p-4 rounded-2xl border flex items-center justify-between gap-4 transition-all ${eq === 'azul' ? 'bg-blue-500/5 border-blue-500/10 hover:bg-blue-500/10' : 'bg-red-500/5 border-red-500/10 hover:bg-red-500/10'}`}
+                                                            >
+                                                                <div className="min-w-0 flex-1">
                                                                     <p className="font-bold text-sm truncate">{j.nombre}</p>
                                                                     {j.mi_voto ? (
                                                                         <div className="flex items-center gap-2 mt-1">
                                                                             <div className="flex gap-0.5">
                                                                                 {Array.from({ length: 5 }).map((_, i) => (
-                                                                                    <span key={i} className={`text-[8px] ${i < Math.round(j.mi_voto!.nota / 2) ? 'grayscale-0' : 'grayscale opacity-20'}`}>⭐</span>
+                                                                                    <span key={i} className={`text-[8px] ${i < Math.round(j.mi_voto!.nota / 2) ? '' : 'grayscale opacity-20'}`}>⭐</span>
                                                                                 ))}
                                                                             </div>
-                                                                            <span className="text-[10px] font-bold text-blue-500">{j.mi_voto.nota}/10</span>
+                                                                            <span className={`text-[10px] font-bold ${eq === 'azul' ? 'text-blue-500' : 'text-red-500'}`}>{j.mi_voto.nota}/10</span>
                                                                         </div>
                                                                     ) : (
                                                                         <p className="text-[10px] text-[var(--text-muted)] font-medium mt-1">Sin votar aún</p>
                                                                     )}
-                                                                    {(j.promedio || 0) > 0 && (
+                                                                    {/* Promedio visible para todos */}
+                                                                    {(j.total_votos || 0) > 0 && (
                                                                         <p className="text-[10px] text-[var(--text-muted)] mt-1">
-                                                                            Promedio: <strong className="text-blue-500">{j.promedio}</strong> <span className="opacity-50">({j.total_votos} Votos)</span>
+                                                                            Promedio: <strong className={eq === 'azul' ? 'text-blue-500' : 'text-red-500'}>{j.promedio}</strong>
+                                                                            <span className="opacity-50"> ({j.total_votos} votos)</span>
                                                                         </p>
                                                                     )}
                                                                 </div>
-                                                                <div className="flex gap-2">
+                                                                <div className="flex gap-2 shrink-0">
                                                                     {j.mi_voto && (
-                                                                        <button onClick={() => handleEliminarVoto(j.id)} className="shrink-0 p-2 rounded-xl text-[10px] font-black transition-all bg-red-500/20 text-red-400 border border-red-500/20 hover:bg-red-500/30">🗑️</button>
+                                                                        <button onClick={() => handleEliminarVoto(j.id)} className="p-2 rounded-xl text-[10px] font-black bg-red-500/20 text-red-400 border border-red-500/20 hover:bg-red-500/30 transition-all">🗑️</button>
                                                                     )}
                                                                     <button
                                                                         onClick={() => setVotandoA(j)}
-                                                                        className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${j.mi_voto ? 'bg-blue-500/20 text-blue-400 border border-blue-500/20' : 'bg-blue-600 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5'}`}
+                                                                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${j.mi_voto
+                                                                            ? eq === 'azul' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/20' : 'bg-red-500/20 text-red-400 border border-red-500/20'
+                                                                            : eq === 'azul' ? 'bg-blue-600 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5' : 'bg-red-600 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5'
+                                                                        }`}
                                                                     >
                                                                         {j.mi_voto ? 'Editar' : 'Votar'}
                                                                     </button>
@@ -471,50 +514,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                         ))}
                                                     </div>
                                                 </div>
-                                                {/* Rojo */}
-                                                <div className="space-y-3">
-                                                    <h4 className="font-black text-red-500 text-[10px] uppercase tracking-[0.2em] mb-3 border-b border-red-500/10 pb-2 flex items-center gap-2">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-red-500" /> EQUIPO ROJO
-                                                    </h4>
-                                                    <div className="grid grid-cols-1 gap-2">
-                                                        {jugadores.filter(j => j.equipo === 'rojo').map((j) => (
-                                                            <div key={j.id} className="bg-red-500/5 p-4 rounded-2xl border border-red-500/10 flex items-center justify-between gap-4 hover:bg-red-500/10 transition-all">
-                                                                <div className="min-w-0">
-                                                                    <p className="font-bold text-sm truncate">{j.nombre}</p>
-                                                                    {j.mi_voto ? (
-                                                                        <div className="flex items-center gap-2 mt-1">
-                                                                            <div className="flex gap-0.5">
-                                                                                {Array.from({ length: 5 }).map((_, i) => (
-                                                                                    <span key={i} className={`text-[8px] ${i < Math.round(j.mi_voto!.nota / 2) ? 'grayscale-0' : 'grayscale opacity-20'}`}>⭐</span>
-                                                                                ))}
-                                                                            </div>
-                                                                            <span className="text-[10px] font-bold text-red-500">{j.mi_voto.nota}/10</span>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <p className="text-[10px] text-[var(--text-muted)] font-medium mt-1">Sin votar aún</p>
-                                                                    )}
-                                                                    {(j.promedio || 0) > 0 && (
-                                                                        <p className="text-[10px] text-[var(--text-muted)] mt-1">
-                                                                            Promedio: <strong className="text-red-500">{j.promedio}</strong> <span className="opacity-50">({j.total_votos} Votos)</span>
-                                                                        </p>
-                                                                    )}
-                                                                </div>
-                                                                <div className="flex gap-2">
-                                                                    {j.mi_voto && (
-                                                                        <button onClick={() => handleEliminarVoto(j.id)} className="shrink-0 p-2 rounded-xl text-[10px] font-black transition-all bg-red-500/20 text-red-400 border border-red-500/20 hover:bg-red-500/30">🗑️</button>
-                                                                    )}
-                                                                    <button
-                                                                        onClick={() => setVotandoA(j)}
-                                                                        className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${j.mi_voto ? 'bg-red-500/20 text-red-400 border border-red-500/20' : 'bg-red-600 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5'}`}
-                                                                    >
-                                                                        {j.mi_voto ? 'Editar' : 'Votar'}
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            ))}
                                         </div>
 
                                         {/* Premios especiales */}
@@ -537,7 +537,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                 onDeleteVote={async (facet: FacetType) => {
                                                     try {
                                                         await eliminarVotoFaceta(partido.id, facet)
-                                                        showToast('Voto de faceta eliminado 🗑️', 'success')
+                                                        showToast('Voto eliminado 🗑️', 'success')
                                                         loadData()
                                                     } catch {
                                                         showToast('Error al eliminar voto de faceta', 'error')
@@ -548,21 +548,24 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                     </div>
                                 )}
 
-                                {/* ── TAB RESULTADOS ── */}
+                                {/* ══ TAB RESULTADOS ══ */}
                                 {activeTab === 'resultados' && (() => {
                                     const sorted = [...jugadores].sort((a, b) => (b.promedio || 0) - (a.promedio || 0))
-                                    const mvp = sorted[0]
+                                    const mvp = sorted.find(j => (j.promedio || 0) > 0)
                                     const azulesRes = jugadores.filter(j => j.equipo === 'azul').sort((a, b) => (b.promedio || 0) - (a.promedio || 0))
                                     const rojosRes = jugadores.filter(j => j.equipo === 'rojo').sort((a, b) => (b.promedio || 0) - (a.promedio || 0))
-                                    const promedioEquipo = (equipo: JugadorPartidoAmigo[]) => {
-                                        const conVotos = equipo.filter(j => (j.promedio || 0) > 0)
-                                        if (conVotos.length === 0) return 0
-                                        return Math.round(conVotos.reduce((sum, j) => sum + (j.promedio || 0), 0) / conVotos.length * 10) / 10
+                                    const promedioEquipo = (eq: JugadorPartidoAmigo[]) => {
+                                        const conVotos = eq.filter(j => (j.promedio || 0) > 0)
+                                        if (!conVotos.length) return 0
+                                        return Math.round(conVotos.reduce((s, j) => s + (j.promedio || 0), 0) / conVotos.length * 10) / 10
                                     }
+                                    const hayVotos = jugadores.some(j => (j.total_votos || 0) > 0)
+
                                     return (
                                         <div className="space-y-6">
+                                            {/* Marcador */}
                                             <div className="bg-gradient-to-br from-[#16a34a] to-emerald-600 p-8 rounded-3xl text-white text-center shadow-xl">
-                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 opacity-80">Marcador Final</p>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 opacity-80">Marcador</p>
                                                 <div className="flex items-center justify-center gap-8">
                                                     <div className="text-center">
                                                         <p className="text-4xl font-black tabular-nums">
@@ -578,46 +581,55 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                         <p className="text-[9px] font-bold uppercase opacity-70 mt-1">ROJO</p>
                                                     </div>
                                                 </div>
+                                                {partido.estado !== 'finalizado' && (
+                                                    <p className="text-[9px] opacity-50 mt-4 uppercase tracking-widest">Partido en curso</p>
+                                                )}
                                             </div>
 
-                                            {mvp && (mvp.promedio || 0) > 0 && (
+                                            {/* Sin votos aún */}
+                                            {!hayVotos && (
+                                                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-8 text-center">
+                                                    <p className="text-3xl mb-3">🗳️</p>
+                                                    <p className="font-black text-sm">Todavía no hay votos</p>
+                                                    <p className="text-[10px] text-[var(--text-muted)] mt-1">Los resultados aparecen acá en tiempo real</p>
+                                                </div>
+                                            )}
+
+                                            {/* MVP */}
+                                            {mvp && (
                                                 <motion.div
                                                     initial={{ scale: 0.9, opacity: 0 }}
                                                     animate={{ scale: 1, opacity: 1 }}
-                                                    transition={{ delay: 0.2, type: 'spring' }}
+                                                    transition={{ delay: 0.1, type: 'spring' }}
                                                     className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-3xl p-8 text-center shadow-2xl relative overflow-hidden shadow-amber-500/30 cursor-pointer"
                                                     onClick={() => setJugadorDetalle(mvp)}
                                                 >
                                                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
-                                                    <p className="text-[10px] text-white/80 capitalize font-black tracking-[0.4em] mb-4">MEMBER OF THE MATCH</p>
-                                                    <div className="relative inline-block mb-4">
-                                                        <div className="absolute inset-0 bg-white/20 blur-xl rounded-full" />
-                                                        <div className="text-5xl relative">👑</div>
-                                                    </div>
-                                                    <h2 className="text-3xl font-black text-white italic tracking-tighter capitalize">{mvp.nombre}</h2>
+                                                    <p className="text-[10px] text-white/80 font-black tracking-[0.4em] mb-4">MEMBER OF THE MATCH</p>
+                                                    <div className="text-5xl mb-4 relative z-10">👑</div>
+                                                    <h2 className="text-3xl font-black text-white italic tracking-tighter">{mvp.nombre}</h2>
                                                     <p className="text-4xl font-black text-white mt-2 drop-shadow-lg">⭐ {mvp.promedio}</p>
-                                                    <p className="text-[10px] text-white/80 font-bold capitalize mt-4">{mvp.total_votos} VOTOS EN TOTAL</p>
+                                                    <p className="text-[10px] text-white/80 font-bold mt-4">{mvp.total_votos} VOTOS</p>
                                                     <p className="text-[10px] text-white/60 mt-1">Tocá para ver detalle</p>
                                                 </motion.div>
                                             )}
 
+                                            {/* Ranking por equipo */}
                                             {[
                                                 { equipo: 'azul', color: '#3b82f6', emoji: '🔵', lista: azulesRes, prom: promedioEquipo(azulesRes) },
                                                 { equipo: 'rojo', color: '#ef4444', emoji: '🔴', lista: rojosRes, prom: promedioEquipo(rojosRes) }
                                             ].map(team => (
-                                                <div key={team.equipo} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--card-border)] overflow-hidden shadow-xl">
-                                                    <div className="p-5 border-b border-[var(--card-border)] bg-[var(--background)]/50" style={{ borderLeftColor: team.color, borderLeftWidth: 6 }}>
-                                                        <div className="flex justify-between items-end">
-                                                            <div>
-                                                                <h3 className="text-xs font-black capitalize tracking-[0.2em] mb-1" style={{ color: team.color }}>
-                                                                    {team.emoji} EQUIPO {team.equipo.toUpperCase()}
-                                                                </h3>
-                                                                <p className="text-2xl font-black italic tracking-tighter">RANKING</p>
-                                                            </div>
-                                                            <div className="text-right">
-                                                                <span className="text-[10px] text-[var(--text-muted)] font-black capitalize tracking-widest">PROM EQUIPO</span>
-                                                                <p className="text-xl font-black" style={{ color: team.color }}>{team.prom}</p>
-                                                            </div>
+                                                <div key={team.equipo} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--card-border)] overflow-hidden">
+                                                    <div className="p-5 border-b border-[var(--card-border)] flex justify-between items-end" style={{ borderLeftColor: team.color, borderLeftWidth: 6 }}>
+                                                        <div>
+                                                            <h3 className="text-xs font-black tracking-[0.2em]" style={{ color: team.color }}>
+                                                                {team.emoji} EQUIPO {team.equipo.toUpperCase()}
+                                                            </h3>
+                                                            <p className="text-2xl font-black italic tracking-tighter">RANKING</p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className="text-[10px] text-[var(--text-muted)] font-black tracking-widest">PROM</span>
+                                                            <p className="text-xl font-black" style={{ color: team.color }}>{team.prom || '–'}</p>
                                                         </div>
                                                     </div>
                                                     <div>
@@ -625,14 +637,14 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                             <button
                                                                 key={j.id}
                                                                 onClick={() => setJugadorDetalle(j)}
-                                                                className={`w-full flex items-center gap-4 p-5 border-b border-[var(--card-border)] last:border-0 hover:bg-[var(--hover-bg)] transition-all text-left ${i === 0 ? 'bg-amber-400/5' : ''}`}
+                                                                className={`w-full flex items-center gap-4 p-5 border-b border-[var(--card-border)] last:border-0 hover:bg-[var(--hover-bg)] transition-all text-left ${i === 0 && (j.promedio || 0) > 0 ? 'bg-amber-400/5' : ''}`}
                                                             >
-                                                                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${i === 0 ? 'bg-amber-400 text-amber-900 shadow-md' : 'bg-[var(--background)] text-[var(--text-muted)]'}`}>
+                                                                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${i === 0 && (j.promedio || 0) > 0 ? 'bg-amber-400 text-amber-900' : 'bg-[var(--background)] text-[var(--text-muted)]'}`}>
                                                                     {i + 1}
                                                                 </span>
                                                                 <div className="flex-1 min-w-0">
-                                                                    <span className="font-bold text-sm block">{i === 0 && '👑 '}{j.nombre}</span>
-                                                                    <div className="w-full h-1.5 bg-[var(--background)] rounded-full mt-2 overflow-hidden shadow-inner">
+                                                                    <span className="font-bold text-sm block truncate">{j.nombre}</span>
+                                                                    <div className="w-full h-1.5 bg-[var(--background)] rounded-full mt-2 overflow-hidden">
                                                                         <motion.div
                                                                             initial={{ width: 0 }}
                                                                             animate={{ width: `${((j.promedio || 0) / 10) * 100}%` }}
@@ -642,90 +654,85 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                                         />
                                                                     </div>
                                                                 </div>
-                                                                <div className="text-right">
-                                                                    <span className="text-sm font-black italic" style={{ color: team.color }}>{j.promedio || '-'}</span>
-                                                                    <p className="text-[8px] text-[var(--text-muted)] font-bold capitalize">{j.total_votos} V</p>
+                                                                <div className="text-right shrink-0">
+                                                                    <span className="text-sm font-black italic" style={{ color: team.color }}>
+                                                                        {(j.promedio || 0) > 0 ? j.promedio : '–'}
+                                                                    </span>
+                                                                    <p className="text-[8px] text-[var(--text-muted)] font-bold">{j.total_votos || 0} V</p>
                                                                 </div>
                                                             </button>
                                                         ))}
-                                                        {team.lista.length === 0 && (
-                                                            <p className="p-5 text-center text-xs text-[var(--text-muted)] italic">Sin jugadores</p>
-                                                        )}
                                                     </div>
                                                 </div>
                                             ))}
 
-                                            <h3 className="font-black italic uppercase tracking-tighter text-sm pt-4">📈 Estadísticas del Partido</h3>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                {[
-                                                    { label: 'Máximo Goleador', emoji: '🔥', players: jugadores.filter(j => (j.goles || 0) > 0).sort((a, b) => (b.goles || 0) - (a.goles || 0)).slice(0, 1), statName: 'goles', statEmoji: '⚽' },
-                                                    { label: 'Máximo Asistidor', emoji: '🎯', players: jugadores.filter(j => (j.asistencias || 0) > 0).sort((a, b) => (b.asistencias || 0) - (a.asistencias || 0)).slice(0, 1), statName: 'asistencias', statEmoji: '👟' }
-                                                ].map((stat, i) => (
-                                                    stat.players.length > 0 ? (
-                                                        <div key={i} className="bg-gradient-to-br from-[var(--card-bg)] to-[var(--hover-bg)] p-5 rounded-3xl border border-[var(--card-border)] flex items-center gap-4 relative overflow-hidden group">
-                                                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                                                <span className="text-6xl">{stat.emoji}</span>
+                                            {/* Goleador / Asistidor */}
+                                            {jugadores.some(j => j.goles || j.asistencias) && (
+                                                <>
+                                                    <h3 className="font-black italic uppercase tracking-tighter text-sm pt-2">📈 Estadísticas</h3>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                        {[
+                                                            { label: 'Máx. Goleador', emoji: '🔥', players: jugadores.filter(j => (j.goles || 0) > 0).sort((a, b) => (b.goles || 0) - (a.goles || 0)).slice(0, 1), stat: 'goles', statEmoji: '⚽' },
+                                                            { label: 'Máx. Asistidor', emoji: '🎯', players: jugadores.filter(j => (j.asistencias || 0) > 0).sort((a, b) => (b.asistencias || 0) - (a.asistencias || 0)).slice(0, 1), stat: 'asistencias', statEmoji: '👟' }
+                                                        ].map((s, i) => s.players.length > 0 ? (
+                                                            <div key={i} className="bg-[var(--card-bg)] p-5 rounded-3xl border border-[var(--card-border)] flex items-center gap-4">
+                                                                <span className="text-3xl">{s.emoji}</span>
+                                                                <div>
+                                                                    <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest">{s.label}</p>
+                                                                    <p className="font-bold text-sm">{s.players[0].nombre}</p>
+                                                                    <p className="text-[10px] text-[var(--text-muted)] font-black">
+                                                                        {s.stat === 'goles' ? s.players[0].goles : s.players[0].asistencias} {s.statEmoji}
+                                                                    </p>
+                                                                </div>
                                                             </div>
-                                                            <span className="text-3xl relative z-10">{stat.emoji}</span>
-                                                            <div className="min-w-0 relative z-10">
-                                                                <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest">{stat.label}</p>
-                                                                <p className="font-bold text-sm truncate">{stat.players[0].nombre}</p>
-                                                                <p className="text-[10px] text-[var(--text-muted)] font-black uppercase tracking-tighter">
-                                                                    {stat.statName === 'goles' ? stat.players[0].goles : stat.players[0].asistencias} {stat.statEmoji}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    ) : null
-                                                ))}
-                                                {jugadores.every(j => !j.goles && !j.asistencias) && (
-                                                    <div className="col-span-full py-8 text-center text-[10px] text-[var(--text-muted)] font-bold italic opacity-50 bg-[var(--card-bg)] rounded-3xl border border-dashed border-[var(--card-border)]">
-                                                        No se cargaron goles ni asistencias aún
+                                                        ) : null)}
                                                     </div>
-                                                )}
-                                            </div>
+                                                </>
+                                            )}
 
-                                            <h3 className="font-black italic uppercase tracking-tighter text-sm pt-4">🏅 Premios (Votación)</h3>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                {[
-                                                    { id: 'goleador', label: 'El Goleador', emoji: '⚽' },
-                                                    { id: 'comilon', label: 'El Comilón', emoji: '🍔' },
-                                                    { id: 'patadas', label: 'Pegapatadas', emoji: '🦵' },
-                                                    { id: 'arquero', label: 'Buen Arquero', emoji: '🧤' },
-                                                ].map(facet => {
-                                                    const counts = facetVotes
-                                                        .filter(v => v.facet === facet.id)
-                                                        .reduce((acc, v) => { acc[v.player_id] = (acc[v.player_id] || 0) + 1; return acc }, {} as Record<string, number>)
-                                                    const entries = Object.entries(counts)
-                                                    if (entries.length === 0) return null
-                                                    const [winnerId, votes] = entries.sort((a, b) => b[1] - a[1])[0]
-                                                    const winner = jugadores.find(j => j.id === winnerId)
-                                                    const totalVotes = facetVotes.filter(v => v.facet === facet.id).length
-                                                    return (
-                                                        <div key={facet.id} className="bg-[var(--card-bg)] p-5 rounded-3xl border border-[var(--card-border)] flex items-center gap-4 hover:border-[#16a34a]/30 transition-all">
-                                                            <span className="text-3xl">{facet.emoji}</span>
-                                                            <div className="min-w-0">
-                                                                <p className="text-[9px] font-black text-[#16a34a] uppercase tracking-widest">{facet.label}</p>
-                                                                <p className="font-bold text-sm truncate">{winner?.nombre || 'Desconocido'}</p>
-                                                                <p className="text-[10px] text-[var(--text-muted)] font-medium">{votes} votos ({Math.round((votes / totalVotes) * 100)}%)</p>
-                                                            </div>
-                                                        </div>
-                                                    )
-                                                })}
-                                                {facetVotes.length === 0 && (
-                                                    <div className="col-span-full py-10 text-center bg-[var(--card-bg)] rounded-3xl border border-dashed border-[var(--card-border)] opacity-50">
-                                                        <p className="text-xs font-bold italic">Aún no hay votos para los premios</p>
+                                            {/* Premios facet */}
+                                            {facetVotes.length > 0 && (
+                                                <>
+                                                    <h3 className="font-black italic uppercase tracking-tighter text-sm pt-2">🏅 Premios</h3>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                        {[
+                                                            { id: 'goleador', label: 'El Goleador', emoji: '⚽' },
+                                                            { id: 'comilon', label: 'El Comilón', emoji: '🍔' },
+                                                            { id: 'patadas', label: 'Pegapatadas', emoji: '🦵' },
+                                                            { id: 'arquero', label: 'Buen Arquero', emoji: '🧤' },
+                                                        ].map(facet => {
+                                                            const counts = facetVotes.filter(v => v.facet === facet.id)
+                                                                .reduce((acc, v) => { acc[v.player_id] = (acc[v.player_id] || 0) + 1; return acc }, {} as Record<string, number>)
+                                                            const entries = Object.entries(counts)
+                                                            if (!entries.length) return null
+                                                            const [winnerId, votes] = entries.sort((a, b) => b[1] - a[1])[0]
+                                                            const winner = jugadores.find(j => j.id === winnerId)
+                                                            const totalVotes = facetVotes.filter(v => v.facet === facet.id).length
+                                                            return (
+                                                                <div key={facet.id} className="bg-[var(--card-bg)] p-5 rounded-3xl border border-[var(--card-border)] flex items-center gap-4">
+                                                                    <span className="text-3xl">{facet.emoji}</span>
+                                                                    <div>
+                                                                        <p className="text-[9px] font-black text-[#16a34a] uppercase tracking-widest">{facet.label}</p>
+                                                                        <p className="font-bold text-sm">{winner?.nombre || '?'}</p>
+                                                                        <p className="text-[10px] text-[var(--text-muted)]">{votes} votos ({Math.round((votes / totalVotes) * 100)}%)</p>
+                                                                    </div>
+                                                                </div>
+                                                            )
+                                                        })}
                                                     </div>
-                                                )}
-                                            </div>
+                                                </>
+                                            )}
                                         </div>
                                     )
                                 })()}
+
                             </motion.div>
                         </AnimatePresence>
                     )}
                 </div>
             </div>
 
+            {/* Modales */}
             <AnimatePresence>
                 {votandoA && (
                     <VotarModal jugador={votandoA} onVotar={handleVotar} onClose={() => setVotandoA(null)} />
@@ -756,7 +763,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                             </p>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2 block">Seleccionar Miembro</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2 block">Miembro del grupo</label>
                                     <div className="max-h-40 overflow-y-auto border border-[var(--card-border)] rounded-2xl bg-[var(--background)] p-2 space-y-1">
                                         {miembros.map(m => (
                                             <button
@@ -765,7 +772,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                 className={`w-full text-left p-3 rounded-xl text-xs flex items-center gap-3 transition-all ${selectedUserId === m.user_id ? 'bg-[#16a34a] text-white font-bold' : 'hover:bg-[var(--hover-bg)]'}`}
                                             >
                                                 <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-[10px]">
-                                                    {m.profile?.username?.[0].toUpperCase()}
+                                                    {m.profile?.username?.[0]?.toUpperCase()}
                                                 </div>
                                                 {m.profile?.username}
                                             </button>
@@ -793,7 +800,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                 <button
                                     onClick={handleAgregarJugador}
                                     disabled={!nuevoNombre.trim() || guardando}
-                                    className="flex-1 py-4 rounded-2xl font-black text-white bg-[#16a34a] disabled:opacity-40 uppercase tracking-widest text-xs shadow-lg shadow-[#16a34a]/20 transition-all"
+                                    className="flex-1 py-4 rounded-2xl font-black text-white bg-[#16a34a] disabled:opacity-40 uppercase tracking-widest text-xs shadow-lg"
                                 >{guardando ? '⏳' : 'Agregar'}</button>
                             </div>
                         </motion.div>
