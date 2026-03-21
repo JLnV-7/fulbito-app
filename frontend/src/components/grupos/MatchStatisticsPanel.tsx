@@ -26,11 +26,11 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, canEdit = fa
     )
     const [procesando, setProcesando] = useState(false)
 
-    // Sincronizar cuando los jugadores llegan async
+    // Sync cuando jugadores cambia (por recarga de data)
     useEffect(() => {
         setGoles(Object.fromEntries(jugadores.map(j => [j.id, j.goles || 0])))
         setAsistencias(Object.fromEntries(jugadores.map(j => [j.id, j.asistencias || 0])))
-    }, [jugadores.map(j => j.id + (j.goles || 0) + (j.asistencias || 0)).join(',')])
+    }, [jugadores])
 
     const handleUpdateStat = (id: string, type: 'goles' | 'asistencias', delta: number) => {
         if (partido.stats_completed || !canEdit) return
@@ -45,8 +45,12 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, canEdit = fa
         if (procesando || !canEdit) return
         setProcesando(true)
         try {
-            const azulGoles = jugadores.filter(j => j.equipo === 'azul').reduce((acc, j) => acc + (goles[j.id] || 0), 0)
-            const rojoGoles = jugadores.filter(j => j.equipo === 'rojo').reduce((acc, j) => acc + (goles[j.id] || 0), 0)
+            const azulGoles = jugadores
+                .filter(j => j.equipo === 'azul')
+                .reduce((acc, j) => acc + (goles[j.id] || 0), 0)
+            const rojoGoles = jugadores
+                .filter(j => j.equipo === 'rojo')
+                .reduce((acc, j) => acc + (goles[j.id] || 0), 0)
             const statsPayload = jugadores.map(j => ({
                 id: j.id,
                 goles: goles[j.id] || 0,
@@ -56,7 +60,6 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, canEdit = fa
             showToast('Estadísticas guardadas 🏆', 'success')
             setTimeout(() => { onUpdate() }, 500)
         } catch (err: any) {
-            console.error('Error al guardar stats:', err)
             showToast('Error al guardar: ' + (err.message || 'Cerrá y reintentá'), 'error')
         } finally {
             setProcesando(false)
@@ -94,9 +97,12 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, canEdit = fa
 
     return (
         <div className="space-y-8 pb-32">
-            {!canEdit && !partido.stats_completed && (
-                <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 text-center">
-                    <p className="text-xs font-bold text-amber-500">Solo el creador o admin del grupo puede editar las estadísticas</p>
+            {/* Aviso solo lectura */}
+            {!canEdit && (
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl px-5 py-3 text-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] opacity-60">
+                        👀 Solo el creador o admin del grupo puede editar estadísticas
+                    </p>
                 </div>
             )}
 
@@ -150,6 +156,7 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, canEdit = fa
                 </div>
             </div>
 
+            {/* Botones solo para admins/creadores */}
             {canEdit && (
                 <div className="flex gap-4">
                     {!partido.stats_completed && (
@@ -164,6 +171,7 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, canEdit = fa
                             Limpiar Todo 🧹
                         </button>
                     )}
+
                     {partido.stats_completed && (
                         <button
                             onClick={async () => {
@@ -187,7 +195,8 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, canEdit = fa
                 </div>
             )}
 
-            {!partido.stats_completed && canEdit && (
+            {/* Botón confirmar — solo para canEdit y partido abierto */}
+            {canEdit && !partido.stats_completed && (
                 <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/95 to-transparent z-50">
                     <div className="max-w-md mx-auto">
                         <motion.div
@@ -211,6 +220,7 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, canEdit = fa
                                     <p className="text-2xl font-black">{jugadores.filter(j => j.equipo === 'rojo').reduce((acc, j) => acc + (goles[j.id] || 0), 0)}</p>
                                 </div>
                             </div>
+
                             <button
                                 onClick={handleSaveStats}
                                 disabled={procesando}
