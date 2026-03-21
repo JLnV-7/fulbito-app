@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePartidosAmigos } from '@/hooks/usePartidosAmigos'
 import { useToast } from '@/contexts/ToastContext'
@@ -33,6 +33,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
     const [jugadores, setJugadores] = useState<JugadorPartidoAmigo[]>([])
     const [facetVotes, setFacetVotes] = useState<FacetVote[]>([])
     const [loading, setLoading] = useState(true)
+    const loadingRef = useRef(false)
 
     const [miembros, setMiembros] = useState<any[]>([])
     const [equipoAgregando, setEquipoAgregando] = useState<'azul' | 'rojo' | null>(null)
@@ -48,52 +49,82 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
     const [jugadorDetalle, setJugadorDetalle] = useState<JugadorPartidoAmigo | null>(null)
 
     const {
-        fetchJugadoresConVotos,
         votarJugador,
         eliminarVotoJugador,
         votarFaceta,
         eliminarVotoFaceta,
-        fetchFacetVotes,
         agregarJugador,
-        eliminarJugador
+        eliminarJugador,
+        cerrarPartidoMundial,
+        reabrirEstadisticas,
     } = usePartidosAmigos(grupoId)
 
-    // ── Carga de datos ──────────────────────────────────────────────
-    const loadData = useCallback(async () => {
+    // ── Fetch directo, sin pasar por el hook para evitar cancelaciones ──
+    const loadData = async () => {
+        if (loadingRef.current) return
+        loadingRef.current = true
+        setLoading(true)
         try {
-            setLoading(true)
-            const [jugs, fVotes] = await Promise.all([
-                fetchJugadoresConVotos(partido.id),
-                fetchFacetVotes(partido.id)
-            ])
-            setJugadores(jugs)
-            setFacetVotes(fVotes)
-        } catch {
+            // 1. Traer jugadores
+            const { data: jugs, error: errJ } = await supabase
+                .from('jugadores_partido_amigo')
+                .select('*')
+                .eq('partido_amigo_id', partido.id)
+                .order('equipo').order('orden')
+            if (errJ) throw errJ
+
+            // 2. Traer todos los votos del partido
+            const { data: votos, error: errV } = await supabase
+                .from('votos_partido_amigo')
+                .select('*')
+                .eq('partido_amigo_id', partido.id)
+            if (errV) throw errV
+
+            // 3. Traer facet votes
+            const { data: fVotes, error: errF } = await supabase
+                .from('facet_votes')
+                .select('*')
+                .eq('partido_amigo_id', partido.id)
+            if (errF) throw errF
+
+            // 4. Calcular promedio y total_votos por jugador
+            const jugadoresConVotos: JugadorPartidoAmigo[] = (jugs || []).map((j: any) => {
+                const votosJugador = (votos || []).filter((v: any) => v.jugador_id === j.id)
+                const miVoto = votosJugador.find((v: any) => v.user_id === user?.id) || null
+                const promedio = votosJugador.length > 0
+                    ? Math.round(votosJugador.reduce((s: number, v: any) => s + v.nota, 0) / votosJugador.length * 10) / 10
+                    : 0
+                return {
+                    ...j,
+                    promedio,
+                    total_votos: votosJugador.length,
+                    mi_voto: miVoto
+                }
+            })
+
+            setJugadores(jugadoresConVotos)
+            setFacetVotes((fVotes || []) as FacetVote[])
+        } catch (err) {
+            console.error('Error loadData:', err)
             showToast('Error cargando datos del partido', 'error')
         } finally {
             setLoading(false)
+            loadingRef.current = false
         }
-    }, [partido.id])
+    }
 
-    const fetchMiembros = useCallback(async () => {
+    const fetchMiembros = async () => {
         const { data } = await supabase
             .from('miembros_grupo')
             .select('user_id, profile:profiles(username)')
             .eq('grupo_id', grupoId)
         setMiembros(data || [])
-    }, [grupoId])
+    }
 
     useEffect(() => {
         loadData()
         fetchMiembros()
     }, [partido.id])
-
-    // Refrescar al cambiar de tab a votos o resultados
-    useEffect(() => {
-        if (activeTab === 'votos' || activeTab === 'resultados') {
-            loadData()
-        }
-    }, [activeTab])
 
     // ── Permisos ────────────────────────────────────────────────────
     const canEdit = user?.id === partido.creado_por || user?.id === adminId
@@ -286,7 +317,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                 <p className="text-2xl font-black mt-1">{jugadores.filter(j => j.equipo === 'rojo').length}</p>
                                             </div>
                                         </div>
-
                                         {(partido.estado === 'borrador' && canEdit) ? (
                                             <div className="space-y-8 pt-4">
                                                 <div className="flex flex-col gap-8">
@@ -350,7 +380,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                 {/* ══ TAB VOTOS ══ */}
                                 {activeTab === 'votos' && (
                                     <div className="space-y-8">
-
                                         {/* Progreso personal */}
                                         <div className="bg-[var(--card-bg)] p-5 rounded-3xl border border-[var(--card-border)] shadow-sm">
                                             <div className="flex justify-between items-end mb-3">
@@ -365,19 +394,15 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                             </div>
                                         </div>
 
-                                        {/* ── RANKING EN VIVO — visible para todos ── */}
+                                        {/* ── RANKING EN VIVO ── */}
                                         <div>
                                             <div className="flex items-center justify-between mb-4">
                                                 <h3 className="font-black italic uppercase tracking-tighter text-sm">📊 Ranking acumulado</h3>
                                                 <button
                                                     onClick={loadData}
                                                     className="text-[9px] font-black uppercase tracking-widest text-[#16a34a] border border-[#16a34a]/30 px-3 py-1 rounded-full hover:bg-[#16a34a]/10 transition-all"
-                                                >
-                                                    🔄 Refrescar
-                                                </button>
+                                                >🔄 Refrescar</button>
                                             </div>
-
-                                            {/* Promedio por equipo */}
                                             <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl overflow-hidden mb-3">
                                                 <div className="flex">
                                                     {(['azul', 'rojo'] as const).map(eq => (
@@ -393,8 +418,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                     ))}
                                                 </div>
                                             </div>
-
-                                            {/* Lista de jugadores ordenada por promedio */}
                                             <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl overflow-hidden">
                                                 <div className="px-5 py-3 border-b border-[var(--card-border)] flex justify-between items-center">
                                                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Ranking en vivo</span>
@@ -402,7 +425,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                         {jugadoresConVotos.length} votados
                                                     </span>
                                                 </div>
-
                                                 {jugadoresConVotos.length === 0 ? (
                                                     <div className="py-10 text-center">
                                                         <p className="text-2xl mb-2">👀</p>
@@ -461,7 +483,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                     </button>
                                                 )}
                                             </div>
-
                                             {(['azul', 'rojo'] as const).map(eq => (
                                                 <div key={eq} className="space-y-3">
                                                     <h4 className={`font-black text-[10px] uppercase tracking-[0.2em] mb-3 border-b pb-2 flex items-center gap-2 ${eq === 'azul' ? 'text-blue-500 border-blue-500/10' : 'text-red-500 border-red-500/10'}`}>
@@ -470,10 +491,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                     </h4>
                                                     <div className="grid grid-cols-1 gap-2">
                                                         {jugadores.filter(j => j.equipo === eq).map(j => (
-                                                            <div
-                                                                key={j.id}
-                                                                className={`p-4 rounded-2xl border flex items-center justify-between gap-4 transition-all ${eq === 'azul' ? 'bg-blue-500/5 border-blue-500/10 hover:bg-blue-500/10' : 'bg-red-500/5 border-red-500/10 hover:bg-red-500/10'}`}
-                                                            >
+                                                            <div key={j.id} className={`p-4 rounded-2xl border flex items-center justify-between gap-4 transition-all ${eq === 'azul' ? 'bg-blue-500/5 border-blue-500/10 hover:bg-blue-500/10' : 'bg-red-500/5 border-red-500/10 hover:bg-red-500/10'}`}>
                                                                 <div className="min-w-0 flex-1">
                                                                     <p className="font-bold text-sm truncate">{j.nombre}</p>
                                                                     {j.mi_voto ? (
@@ -488,7 +506,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                                     ) : (
                                                                         <p className="text-[10px] text-[var(--text-muted)] font-medium mt-1">Sin votar aún</p>
                                                                     )}
-                                                                    {/* Promedio visible para todos */}
                                                                     {(j.total_votos || 0) > 0 && (
                                                                         <p className="text-[10px] text-[var(--text-muted)] mt-1">
                                                                             Promedio: <strong className={eq === 'azul' ? 'text-blue-500' : 'text-red-500'}>{j.promedio}</strong>
@@ -529,7 +546,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                     try {
                                                         await votarFaceta(partido.id, pid, facet)
                                                         showToast('Voto guardado 🏆', 'success')
-                                                        loadData()
+                                                        await loadData()
                                                     } catch {
                                                         showToast('Error al votar', 'error')
                                                     }
@@ -538,7 +555,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                     try {
                                                         await eliminarVotoFaceta(partido.id, facet)
                                                         showToast('Voto eliminado 🗑️', 'success')
-                                                        loadData()
+                                                        await loadData()
                                                     } catch {
                                                         showToast('Error al eliminar voto de faceta', 'error')
                                                     }
@@ -560,10 +577,8 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                         return Math.round(conVotos.reduce((s, j) => s + (j.promedio || 0), 0) / conVotos.length * 10) / 10
                                     }
                                     const hayVotos = jugadores.some(j => (j.total_votos || 0) > 0)
-
                                     return (
                                         <div className="space-y-6">
-                                            {/* Marcador */}
                                             <div className="bg-gradient-to-br from-[#16a34a] to-emerald-600 p-8 rounded-3xl text-white text-center shadow-xl">
                                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 opacity-80">Marcador</p>
                                                 <div className="flex items-center justify-center gap-8">
@@ -585,8 +600,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                     <p className="text-[9px] opacity-50 mt-4 uppercase tracking-widest">Partido en curso</p>
                                                 )}
                                             </div>
-
-                                            {/* Sin votos aún */}
                                             {!hayVotos && (
                                                 <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-8 text-center">
                                                     <p className="text-3xl mb-3">🗳️</p>
@@ -594,8 +607,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                     <p className="text-[10px] text-[var(--text-muted)] mt-1">Los resultados aparecen acá en tiempo real</p>
                                                 </div>
                                             )}
-
-                                            {/* MVP */}
                                             {mvp && (
                                                 <motion.div
                                                     initial={{ scale: 0.9, opacity: 0 }}
@@ -613,8 +624,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                     <p className="text-[10px] text-white/60 mt-1">Tocá para ver detalle</p>
                                                 </motion.div>
                                             )}
-
-                                            {/* Ranking por equipo */}
                                             {[
                                                 { equipo: 'azul', color: '#3b82f6', emoji: '🔵', lista: azulesRes, prom: promedioEquipo(azulesRes) },
                                                 { equipo: 'rojo', color: '#ef4444', emoji: '🔴', lista: rojosRes, prom: promedioEquipo(rojosRes) }
@@ -665,8 +674,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                     </div>
                                                 </div>
                                             ))}
-
-                                            {/* Goleador / Asistidor */}
                                             {jugadores.some(j => j.goles || j.asistencias) && (
                                                 <>
                                                     <h3 className="font-black italic uppercase tracking-tighter text-sm pt-2">📈 Estadísticas</h3>
@@ -689,8 +696,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                     </div>
                                                 </>
                                             )}
-
-                                            {/* Premios facet */}
                                             {facetVotes.length > 0 && (
                                                 <>
                                                     <h3 className="font-black italic uppercase tracking-tighter text-sm pt-2">🏅 Premios</h3>
@@ -725,7 +730,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                         </div>
                                     )
                                 })()}
-
                             </motion.div>
                         </AnimatePresence>
                     )}
@@ -738,13 +742,11 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                     <VotarModal jugador={votandoA} onVotar={handleVotar} onClose={() => setVotandoA(null)} />
                 )}
             </AnimatePresence>
-
             <AnimatePresence>
                 {showRapida && (
                     <VotacionRapida jugadores={jugadores} partidoId={partido.id} onVotarTodos={handleVotarTodos} onClose={() => setShowRapida(false)} />
                 )}
             </AnimatePresence>
-
             <AnimatePresence>
                 {equipoAgregando && (
                     <motion.div
@@ -807,7 +809,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                     </motion.div>
                 )}
             </AnimatePresence>
-
             <AnimatePresence>
                 {jugadorDetalle && (
                     <DetalleJugadorAmigo jugador={jugadorDetalle} grupoId={grupoId} onClose={() => setJugadorDetalle(null)} />
