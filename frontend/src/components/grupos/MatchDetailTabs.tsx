@@ -356,6 +356,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                         <div>
                                             <h3 className="font-black italic uppercase tracking-tighter text-sm mb-4">📊 Ranking acumulado</h3>
                                             <RankingEnVivo
+                                                key={jugadores.map(j => j.total_votos || 0).join('-')}
                                                 jugadores={jugadores}
                                                 totalMiembros={partido.total_miembros || 0}
                                             />
