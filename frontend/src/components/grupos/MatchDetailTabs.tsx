@@ -12,7 +12,6 @@ import { MatchStatisticsPanel } from './MatchStatisticsPanel'
 import { CanchaSeleccion } from './CanchaSeleccion'
 import { VotarModal } from './VotarModal'
 import { VotacionRapida } from './VotacionRapida'
-import { RankingEnVivo } from './RankingEnVivo'
 import { DetalleJugadorAmigo } from './DetalleJugadorAmigo'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
@@ -48,13 +47,13 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
     const [showRapida, setShowRapida] = useState(false)
     const [jugadorDetalle, setJugadorDetalle] = useState<JugadorPartidoAmigo | null>(null)
 
-    const { 
-        fetchJugadoresConVotos, 
-        votarJugador, 
+    const {
+        fetchJugadoresConVotos,
+        votarJugador,
         eliminarVotoJugador,
-        votarFaceta, 
+        votarFaceta,
         eliminarVotoFaceta,
-        fetchFacetVotes, 
+        fetchFacetVotes,
         agregarJugador,
         eliminarJugador
     } = usePartidosAmigos(grupoId)
@@ -149,9 +148,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
         setGuardando(true)
         try {
             const jugador = await agregarJugador(partido.id, nuevoNombre.trim(), equipoAgregando, selectedUserId || undefined)
-            if (ordenAgregando !== null) {
-                jugador.orden = ordenAgregando
-            }
+            if (ordenAgregando !== null) jugador.orden = ordenAgregando
             showToast('Jugador agregado', 'success')
             setNuevoNombre('')
             setSelectedUserId(null)
@@ -180,6 +177,17 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
     const totalJugadores = jugadores.length
     const progreso = totalJugadores > 0 ? Math.round((votados / totalJugadores) * 100) : 0
 
+    // Ranking inline helpers
+    const jugadoresConVotos = [...jugadores]
+        .filter(j => (j.total_votos || 0) > 0)
+        .sort((a, b) => (b.promedio || 0) - (a.promedio || 0))
+
+    const promEquipo = (eq: 'azul' | 'rojo') => {
+        const lista = jugadoresConVotos.filter(j => j.equipo === eq)
+        if (!lista.length) return 0
+        return Math.round(lista.reduce((s, j) => s + (j.promedio || 0), 0) / lista.length * 10) / 10
+    }
+
     const tabs = [
         { id: 'info', label: 'Info', icon: Info },
         { id: 'stats', label: 'Estadísticas', icon: BarChart2 },
@@ -196,10 +204,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
         >
             {/* Header */}
             <div className="bg-[#16a34a] text-white pt-10 pb-4 px-6 relative shrink-0">
-                <button
-                    onClick={onClose}
-                    className="absolute top-10 right-6 p-2 bg-black/20 rounded-full hover:bg-black/30 transition-all"
-                >
+                <button onClick={onClose} className="absolute top-10 right-6 p-2 bg-black/20 rounded-full hover:bg-black/30 transition-all">
                     <X size={20} />
                 </button>
                 <div className="max-w-4xl mx-auto">
@@ -218,9 +223,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-all ${
-                                activeTab === tab.id
-                                    ? 'bg-[#16a34a]/10 text-[#16a34a]'
-                                    : 'text-[var(--text-muted)] hover:bg-[var(--hover-bg)]'
+                                activeTab === tab.id ? 'bg-[#16a34a]/10 text-[#16a34a]' : 'text-[var(--text-muted)] hover:bg-[var(--hover-bg)]'
                             }`}
                         >
                             <tab.icon size={18} />
@@ -257,7 +260,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                 {partido.hora.slice(0, 5)} HS • Fútbol {partido.tipo_partido}
                                             </p>
                                         </div>
-
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="bg-blue-500/10 p-4 rounded-2xl border border-blue-500/20 text-center">
                                                 <p className="text-2xl mb-1">🔵</p>
@@ -270,7 +272,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                 <p className="text-2xl font-black mt-1">{jugadores.filter(j => j.equipo === 'rojo').length}</p>
                                             </div>
                                         </div>
-
                                         {(partido.estado === 'borrador' && canEdit) ? (
                                             <div className="space-y-8 pt-4">
                                                 <div className="flex flex-col gap-8">
@@ -344,22 +345,72 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                 <p className="text-2xl font-black text-[#16a34a] leading-none">{progreso}%</p>
                                             </div>
                                             <div className="h-2 bg-[var(--background)] rounded-full overflow-hidden border border-[var(--card-border)]">
-                                                <motion.div
-                                                    initial={{ width: 0 }}
-                                                    animate={{ width: `${progreso}%` }}
-                                                    className="h-full bg-[#16a34a]"
-                                                />
+                                                <motion.div initial={{ width: 0 }} animate={{ width: `${progreso}%` }} className="h-full bg-[#16a34a]" />
                                             </div>
                                         </div>
 
-                                        {/* Ranking en vivo */}
+                                        {/* ── RANKING EN VIVO (inline, sin componente externo) ── */}
                                         <div>
                                             <h3 className="font-black italic uppercase tracking-tighter text-sm mb-4">📊 Ranking acumulado</h3>
-                                            <RankingEnVivo
-                                                key={jugadores.map(j => j.total_votos || 0).join('-')}
-                                                jugadores={jugadores}
-                                                totalMiembros={partido.total_miembros || 0}
-                                            />
+                                            <div className="space-y-3">
+                                                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl overflow-hidden">
+                                                    <div className="flex">
+                                                        {(['azul', 'rojo'] as const).map(eq => (
+                                                            <div key={eq} className={`flex-1 p-4 text-center ${eq === 'azul' ? 'border-r' : 'border-l'} border-[var(--card-border)]`}>
+                                                                <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1 ${eq === 'azul' ? 'text-blue-500' : 'text-red-500'}`}>
+                                                                    {eq === 'azul' ? '🔵 Azul' : '🔴 Rojo'}
+                                                                </p>
+                                                                <p className={`text-3xl font-black tabular-nums ${eq === 'azul' ? 'text-blue-500' : 'text-red-500'}`}>
+                                                                    {promEquipo(eq) || '–'}
+                                                                </p>
+                                                                <p className="text-[9px] text-[var(--text-muted)] mt-1">prom. equipo</p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl overflow-hidden">
+                                                    <div className="px-5 py-3 border-b border-[var(--card-border)] flex justify-between items-center">
+                                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Ranking en vivo</span>
+                                                        <span className="text-[9px] font-black bg-[#16a34a]/10 text-[#16a34a] px-2 py-0.5 rounded-full border border-[#16a34a]/20">LIVE</span>
+                                                    </div>
+                                                    {jugadoresConVotos.length === 0 ? (
+                                                        <p className="text-center py-6 text-xs text-[var(--text-muted)] opacity-50">👀 Esperando los primeros votos...</p>
+                                                    ) : (
+                                                        <div>
+                                                            {jugadoresConVotos.map((j, i) => (
+                                                                <div key={j.id} className={`flex items-center gap-3 px-5 py-3 border-b border-[var(--card-border)] last:border-0 ${i === 0 ? 'bg-amber-400/5' : ''}`}>
+                                                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${i === 0 ? 'bg-amber-400 text-amber-900' : 'bg-[var(--background)] text-[var(--text-muted)]'}`}>
+                                                                        {i === 0 ? '👑' : i + 1}
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex items-center justify-between mb-1">
+                                                                            <span className="text-sm font-bold truncate">{j.nombre}</span>
+                                                                            <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                                                                                <span style={{ color: j.equipo === 'azul' ? '#3b82f6' : '#ef4444' }} className="text-[9px]">
+                                                                                    {j.equipo === 'azul' ? '🔵' : '🔴'}
+                                                                                </span>
+                                                                                <span className="text-base font-black tabular-nums" style={{ color: i === 0 ? '#f59e0b' : j.equipo === 'azul' ? '#3b82f6' : '#ef4444' }}>
+                                                                                    {j.promedio}
+                                                                                </span>
+                                                                                <span className="text-[9px] text-[var(--text-muted)]">({j.total_votos}v)</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="h-1.5 bg-[var(--background)] rounded-full overflow-hidden">
+                                                                            <div
+                                                                                className="h-full rounded-full transition-all duration-700"
+                                                                                style={{
+                                                                                    width: `${((j.promedio || 0) / 10) * 100}%`,
+                                                                                    backgroundColor: i === 0 ? '#f59e0b' : j.equipo === 'azul' ? '#3b82f6' : '#ef4444'
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
                                         <div className="border-t border-[var(--card-border)]" />
 
@@ -376,7 +427,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                     </button>
                                                 )}
                                             </div>
-
                                             <div className="grid grid-cols-1 gap-6">
                                                 {/* Azul */}
                                                 <div className="space-y-3">
@@ -385,7 +435,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                     </h4>
                                                     <div className="grid grid-cols-1 gap-2">
                                                         {jugadores.filter(j => j.equipo === 'azul').map((j) => (
-                                                            <div key={j.id} className="bg-blue-500/5 p-4 rounded-2xl border border-blue-500/10 flex items-center justify-between gap-4 group hover:bg-blue-500/10 transition-all">
+                                                            <div key={j.id} className="bg-blue-500/5 p-4 rounded-2xl border border-blue-500/10 flex items-center justify-between gap-4 hover:bg-blue-500/10 transition-all">
                                                                 <div className="min-w-0">
                                                                     <p className="font-bold text-sm truncate">{j.nombre}</p>
                                                                     {j.mi_voto ? (
@@ -421,7 +471,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                         ))}
                                                     </div>
                                                 </div>
-
                                                 {/* Rojo */}
                                                 <div className="space-y-3">
                                                     <h4 className="font-black text-red-500 text-[10px] uppercase tracking-[0.2em] mb-3 border-b border-red-500/10 pb-2 flex items-center gap-2">
@@ -429,7 +478,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                     </h4>
                                                     <div className="grid grid-cols-1 gap-2">
                                                         {jugadores.filter(j => j.equipo === 'rojo').map((j) => (
-                                                            <div key={j.id} className="bg-red-500/5 p-4 rounded-2xl border border-red-500/10 flex items-center justify-between gap-4 group hover:bg-red-500/10 transition-all">
+                                                            <div key={j.id} className="bg-red-500/5 p-4 rounded-2xl border border-red-500/10 flex items-center justify-between gap-4 hover:bg-red-500/10 transition-all">
                                                                 <div className="min-w-0">
                                                                     <p className="font-bold text-sm truncate">{j.nombre}</p>
                                                                     {j.mi_voto ? (
@@ -512,7 +561,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                     }
                                     return (
                                         <div className="space-y-6">
-                                            {/* Marcador Final */}
                                             <div className="bg-gradient-to-br from-[#16a34a] to-emerald-600 p-8 rounded-3xl text-white text-center shadow-xl">
                                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 opacity-80">Marcador Final</p>
                                                 <div className="flex items-center justify-center gap-8">
@@ -532,7 +580,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                 </div>
                                             </div>
 
-                                            {/* MVP */}
                                             {mvp && (mvp.promedio || 0) > 0 && (
                                                 <motion.div
                                                     initial={{ scale: 0.9, opacity: 0 }}
@@ -554,7 +601,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                 </motion.div>
                                             )}
 
-                                            {/* Rankings por equipo */}
                                             {[
                                                 { equipo: 'azul', color: '#3b82f6', emoji: '🔵', lista: azulesRes, prom: promedioEquipo(azulesRes) },
                                                 { equipo: 'rojo', color: '#ef4444', emoji: '🔴', lista: rojosRes, prom: promedioEquipo(rojosRes) }
@@ -609,7 +655,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                 </div>
                                             ))}
 
-                                            {/* Estadísticas */}
                                             <h3 className="font-black italic uppercase tracking-tighter text-sm pt-4">📈 Estadísticas del Partido</h3>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 {[
@@ -639,7 +684,6 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                 )}
                                             </div>
 
-                                            {/* Premios */}
                                             <h3 className="font-black italic uppercase tracking-tighter text-sm pt-4">🏅 Premios (Votación)</h3>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 {[
@@ -682,43 +726,27 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                 </div>
             </div>
 
-            {/* Modal votar individual */}
             <AnimatePresence>
                 {votandoA && (
-                    <VotarModal
-                        jugador={votandoA}
-                        onVotar={handleVotar}
-                        onClose={() => setVotandoA(null)}
-                    />
+                    <VotarModal jugador={votandoA} onVotar={handleVotar} onClose={() => setVotandoA(null)} />
                 )}
             </AnimatePresence>
 
-            {/* Modal votación rápida */}
             <AnimatePresence>
                 {showRapida && (
-                    <VotacionRapida
-                        jugadores={jugadores}
-                        partidoId={partido.id}
-                        onVotarTodos={handleVotarTodos}
-                        onClose={() => setShowRapida(false)}
-                    />
+                    <VotacionRapida jugadores={jugadores} partidoId={partido.id} onVotarTodos={handleVotarTodos} onClose={() => setShowRapida(false)} />
                 )}
             </AnimatePresence>
 
-            {/* Modal agregar jugador */}
             <AnimatePresence>
                 {equipoAgregando && (
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4"
                         onClick={() => setEquipoAgregando(null)}
                     >
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
+                            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
                             className="bg-[var(--card-bg)] rounded-3xl p-6 w-full max-w-sm border border-[var(--card-border)] shadow-2xl"
                             onClick={e => e.stopPropagation()}
                         >
@@ -749,8 +777,7 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                         <UserPlus size={16} className="text-[var(--text-muted)]" />
                                     </div>
                                     <input
-                                        type="text"
-                                        value={nuevoNombre}
+                                        type="text" value={nuevoNombre}
                                         onChange={e => { setNuevoNombre(e.target.value); setSelectedUserId(null) }}
                                         onKeyDown={e => e.key === 'Enter' && handleAgregarJugador()}
                                         placeholder="O nombre de invitado..."
@@ -774,14 +801,9 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                 )}
             </AnimatePresence>
 
-            {/* Modal detalle jugador */}
             <AnimatePresence>
                 {jugadorDetalle && (
-                    <DetalleJugadorAmigo
-                        jugador={jugadorDetalle}
-                        grupoId={grupoId}
-                        onClose={() => setJugadorDetalle(null)}
-                    />
+                    <DetalleJugadorAmigo jugador={jugadorDetalle} grupoId={grupoId} onClose={() => setJugadorDetalle(null)} />
                 )}
             </AnimatePresence>
         </motion.div>
