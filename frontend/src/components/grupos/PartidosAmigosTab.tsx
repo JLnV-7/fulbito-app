@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { CrearPartidoAmigo } from './CrearPartidoAmigo'
 import { VotarJugadores } from './VotarJugadores'
-import { MatchDetailTabs } from './MatchDetailTabs'
+import { PartidoModal } from './PartidoModal'
 import type { PartidoAmigo, GrupoProde } from '@/types'
 
 interface PartidosAmigosTabProps {
@@ -197,7 +197,7 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
             {/* Modal de Detalle con Tabs */}
             <AnimatePresence>
                 {detalleVisible && (
-                    <MatchDetailTabs
+                    <PartidoModal
                         partido={detalleVisible}
                         grupoId={grupo.id}
                         adminId={grupo.admin_id}
