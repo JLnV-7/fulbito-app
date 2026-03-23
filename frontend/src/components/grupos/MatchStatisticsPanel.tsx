@@ -4,24 +4,20 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { usePartidosAmigos } from '@/hooks/usePartidosAmigos'
 import { useToast } from '@/contexts/ToastContext'
-import { useAuth } from '@/contexts/AuthContext'
 import type { JugadorPartidoAmigo, PartidoAmigo } from '@/types'
 
 interface MatchStatisticsPanelProps {
     partido: PartidoAmigo
     jugadores: JugadorPartidoAmigo[]
     grupoId: string
-    onUpdate: () => void
     canEdit?: boolean
+    onUpdate: () => void
 }
 
-export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate, canEdit }: MatchStatisticsPanelProps) {
+export function MatchStatisticsPanel({ partido, jugadores, grupoId, canEdit = false, onUpdate }: MatchStatisticsPanelProps) {
     const { cerrarPartidoMundial, reabrirEstadisticas } = usePartidosAmigos(grupoId)
     const { showToast } = useToast()
-    const { user } = useAuth()
 
-
-    // Internal state for unsaved stats
     const [goles, setGoles] = useState<Record<string, number>>(
         Object.fromEntries(jugadores.map(j => [j.id, j.goles || 0]))
     )
@@ -30,15 +26,14 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate, ca
     )
     const [procesando, setProcesando] = useState(false)
 
-    // Sincronizar stats si los jugadores llegan asincrónicamente
+    // Sync cuando jugadores cambia (por recarga de data)
     useEffect(() => {
         setGoles(Object.fromEntries(jugadores.map(j => [j.id, j.goles || 0])))
         setAsistencias(Object.fromEntries(jugadores.map(j => [j.id, j.asistencias || 0])))
-    }, [jugadores.map(j => j.id + (j.goles || 0) + (j.asistencias || 0)).join(',')])
+    }, [jugadores])
 
     const handleUpdateStat = (id: string, type: 'goles' | 'asistencias', delta: number) => {
-        if (partido.stats_completed) return
-        
+        if (partido.stats_completed || !canEdit) return
         if (type === 'goles') {
             setGoles(prev => ({ ...prev, [id]: Math.max(0, (prev[id] || 0) + delta) }))
         } else {
@@ -47,34 +42,24 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate, ca
     }
 
     const handleSaveStats = async () => {
-        if (procesando) return
+        if (procesando || !canEdit) return
         setProcesando(true)
         try {
-            // Recalculate everything based on CURRENT state to be 100% sure
             const azulGoles = jugadores
                 .filter(j => j.equipo === 'azul')
                 .reduce((acc, j) => acc + (goles[j.id] || 0), 0)
-            
             const rojoGoles = jugadores
                 .filter(j => j.equipo === 'rojo')
                 .reduce((acc, j) => acc + (goles[j.id] || 0), 0)
-
             const statsPayload = jugadores.map(j => ({
                 id: j.id,
                 goles: goles[j.id] || 0,
                 asistencias: asistencias[j.id] || 0
             }))
-
-            console.log('Guardando estadísticas finales:', { azulGoles, rojoGoles, statsPayload })
             await cerrarPartidoMundial(partido.id, azulGoles, rojoGoles, statsPayload)
-            
             showToast('Estadísticas guardadas 🏆', 'success')
-            // Don't close immediately to let the user see the success
-            setTimeout(() => {
-                onUpdate()
-            }, 500)
+            setTimeout(() => { onUpdate() }, 500)
         } catch (err: any) {
-            console.error('Error al guardar stats:', err)
             showToast('Error al guardar: ' + (err.message || 'Cerrá y reintentá'), 'error')
         } finally {
             setProcesando(false)
@@ -85,22 +70,22 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate, ca
         <div className="flex flex-col items-center gap-1">
             <span className="text-[10px] opacity-50">{emoji}</span>
             <div className="flex items-center gap-2 bg-[var(--background)] px-1 py-1 rounded-xl border border-[var(--card-border)]">
-                <button 
+                <button
                     onClick={() => onDelta(-1)}
-                    disabled={partido.stats_completed || value === 0}
+                    disabled={partido.stats_completed || !canEdit || value === 0}
                     className="w-7 h-7 flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--hover-bg)] rounded-lg disabled:opacity-20"
                 >-</button>
                 <span className="w-4 text-center font-black text-sm tabular-nums" style={{ color: value > 0 ? color : 'inherit' }}>
                     {value}
                 </span>
-                <button 
+                <button
                     onClick={() => onDelta(1)}
-                    disabled={partido.stats_completed}
+                    disabled={partido.stats_completed || !canEdit}
                     className="w-7 h-7 flex items-center justify-center text-[#16a34a] hover:bg-[#16a34a]/10 rounded-lg disabled:opacity-20"
                 >+</button>
             </div>
-            {value > 0 && !partido.stats_completed && (
-                <button 
+            {value > 0 && !partido.stats_completed && canEdit && (
+                <button
                     onClick={() => onDelta(-value)}
                     className="mt-1 text-[8px] font-black text-red-500/50 hover:text-red-500 uppercase tracking-widest transition-colors"
                 >
@@ -112,6 +97,15 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate, ca
 
     return (
         <div className="space-y-8 pb-32">
+            {/* Aviso solo lectura */}
+            {!canEdit && (
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl px-5 py-3 text-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] opacity-60">
+                        👀 Solo el creador o admin del grupo puede editar estadísticas
+                    </p>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 gap-8">
                 {/* Equipo Azul */}
                 <div className="bg-blue-500/5 rounded-[2.5rem] p-1 border border-blue-500/10 backdrop-blur-sm">
@@ -162,46 +156,50 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate, ca
                 </div>
             </div>
 
-            <div className="flex gap-4">
-                {!partido.stats_completed && (
-                    <button
-                        onClick={() => {
-                            setGoles(Object.fromEntries(jugadores.map(j => [j.id, 0])))
-                            setAsistencias(Object.fromEntries(jugadores.map(j => [j.id, 0])))
-                            showToast('Estadísticas reseteadas 🧹', 'success')
-                        }}
-                        className="flex-1 py-4 bg-gray-500/10 text-gray-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-gray-500/20 transition-all border border-gray-500/10"
-                    >
-                        Limpiar Todo 🧹
-                    </button>
-                )}
-                
-                {partido.stats_completed && canEdit && (
-                    <button
-                        onClick={async () => {
-                            if (procesando) return
-                            setProcesando(true)
-                            try {
-                                await reabrirEstadisticas(partido.id)
-                                showToast('Estadísticas reabiertas 🔓', 'success')
-                                onUpdate()
-                            } catch (err) {
-                                showToast('Error al reabrir', 'error')
-                            } finally {
-                                setProcesando(false)
-                            }
-                        }}
-                        className="flex-1 py-4 bg-orange-500/10 text-orange-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-orange-500/20 transition-all border border-orange-500/10"
-                    >
-                        Reabrir para Editar 🔓
-                    </button>
-                )}
-            </div>
+            {/* Botones solo para admins/creadores */}
+            {canEdit && (
+                <div className="flex gap-4">
+                    {!partido.stats_completed && (
+                        <button
+                            onClick={() => {
+                                setGoles(Object.fromEntries(jugadores.map(j => [j.id, 0])))
+                                setAsistencias(Object.fromEntries(jugadores.map(j => [j.id, 0])))
+                                showToast('Estadísticas reseteadas 🧹', 'success')
+                            }}
+                            className="flex-1 py-4 bg-gray-500/10 text-gray-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-gray-500/20 transition-all border border-gray-500/10"
+                        >
+                            Limpiar Todo 🧹
+                        </button>
+                    )}
 
-            {!partido.stats_completed && canEdit && (
+                    {partido.stats_completed && (
+                        <button
+                            onClick={async () => {
+                                if (procesando) return
+                                setProcesando(true)
+                                try {
+                                    await reabrirEstadisticas(partido.id)
+                                    showToast('Estadísticas reabiertas 🔓', 'success')
+                                    onUpdate()
+                                } catch {
+                                    showToast('Error al reabrir', 'error')
+                                } finally {
+                                    setProcesando(false)
+                                }
+                            }}
+                            className="flex-1 py-4 bg-orange-500/10 text-orange-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-orange-500/20 transition-all border border-orange-500/10"
+                        >
+                            Reabrir para Editar 🔓
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {/* Botón confirmar — solo para canEdit y partido abierto */}
+            {canEdit && !partido.stats_completed && (
                 <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/95 to-transparent z-50">
                     <div className="max-w-md mx-auto">
-                        <motion.div 
+                        <motion.div
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[2rem] p-5 shadow-2xl backdrop-blur-xl"
@@ -231,7 +229,7 @@ export function MatchStatisticsPanel({ partido, jugadores, grupoId, onUpdate, ca
                                 <span className="relative z-10 flex items-center justify-center gap-2">
                                     {procesando ? '⏳ Procesando...' : '🔥 Confirmar y Cerrar'}
                                 </span>
-                                <motion.div 
+                                <motion.div
                                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full"
                                     animate={{ translateX: ['100%', '-100%'] }}
                                     transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
