@@ -155,18 +155,23 @@ export function TabVotos({ partido, jugadores, facetVotes, onVotar, onEliminarVo
                             >
                                 <div className="flex-1 min-w-0">
                                     <p className="font-bold text-sm truncate">{j.nombre}</p>
-                                    {j.mi_voto ? (
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <div className="flex gap-0.5">
+                                            {Array.from({ length: 5 }).map((_, i) => (
+                                                <span key={i} className={`text-[8px] ${i < Math.round((j.promedio || 0) / 2) ? '' : 'grayscale opacity-20'}`}>⭐</span>
+                                            ))}
+                                        </div>
+                                        <span className={`text-[10px] font-bold ${eq === 'azul' ? 'text-blue-500' : 'text-red-500'}`}>
+                                            {(j.total_votos || 0) > 0 ? `${j.promedio}/10` : 'Sin votos'}
+                                        </span>
+                                        {(j.total_votos || 0) > 0 && (
+                                            <span className="text-[10px] text-[var(--text-muted)] opacity-50">({j.total_votos}v)</span>
+                                        )}
+                                    </div>
+                                    {j.mi_voto && (
                                         <p className="text-[10px] mt-0.5" style={{ color: eq === 'azul' ? '#3b82f6' : '#ef4444' }}>
                                             Tu voto: <strong>{j.mi_voto.nota}/10</strong>
                                             {j.mi_voto.comentario && <span className="text-[var(--text-muted)]"> · "{j.mi_voto.comentario}"</span>}
-                                        </p>
-                                    ) : (
-                                        <p className="text-[10px] text-[var(--text-muted)] mt-0.5">Sin votar</p>
-                                    )}
-                                    {(j.total_votos || 0) > 0 && (
-                                        <p className="text-[10px] text-[var(--text-muted)] mt-0.5">
-                                            Promedio: <strong style={{ color: eq === 'azul' ? '#3b82f6' : '#ef4444' }}>{j.promedio}</strong>
-                                            <span className="opacity-50"> ({j.total_votos} votos)</span>
                                         </p>
                                     )}
                                 </div>

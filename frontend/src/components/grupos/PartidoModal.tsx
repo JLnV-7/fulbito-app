@@ -47,7 +47,12 @@ export function PartidoModal({ partido, grupoId, adminId, initialTab = 'info', o
     } = usePartidoDetalle(partido.id, grupoId)
 
     // Fetch al montar — una sola vez
-    useEffect(() => { fetch() }, [partido.id])
+    useEffect(() => { 
+        fetch() 
+        // Bloquear body scroll al montar
+        document.body.style.overflow = 'hidden'
+        return () => { document.body.style.overflow = 'unset' }
+    }, [partido.id])
 
     const handleError = (msg: string) => showToast(msg, 'error')
     const handleSuccess = (msg: string) => showToast(msg, 'success')
