@@ -638,9 +638,7 @@ export default function Perfil() {
                       </button>
 
                       {/* Feedback */}
-                      <div className="p-4">
-                        <FeedbackWidget />
-                      </div>
+                      <FeedbackWidget inline={true} />
                     </div>
                   </section>
 

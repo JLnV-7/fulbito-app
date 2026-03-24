@@ -71,13 +71,17 @@ export function FeedbackWidget({ inline = false }: FeedbackWidgetProps) {
             {inline ? (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="w-full text-left py-3 px-1 border-b border-[var(--card-border)] last:border-0 flex items-center justify-between group transition-colors hover:bg-[var(--hover-bg)]"
+                    className="w-full flex items-center justify-between p-4 hover:bg-[var(--hover-bg)] transition-colors active:bg-[var(--card-border)]/50"
                 >
-                    <div className="flex items-center gap-3">
-                        <MessageSquarePlus size={16} className="text-[var(--text-muted)] group-hover:text-[var(--foreground)] transition-colors" />
-                        <span className="text-xs font-bold capitalize tracking-tight text-[var(--foreground)]">Enviar Feedback</span>
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center border border-amber-500/20">
+                            <MessageSquarePlus size={18} />
+                        </div>
+                        <div className="text-left">
+                            <p className="text-sm font-bold">Enviar Feedback</p>
+                            <p className="text-[10px] text-[var(--text-muted)] font-medium">Ayudanos a mejorar la app</p>
+                        </div>
                     </div>
-                    <span className="text-[10px] text-[var(--text-muted)] font-medium capitalize">Ayudanos a mejorar</span>
                 </button>
             ) : (
                 <motion.button
@@ -91,14 +95,14 @@ export function FeedbackWidget({ inline = false }: FeedbackWidgetProps) {
                 </motion.button>
             )}
 
-            {/* Modal */}
-            <AnimatePresence>
-                {isOpen && (
+            {/* Modal via Portal */}
+            {isOpen && typeof document !== 'undefined' && require('react-dom').createPortal(
+                <AnimatePresence>
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+                        className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
                         onClick={() => setIsOpen(false)}
                     >
                         <motion.div
@@ -173,8 +177,9 @@ export function FeedbackWidget({ inline = false }: FeedbackWidgetProps) {
                             </form>
                         </motion.div>
                     </motion.div>
-                )}
-            </AnimatePresence>
+                </AnimatePresence>,
+                document.body
+            )}
         </>
     )
 }
