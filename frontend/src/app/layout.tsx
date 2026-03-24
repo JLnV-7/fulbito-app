@@ -80,6 +80,11 @@ export default function RootLayout({
             <p className="text-[10px] mt-4 opacity-50">FutLog Beta © {new Date().getFullYear()}</p>
           </footer>
         </LayoutClientWrapper>
+        <script
+          dangerouslySetInnerHTML={{
+             __html: `if('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister())) }`
+          }}
+        />
       </body>
     </html>
   );
