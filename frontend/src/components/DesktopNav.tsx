@@ -39,12 +39,12 @@ function DesktopNavInner() {
     ]
 
     return (
-        <nav className="hidden md:flex fixed top-0 left-0 right-0 
+        <nav className="hidden md:flex fixed top-0 left-0 right-0 h-16
                     bg-[var(--background)]/80 backdrop-blur-xl
-                    border-b border-[var(--card-border)] px-6 py-2.5 items-center z-50">
+                    border-b border-[var(--card-border)] px-6 items-center z-50">
 
             {/* Left: Logo */}
-            <div className="w-36 flex-shrink-0">
+            <div className="w-48 flex-shrink-0">
                 <button
                     onClick={() => router.push('/')}
                     className="text-lg font-black italic tracking-tighter hover:opacity-80 transition-opacity"
@@ -75,7 +75,7 @@ function DesktopNavInner() {
             </div>
 
             {/* Right: Actions */}
-            <div className="w-36 flex-shrink-0 flex items-center justify-end gap-1 md:gap-2">
+            <div className="w-48 flex-shrink-0 flex items-center justify-end gap-1 md:gap-2">
                 <button
                     onClick={() => router.push('/buscar')}
                     className="p-2 flex items-center justify-center rounded-full text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-all"
@@ -97,7 +97,7 @@ function DesktopNavInner() {
                 >
                     <User size={18} />
                 </button>
-                <ThemeToggle />
+                <ThemeToggle compact />
             </div>
         </nav>
     )
