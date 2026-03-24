@@ -1,7 +1,4 @@
 // src/hooks/usePartidoDetalle.ts
-// Hook simple y directo — sin useCallback, sin dependencias circulares
-// Hace todos los fetches directamente con supabase
-
 'use client'
 
 import { useState } from 'react'
@@ -20,7 +17,6 @@ export function usePartidoDetalle(partidoId: string, grupoId: string) {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    // ── Fetch principal — llama esto al montar y cuando necesitás refrescar ──
     const fetch = async () => {
         if (!user) return
         setLoading(true)
@@ -50,17 +46,33 @@ export function usePartidoDetalle(partidoId: string, grupoId: string) {
             if (errV) throw errV
             if (errF) throw errF
 
-            // Calcular promedio y total_votos por jugador en el cliente
+            // Traer avatares de los jugadores vinculados a perfiles reales
+            const userIds = (jugs || [])
+                .map((j: any) => j.user_id)
+                .filter(Boolean) as string[]
+
+            let profileAvatars: Record<string, string> = {}
+            if (userIds.length > 0) {
+                const { data: profiles } = await supabase
+                    .from('profiles')
+                    .select('id, avatar_url')
+                    .in('id', userIds)
+                profileAvatars = Object.fromEntries(
+                    (profiles || []).map((p: any) => [p.id, p.avatar_url])
+                )
+            }
+
+            // Calcular promedio y total_votos por jugador
             const jugadoresConStats: JugadorPartidoAmigo[] = (jugs || []).map((j: any) => {
                 const votosDeEsteJugador = (votos || []).filter((v: any) => v.jugador_id === j.id)
                 const miVoto = votosDeEsteJugador.find((v: any) => v.user_id === user.id) ?? null
                 const totalVotos = votosDeEsteJugador.length
                 const promedio = totalVotos > 0
-                    ? Math.round(
-                        votosDeEsteJugador.reduce((s: number, v: any) => s + v.nota, 0) / totalVotos * 10
-                      ) / 10
+                    ? Math.round(votosDeEsteJugador.reduce((s: number, v: any) => s + v.nota, 0) / totalVotos * 10) / 10
                     : 0
-                return { ...j, promedio, total_votos: totalVotos, mi_voto: miVoto }
+                const avatarUrl = j.user_id ? profileAvatars[j.user_id] || null : null
+
+                return { ...j, promedio, total_votos: totalVotos, mi_voto: miVoto, avatar_url: avatarUrl }
             })
 
             setData({
@@ -74,7 +86,6 @@ export function usePartidoDetalle(partidoId: string, grupoId: string) {
         }
     }
 
-    // ── Votar a un jugador ──
     const votar = async (jugadorId: string, nota: number, comentario?: string) => {
         if (!user) throw new Error('No autenticado')
         const { error } = await supabase
@@ -90,7 +101,6 @@ export function usePartidoDetalle(partidoId: string, grupoId: string) {
         await fetch()
     }
 
-    // ── Eliminar voto ──
     const eliminarVoto = async (jugadorId: string) => {
         if (!user) throw new Error('No autenticado')
         const { error } = await supabase
@@ -103,7 +113,6 @@ export function usePartidoDetalle(partidoId: string, grupoId: string) {
         await fetch()
     }
 
-    // ── Votar faceta ──
     const votarFaceta = async (playerId: string, facet: FacetType) => {
         if (!user) throw new Error('No autenticado')
         const { error } = await supabase
@@ -118,7 +127,6 @@ export function usePartidoDetalle(partidoId: string, grupoId: string) {
         await fetch()
     }
 
-    // ── Eliminar voto faceta ──
     const eliminarFaceta = async (facet: FacetType) => {
         if (!user) throw new Error('No autenticado')
         const { error } = await supabase
@@ -131,7 +139,6 @@ export function usePartidoDetalle(partidoId: string, grupoId: string) {
         await fetch()
     }
 
-    // ── Agregar jugador ──
     const agregarJugador = async (nombre: string, equipo: 'azul' | 'rojo', userId?: string) => {
         const { error } = await supabase
             .from('jugadores_partido_amigo')
@@ -140,7 +147,6 @@ export function usePartidoDetalle(partidoId: string, grupoId: string) {
         await fetch()
     }
 
-    // ── Eliminar jugador ──
     const eliminarJugador = async (jugadorId: string) => {
         const { error } = await supabase
             .from('jugadores_partido_amigo')
@@ -150,13 +156,11 @@ export function usePartidoDetalle(partidoId: string, grupoId: string) {
         await fetch()
     }
 
-    // ── Guardar estadísticas (goles/asistencias + marcador) ──
     const guardarStats = async (
         statsJugadores: { id: string; goles: number; asistencias: number }[],
         resultadoAzul: number,
         resultadoRojo: number
     ) => {
-        // Actualizar cada jugador
         for (const j of statsJugadores) {
             const { error } = await supabase
                 .from('jugadores_partido_amigo')
@@ -164,7 +168,6 @@ export function usePartidoDetalle(partidoId: string, grupoId: string) {
                 .eq('id', j.id)
             if (error) throw error
         }
-        // Actualizar marcador y cerrar stats
         const { error } = await supabase
             .from('partidos_amigos')
             .update({
@@ -178,7 +181,6 @@ export function usePartidoDetalle(partidoId: string, grupoId: string) {
         await fetch()
     }
 
-    // ── Reabrir estadísticas ──
     const reabrirStats = async () => {
         const { error } = await supabase
             .from('partidos_amigos')
@@ -188,7 +190,6 @@ export function usePartidoDetalle(partidoId: string, grupoId: string) {
         await fetch()
     }
 
-    // ── Obtener votos detallados de un jugador (para modal de detalle) ──
     const fetchDetalleJugador = async (jugadorId: string) => {
         const { data: votos, error } = await supabase
             .from('votos_partido_amigo')
@@ -200,7 +201,7 @@ export function usePartidoDetalle(partidoId: string, grupoId: string) {
         const userIds = (votos || []).map((v: any) => v.user_id)
         const { data: profiles } = await supabase
             .from('profiles')
-            .select('id, username')
+            .select('id, username, avatar_url')
             .in('id', userIds)
 
         const votosConProfile = (votos || []).map((v: any) => ({

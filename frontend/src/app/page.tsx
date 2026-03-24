@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { FixtureTable } from '@/components/FixtureTable'
+import { DateScroller } from '@/components/DateScroller'
 import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { PartidoCardSkeleton } from '@/components/skeletons/PartidoCardSkeleton'
@@ -303,37 +304,12 @@ function HomeContent() {
                         <LiveMatchesStrip partidos={livePartidos} />
 
                         {/* Date navigation */}
-                        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-                          {dateRange.map((date) => {
-                            const dateStr = toLocalDateStr(date)
-                            const label = formatDateLabel(date, t, localeFormat)
-                            const isSelected = dateStr === selectedDate
-                            const isToday = dateStr === toLocalDateStr(new Date())
-                            return (
-                              <button
-                                key={dateStr}
-                                onClick={() => {
-                                  hapticFeedback(5)
-                                  setSelectedDate(dateStr)
-                                }}
-                                className={`flex flex-col items-center justify-center min-w-[3.5rem] py-1.5 px-2 rounded-xl border transition-all
-                                  ${isSelected
-                                    ? 'bg-[var(--foreground)] border-[var(--foreground)] text-[var(--background)] shadow-md'
-                                    : isToday
-                                      ? 'bg-[var(--card-bg)] border-[var(--accent)]/50 text-[var(--foreground)]'
-                                      : 'bg-[var(--card-bg)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--card-border-hover)]'
-                                  }`}
-                              >
-                                <span className={`text-[9px] font-black uppercase tracking-wider ${isSelected ? 'opacity-90' : 'opacity-70'}`}>
-                                  {['Hoy','Mañana','Ayer'].includes(label) ? ' ' : new Date(dateStr + 'T12:00:00').toLocaleDateString(localeFormat, { weekday: 'short' })}
-                                </span>
-                                <span className={`text-sm font-black tracking-tighter mt-0.5 ${isSelected ? 'text-[var(--background)]' : ''}`}>
-                                  {['Hoy','Mañana','Ayer'].includes(label) ? label : new Date(dateStr + 'T12:00:00').getDate()}
-                                </span>
-                              </button>
-                            )
-                          })}
-                        </div>
+                        <DateScroller
+                          dateRange={dateRange}
+                          selectedDate={selectedDate}
+                          onSelect={setSelectedDate}
+                          localeFormat={localeFormat}
+                        />
 
                         {/* Fixture */}
                         <section>

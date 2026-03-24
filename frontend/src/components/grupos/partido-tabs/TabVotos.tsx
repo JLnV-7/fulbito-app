@@ -8,6 +8,7 @@ import type { JugadorPartidoAmigo, PartidoAmigo, FacetVote, FacetType } from '@/
 import { VotarModal } from '../VotarModal'
 import { FacetVotingCards } from '../FacetVotingCards'
 import { DetalleJugadorAmigo } from '../DetalleJugadorAmigo'
+import { JugadorAvatar } from '../JugadorAvatar'
 
 interface Props {
     partido: PartidoAmigo
@@ -31,7 +32,6 @@ export function TabVotos({ partido, jugadores, facetVotes, onVotar, onEliminarVo
     const total = jugadores.length
     const progreso = total > 0 ? Math.round((votados / total) * 100) : 0
 
-    // Ranking — todos los jugadores con al menos 1 voto, ordenados por promedio
     const ranking = [...jugadores]
         .filter(j => (j.total_votos || 0) > 0)
         .sort((a, b) => (b.promedio || 0) - (a.promedio || 0))
@@ -45,17 +45,13 @@ export function TabVotos({ partido, jugadores, facetVotes, onVotar, onEliminarVo
     const handleVotar = async (nota: number, comentario?: string) => {
         if (!votandoA) return
         setGuardando(true)
-        try {
-            await onVotar(votandoA.id, nota, comentario)
-        } finally {
-            setGuardando(false)
-            setVotandoA(null)
-        }
+        try { await onVotar(votandoA.id, nota, comentario) }
+        finally { setGuardando(false); setVotandoA(null) }
     }
 
     return (
         <div className="space-y-6 pb-8">
-            {/* Progreso personal */}
+            {/* Progreso */}
             <div className="bg-[var(--card-bg)] p-5 rounded-3xl border border-[var(--card-border)]">
                 <div className="flex justify-between items-end mb-3">
                     <div>
@@ -65,24 +61,17 @@ export function TabVotos({ partido, jugadores, facetVotes, onVotar, onEliminarVo
                     <div className="flex items-center gap-3">
                         <p className="text-2xl font-black text-[#16a34a]">{progreso}%</p>
                         <button
-                            type="button"
                             onClick={onRefresh}
                             className="text-[9px] font-black uppercase tracking-widest text-[#16a34a] border border-[#16a34a]/30 px-3 py-1 rounded-full hover:bg-[#16a34a]/10 transition-all"
-                        >
-                            🔄
-                        </button>
+                        >🔄</button>
                     </div>
                 </div>
                 <div className="h-2 bg-[var(--background)] rounded-full overflow-hidden">
-                    <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progreso}%` }}
-                        className="h-full bg-[#16a34a] rounded-full"
-                    />
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${progreso}%` }} className="h-full bg-[#16a34a] rounded-full" />
                 </div>
             </div>
 
-            {/* Ranking en vivo — siempre visible */}
+            {/* Ranking en vivo */}
             <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl overflow-hidden">
                 <div className="px-5 py-4 border-b border-[var(--card-border)] flex items-center justify-between">
                     <h3 className="font-black italic uppercase tracking-tighter text-sm">📊 Ranking en vivo</h3>
@@ -107,14 +96,22 @@ export function TabVotos({ partido, jugadores, facetVotes, onVotar, onEliminarVo
                 ) : (
                     ranking.map((j, i) => (
                         <button
-                            type="button"
                             key={j.id}
                             onClick={() => setJugadorDetalle(j)}
-                            className={`w-full flex items-center gap-3 px-5 py-3 border-b border-[var(--card-border)] last:border-0 text-left hover:bg-[var(--hover-bg)] transition-all ${i === 0 ? 'bg-amber-400/5' : ''}`}
+                            className={`w-full flex items-center gap-3 px-4 py-3 border-b border-[var(--card-border)] last:border-0 text-left hover:bg-[var(--hover-bg)] transition-all ${i === 0 ? 'bg-amber-400/5' : ''}`}
                         >
-                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${i === 0 ? 'bg-amber-400 text-amber-900' : 'bg-[var(--background)] text-[var(--text-muted)]'}`}>
+                            {/* Posición */}
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${i === 0 ? 'bg-amber-400 text-amber-900' : 'bg-[var(--background)] text-[var(--text-muted)]'}`}>
                                 {i === 0 ? '👑' : i + 1}
                             </div>
+                            {/* Avatar */}
+                            <JugadorAvatar
+                                nombre={j.nombre}
+                                avatarUrl={(j as any).avatar_url}
+                                equipo={j.equipo}
+                                size="sm"
+                            />
+                            {/* Info */}
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm font-bold truncate">{j.nombre}</span>
@@ -153,42 +150,44 @@ export function TabVotos({ partido, jugadores, facetVotes, onVotar, onEliminarVo
                         {jugadores.filter(j => j.equipo === eq).map(j => (
                             <div
                                 key={j.id}
-                                className={`p-4 rounded-2xl border flex items-center gap-3 ${eq === 'azul' ? 'bg-blue-500/5 border-blue-500/10' : 'bg-red-500/5 border-red-500/10'}`}
+                                className={`p-3 rounded-2xl border flex items-center gap-3 ${eq === 'azul' ? 'bg-blue-500/5 border-blue-500/10' : 'bg-red-500/5 border-red-500/10'}`}
                             >
+                                {/* Avatar */}
+                                <JugadorAvatar
+                                    nombre={j.nombre}
+                                    avatarUrl={(j as any).avatar_url}
+                                    equipo={j.equipo}
+                                    size="md"
+                                />
+                                {/* Info */}
                                 <div className="flex-1 min-w-0">
                                     <p className="font-bold text-sm truncate">{j.nombre}</p>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <div className="flex gap-0.5">
-                                            {Array.from({ length: 5 }).map((_, i) => (
-                                                <span key={i} className={`text-[8px] ${i < Math.round((j.promedio || 0) / 2) ? '' : 'grayscale opacity-20'}`}>⭐</span>
-                                            ))}
-                                        </div>
-                                        <span className={`text-[10px] font-bold ${eq === 'azul' ? 'text-blue-500' : 'text-red-500'}`}>
-                                            {(j.total_votos || 0) > 0 ? `${j.promedio}/10` : 'Sin votos'}
-                                        </span>
-                                        {(j.total_votos || 0) > 0 && (
-                                            <span className="text-[10px] text-[var(--text-muted)] opacity-50">({j.total_votos}v)</span>
-                                        )}
-                                    </div>
-                                    {j.mi_voto && (
+                                    {j.mi_voto ? (
                                         <p className="text-[10px] mt-0.5" style={{ color: eq === 'azul' ? '#3b82f6' : '#ef4444' }}>
                                             Tu voto: <strong>{j.mi_voto.nota}/10</strong>
                                             {j.mi_voto.comentario && <span className="text-[var(--text-muted)]"> · "{j.mi_voto.comentario}"</span>}
                                         </p>
+                                    ) : (
+                                        <p className="text-[10px] text-[var(--text-muted)] mt-0.5">Sin votar</p>
+                                    )}
+                                    {(j.total_votos || 0) > 0 && (
+                                        <p className="text-[10px] text-[var(--text-muted)] mt-0.5">
+                                            Prom: <strong style={{ color: eq === 'azul' ? '#3b82f6' : '#ef4444' }}>{j.promedio}</strong>
+                                            <span className="opacity-50"> ({j.total_votos}v)</span>
+                                        </p>
                                     )}
                                 </div>
+                                {/* Botones */}
                                 <div className="flex gap-2 shrink-0">
                                     {j.mi_voto && (
                                         <button
-                                            type="button"
                                             onClick={() => onEliminarVoto(j.id)}
                                             className="p-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all text-xs"
                                         >🗑️</button>
                                     )}
                                     <button
-                                        type="button"
                                         onClick={() => setVotandoA(j)}
-                                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                        className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                                             j.mi_voto
                                                 ? eq === 'azul' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/20' : 'bg-red-500/20 text-red-400 border border-red-500/20'
                                                 : eq === 'azul' ? 'bg-blue-600 text-white' : 'bg-red-600 text-white'
@@ -215,22 +214,11 @@ export function TabVotos({ partido, jugadores, facetVotes, onVotar, onEliminarVo
                 />
             </div>
 
-            {/* Modal para votar */}
             {votandoA && (
-                <VotarModal
-                    jugador={votandoA}
-                    onVotar={handleVotar}
-                    onClose={() => setVotandoA(null)}
-                />
+                <VotarModal jugador={votandoA} onVotar={handleVotar} onClose={() => setVotandoA(null)} />
             )}
-
-            {/* Modal detalle jugador */}
             {jugadorDetalle && (
-                <DetalleJugadorAmigo
-                    jugador={jugadorDetalle}
-                    grupoId=""
-                    onClose={() => setJugadorDetalle(null)}
-                />
+                <DetalleJugadorAmigo jugador={jugadorDetalle} grupoId="" onClose={() => setJugadorDetalle(null)} />
             )}
         </div>
     )
