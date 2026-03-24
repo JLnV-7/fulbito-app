@@ -84,16 +84,16 @@ export function AvatarUploader({ currentAvatarUrl, onUploadSuccess }: AvatarUplo
     }
 
     return (
-        <div className="relative group cursor-pointer w-24 h-24 mx-auto rounded-full overflow-hidden border-4 border-[var(--accent)]/20 shadow-xl bg-[var(--card-bg)]">
+        <div className="relative group cursor-pointer w-28 h-28 mx-auto rounded-full overflow-hidden border-4 border-[var(--background)] shadow-[0_8px_30px_rgb(0,0,0,0.12)] bg-[var(--card-bg)] ring-4 ring-[var(--accent)]/20 transition-all hover:scale-105">
             {/* Current Avatar or Fallback */}
             {currentAvatarUrl ? (
                 <img
                     src={currentAvatarUrl}
                     alt="Avatar"
-                    className={`w-full h-full object-cover transition-opacity duration-300 ${uploading ? 'opacity-50 blur-sm' : 'group-hover:opacity-75'}`}
+                    className={`w-full h-full object-cover transition-all duration-300 ${uploading ? 'opacity-50 blur-sm scale-110' : 'group-hover:scale-110'}`}
                 />
             ) : (
-                <div className="w-full h-full flex items-center justify-center text-[var(--foreground)] text-3xl font-black bg-[var(--background)]">
+                <div className="w-full h-full flex items-center justify-center text-[var(--foreground)] text-4xl font-black bg-[var(--background)]">
                     {uploading ? <LoadingSpinner /> : '👤'}
                 </div>
             )}

@@ -26,18 +26,18 @@ export function UserListsView({ userId, isOwnProfile }: UserListsViewProps) {
     }
 
     return (
-        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-6 shadow-sm mb-6">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-black flex items-center gap-2">
-                    <span className="text-2xl">📋</span>
+        <div className="bg-[var(--card-bg)]/80 backdrop-blur-xl border border-[var(--card-border)]/50 rounded-[2rem] p-6 shadow-sm mb-4">
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-[11px] font-black text-[var(--accent)] uppercase tracking-widest flex items-center gap-2">
+                    <span className="text-sm">📋</span>
                     Mis Listas
                 </h2>
                 {isOwnProfile && (
                     <button
                         onClick={() => setShowCreateModal(true)}
-                        className="bg-[var(--accent)] text-white p-2 rounded-xl hover:brightness-110 transition-colors shadow-sm"
+                        className="w-8 h-8 flex items-center justify-center bg-[var(--foreground)] text-[var(--background)] rounded-full hover:scale-105 active:scale-95 transition-all shadow-md"
                     >
-                        <ListPlus size={18} />
+                        <ListPlus size={16} strokeWidth={3} />
                     </button>
                 )}
             </div>

@@ -415,9 +415,9 @@ export default function Perfil() {
                 <div className="space-y-5">
                   <MatchDiary userId={user.id} />
                   <TopPartidos userId={user.id} />
-                  <UserListsView userId={user.id} />
-                  <UserBadgesGallery userId={user.id} badgeStats={badgeStats} />
-                  <BuildXI userId={user.id} />
+                  <UserListsView userId={user.id} isOwnProfile={true} />
+                  <UserBadgesGallery userId={user.id} isOwnProfile={true} />
+                  <BuildXI />
                 </div>
               )}
 
@@ -462,91 +462,116 @@ export default function Perfil() {
                     </div>
                   )}
 
-                  <UserStatsCard stats={stats} />
-                  <StatsRadar stats={buildRadarStats(stats, prodeStats)} />
+                  <UserStatsCard stats={stats} prodeStats={prodeStats || null} />
+                  <StatsRadar stats={buildRadarStats({ ...stats, prode_puntos: prodeStats?.puntos_totales })} />
                   <RatingPieChart userId={user.id} />
                 </div>
               )}
 
               {/* ── TAB AJUSTES ── */}
               {activeTab === 'ajustes' && (
-                <div className="space-y-4">
-                  {/* Editor de perfil */}
-                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden">
-                    <div className="px-5 py-4 border-b border-[var(--card-border)]">
-                      <p className="font-black text-sm">✏️ Editar Perfil</p>
-                    </div>
-                    <div className="p-5 space-y-4">
-                      <div>
-                        <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2 block">Avatar</label>
+                <div className="space-y-8 pb-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  
+                  {/* Editar Perfil */}
+                  <section>
+                    <h3 className="text-[11px] font-black text-[var(--text-muted)] uppercase tracking-widest pl-4 mb-3">
+                      Perfil Público
+                    </h3>
+                    <div className="bg-[var(--card-bg)]/80 backdrop-blur-xl border border-[var(--card-border)] rounded-3xl overflow-hidden shadow-sm">
+                      <div className="p-5 flex flex-col items-center gap-4 border-b border-[var(--card-border)]/50">
                         <AvatarUploader
-                          userId={user.id}
-                          currentAvatar={editAvatar}
-                          onAvatarChange={setEditAvatar}
+                          currentAvatarUrl={editAvatar}
+                          onUploadSuccess={setEditAvatar}
                         />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2 block">Usuario</label>
-                        <input
-                          type="text"
-                          value={editUsername}
-                          onChange={e => setEditUsername(e.target.value)}
-                          className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
-                          placeholder="Tu nombre de usuario"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2 block">Equipo del corazón</label>
-                        <EquipoSelector
-                          value={editEquipo}
-                          onChange={setEditEquipo}
-                        />
-                      </div>
-                      {saveMessage && (
-                        <p className={`text-xs font-bold ${saveMessage.includes('Error') || saveMessage.includes('No') ? 'text-red-500' : 'text-green-500'}`}>
-                          {saveMessage}
+                        <p className="text-[10px] text-[var(--text-muted)] font-medium text-center max-w-[200px]">
+                          Tocá la imagen para cambiar tu foto
                         </p>
-                      )}
-                      <button
-                        onClick={handleSaveProfile}
-                        disabled={saving}
-                        className="w-full bg-[var(--foreground)] text-[var(--background)] py-3 rounded-2xl font-black text-sm uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
-                      >
-                        {saving ? '⏳ Guardando...' : 'Guardar Cambios'}
-                      </button>
+                      </div>
+                      <div className="p-5 space-y-5">
+                        <div className="group">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2 block group-focus-within:text-[var(--foreground)] transition-colors">
+                            Usuario
+                          </label>
+                          <input
+                            type="text"
+                            value={editUsername}
+                            onChange={e => setEditUsername(e.target.value)}
+                            className="w-full bg-[var(--background)]/50 border border-[var(--card-border)] rounded-2xl px-4 py-3.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] transition-all"
+                            placeholder="Tu nombre de usuario"
+                          />
+                        </div>
+                        <div className="group">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-2 block group-focus-within:text-[var(--foreground)] transition-colors">
+                            Equipo del corazón
+                          </label>
+                          <EquipoSelector
+                            selectedEquipo={editEquipo}
+                            onSelect={setEditEquipo}
+                          />
+                        </div>
+                        
+                        {saveMessage && (
+                          <div className={`px-4 py-3 rounded-xl border text-xs font-bold text-center ${
+                            saveMessage.includes('Error') || saveMessage.includes('No') 
+                              ? 'bg-red-500/10 border-red-500/20 text-red-500' 
+                              : 'bg-[#10b981]/10 border-[#10b981]/20 text-[#10b981]'
+                          }`}>
+                            {saveMessage}
+                          </div>
+                        )}
+                        
+                        <button
+                          onClick={handleSaveProfile}
+                          disabled={saving}
+                          className="w-full bg-[var(--foreground)] text-[var(--background)] py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-black/10 disabled:opacity-50 disabled:hover:scale-100"
+                        >
+                          {saving ? '⏳ Guardando...' : 'Guardar Cambios'}
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  </section>
 
-                  {/* Preferencias */}
-                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden">
-                    <div className="px-5 py-4 border-b border-[var(--card-border)]">
-                      <p className="font-black text-sm">⚙️ Preferencias</p>
-                    </div>
-                    <div className="divide-y divide-[var(--card-border)]">
+                  {/* Preferencias de la App */}
+                  <section>
+                    <h3 className="text-[11px] font-black text-[var(--text-muted)] uppercase tracking-widest pl-4 mb-3">
+                      Preferencias
+                    </h3>
+                    <div className="bg-[var(--card-bg)]/80 backdrop-blur-xl border border-[var(--card-border)] rounded-3xl overflow-hidden shadow-sm divide-y divide-[var(--card-border)]/50">
+                      
                       {/* Tema */}
-                      <div className="flex items-center justify-between px-5 py-4">
-                        <div>
-                          <p className="text-sm font-bold">Tema</p>
-                          <p className="text-[10px] text-[var(--text-muted)]">{theme === 'dark' ? 'Oscuro' : 'Claro'}</p>
+                      <div className="flex items-center justify-between p-4 hover:bg-[var(--hover-bg)] transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-[var(--background)] flex items-center justify-center border border-[var(--card-border)]">
+                            {theme === 'dark' ? '🌙' : '☀️'}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold">Apariencia</p>
+                            <p className="text-[10px] text-[var(--text-muted)] font-medium">Modo {theme === 'dark' ? 'Oscuro' : 'Claro'}</p>
+                          </div>
                         </div>
                         <button
                           onClick={toggleTheme}
-                          className="px-4 py-2 rounded-xl border border-[var(--card-border)] text-xs font-black uppercase tracking-widest hover:bg-[var(--hover-bg)] transition-all"
+                          className="px-4 py-2 rounded-full border border-[var(--card-border)] text-[10px] font-black uppercase tracking-widest hover:bg-[var(--background)] transition-all active:scale-95"
                         >
-                          {theme === 'dark' ? '☀️ Claro' : '🌙 Oscuro'}
+                          Cambiar
                         </button>
                       </div>
 
                       {/* Idioma */}
-                      <div className="flex items-center justify-between px-5 py-4">
-                        <div>
-                          <p className="text-sm font-bold">Idioma</p>
-                          <p className="text-[10px] text-[var(--text-muted)]">Idioma de la interfaz</p>
+                      <div className="flex items-center justify-between p-4 hover:bg-[var(--hover-bg)] transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-[var(--background)] flex items-center justify-center border border-[var(--card-border)]">
+                            🌍
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold">Idioma</p>
+                            <p className="text-[10px] text-[var(--text-muted)] font-medium">Global</p>
+                          </div>
                         </div>
                         <select
                           value={language}
                           onChange={e => setLanguage(e.target.value as any)}
-                          className="bg-[var(--background)] border border-[var(--card-border)] rounded-xl px-3 py-2 text-xs font-bold focus:outline-none"
+                          className="bg-[var(--background)] border border-[var(--card-border)] rounded-full px-3 py-2 text-[10px] font-black uppercase focus:outline-none focus:border-[var(--accent)] transition-all cursor-pointer"
                         >
                           <option value="es">🇦🇷 Español</option>
                           <option value="en">🇺🇸 English</option>
@@ -555,28 +580,39 @@ export default function Perfil() {
                       </div>
 
                       {/* Notificaciones */}
-                      <div className="px-5 py-4">
+                      <div className="p-4">
                         <NotificationSettings />
                       </div>
 
                       {/* Desafíos */}
-                      <div className="px-5">
+                      <div className="p-4">
                         <ChallengesFAB inline={true} />
                       </div>
+                    </div>
+                  </section>
 
+                  {/* Acciones */}
+                  <section>
+                    <h3 className="text-[11px] font-black text-[var(--text-muted)] uppercase tracking-widest pl-4 mb-3">
+                      Acciones
+                    </h3>
+                    <div className="bg-[var(--card-bg)]/80 backdrop-blur-xl border border-[var(--card-border)] rounded-3xl overflow-hidden shadow-sm divide-y divide-[var(--card-border)]/50">
+                      
                       {/* QR */}
                       <button
                         onClick={() => setShowQRModal(true)}
-                        className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--hover-bg)] transition-all"
+                        className="w-full flex items-center justify-between p-4 hover:bg-[var(--hover-bg)] transition-colors active:bg-[var(--card-border)]/50"
                       >
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg">📱</span>
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center border border-blue-500/20">
+                            📱
+                          </div>
                           <div className="text-left">
-                            <p className="text-sm font-bold">Mi QR</p>
-                            <p className="text-[10px] text-[var(--text-muted)]">Compartir perfil</p>
+                            <p className="text-sm font-bold">Compartir Perfil</p>
+                            <p className="text-[10px] text-[var(--text-muted)] font-medium">Mostrar mi código QR</p>
                           </div>
                         </div>
-                        <ChevronRight size={16} className="text-[var(--text-muted)]" />
+                        <ChevronRight size={18} className="text-[var(--text-muted)]" />
                       </button>
 
                       {/* Sync */}
@@ -587,34 +623,31 @@ export default function Perfil() {
                           finally { setSyncing(false) }
                         }}
                         disabled={syncing}
-                        className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--hover-bg)] transition-all disabled:opacity-50"
+                        className="w-full flex items-center justify-between p-4 hover:bg-[var(--hover-bg)] transition-colors active:bg-[var(--card-border)]/50 disabled:opacity-50"
                       >
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg">🔄</span>
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-[#10b981]/10 text-[#10b981] flex items-center justify-center border border-[#10b981]/20">
+                            🔄
+                          </div>
                           <div className="text-left">
-                            <p className="text-sm font-bold">Sincronizar</p>
-                            <p className="text-[10px] text-[var(--text-muted)]">Subir partidos offline</p>
+                            <p className="text-sm font-bold">Sincronizar Offline</p>
+                            <p className="text-[10px] text-[var(--text-muted)] font-medium">Subir partidos pendientes</p>
                           </div>
                         </div>
-                        {syncing && <LoadingSpinner />}
+                        {syncing ? <LoadingSpinner /> : <ChevronRight size={18} className="text-[var(--text-muted)]" />}
                       </button>
-                    </div>
-                  </div>
 
-                  {/* Feedback */}
-                  <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden">
-                    <div className="px-5 py-4 border-b border-[var(--card-border)]">
-                      <p className="font-black text-sm">💬 Feedback</p>
+                      {/* Feedback */}
+                      <div className="p-4">
+                        <FeedbackWidget />
+                      </div>
                     </div>
-                    <div className="p-5">
-                      <FeedbackWidget />
-                    </div>
-                  </div>
+                  </section>
 
                   {/* Cerrar sesión */}
                   <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border border-red-500/20 text-red-500 font-black text-sm uppercase tracking-widest hover:bg-red-500/5 transition-all"
+                    className="w-full flex items-center justify-center gap-2 py-4 rounded-3xl border border-red-500/20 bg-red-500/5 text-red-500 font-black text-[11px] uppercase tracking-widest hover:bg-red-500/10 active:scale-95 transition-all"
                   >
                     <LogOut size={16} />
                     Cerrar Sesión
@@ -630,7 +663,9 @@ export default function Perfil() {
         <AnimatePresence>
           {showQRModal && profile && (
             <ProfileQRModal
-              profile={profile}
+              isOpen={showQRModal}
+              username={profile?.username || ''}
+              userId={profile?.id || ''}
               onClose={() => setShowQRModal(false)}
             />
           )}
@@ -639,6 +674,7 @@ export default function Perfil() {
         <AnimatePresence>
           {followModalState.isOpen && (
             <FollowListModal
+              isOpen={followModalState.isOpen}
               userId={user.id}
               type={followModalState.type}
               title={followModalState.title}

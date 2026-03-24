@@ -26,32 +26,33 @@ export function EquipoSelector({ selectedEquipo, onSelect }: Props) {
     )
 
     return (
-        <div className="space-y-3">
-            <input
-                type="text"
-                placeholder="Buscar equipo..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-xl px-4 py-3 outline-none focus:border-[#ffd700]"
-                autoFocus
-            />
+        <div className="space-y-4">
+            <div className="relative">
+                <input
+                    type="text"
+                    placeholder="Buscar equipo..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full bg-[var(--background)]/50 border border-[var(--card-border)] rounded-2xl px-4 py-3.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] transition-all"
+                />
+            </div>
 
-            <div className="max-h-60 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="max-h-60 overflow-y-auto grid grid-cols-2 gap-2 no-scrollbar px-1 py-1">
                 {filtrados.map((equipo) => (
                     <button
                         key={equipo}
                         onClick={() => onSelect(equipo)}
-                        className={`px-4 py-2 rounded-lg text-left text-sm font-medium transition-all
+                        className={`px-4 py-2.5 rounded-xl text-left text-sm font-bold transition-all active:scale-95 truncate border
               ${selectedEquipo === equipo
-                                ? 'bg-[#ffd700] text-black'
-                                : 'bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)]'
+                                ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)] shadow-sm'
+                                : 'bg-[var(--card-bg)]/80 hover:bg-[var(--hover-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)] border-[var(--card-border)]/50'
                             }`}
                     >
                         {equipo}
                     </button>
                 ))}
                 {filtrados.length === 0 && (
-                    <p className="text-center text-sm text-[var(--text-muted)] col-span-2 py-4">
+                    <p className="text-center text-xs font-bold text-[var(--text-muted)] col-span-2 py-8">
                         No se encontraron equipos
                     </p>
                 )}

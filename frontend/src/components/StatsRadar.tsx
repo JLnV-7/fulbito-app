@@ -40,9 +40,9 @@ export function StatsRadar({ stats, size = 220 }: StatsRadarProps) {
     }).join(' ') + ' Z'
 
     return (
-        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-4" style={{ borderRadius: 'var(--radius)' }}>
-            <h3 className="text-[10px] font-black text-[var(--text-muted)] capitalize tracking-widest mb-3 flex items-center gap-2 italic">
-                📊 Tu Radar
+        <div className="bg-[var(--card-bg)]/80 backdrop-blur-xl border border-[var(--card-border)]/50 rounded-[2rem] p-5 shadow-sm mb-4">
+            <h3 className="text-[10px] font-black text-[var(--accent)] uppercase tracking-widest mb-6 flex items-center justify-center gap-2">
+                <span className="text-sm">🎯</span> Tu Radar
             </h3>
 
             <div className="flex justify-center">

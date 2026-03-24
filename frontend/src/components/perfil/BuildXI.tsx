@@ -316,7 +316,7 @@ export function BuildXI() {
 
     return (
         <DndProvider backend={HTML5Backend}>
-            <div className="bg-[var(--background)]">
+            <div className="bg-[var(--card-bg)]/80 backdrop-blur-xl border border-[var(--card-border)]/50 rounded-[2rem] p-6 shadow-sm mb-4">
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Pitch Section */}
                     <div className="flex-1">
@@ -405,8 +405,8 @@ export function BuildXI() {
                                 ✅ Tocá una posición en la cancha para asignar a {selectedPlayer.name}
                             </div>
                         )}
-                        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-6 shadow-sm">
-                            <h4 className="font-black italic capitalize tracking-tighter mb-4">Recomendados</h4>
+                        <div className="bg-[var(--background)]/50 backdrop-blur-md border border-[var(--card-border)]/50 rounded-[2rem] p-6 shadow-sm h-full max-h-[600px] flex flex-col">
+                            <h4 className="font-black italic capitaliz mb-4">Recomendados</h4>
                             <p className="text-[9px] text-[var(--text-muted)] font-bold capitalize tracking-tight mb-3">Arrastrá o tocá un jugador para seleccionarlo</p>
                             <div className="grid grid-cols-1 gap-3 max-h-[500px] overflow-y-auto no-scrollbar pr-1">
                                 {suggestedPlayers.map(p => (

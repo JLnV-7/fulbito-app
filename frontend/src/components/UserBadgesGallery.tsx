@@ -74,22 +74,23 @@ export function UserBadgesGallery({ userId, isOwnProfile = false }: UserBadgesGa
 
     if (loading) {
         return (
-            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-6 mb-6 flex justify-center py-8">
+            <div className="bg-[var(--card-bg)]/80 backdrop-blur-xl border border-[var(--card-border)]/50 rounded-[2rem] p-6 mb-4 flex justify-center py-12 shadow-sm">
                 <Loader2 className="animate-spin text-[var(--accent)]" />
             </div>
         )
     }
 
-    const unlockedIds = new Set(unlockedBadges.map(ub => ub.badge.id))
+    const unpackedBadgesIds = new Set(unlockedBadges.map(ub => ub.badge.id))
+    const unlockedIds = unpackedBadgesIds
 
     return (
-        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 mb-4" style={{ borderRadius: 'var(--radius)' }}>
-            <div className="flex items-center gap-2 mb-4 border-b border-[var(--card-border)] pb-2 border-dashed">
-                <div className="p-1.5 bg-[var(--background)] border border-[var(--card-border)] text-[var(--foreground)]" style={{ borderRadius: 'var(--radius)' }}>
-                    <Award size={16} />
-                </div>
-                <h2 className="text-[10px] font-black capitalize tracking-widest">Mis Insignias</h2>
-                <span className="ml-auto text-[9px] font-bold bg-[var(--background)] px-2 py-0.5 border border border-[var(--card-border)]" style={{ borderRadius: 'var(--radius)' }}>
+        <div className="bg-[var(--card-bg)]/80 backdrop-blur-xl border border-[var(--card-border)]/50 rounded-[2rem] p-6 shadow-sm mb-4">
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-[11px] font-black text-[var(--accent)] uppercase tracking-widest flex items-center gap-2">
+                    <span className="text-sm">🏅</span>
+                    Mis Insignias
+                </h2>
+                <span className="text-[10px] font-black bg-[var(--background)] px-3 py-1 rounded-full border border-[var(--card-border)] text-[var(--text-muted)]">
                     {unlockedBadges.length} / {allBadges.length}
                 </span>
             </div>
@@ -105,31 +106,31 @@ export function UserBadgesGallery({ userId, isOwnProfile = false }: UserBadgesGa
                             transition={{ delay: index * 0.05 }}
                             key={badge.id}
                             className={`
-                relative p-4 rounded-2xl flex flex-col items-center text-center transition-all
+                relative p-4 rounded-[1.5rem] flex flex-col items-center text-center transition-all hover:scale-[1.02] duration-300
                 ${isUnlocked
-                                    ? 'bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/30 hover:border-amber-500 shadow-sm'
-                                    : 'bg-[var(--background)] border border-[var(--card-border)] opacity-60 grayscale'
+                                    ? 'bg-gradient-to-br from-amber-500/15 to-amber-500/5 border border-amber-500/30'
+                                    : 'bg-[var(--card-bg)] border border-[var(--card-border)] opacity-60 grayscale'
                                 }
               `}
                         >
-                            <div className="text-4xl mb-2 drop-shadow-md">{badge.icon}</div>
-                            <h3 className={`text-xs font-bold leading-tight mb-1 ${isUnlocked ? 'text-amber-500' : 'text-[var(--text-muted)]'}`}>
+                            <div className="text-4xl mb-3 drop-shadow-md">{badge.icon}</div>
+                            <h3 className={`text-[11px] font-black leading-tight mb-2 uppercase tracking-wide ${isUnlocked ? 'text-amber-500' : 'text-[var(--text-muted)]'}`}>
                                 {badge.name}
                             </h3>
 
                             {isUnlocked && (
-                                <p className="text-[9px] text-[var(--text-muted)] leading-tight mb-2">
+                                <p className="text-[9px] text-[var(--text-muted)] leading-relaxed mb-3 font-medium">
                                     {badge.description}
                                 </p>
                             )}
 
                             <div className="mt-auto">
                                 {isUnlocked ? (
-                                    <span className="text-[10px] font-black bg-amber-500/20 text-amber-600 px-2 py-0.5 rounded-full">
+                                    <span className="text-[10px] font-black bg-amber-500 text-[var(--background)] px-3 py-1 rounded-full shadow-sm">
                                         +{badge.xp_reward} XP
                                     </span>
                                 ) : (
-                                    <div className="bg-[var(--card-bg)] p-1 rounded-full text-[var(--text-muted)] border border-[var(--card-border)]">
+                                    <div className="bg-[var(--background)] p-2 rounded-full text-[var(--text-muted)] border border-[var(--card-border)] opacity-50">
                                         <Lock size={12} />
                                     </div>
                                 )}
