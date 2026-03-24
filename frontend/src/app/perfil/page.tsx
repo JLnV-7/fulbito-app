@@ -38,7 +38,7 @@ import { Button } from '@/components/ui/Button'
 import { BuildXI } from '@/components/perfil/BuildXI'
 import { MatchDiary } from '@/components/perfil/MatchDiary'
 import { useMatchLogs } from '@/hooks/useMatchLogs'
-import { Settings, Edit3, QrCode, LogOut, Users, BarChart2, BookOpen, ChevronRight } from 'lucide-react'
+import { Settings, Edit3, QrCode, LogOut, Users, BarChart2, BookOpen, ChevronRight, Search, Trophy } from 'lucide-react'
 
 type ProfileTab = 'social' | 'stats' | 'ajustes'
 
@@ -192,9 +192,28 @@ export default function Perfil() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
+      <>
+        <DesktopNav />
+        <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-28 md:pt-16">
+          {/* Skeleton banner */}
+          <div className="h-32 w-full bg-[var(--card-border)] animate-pulse" />
+          <div className="px-5 pb-4">
+            <div className="flex items-end justify-between -mt-12 mb-4">
+              <div className="w-24 h-24 rounded-3xl border-4 border-[var(--background)] bg-[var(--card-bg)] animate-pulse" />
+              <div className="w-20 h-9 rounded-2xl bg-[var(--card-bg)] animate-pulse" />
+            </div>
+            <div className="h-6 w-40 bg-[var(--card-bg)] rounded-xl animate-pulse mb-2" />
+            <div className="h-4 w-28 bg-[var(--card-bg)] rounded-xl animate-pulse mb-4" />
+            <div className="h-1.5 w-full bg-[var(--card-border)] rounded-full mb-5" />
+            <div className="grid grid-cols-3 gap-3">
+              {[0,1,2].map(i => (
+                <div key={i} className="h-20 rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)] animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </main>
+        <NavBar />
+      </>
     )
   }
 
@@ -253,13 +272,25 @@ export default function Perfil() {
           {/* Acciones top-right */}
           <div className="absolute top-3 right-4 flex gap-2">
             <button
+              onClick={() => router.push('/ranking')}
+              className="p-2 rounded-full bg-black/20 backdrop-blur-sm text-white hover:bg-black/30 transition-all"
+            >
+              <Trophy size={18} />
+            </button>
+            <button
+              onClick={() => router.push('/buscar')}
+              className="p-2 rounded-full bg-black/20 backdrop-blur-sm text-white hover:bg-black/30 transition-all"
+            >
+              <Search size={18} />
+            </button>
+            <button
               onClick={() => setShowQRModal(true)}
               className="p-2 rounded-full bg-black/20 backdrop-blur-sm text-white hover:bg-black/30 transition-all"
             >
               <QrCode size={18} />
             </button>
             <button
-              onClick={() => setShowEditor(true)}
+              onClick={() => setActiveTab('ajustes')}
               className="p-2 rounded-full bg-black/20 backdrop-blur-sm text-white hover:bg-black/30 transition-all"
             >
               <Edit3 size={18} />
@@ -270,8 +301,9 @@ export default function Perfil() {
           <div className="px-5 pb-4">
             <div className="flex items-end justify-between -mt-12 mb-4">
               <div className="relative">
-                <div
-                  className="w-24 h-24 rounded-3xl border-4 border-[var(--background)] shadow-xl flex items-center justify-center text-5xl overflow-hidden"
+                <button
+                  onClick={() => setActiveTab('ajustes')}
+                  className="w-24 h-24 rounded-3xl border-4 border-[var(--background)] shadow-xl flex items-center justify-center text-5xl overflow-hidden relative group cursor-pointer"
                   style={{ background: `${teamColor}22` }}
                 >
                   {profile?.avatar_url?.startsWith('http') ? (
@@ -279,7 +311,10 @@ export default function Perfil() {
                   ) : (
                     <span>{profile?.avatar_url || '👤'}</span>
                   )}
-                </div>
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl">
+                    <Edit3 size={20} className="text-white" />
+                  </div>
+                </button>
                 {/* Badge de nivel */}
                 <div
                   className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full text-[10px] font-black text-white shadow-lg"
@@ -365,7 +400,7 @@ export default function Perfil() {
                 }`}
               >
                 {tab.icon}
-                <span className="hidden sm:inline">{tab.label}</span>
+                <span>{tab.label}</span>
               </button>
             ))}
           </div>
