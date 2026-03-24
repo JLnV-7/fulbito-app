@@ -167,16 +167,8 @@ export function usePartidos(filtroLiga: Liga = 'Todos') {
     // Polling fijo: el efecto se re-ejecuta al cambiar filtroLiga
     const intervalId = setInterval(fetchPartidos, POLL_INTERVAL)
 
-    // Refetch on window focus (to catch updates when returning to the app)
-    const handleFocus = () => {
-      console.log('[usePartidos] Window focused, refetching...')
-      fetchPartidos()
-    }
-    window.addEventListener('focus', handleFocus)
-
     return () => {
       clearInterval(intervalId)
-      window.removeEventListener('focus', handleFocus)
     }
   }, [fetchPartidos])
 

@@ -129,6 +129,14 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
     // ── Permisos ────────────────────────────────────────────────────
     const canEdit = user?.id === partido.creado_por || user?.id === adminId
 
+    useEffect(() => {
+        // Bloquear scroll del body al abrir el modal para evitar la doble barra
+        document.body.style.overflow = 'hidden'
+        return () => {
+            document.body.style.overflow = 'unset'
+        }
+    }, [])
+
     // ── Votos helpers ───────────────────────────────────────────────
     const updateJugadorVotoLocal = (jugadorId: string, nota: number, comentario?: string) => {
         setJugadores(prev => prev.map(j => {
@@ -494,22 +502,22 @@ export function MatchDetailTabs({ partido, grupoId, onClose, onUpdate, initialTa
                                                             <div key={j.id} className={`p-4 rounded-2xl border flex items-center justify-between gap-4 transition-all ${eq === 'azul' ? 'bg-blue-500/5 border-blue-500/10 hover:bg-blue-500/10' : 'bg-red-500/5 border-red-500/10 hover:bg-red-500/10'}`}>
                                                                 <div className="min-w-0 flex-1">
                                                                     <p className="font-bold text-sm truncate">{j.nombre}</p>
-                                                                    {j.mi_voto ? (
-                                                                        <div className="flex items-center gap-2 mt-1">
-                                                                            <div className="flex gap-0.5">
-                                                                                {Array.from({ length: 5 }).map((_, i) => (
-                                                                                    <span key={i} className={`text-[8px] ${i < Math.round(j.mi_voto!.nota / 2) ? '' : 'grayscale opacity-20'}`}>⭐</span>
-                                                                                ))}
-                                                                            </div>
-                                                                            <span className={`text-[10px] font-bold ${eq === 'azul' ? 'text-blue-500' : 'text-red-500'}`}>{j.mi_voto.nota}/10</span>
+                                                                    <div className="flex items-center gap-2 mt-1">
+                                                                        <div className="flex gap-0.5">
+                                                                            {Array.from({ length: 5 }).map((_, i) => (
+                                                                                <span key={i} className={`text-[8px] ${i < Math.round((j.promedio || 0) / 2) ? '' : 'grayscale opacity-20'}`}>⭐</span>
+                                                                            ))}
                                                                         </div>
-                                                                    ) : (
-                                                                        <p className="text-[10px] text-[var(--text-muted)] font-medium mt-1">Sin votar aún</p>
-                                                                    )}
-                                                                    {(j.total_votos || 0) > 0 && (
-                                                                        <p className="text-[10px] text-[var(--text-muted)] mt-1">
-                                                                            Promedio: <strong className={eq === 'azul' ? 'text-blue-500' : 'text-red-500'}>{j.promedio}</strong>
-                                                                            <span className="opacity-50"> ({j.total_votos} votos)</span>
+                                                                        <span className={`text-[10px] font-bold ${eq === 'azul' ? 'text-blue-500' : 'text-red-500'}`}>
+                                                                            {(j.total_votos || 0) > 0 ? `${j.promedio}/10` : 'Sin votos'}
+                                                                        </span>
+                                                                        {(j.total_votos || 0) > 0 && (
+                                                                            <span className="text-[10px] text-[var(--text-muted)] opacity-50">({j.total_votos}v)</span>
+                                                                        )}
+                                                                    </div>
+                                                                    {j.mi_voto && (
+                                                                        <p className="text-[9px] text-[var(--text-muted)] font-medium mt-1">
+                                                                            Tu voto: {j.mi_voto.nota}/10
                                                                         </p>
                                                                     )}
                                                                 </div>
