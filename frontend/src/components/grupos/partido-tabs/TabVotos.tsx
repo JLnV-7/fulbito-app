@@ -65,6 +65,7 @@ export function TabVotos({ partido, jugadores, facetVotes, onVotar, onEliminarVo
                     <div className="flex items-center gap-3">
                         <p className="text-2xl font-black text-[#16a34a]">{progreso}%</p>
                         <button
+                            type="button"
                             onClick={onRefresh}
                             className="text-[9px] font-black uppercase tracking-widest text-[#16a34a] border border-[#16a34a]/30 px-3 py-1 rounded-full hover:bg-[#16a34a]/10 transition-all"
                         >
@@ -106,6 +107,7 @@ export function TabVotos({ partido, jugadores, facetVotes, onVotar, onEliminarVo
                 ) : (
                     ranking.map((j, i) => (
                         <button
+                            type="button"
                             key={j.id}
                             onClick={() => setJugadorDetalle(j)}
                             className={`w-full flex items-center gap-3 px-5 py-3 border-b border-[var(--card-border)] last:border-0 text-left hover:bg-[var(--hover-bg)] transition-all ${i === 0 ? 'bg-amber-400/5' : ''}`}
@@ -178,11 +180,13 @@ export function TabVotos({ partido, jugadores, facetVotes, onVotar, onEliminarVo
                                 <div className="flex gap-2 shrink-0">
                                     {j.mi_voto && (
                                         <button
+                                            type="button"
                                             onClick={() => onEliminarVoto(j.id)}
                                             className="p-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all text-xs"
                                         >🗑️</button>
                                     )}
                                     <button
+                                        type="button"
                                         onClick={() => setVotandoA(j)}
                                         className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                                             j.mi_voto

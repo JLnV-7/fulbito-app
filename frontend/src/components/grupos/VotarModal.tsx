@@ -55,6 +55,7 @@ export function VotarModal({ jugador, onVotar, onClose }: VotarModalProps) {
                             </p>
                         </div>
                         <button
+                            type="button"
                             onClick={onClose}
                             className="w-8 h-8 rounded-full bg-[var(--background)] flex items-center justify-center text-[var(--text-muted)]"
                         >✕</button>
@@ -75,6 +76,7 @@ export function VotarModal({ jugador, onVotar, onClose }: VotarModalProps) {
                         <div className="grid grid-cols-5 gap-2">
                             {Array.from({ length: 10 }, (_, i) => i + 1).map(n => (
                                 <button
+                                    type="button"
                                     key={n}
                                     onClick={() => setNota(n)}
                                     className={`py-3 rounded-xl text-lg font-black transition-all ${nota === n
@@ -109,12 +111,14 @@ export function VotarModal({ jugador, onVotar, onClose }: VotarModalProps) {
                     {/* Footer */}
                     <div className="p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] border-t border-[var(--card-border)] flex gap-3">
                         <button
+                            type="button"
                             onClick={onClose}
                             className="flex-1 py-3 rounded-xl text-[var(--text-muted)] font-bold hover:bg-[var(--background)]"
                         >
                             Cancelar
                         </button>
                         <button
+                            type="button"
                             onClick={handleGuardar}
                             disabled={nota === 0 || guardando}
                             className="flex-1 py-3 rounded-xl font-black text-black bg-[#fbbf24] disabled:opacity-40 transition-all hover:shadow-lg hover:shadow-[#fbbf24]/30"

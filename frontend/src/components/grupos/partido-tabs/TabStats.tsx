@@ -101,6 +101,7 @@ export function TabStats({ partido, jugadores, canEdit, onGuardar, onReabrir }: 
             {/* Botón Reabrir */}
             {canEdit && partido.stats_completed && (
                 <button
+                    type="button"
                     onClick={async () => { setProcesando(true); try { await onReabrir() } finally { setProcesando(false) } }}
                     disabled={procesando}
                     className="w-full py-4 bg-orange-500/10 text-orange-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-orange-500/20 transition-all border border-orange-500/20 disabled:opacity-50"
@@ -129,6 +130,7 @@ export function TabStats({ partido, jugadores, canEdit, onGuardar, onReabrir }: 
                             </div>
                         </div>
                         <button
+                            type="button"
                             onClick={handleGuardar}
                             disabled={procesando}
                             className="w-full bg-[#16a34a] text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs disabled:opacity-50 hover:brightness-110 transition-all"
@@ -171,12 +173,14 @@ function Counter({ value, color, emoji, canEdit, onDelta }: {
             <span className="text-[10px] opacity-50">{emoji}</span>
             <div className="flex items-center gap-1 bg-[var(--background)] px-1 py-1 rounded-xl border border-[var(--card-border)]">
                 <button
+                    type="button"
                     onClick={() => onDelta(-1)}
                     disabled={!canEdit || value === 0}
                     className="w-7 h-7 flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--hover-bg)] rounded-lg disabled:opacity-20 text-lg"
                 >-</button>
                 <span className="w-5 text-center font-black text-sm tabular-nums" style={{ color: value > 0 ? color : undefined }}>{value}</span>
                 <button
+                    type="button"
                     onClick={() => onDelta(1)}
                     disabled={!canEdit}
                     className="w-7 h-7 flex items-center justify-center text-[#16a34a] hover:bg-[#16a34a]/10 rounded-lg disabled:opacity-20 text-lg"

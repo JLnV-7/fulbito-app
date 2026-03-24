@@ -13,6 +13,10 @@ import { usePartidoDetalle } from '@/hooks/usePartidoDetalle'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import type { PartidoAmigo, JugadorPartidoAmigo, FacetType } from '@/types'
 
+// ── Modulos de UI del Modal ─────────────────────────────────────────────────
+import { ModalHeader } from './partido-modal-components/ModalHeader'
+import { TabNav } from './partido-modal-components/TabNav'
+
 // ── Sub-componentes de tabs ──────────────────────────────────────────────────
 import { TabInfo } from './partido-tabs/TabInfo'
 import { TabVotos } from './partido-tabs/TabVotos'
@@ -57,13 +61,6 @@ export function PartidoModal({ partido, grupoId, adminId, initialTab = 'info', o
     const handleError = (msg: string) => showToast(msg, 'error')
     const handleSuccess = (msg: string) => showToast(msg, 'success')
 
-    const tabs: { id: Tab; label: string; icon: typeof Info }[] = [
-        { id: 'info',       label: 'Info',       icon: Info },
-        { id: 'votos',      label: 'Votos',      icon: Inbox },
-        { id: 'resultados', label: 'Resultados', icon: Trophy },
-        { id: 'stats',      label: 'Stats',      icon: BarChart2 },
-    ]
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -72,47 +69,10 @@ export function PartidoModal({ partido, grupoId, adminId, initialTab = 'info', o
             className="fixed inset-0 bg-[var(--background)] z-[60] flex flex-col"
         >
             {/* Header */}
-            <div className="bg-[#16a34a] text-white pt-10 pb-4 px-6 relative shrink-0">
-                <button
-                    onClick={onClose}
-                    className="absolute top-10 right-6 p-2 bg-black/20 rounded-full hover:bg-black/30 transition-all"
-                >
-                    <X size={20} />
-                </button>
-                <div className="max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-black italic tracking-tighter">⚽ Partido</h2>
-                    <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest mt-1">
-                        {new Date(partido.fecha + 'T00:00:00').toLocaleDateString('es-AR', {
-                            weekday: 'long', day: 'numeric', month: 'long'
-                        })} · {partido.hora.slice(0, 5)} hs
-                    </p>
-                    {partido.cancha && (
-                        <p className="text-white/70 text-[10px] font-bold uppercase tracking-widest">
-                            📍 {partido.cancha}
-                        </p>
-                    )}
-                </div>
-            </div>
+            <ModalHeader partido={partido} onClose={onClose} />
 
             {/* Tabs */}
-            <div className="bg-[var(--card-bg)] border-b border-[var(--card-border)] px-4 py-2 shrink-0">
-                <div className="max-w-2xl mx-auto flex gap-1">
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-all ${
-                                activeTab === tab.id
-                                    ? 'bg-[#16a34a]/10 text-[#16a34a]'
-                                    : 'text-[var(--text-muted)] hover:bg-[var(--hover-bg)]'
-                            }`}
-                        >
-                            <tab.icon size={18} />
-                            <span className="text-[10px] font-black uppercase tracking-tighter">{tab.label}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
+            <TabNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto">
@@ -126,6 +86,7 @@ export function PartidoModal({ partido, grupoId, adminId, initialTab = 'info', o
                         <div className="text-center py-16">
                             <p className="text-red-500 font-bold text-sm mb-4">{error}</p>
                             <button
+                                type="button"
                                 onClick={fetch}
                                 className="bg-[#16a34a] text-white px-6 py-2 rounded-xl font-black text-xs uppercase tracking-widest"
                             >

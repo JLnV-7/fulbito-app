@@ -183,7 +183,7 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
                 {/* Header */}
                 <div className="sticky top-0 bg-[var(--card-bg)] z-10 p-5 border-b border-[var(--card-border)] flex items-center gap-3">
                     {paso === 2 && (
-                        <button onClick={() => setPaso(1)}
+                        <button type="button" onClick={() => setPaso(1)}
                             className="w-8 h-8 rounded-full bg-[var(--background)] flex items-center justify-center">←</button>
                     )}
                     <div className="flex-1">
@@ -192,7 +192,7 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
                         </h3>
                         <p className="text-xs text-[var(--text-muted)]">Paso {paso} de 2</p>
                     </div>
-                    <button onClick={onClose}
+                    <button type="button" onClick={onClose}
                         className="w-8 h-8 rounded-full bg-[var(--background)] flex items-center justify-center text-[var(--text-muted)]"
                     >✕</button>
                 </div>
@@ -214,6 +214,7 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
                                 <div className="space-y-2">
                                     {TIPOS_PARTIDO.map(t => (
                                         <button
+                                            type="button"
                                             key={t.value}
                                             onClick={() => setTipo(t.value)}
                                             className={`w-full p-3 rounded-[var(--radius)] border text-left flex justify-between items-center transition-all ${tipo === t.value
@@ -264,6 +265,7 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
 
                             {/* Siguiente */}
                             <button
+                                type="button"
                                 onClick={handleSiguiente}
                                 disabled={!fecha || guardando}
                                 className="w-full py-4 rounded-[var(--radius)] font-black text-white bg-[#16a34a] disabled:opacity-40 hover:bg-[#059669] transition-all"
@@ -318,6 +320,7 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
                             {/* Actions */}
                             <div className="space-y-2 pt-2">
                                 <button
+                                    type="button"
                                     onClick={handleCrearYAbrir}
                                     disabled={guardando || (jugadoresAzul.length === 0 && jugadoresRojo.length === 0)}
                                     className="w-full py-4 rounded-[var(--radius)] font-black text-white bg-[#16a34a] disabled:opacity-40 hover:bg-[#059669] transition-all"
@@ -325,6 +328,7 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
                                     {guardando ? '⏳' : '🗳️ Crear y Abrir Votación'}
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={handleGuardarBorrador}
                                     className="w-full py-3 rounded-[var(--radius)] font-bold text-[var(--text-muted)] border border-[var(--card-border)] hover:bg-[var(--hover-bg)]"
                                 >
@@ -361,6 +365,7 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
                                     <div className="max-h-32 overflow-y-auto border border-[var(--card-border)] rounded-[var(--radius)] mb-2">
                                         {miembros.map(m => (
                                             <button
+                                                type="button"
                                                 key={m.user_id}
                                                 onClick={() => {
                                                     setNuevoNombre(m.profile?.username || 'Usuario');
@@ -391,10 +396,12 @@ export function CrearPartidoAmigo({ grupoId, onClose, onCreated }: CrearPartidoA
                                 </div>
                                 <div className="flex gap-2">
                                     <button
+                                        type="button"
                                         onClick={() => { setEquipoAgregando(null); setNuevoNombre(''); setSelectedUserId(null); setOrdenAgregando(null) }}
                                         className="flex-1 py-2 rounded-[var(--radius)] text-[var(--text-muted)] font-bold"
                                     >Cancelar</button>
                                     <button
+                                        type="button"
                                         onClick={handleAgregarJugador}
                                         disabled={!nuevoNombre.trim() || guardando}
                                         className="flex-1 py-2 rounded-[var(--radius)] font-black text-white bg-[#16a34a] disabled:opacity-40"
@@ -425,6 +432,7 @@ function TeamSection({ equipo, color, emoji, maxJugadores, jugadores, onAgregar,
             </h4>
 
             <button
+                type="button"
                 onClick={onAgregar}
                 className="w-full p-3 rounded-[var(--radius)] border-2 border-dashed border-[var(--card-border)] text-sm text-[var(--text-muted)] hover:border-[#16a34a] hover:text-[#16a34a] transition-all mb-2"
             >
@@ -441,6 +449,7 @@ function TeamSection({ equipo, color, emoji, maxJugadores, jugadores, onAgregar,
                     >
                         <span className="text-sm font-bold">👤 {j.nombre}</span>
                         <button
+                            type="button"
                             onClick={() => onEliminar(j)}
                             className="text-[#ef4444] hover:bg-[#ef4444]/10 w-7 h-7 rounded-full flex items-center justify-center text-xs"
                         >❌</button>

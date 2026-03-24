@@ -56,6 +56,7 @@ export function FacetVotingCards({ jugadores, votosExistentes, onVote, onDeleteV
                             </div>
                             {myVote && (
                                 <button 
+                                    type="button"
                                     onClick={() => onDeleteVote(facet.id)}
                                     className="p-2 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-all border border-red-500/10"
                                     title="Quitar voto"
@@ -67,7 +68,10 @@ export function FacetVotingCards({ jugadores, votosExistentes, onVote, onDeleteV
 
                         <select
                             value={myVote?.player_id || ''}
-                            onChange={(e) => onVote(e.target.value, facet.id)}
+                            onChange={(e) => {
+                                e.preventDefault()
+                                onVote(e.target.value, facet.id)
+                            }}
                             className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-[#16a34a] transition-colors appearance-none"
                         >
                             <option value="" disabled>Elegir jugador...</option>
