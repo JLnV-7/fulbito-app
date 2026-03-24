@@ -78,6 +78,8 @@ export default function PartidoPage() {
   const chatRef = useRef<HTMLDivElement>(null)
   const pollRef = useRef<HTMLDivElement>(null)
 
+  const numericId = !isNaN(Number(id)) ? Number(id) : null;
+
   const scrollToRef = (ref: React.RefObject<HTMLDivElement | null>) => {
     if (ref.current) {
       const y = ref.current.getBoundingClientRect().top + window.scrollY - 80

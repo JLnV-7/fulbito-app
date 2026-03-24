@@ -1,0 +1,24 @@
+﻿.next/dev/types/validator.ts(188,39): error TS2307: Cannot find module '../../../src/app/perfil/[id]/page.js' or its corresponding type declarations.
+src/app/partido/[id]/page.tsx(455,43): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(458,32): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(559,24): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(580,61): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(589,24): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(610,61): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(651,20): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(654,36): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(716,22): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(738,46): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(750,22): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(771,59): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(903,22): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(905,36): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(910,22): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(911,49): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(917,41): error TS2304: Cannot find name 'numericId'.
+src/app/partido/[id]/page.tsx(920,34): error TS2304: Cannot find name 'numericId'.
+src/app/perfil/[username]/ProfileClient.tsx(307,10): error TS2739: Type '{ userId: any; type: FollowListType; onClose: () => void; }' is missing the following properties from type 'FollowListModalProps': isOpen, title
+src/components/feed/FeedGlobal.tsx(48,18): error TS2352: Conversion of type '{ id: any; partido_id: any; rating_partido: any; review_text: any; review_title: any; jugador_estrella: any; created_at: any; equipo_local: any; equipo_visitante: any; goles_local: any; goles_visitante: any; is_spoiler: any; profile: { ...; }[]; }[]' to type 'ItemFeed[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ id: any; partido_id: any; rating_partido: any; review_text: any; review_title: any; jugador_estrella: any; created_at: any; equipo_local: any; equipo_visitante: any; goles_local: any; goles_visitante: any; is_spoiler: any; profile: { ...; }[]; }' is not comparable to type 'ItemFeed'.
+    Types of property 'profile' are incompatible.
+      Type '{ username: any; avatar_url: any; }[]' is missing the following properties from type '{ username: string; avatar_url: string | null; }': username, avatar_url

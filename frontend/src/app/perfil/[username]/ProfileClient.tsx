@@ -302,9 +302,10 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
         </div>
       </main>
 
-      {/* Modal seguidores/siguiendo */}
       {followModal && (
         <FollowListModal
+          isOpen={!!followModal}
+          title={followModal === 'followers' ? 'Seguidores' : 'Siguiendo'}
           userId={initialProfile.id}
           type={followModal}
           onClose={() => setFollowModal(null)}

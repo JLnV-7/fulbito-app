@@ -45,7 +45,7 @@ export function FeedGlobal() {
           .limit(30)
 
         if (error) throw error
-        setItems((data ?? []) as ItemFeed[])
+        setItems((data ?? []) as unknown as ItemFeed[])
       } catch (err) {
         console.error('[FeedGlobal] Fetch error:', err)
         setError('No se pudo cargar el feed de la tribuna.')
