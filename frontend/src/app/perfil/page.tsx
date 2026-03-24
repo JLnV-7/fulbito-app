@@ -270,64 +270,51 @@ export default function Perfil() {
           />
 
           {/* Acciones top-right */}
-          <div className="absolute top-3 right-4 flex gap-2">
-            <button
-              onClick={() => router.push('/ranking')}
-              className="p-2 rounded-full bg-black/20 backdrop-blur-sm text-white hover:bg-black/30 transition-all"
-            >
-              <Trophy size={18} />
-            </button>
-            <button
-              onClick={() => router.push('/buscar')}
-              className="p-2 rounded-full bg-black/20 backdrop-blur-sm text-white hover:bg-black/30 transition-all"
-            >
-              <Search size={18} />
-            </button>
+          <div className="absolute top-4 right-4 flex gap-2">
             <button
               onClick={() => setShowQRModal(true)}
-              className="p-2 rounded-full bg-black/20 backdrop-blur-sm text-white hover:bg-black/30 transition-all"
+              className="p-2.5 rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/30 transition-all border border-white/10"
             >
               <QrCode size={18} />
             </button>
             <button
               onClick={() => setActiveTab('ajustes')}
-              className="p-2 rounded-full bg-black/20 backdrop-blur-sm text-white hover:bg-black/30 transition-all"
+              className="p-2.5 rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/30 transition-all border border-white/10"
             >
-              <Edit3 size={18} />
+              <Settings size={18} />
             </button>
           </div>
 
           {/* Avatar grande — sobresale del banner */}
-          <div className="px-5 pb-4">
-            <div className="flex items-end justify-between -mt-12 mb-4">
+          <div className="px-6 pb-4">
+            <div className="flex items-end justify-between -mt-14 mb-4">
               <div className="relative">
                 <button
                   onClick={() => setActiveTab('ajustes')}
-                  className="w-24 h-24 rounded-3xl border-4 border-[var(--background)] shadow-xl flex items-center justify-center text-5xl overflow-hidden relative group cursor-pointer"
-                  style={{ background: `${teamColor}22` }}
+                  className="w-28 h-28 rounded-full border-4 border-[var(--background)] shadow-2xl flex items-center justify-center text-5xl overflow-hidden relative group cursor-pointer bg-[var(--card-bg)]"
                 >
                   {profile?.avatar_url?.startsWith('http') ? (
                     <img src={profile.avatar_url} alt="avatar" className="w-full h-full object-cover" />
                   ) : (
                     <span>{profile?.avatar_url || '👤'}</span>
                   )}
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl">
-                    <Edit3 size={20} className="text-white" />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Edit3 size={24} className="text-white" />
                   </div>
                 </button>
                 {/* Badge de nivel */}
                 <div
-                  className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full text-[10px] font-black text-white shadow-lg"
+                  className="absolute bottom-1 -right-1 px-2.5 py-0.5 rounded-full text-[11px] font-black text-white shadow-xl border-2 border-[var(--background)]"
                   style={{ background: teamColor }}
                 >
                   LVL {level}
                 </div>
               </div>
 
-              {/* Botón seguir (solo si alguien más ve el perfil — acá es propio) */}
+              {/* Botón salir */}
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-2xl border border-[var(--card-border)] text-[var(--text-muted)] text-xs font-bold hover:bg-[var(--hover-bg)] transition-all"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--text-muted)] text-xs font-bold hover:bg-[var(--hover-bg)] transition-all mb-2"
               >
                 <LogOut size={14} />
                 Salir
@@ -335,23 +322,23 @@ export default function Perfil() {
             </div>
 
             {/* Nombre y equipo */}
-            <div className="mb-4">
+            <div className="mb-5">
               <h1 className="text-2xl font-black tracking-tight">{profile?.username || 'Usuario'}</h1>
               {profile?.equipo && (
                 <p className="text-sm font-bold mt-0.5" style={{ color: teamColor }}>
                   ❤️ {profile.equipo}
                 </p>
               )}
-              <p className="text-xs text-[var(--text-muted)] mt-1">{user.email}</p>
+              <p className="text-[11px] text-[var(--text-muted)] mt-1">{user.email}</p>
             </div>
 
             {/* XP bar */}
-            <div className="mb-5">
+            <div className="mb-6">
               <div className="flex justify-between items-center mb-1.5">
                 <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Progreso</span>
                 <span className="text-[10px] font-bold text-[var(--text-muted)]">{xp} / {xpForNext} XP</span>
               </div>
-              <div className="h-1.5 bg-[var(--card-border)] rounded-full overflow-hidden">
+              <div className="h-2 bg-[var(--card-border)] rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min((xp / xpForNext) * 100, 100)}%` }}
@@ -366,41 +353,47 @@ export default function Perfil() {
             <div className="grid grid-cols-3 gap-3 mb-2">
               <button
                 onClick={() => setFollowModalState({ isOpen: true, type: 'followers', title: 'Seguidores' })}
-                className="flex flex-col items-center p-3 rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)] hover:border-[var(--card-border-hover)] transition-all active:scale-95"
+                className="flex flex-col items-center p-3 rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)] hover:border-[var(--card-border-hover)] transition-all active:scale-95 shadow-sm"
               >
                 <span className="text-xl font-black">{followersCount}</span>
-                <span className="text-[9px] text-[var(--text-muted)] font-black uppercase tracking-widest mt-0.5">Seguidores</span>
+                <span className="text-[10px] text-[var(--text-muted)] font-bold mt-0.5">Seguidores</span>
               </button>
               <button
                 onClick={() => setFollowModalState({ isOpen: true, type: 'following', title: 'Siguiendo' })}
-                className="flex flex-col items-center p-3 rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)] hover:border-[var(--card-border-hover)] transition-all active:scale-95"
+                className="flex flex-col items-center p-3 rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)] hover:border-[var(--card-border-hover)] transition-all active:scale-95 shadow-sm"
               >
                 <span className="text-xl font-black">{followingCount}</span>
-                <span className="text-[9px] text-[var(--text-muted)] font-black uppercase tracking-widest mt-0.5">Siguiendo</span>
+                <span className="text-[10px] text-[var(--text-muted)] font-bold mt-0.5">Siguiendo</span>
               </button>
-              <div className="flex flex-col items-center p-3 rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)]">
+              <div className="flex flex-col items-center p-3 rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)] shadow-sm">
                 <span className="text-xl font-black">{stats.partidos_vistos}</span>
-                <span className="text-[9px] text-[var(--text-muted)] font-black uppercase tracking-widest mt-0.5">Partidos</span>
+                <span className="text-[10px] text-[var(--text-muted)] font-bold mt-0.5">Partidos</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* ── TABS ── */}
-        <div className="sticky top-0 md:top-16 z-30 bg-[var(--background)]/90 backdrop-blur-xl border-b border-[var(--card-border)]">
+        <div className="sticky top-0 md:top-16 z-30 bg-[var(--background)]/95 backdrop-blur-xl border-b border-[var(--card-border)]">
           <div className="flex px-4 max-w-2xl mx-auto">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => { hapticFeedback(5); setActiveTab(tab.id) }}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-black uppercase tracking-widest border-b-2 transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-bold transition-all relative ${
                   activeTab === tab.id
-                    ? 'border-[var(--foreground)] text-[var(--foreground)]'
-                    : 'border-transparent text-[var(--text-muted)] hover:text-[var(--foreground)]'
+                    ? 'text-[var(--foreground)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
                 }`}
               >
                 {tab.icon}
                 <span>{tab.label}</span>
+                {activeTab === tab.id && (
+                  <motion.div
+                    layoutId="activeProfileTab"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--foreground)]"
+                  />
+                )}
               </button>
             ))}
           </div>
