@@ -67,6 +67,9 @@ export default function RootLayout({
       <body
         className="antialiased"
       >
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, background: 'red', color: 'white', zIndex: 999999, fontWeight: 'black', textAlign: 'center', padding: '10px' }}>
+          ¡NUEVO DEPLOY V3 RECIBIDO CORRECTAMENTE!
+        </div>
         <LayoutClientWrapper>
           {children}
           <footer className="text-center py-6 text-[var(--text-muted)] text-sm pb-28 md:pb-8 border-t border-[var(--card-border)] mt-8 bg-[var(--background)]">
