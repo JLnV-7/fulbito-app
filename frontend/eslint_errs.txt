@@ -1,0 +1,192 @@
+﻿
+E:\no borrar\fulbitoo\frontend\postcss.config.mjs
+  1:1  warning  Assign object to a variable before exporting as module default  import/no-anonymous-default-export
+
+E:\no borrar\fulbitoo\frontend\public\workbox-e43f5367.js
+     5:7   warning  Expected an assignment or function call and instead saw an expression                                          @typescript-eslint/no-unused-expressions
+    52:7   error    Definition for rule '@typescript-eslint/ban-types' was not found                                               @typescript-eslint/ban-types
+   419:5   error    Definition for rule '@typescript-eslint/ban-types' was not found                                               @typescript-eslint/ban-types
+   435:5   warning  Unused eslint-disable directive (no problems were reported)
+   458:7   warning  Expected an assignment or function call and instead saw an expression                                          @typescript-eslint/no-unused-expressions
+   752:11  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-member-access')
+   754:13  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-assignment')
+   948:11  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-assignment')
+   964:13  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unsafe-assignment')
+   970:13  warning  Unused eslint-disable directive (no problems were reported)
+  1187:7   warning  Expected an assignment or function call and instead saw an expression                                          @typescript-eslint/no-unused-expressions
+  1346:5   error    Definition for rule '@typescript-eslint/ban-types' was not found                                               @typescript-eslint/ban-types
+  1738:35  warning  Unused eslint-disable directive (no problems were reported)
+
+E:\no borrar\fulbitoo\frontend\src\app\buscar\page.tsx
+  439:53  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  635:35  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\app\grupos\[id]\page.tsx
+  49:8  warning  React Hook useEffect has a missing dependency: 'fetchGrupoData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\app\historial\page.tsx
+  21:8  warning  React Hook useEffect has a missing dependency: 'fetchHistorial'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\app\listas\[id]\page.tsx
+  46:6  warning  React Hook useEffect has a missing dependency: 'supabase'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\app\log\[id]\page.tsx
+  138:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\app\mis-stats\page.tsx
+  76:6  warning  React Hook useEffect has a missing dependency: 'supabase'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\app\perfil\[username]\ProfileClient.tsx
+  57:6   warning  React Hook useEffect has a missing dependency: 'supabase'. Either include it or remove the dependency array                                                                                                                                                                              react-hooks/exhaustive-deps
+  92:19  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\app\perfil\page.tsx
+  208:6   warning  React Hook useEffect has a missing dependency: 'prodeStats'. Either include it or remove the dependency array. You can also replace multiple useState variables with useReducer if 'setBadgeStats' needs the current value of 'prodeStats'                                               react-hooks/exhaustive-deps
+  385:23  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\app\prode\page.tsx
+  93:8  warning  React Hook useEffect has a missing dependency: 'showToast'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\app\ranking\page.tsx
+   38:8   warning  React Hook useEffect has a missing dependency: 'fetchRanking'. Either include it or remove the dependency array                                                                                                                                                                          react-hooks/exhaustive-deps
+  506:75  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\AdvancedStats.tsx
+  108:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  115:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\AutoShareModal.tsx
+  161:37  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\BadgeDisplay.tsx
+  33:8  warning  React Hook useEffect has a missing dependency: 'lastUnlockedCount'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\ChatPoll.tsx
+  41:8  warning  React Hook useEffect has missing dependencies: 'fetchPoll' and 'fetchVotes'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\ClubRanking.tsx
+  142:41  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\CommentSection.tsx
+   99:8   warning  React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array                                                                                                                                                                                  react-hooks/exhaustive-deps
+  374:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\CommunityRating.tsx
+  109:8  warning  React Hook useEffect has a missing dependency: 'equipos'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\ComunidadContent.tsx
+  200:45  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\FixtureTable.tsx
+  63:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  84:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\FixturesContent.tsx
+  96:8  warning  React Hook useMemo has a missing dependency: 'localeFormat'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\FollowListModal.tsx
+  211:53  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\FollowRecommendations.tsx
+   31:8   warning  React Hook useEffect has a missing dependency: 'loadRecommendations'. Either include it or remove the dependency array                                                                                                                                                                   react-hooks/exhaustive-deps
+  162:37  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\GiphyPicker.tsx
+  85:29  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\GiphySelector.tsx
+  110:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\HeadToHead.tsx
+  41:8  warning  React Hook useEffect has a missing dependency: 'fetchH2H'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\MatchLiveChat.tsx
+   35:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  287:41  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\MatchLogCard.tsx
+  124:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  250:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\MatchLogForm.tsx
+  809:41  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\NewsFeed.tsx
+  117:29  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\NewsTab.tsx
+  155:37  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\NotificationSettings.tsx
+  38:8  warning  React Hook useEffect has a missing dependency: 'loadPrefs'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\ProdeStats.tsx
+  25:8  warning  React Hook useEffect has a missing dependency: 'fetchStats'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\SearchBar.tsx
+  101:61  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  101:61  warning  img elements must have an alt prop, either with meaningful text, or an empty string for decorative images                                                                                                                                                                                jsx-a11y/alt-text
+
+E:\no borrar\fulbitoo\frontend\src\components\TeamForm.tsx
+  20:8  warning  React Hook useEffect has a missing dependency: 'fetchForm'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\TopPartidos.tsx
+  47:8  warning  React Hook useEffect has a missing dependency: 'fetchFavorites'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\__tests__\ProdeCard.test.tsx
+  12:30  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  12:30  warning  img elements must have an alt prop, either with meaningful text, or an empty string for decorative images                                                                                                                                                                                jsx-a11y/alt-text
+
+E:\no borrar\fulbitoo\frontend\src\components\admin\MatchUpdater.tsx
+  15:8  warning  React Hook useEffect has a missing dependency: 'loadMatches'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\feed\FeedGlobal.tsx
+  99:19  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\feed\TopMatchesToday.tsx
+  57:6  warning  React Hook useEffect has a missing dependency: 'supabase'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\grupos\DetalleJugadorAmigo.tsx
+  27:8  warning  React Hook useEffect has a missing dependency: 'loadDetalle'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\grupos\MatchDetailTabs.tsx
+  127:8  warning  React Hook useEffect has missing dependencies: 'fetchMiembros' and 'loadData'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\grupos\PartidoModal.tsx
+  55:8  warning  React Hook useEffect has a missing dependency: 'fetch'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\grupos\ResultadosPartidoAmigo.tsx
+  26:8  warning  React Hook useEffect has a missing dependency: 'loadResultados'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\grupos\TablaEstadisticas.tsx
+   29:8   warning  React Hook useEffect has a missing dependency: 'fetchStats'. Either include it or remove the dependency array                                                                                                                                                                            react-hooks/exhaustive-deps
+  152:51  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\grupos\VotarJugadores.tsx
+  28:8  warning  React Hook useEffect has a missing dependency: 'loadJugadores'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\components\jugadores\ResenasMVP.tsx
+  70:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\perfil\AvatarUploader.tsx
+  90:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\perfil\BuildXI.tsx
+   90:29  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  137:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\components\resenas\ListaResenas.tsx
+  60:22  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\no borrar\fulbitoo\frontend\src\hooks\useGrupos.ts
+  21:8  warning  React Hook useEffect has a missing dependency: 'fetchMisGrupos'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\hooks\useMatchLogs.ts
+  230:8  warning  React Hook useCallback has a missing dependency: 'showToast'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\no borrar\fulbitoo\frontend\src\hooks\usePronosticos.ts
+  43:8  warning  React Hook useEffect has a missing dependency: 'fetchPronosticos'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+Ô£û 80 problems (3 errors, 77 warnings)
+  0 errors and 7 warnings potentially fixable with the `--fix` option.
+

@@ -14,7 +14,9 @@ const eslintConfig = defineConfig([
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/preserve-manual-memoization": "off",
       "react-hooks/immutability": "off",
-      "@next/next/no-html-link-for-pages": "off"
+      "@next/next/no-html-link-for-pages": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/ban-ts-comment": "off"
     }
   },
   // Override default ignores of eslint-config-next.
