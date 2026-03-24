@@ -61,7 +61,22 @@ export function PartidosAmigosTab({ grupo }: PartidosAmigosTabProps) {
     }
 
     if (loading) {
-        return <div className="text-center py-10 text-[var(--text-muted)]">⏳ Cargando partidos...</div>
+        return (
+            <div className="space-y-6 animate-pulse">
+                {/* Header Skeleton */}
+                <div className="flex justify-between items-center">
+                    <div className="h-6 w-40 bg-[var(--card-bg)] rounded-xl" />
+                    <div className="h-8 w-24 bg-[var(--card-bg)] rounded-xl" />
+                </div>
+                {/* Cards Skeleton */}
+                <div className="space-y-4">
+                    <div className="h-4 w-32 bg-[var(--card-bg)] rounded-xl mb-2" />
+                    {[1, 2].map(i => (
+                        <div key={i} className="h-28 bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)]" />
+                    ))}
+                </div>
+            </div>
+        )
     }
 
     return (

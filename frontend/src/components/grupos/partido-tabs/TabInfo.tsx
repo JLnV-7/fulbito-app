@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { UserPlus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import type { PartidoAmigo, JugadorPartidoAmigo } from '@/types'
+import { JugadorAvatar } from '../JugadorAvatar'
 
 interface Props {
     partido: PartidoAmigo
@@ -25,7 +26,7 @@ export function TabInfo({ partido, jugadores, grupoId, canEdit, onAgregarJugador
     useEffect(() => {
         supabase
             .from('miembros_grupo')
-            .select('user_id, profile:profiles(username)')
+            .select('user_id, profile:profiles(username, avatar_url)')
             .eq('grupo_id', grupoId)
             .then(({ data }) => setMiembros(data || []))
     }, [grupoId])
@@ -94,7 +95,10 @@ export function TabInfo({ partido, jugadores, grupoId, canEdit, onAgregarJugador
                     ) : (
                         jugadores.filter(j => j.equipo === eq).map(j => (
                             <div key={j.id} className="flex items-center justify-between px-5 py-3 border-b border-[var(--card-border)] last:border-0">
-                                <p className="font-bold text-sm">👤 {j.nombre}</p>
+                                <div className="flex items-center gap-3">
+                                    <JugadorAvatar nombre={j.nombre} avatarUrl={(j as any).avatar_url} equipo={j.equipo} size="sm" />
+                                    <p className="font-bold text-sm">{j.nombre}</p>
+                                </div>
                                 {canEdit && (
                                     <button
                                         onClick={() => onEliminarJugador(j.id)}
@@ -128,7 +132,13 @@ export function TabInfo({ partido, jugadores, grupoId, canEdit, onAgregarJugador
                                             className={`w-full text-left p-3 rounded-xl text-xs flex items-center gap-2 transition-all ${selectedUser === m.user_id ? 'bg-[#16a34a] text-white font-bold' : 'hover:bg-[var(--hover-bg)]'}`}
                                         >
                                             <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-[10px]">
-                                                {m.profile?.username?.[0]?.toUpperCase()}
+                                            {m.profile?.avatar_url?.startsWith('http') ? (
+                                                <img src={m.profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                                            ) : m.profile?.avatar_url ? (
+                                                <span className="text-sm">{m.profile.avatar_url}</span>
+                                            ) : (
+                                                <span className="text-[10px]">{m.profile?.username?.[0]?.toUpperCase()}</span>
+                                            )}
                                             </div>
                                             {m.profile?.username}
                                         </button>

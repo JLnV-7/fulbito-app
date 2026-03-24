@@ -3,7 +3,7 @@
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { ThemeToggle } from './ThemeToggle'
-import { Trophy, Target, Users, Newspaper } from 'lucide-react'
+import { Trophy, Target, Users, Newspaper, Search, User } from 'lucide-react'
 import { Suspense } from 'react'
 
 interface NavItem {
@@ -35,7 +35,6 @@ function DesktopNavInner() {
         { label: 'Partidos', path: '/', icon: <Trophy size={14} /> },
         { label: 'Noticias', path: '/?tab=noticias', tab: 'noticias', icon: <Newspaper size={14} /> },
         { label: 'Prode', path: '/prode', icon: <Target size={14} /> },
-        { label: 'Ranking', path: '/ranking', icon: <Trophy size={14} /> },
         { label: 'Comunidad', path: '/comunidad', icon: <Users size={14} /> },
     ]
 
@@ -76,7 +75,28 @@ function DesktopNavInner() {
             </div>
 
             {/* Right: Actions */}
-            <div className="w-36 flex-shrink-0 flex items-center justify-end gap-2">
+            <div className="w-36 flex-shrink-0 flex items-center justify-end gap-1 md:gap-2">
+                <button
+                    onClick={() => router.push('/buscar')}
+                    className="p-2 flex items-center justify-center rounded-full text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-all"
+                    title="Buscar"
+                >
+                    <Search size={18} />
+                </button>
+                <button
+                    onClick={() => router.push('/ranking')}
+                    className="p-2 flex items-center justify-center rounded-full text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-all"
+                    title="Ranking general"
+                >
+                    <Trophy size={18} />
+                </button>
+                <button
+                    onClick={() => router.push('/perfil')}
+                    className="p-2 flex items-center justify-center rounded-full text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-all"
+                    title="Mi Perfil"
+                >
+                    <User size={18} />
+                </button>
                 <ThemeToggle />
             </div>
         </nav>
