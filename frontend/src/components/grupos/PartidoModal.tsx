@@ -80,7 +80,7 @@ export function PartidoModal({ partido, grupoId, adminId, initialTab = 'info', o
                     <X size={20} />
                 </button>
                 <div className="max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-black italic tracking-tighter">⚽ Partido V2</h2>
+                    <h2 className="text-2xl font-black italic tracking-tighter">⚽ Partido</h2>
                     <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest mt-1">
                         {new Date(partido.fecha + 'T00:00:00').toLocaleDateString('es-AR', {
                             weekday: 'long', day: 'numeric', month: 'long'
