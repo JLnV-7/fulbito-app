@@ -164,8 +164,8 @@ export default function GrupoDetailPage() {
     return (
         <>
             <DesktopNav />
-            <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-24 md:pt-20">
-
+            <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-32 pt-16 md:pt-24 relative">
+                
                 {/* Header del Grupo */}
                 <div className="bg-[#16a34a] text-white pt-10 pb-20 px-6 rounded-b-[40px] shadow-lg">
                     <div className="max-w-4xl mx-auto flex justify-between items-start">
