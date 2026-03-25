@@ -9,6 +9,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { calcularEstadoPartido, hapticFeedback, isMatchTooOld, getTeamColor } from '@/lib/helpers'
 import { CanchaFormacion } from '@/components/CanchaFormacion'
 import { CommentSection } from '@/components/CommentSection'
+import { CinematicHeader } from '@/components/partido/CinematicHeader'
+import { TopPlayersTable } from '@/components/partido/TopPlayersTable'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
 import { NavBar } from '@/components/NavBar'
@@ -289,13 +291,14 @@ export default function PartidoPage() {
 
   const isTooOld = partido ? isMatchTooOld(partido.fecha_inicio) : false
 
-  const handleVotar = useCallback((jugadorId: number, nota: number) => {
+  const handleVotar = useCallback((jugadorId: number, nota: number, comentario?: string) => {
     if (votoExistente || isTooOld) return // Bloqueado
     hapticFeedback(20)
     setVotos(prev => ({
       ...prev,
       [jugadorId]: nota
     }))
+    // Note: comentario save is planned for next db schema iteration
   }, [votoExistente, isTooOld])
 
   const handleGuardarVotos = async () => {
@@ -364,108 +367,16 @@ export default function PartidoPage() {
       <PullToRefresh onRefresh={async () => { window.location.reload() }}>
         <main className={`min-h-screen bg-[var(--background)] text-[var(--foreground)] md:pt-20
                            ${isVotingMode ? 'pb-44' : 'pb-28'}`}>
-          {/* Header compacto */}
-          <div className="bg-[var(--card-bg)] border-b border-[var(--card-border)]">
-            <div className="max-w-4xl mx-auto px-6 py-4">
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  onClick={() => {
-                    hapticFeedback(15)
-                    if (window.history.length > 2) {
-                      router.back()
-                    } else {
-                      router.push('/')
-                    }
-                  }}
-                  className="text-[var(--text-muted)] text-sm hover:text-[var(--foreground)] transition-colors"
-                >
-                  ← Volver
-                </button>
+          {/* Cinematic Header del Partido */}
+          <CinematicHeader partido={partido} estado={estado} equipos={equipos} />
 
-                <ShareButton
+          {/* Compartir partido - Absolute top right just below navigation if needed, but NavBar handles it or we can place a standalone FAB */}
+          <div className="flex justify-end px-6 mt-4">
+              <ShareButton
                   titulo={`Partido: ${partido.equipo_local} vs ${partido.equipo_visitante}`}
                   texto={`¡Mirá y votá en este partido en FutLog! ${partido.equipo_local} vs ${partido.equipo_visitante}`}
                   url={typeof window !== 'undefined' ? window.location.href : ''}
-                  captureRef={formacionesRef}
-                />
-              </div>
-
-              {/* Status and League Tags */}
-              <div className="flex items-center justify-between mt-2 mb-6">
-                <span className="text-xs font-black text-[#16a34a] capitalize tracking-wider bg-[#16a34a]/10 px-2.5 py-1 rounded-full border border-[#16a34a]/20">
-                  {partido.liga}
-                </span>
-                <span className={`text-[10px] font-black capitalize px-2.5 py-1 rounded-full border shadow-sm ${estado === 'PREVIA'
-                  ? 'bg-[var(--accent-yellow)]/10 text-[var(--accent-yellow)] border-[var(--accent-yellow)]/20'
-                  : estado === 'EN_JUEGO'
-                    ? 'bg-[var(--accent-red)]/10 text-[var(--accent-red)] border-[var(--accent-red)]/20 animate-pulse'
-                    : 'bg-[var(--foreground)]/5 text-[var(--text-muted)] border-[var(--card-border)]'
-                  }`}>
-                  {estado === 'PREVIA' && 'Próximo'}
-                  {estado === 'EN_JUEGO' && 'En vivo'}
-                  {estado === 'FINALIZADO' && 'Finalizado'}
-                </span>
-              </div>
-
-              {/* Giant Logos Matchup Layout */}
-              <div className="flex items-center justify-between max-w-lg mx-auto py-4 relative">
-                {/* Local */}
-                <div className="flex flex-col items-center flex-1 gap-3 relative z-10 w-[120px]">
-                  <div className="relative">
-                    <div 
-                      className="absolute inset-0 blur-2xl rounded-full scale-110 opacity-30 dark:opacity-40" 
-                      style={{ backgroundColor: getTeamColor(partido.equipo_local) }} 
-                    />
-                    <TeamLogo src={partido.logo_local || undefined} teamName={partido.equipo_local} size={72} className="relative z-10 shadow-2xl drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
-                  </div>
-                  <h3 className="font-black text-sm md:text-base text-center leading-tight">
-                    {partido.equipo_local}
-                  </h3>
-                </div>
-
-                {/* Score or VS Centered */}
-                <div className="flex flex-col items-center justify-center shrink-0 w-[100px] z-20">
-                  {estado === 'PREVIA' ? (
-                    <div className="w-12 h-12 rounded-full border border-white/10 bg-white/5 flex items-center justify-center shadow-lg backdrop-blur-md">
-                      <span className="font-black text-[var(--text-muted)] italic">VS</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 font-black text-4xl md:text-5xl tracking-tighter shadow-sm text-center">
-                      <span>{partido.goles_local ?? '-'}</span>
-                      <span className="text-[var(--text-muted)] text-3xl font-light opacity-50 px-1">-</span>
-                      <span>{partido.goles_visitante ?? '-'}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Visitante */}
-                <div className="flex flex-col items-center flex-1 gap-3 relative z-10 w-[120px]">
-                  <div className="relative">
-                    <div 
-                      className="absolute inset-0 blur-2xl rounded-full scale-110 opacity-30 dark:opacity-40" 
-                      style={{ backgroundColor: getTeamColor(partido.equipo_visitante) }} 
-                    />
-                    <TeamLogo src={partido.logo_visitante || undefined} teamName={partido.equipo_visitante} size={72} className="relative z-10 shadow-2xl drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
-                  </div>
-                  <h3 className="font-black text-sm md:text-base text-center leading-tight">
-                    {partido.equipo_visitante}
-                  </h3>
-                </div>
-              </div>
-
-              {/* Rating comunitario — visible sin scroll */}
-              {estado === 'FINALIZADO' && numericId !== null && (
-                <div className="mt-4 flex flex-col items-center gap-1">
-                    <CommunityRating
-                    partidoId={numericId}
-                    equipoLocal={partido.equipo_local}
-                    equipoVisitante={partido.equipo_visitante}
-                    equipos={equipos}
-                    compact
-                    />
-                </div>
-              )}
-            </div>
+              />
           </div>
 
 
@@ -626,6 +537,10 @@ export default function PartidoPage() {
                         <div className="h-px flex-1 bg-[var(--card-border)] opacity-30"></div>
                         <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">FORMACIONES Y VOTACIÓN</span>
                         <div className="h-px flex-1 bg-[var(--card-border)] opacity-30"></div>
+                      </div>
+                      
+                      <div className="mb-6">
+                        <TopPlayersTable partidoId={numericId!} equipos={equipos} />
                       </div>
                       
                       <div className="text-center bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] p-4">
