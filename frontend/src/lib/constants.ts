@@ -106,4 +106,25 @@ export const LIGA_FLAGS: Record<string, string> = {
     'Perú': '🇵🇪',
     'Ecuador': '🇪🇨',
 }
+
+export const TEAM_THEMES: Record<string, { primary: string; secondary: string; dark?: string }> = {
+    'Boca Juniors': { primary: '#003366', secondary: '#FFCC00', dark: '#002244' },
+    'River Plate': { primary: '#FF0000', secondary: '#FFFFFF', dark: '#cc0000' },
+    'San Lorenzo': { primary: '#003399', secondary: '#FF0000', dark: '#002266' },
+    'Racing Club': { primary: '#A8E0FF', secondary: '#FFFFFF', dark: '#82c0df' },
+    'Independiente': { primary: '#E30613', secondary: '#FFFFFF', dark: '#b0050f' },
+    'Estudiantes': { primary: '#E2001A', secondary: '#FFFFFF', dark: '#b00014' },
+    'Gimnasia': { primary: '#003399', secondary: '#FFFFFF', dark: '#002266' },
+    'Vélez Sarsfield': { primary: '#003399', secondary: '#FFFFFF', dark: '#002266' },
+    'Huracán': { primary: '#FF0000', secondary: '#FFFFFF', dark: '#cc0000' },
+    'Rosario Central': { primary: '#002D62', secondary: '#FFCD00', dark: '#001a3a' },
+    'Newell\'s Old Boys': { primary: '#000000', secondary: '#E30613', dark: '#000000' },
+    'Belgrano': { primary: '#00AEEF', secondary: '#FFFFFF', dark: '#008ec3' },
+    'Talleres': { primary: '#001A57', secondary: '#FFFFFF', dark: '#000d2b' },
+    'Selección Argentina': { primary: '#75AADB', secondary: '#FFFFFF', dark: '#5d8ab3' },
+    'Inter Miami': { primary: '#F2A9B8', secondary: '#000000', dark: '#d98b9a' },
+    'Real Madrid': { primary: '#FFFFFF', secondary: '#FEBE10', dark: '#e6e6e6' },
+    'FC Barcelona': { primary: '#A50044', secondary: '#004D98', dark: '#7a0032' },
+}
+
 export type Liga = typeof LIGAS[number]

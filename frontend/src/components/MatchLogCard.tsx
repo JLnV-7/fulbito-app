@@ -103,40 +103,43 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-[var(--card-bg)] border border-[var(--card-border)] overflow-hidden
-                 hover:border-[var(--foreground)] transition-all duration-300 cursor-pointer group"
-            style={{ borderRadius: 'var(--radius)' }}
+            className="bg-[var(--card-bg)]/80 backdrop-blur-xl border border-[var(--card-border)]/50 overflow-hidden
+                 hover:border-[var(--accent)]/30 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-xl group relative select-none"
+            style={{ borderRadius: '2rem' }}
             onClick={() => router.push(`/log/${log.id}`)}
         >
+            {/* Ambient Background Glow (Subtle) */}
+            <div className="absolute top-0 left-0 w-32 h-32 bg-[var(--accent)]/5 rounded-full blur-[40px] -translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+            
             {/* Header: User info + time */}
-            <div className="flex items-center gap-3 px-4 pt-3.5 pb-2">
+            <div className="flex items-center gap-3 px-5 pt-4 pb-2 relative z-10">
                 <div
-                    className="w-8 h-8 bg-[var(--foreground)] flex items-center justify-center text-[var(--background)] text-xs font-black shrink-0 cursor-pointer hover:ring-2 hover:ring-[var(--foreground)]/50 transition-all"
-                    style={{ borderRadius: 'var(--radius)' }}
+                    className="w-9 h-9 bg-[var(--card-border)] flex items-center justify-center text-[var(--foreground)] text-xs font-black shrink-0 cursor-pointer hover:ring-2 hover:ring-[var(--accent)]/30 transition-all overflow-hidden border border-white/5 shadow-inner"
+                    style={{ borderRadius: '1rem' }}
                     onClick={(e) => {
                         e.stopPropagation()
                         if (log.user_id) router.push(`/perfil/${log.user_id}`)
                     }}
                 >
                     {log.profile?.avatar_url ? (
-                        <img src={log.profile.avatar_url} alt="" className="w-full h-full object-cover" style={{ borderRadius: 'var(--radius)' }} />
+                        <img src={log.profile.avatar_url} alt="" className="w-full h-full object-cover" />
                     ) : (
                         log.profile?.username?.charAt(0)?.toUpperCase() || '?'
                     )}
                 </div>
                 <div className="flex-1 min-w-0">
                     <span
-                        className="text-sm font-black capitalize italic tracking-tighter truncate block cursor-pointer hover:underline transition-colors w-fit"
+                        className="text-sm font-black italic tracking-tighter truncate block cursor-pointer hover:text-[var(--accent)] transition-colors w-fit"
                         onClick={(e) => {
                             e.stopPropagation()
                             if (log.user_id) router.push(`/perfil/${log.user_id}`)
                         }}
                     >
-                        {log.profile?.username || 'Anónimo'}
+                        @{log.profile?.username || 'Anónimo'}
                     </span>
-                    <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-muted)]">
+                    <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">
                         <TypeIcon size={10} style={{ color: typeMeta.color }} />
                         <span>{typeMeta.label}</span>
                         <span>·</span>
@@ -144,57 +147,72 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
                         <span>{timeAgo(log.created_at)}</span>
                     </div>
                 </div>
-                {log.is_neutral && (
-                    <span className="text-[10px] px-1.5 py-0.5 border border-[var(--card-border)] bg-[var(--background)] text-[var(--foreground)] font-black capitalize tracking-widest hidden sm:inline-block">
-                        📐 Neutral
-                    </span>
-                )}
-                <div className="flex gap-1">
+                
+                <div className="flex gap-1 items-center">
                     {log.is_neutral && (
-                        <span className="sm:hidden text-[10px] px-1.5 py-0.5 border border-[var(--card-border)] bg-[var(--background)] text-[var(--foreground)] font-black shrink-0">
-                            📐
+                        <span className="text-[9px] px-2 py-0.5 border border-white/10 bg-white/5 text-[var(--foreground)] font-black uppercase tracking-widest rounded-full backdrop-blur-md">
+                            📐 Neutral
                         </span>
                     )}
                     {log.is_private && (
-                        <span className="text-[10px] px-1.5 py-0.5 border border-amber-500/30 bg-amber-500/10 text-amber-600 font-bold capitalize shrink-0">
+                        <span className="text-[9px] px-2 py-0.5 border border-amber-500/20 bg-amber-500/10 text-amber-500 font-black uppercase tracking-widest rounded-full">
                             Privado
                         </span>
                     )}
+                    {log.prode_hit && (
+                        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest shadow-sm
+                            ${log.prode_hit === 'exacto' 
+                                ? 'bg-green-500/10 border-green-500/30 text-green-500' 
+                                : 'bg-blue-500/10 border-blue-500/30 text-blue-500'}`}
+                        >
+                            <span>{log.prode_hit === 'exacto' ? '🎯' : '✅'}</span>
+                            <span>{log.prode_hit === 'exacto' ? 'Pleno' : 'Acierto'}</span>
+                            {log.prode_puntos && (
+                                <span className="opacity-60">+{log.prode_puntos}</span>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Match Info */}
-            <div className="px-4 py-3">
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <TeamLogo src={log.logo_local} teamName={log.equipo_local} size={24} />
-                        <span className="text-sm font-semibold truncate">{log.equipo_local}</span>
+            {/* Match Info & Giant Score */}
+            <div className="px-5 py-4 relative z-10">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col items-center gap-2 flex-1 min-w-0">
+                        <TeamLogo src={log.logo_local} teamName={log.equipo_local} size={40} className="drop-shadow-lg" />
+                        <span className="text-[10px] font-black uppercase tracking-tight text-center truncate w-full">{log.equipo_local}</span>
                     </div>
 
-                    {log.goles_local != null && log.goles_visitante != null ? (
-                        <div className="text-center px-2">
-                            <div className="text-lg font-bold tabular-nums tracking-wider">
-                                {log.goles_local} - {log.goles_visitante}
+                    <div className="flex flex-col items-center justify-center shrink-0">
+                        {log.goles_local != null && log.goles_visitante != null ? (
+                            <div className="flex flex-col items-center">
+                                <div className="text-3xl font-black tabular-nums tracking-tighter flex items-center gap-1.5">
+                                    <span>{log.goles_local}</span>
+                                    <span className="text-[10px] opacity-30 font-light italic">VS</span>
+                                    <span>{log.goles_visitante}</span>
+                                </div>
+                                {log.rating_partido && (
+                                    <div className="flex items-center gap-1 mt-1 bg-[var(--accent)]/10 px-2 py-0.5 rounded-full border border-[var(--accent)]/20 shadow-sm">
+                                        <StarRatingDisplay value={log.rating_partido} size="xs" />
+                                        <span className="text-[11px] font-black tabular-nums text-[var(--accent)]">{log.rating_partido.toFixed(1)}</span>
+                                    </div>
+                                )}
                             </div>
-                        </div>
-                    ) : (
-                        <div className="text-xs text-[var(--text-muted)] px-2">vs</div>
-                    )}
+                        ) : (
+                            <div className="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center">
+                                <span className="font-black text-[var(--text-muted)] italic text-xs">VS</span>
+                            </div>
+                        )}
+                    </div>
 
-                    <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                        <span className="text-sm font-semibold truncate text-right">{log.equipo_visitante}</span>
-                        <TeamLogo src={log.logo_visitante} teamName={log.equipo_visitante} size={24} />
+                    <div className="flex flex-col items-center gap-2 flex-1 min-w-0">
+                        <TeamLogo src={log.logo_visitante} teamName={log.equipo_visitante} size={40} className="drop-shadow-lg" />
+                        <span className="text-[10px] font-black uppercase tracking-tight text-center truncate w-full">{log.equipo_visitante}</span>
                     </div>
                 </div>
                 {log.liga && (
-                    <div className="text-[10px] text-[var(--text-muted)] text-center mt-1">{log.liga}</div>
+                    <div className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] text-center mt-3 opacity-60 italic">{log.liga}</div>
                 )}
-            </div>
-
-            {/* Rating Stars - prominent */}
-            <div className="flex items-center justify-center gap-3 px-4 py-2 border-y border-[var(--card-border)] bg-[var(--background)]/30">
-                <StarRatingDisplay value={log.rating_partido} size="md" />
-                <span className="text-xl font-black text-[var(--foreground)] italic tracking-tighter tabular-nums">{log.rating_partido.toFixed(1)}</span>
             </div>
 
             {/* Secondary Ratings Pills */}
@@ -255,30 +273,31 @@ export function MatchLogCard({ log, onLike, compact = false }: MatchLogCardProps
 
             {/* Review Preview */}
             {log.review_text && !compact && (
-                <div className="px-4 pb-3">
-                    {log.is_spoiler && !spoilerRevealed ? (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); setSpoilerRevealed(true) }}
-                            className="flex items-center gap-2 w-full p-3 rounded-xl bg-red-500/5 border border-red-500/20
-                       text-xs text-red-400 hover:bg-red-500/10 transition-colors"
-                        >
-                            <EyeOff size={14} />
-                            <span>Esta reseña contiene spoilers — tocar para revelar</span>
-                        </button>
-                    ) : (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.4 }}
-                        >
-                            {log.review_title && (
-                                <h4 className="text-sm font-semibold mb-1">{log.review_title}</h4>
-                            )}
-                            <p className="text-xs text-[var(--text-muted)] line-clamp-3 leading-relaxed">
-                                {log.review_text}
-                            </p>
-                        </motion.div>
-                    )}
+                <div className="px-5 pb-4 relative z-10">
+                    <div className="bg-[var(--background)]/40 p-4 rounded-2xl border border-white/5 shadow-inner">
+                        {log.is_spoiler && !spoilerRevealed ? (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setSpoilerRevealed(true) }}
+                                className="flex items-center gap-2 w-full text-xs text-red-400 hover:text-red-300 transition-colors py-2"
+                            >
+                                <EyeOff size={14} />
+                                <span className="font-bold uppercase tracking-wider text-[10px]">Spoiler — Tocar para revelar</span>
+                            </button>
+                        ) : (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.4 }}
+                            >
+                                {log.review_title && (
+                                    <h4 className="text-sm font-black mb-1.5 tracking-tight italic">"{log.review_title}"</h4>
+                                )}
+                                <p className="text-xs text-[var(--text-muted)] line-clamp-4 leading-relaxed font-medium">
+                                    {log.review_text}
+                                </p>
+                            </motion.div>
+                        )}
+                    </div>
                 </div>
             )}
 

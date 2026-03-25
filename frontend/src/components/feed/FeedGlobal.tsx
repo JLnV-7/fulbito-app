@@ -1,61 +1,97 @@
-'use client'
-
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import Link from 'next/link'
-import { Star, ArrowRight, User } from 'lucide-react'
-
-type ItemFeed = {
-  id: string
-  partido_id: string | number | null
-  rating_partido: number | null
-  review_text: string | null
-  review_title: string | null
-  jugador_estrella: string | null
-  created_at: string
-  equipo_local: string
-  equipo_visitante: string
-  goles_local: number | null
-  goles_visitante: number | null
-  is_spoiler: boolean
-  profile: { username: string; avatar_url: string | null } | null
-}
+import { Hash, Users, Activity } from 'lucide-react'
+import { MatchLogCard } from '@/components/MatchLogCard'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useAuth } from '@/contexts/AuthContext'
+import type { MatchLog } from '@/types'
 
 export function FeedGlobal() {
-  const [items, setItems] = useState<ItemFeed[]>([])
+  const { user } = useAuth()
+  const [items, setItems] = useState<MatchLog[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'all' | 'following'>('all')
+
+  const fetchFeed = useCallback(async () => {
+    setLoading(true)
+    const supabase = createClient()
+    try {
+      let query = supabase
+        .from('match_logs')
+        .select(`
+          id, partido_id, rating_partido, review_text, review_title,
+          jugador_estrella, created_at, equipo_local, equipo_visitante,
+          goles_local, goles_visitante, is_spoiler, logo_local, logo_visitante,
+          match_type, is_private, is_neutral, mood, user_id,
+          profile:profiles!match_logs_user_id_fkey(username, avatar_url)
+        `)
+        .eq('is_private', false)
+        .not('review_text', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(30)
+
+      if (activeTab === 'following' && user) {
+        // Get following IDs first
+        const { data: followingData } = await supabase
+          .from('user_follows')
+          .select('following_id')
+          .eq('follower_id', user.id)
+        
+        const followingIds = followingData?.map(f => f.following_id) || []
+        
+        if (followingIds.length > 0) {
+          query = query.in('user_id', followingIds)
+        } else {
+          setItems([])
+          setLoading(false)
+          return
+        }
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+      const logs = data as any[]
+
+      // Fetch prode hits for these logs
+      if (logs.length > 0) {
+        const userIds = Array.from(new Set(logs.map(l => l.user_id)))
+        const fixtureIds = Array.from(new Set(logs.map(l => l.partido_id)))
+
+        const { data: prodeHits } = await supabase
+          .from('puntuacion_prode')
+          .select(`
+            tipo_acierto, puntos, user_id,
+            partido:partidos!inner(fixture_id)
+          `)
+          .in('user_id', userIds)
+          .in('partido.fixture_id', fixtureIds)
+
+        const itemsWithProde = logs.map(log => {
+          const hit = prodeHits?.find(ph => 
+            ph.user_id === log.user_id && 
+            (ph.partido as any).fixture_id === log.partido_id
+          )
+          return { ...log, prode_hit: hit?.tipo_acierto, prode_puntos: hit?.puntos }
+        })
+
+        setItems(itemsWithProde)
+      } else {
+        setItems([])
+      }
+    } catch (err) {
+      console.error('[FeedGlobal] Fetch error:', err)
+      setError('No se pudo cargar el feed de la tribuna.')
+    } finally {
+      setLoading(false)
+    }
+  }, [activeTab, user])
 
   useEffect(() => {
-    const supabase = createClient()
-
-    const fetchFeed = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('match_logs')
-          .select(`
-            id, partido_id, rating_partido, review_text, review_title,
-            jugador_estrella, created_at, equipo_local, equipo_visitante,
-            goles_local, goles_visitante, is_spoiler,
-            profile:profiles!match_logs_user_id_fkey(username, avatar_url)
-          `)
-          .eq('is_private', false)
-          .not('review_text', 'is', null)
-          .order('created_at', { ascending: false })
-          .limit(30)
-
-        if (error) throw error
-        setItems((data ?? []) as unknown as ItemFeed[])
-      } catch (err) {
-        console.error('[FeedGlobal] Fetch error:', err)
-        setError('No se pudo cargar el feed de la tribuna.')
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchFeed()
 
+    const supabase = createClient()
     const channel = supabase
       .channel('feed_global_changes')
       .on('postgres_changes', {
@@ -66,7 +102,7 @@ export function FeedGlobal() {
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [])
+  }, [fetchFeed])
 
   if (loading) return <FeedSkeleton />
 
@@ -84,77 +120,56 @@ export function FeedGlobal() {
     </div>
   )
 
+  const handleLike = async (id: string, type: string = 'like') => {
+    // Optimistic UI update or full refetch
+    // For now we rely on the realtime subscription to fetchFeed or manual update
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {items.map((item) => (
-        <div key={item.id}
-          className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-5 space-y-4 hover:border-[var(--accent)]/30 transition-all shadow-sm">
-          
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <Link href={`/perfil/${item.profile?.username}`}
-              className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-full bg-[var(--accent)]/10 flex items-center justify-center overflow-hidden border border-[var(--card-border)]">
-                {item.profile?.avatar_url ? (
-                  <img src={item.profile.avatar_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <User size={14} className="text-[var(--accent)]" />
-                )}
-              </div>
-              <span className="text-xs font-black italic tracking-tighter group-hover:text-[var(--accent)] transition-colors">
-                @{item.profile?.username || 'Anónimo'}
-              </span>
-            </Link>
-            {item.partido_id && (
-              <Link href={`/partido/${item.partido_id}`}
-                className="flex items-center gap-1 text-[var(--accent)] text-[10px] font-bold uppercase tracking-widest hover:opacity-70 transition-opacity">
-                Ver partido <ArrowRight size={10} />
-              </Link>
-            )}
-          </div>
-
-          {/* Partido */}
-          <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
-            {item.equipo_local}
-            {item.goles_local != null ? ` ${item.goles_local} - ${item.goles_visitante} ` : ' vs '}
-            {item.equipo_visitante}
-          </p>
-
-          {/* Rating */}
-          {item.rating_partido && (
-            <div className="flex gap-0.5">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} size={12}
-                  className={i < item.rating_partido! ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600 opacity-20'} />
-              ))}
-            </div>
-          )}
-
-          {/* Review */}
-          {item.review_title && (
-            <p className="text-sm font-black tracking-tight">{item.review_title}</p>
-          )}
-          {item.review_text && (
-            item.is_spoiler ? (
-              <p className="text-xs text-red-400 italic">⚠️ Reseña con spoilers</p>
-            ) : (
-              <p className="text-sm leading-relaxed line-clamp-3">"{item.review_text}"</p>
-            )
-          )}
-
-          {/* Footer */}
-          <div className="flex justify-between items-center pt-2 border-t border-[var(--card-border)]/50">
-            {item.jugador_estrella ? (
-              <span className="text-[9px] font-black text-green-500 uppercase tracking-widest">
-                ⭐ {item.jugador_estrella}
-              </span>
-            ) : <div />}
-            <span className="text-[var(--text-muted)] text-[9px] font-bold opacity-50 uppercase">
-              {new Date(item.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })}
-            </span>
-          </div>
+    <div className="flex flex-col gap-6 max-w-2xl mx-auto">
+      {/* Tab Switcher */}
+      <div className="flex items-center justify-between px-2">
+        <div className="flex items-center gap-1 bg-[var(--card-bg)] p-1 rounded-2xl border border-[var(--card-border)]">
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+              activeTab === 'all' 
+                ? 'bg-[var(--accent)] text-white shadow-lg' 
+                : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
+            }`}
+          >
+            <Activity size={12} />
+            Global
+          </button>
+          <button
+            onClick={() => setActiveTab('following')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+              activeTab === 'following' 
+                ? 'bg-[var(--accent)] text-white shadow-lg' 
+                : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
+            }`}
+          >
+            <Users size={12} />
+            Siguiendo
+          </button>
         </div>
-      ))}
+      </div>
+      
+      <AnimatePresence>
+        {items.map((item: MatchLog, idx: number) => (
+          <motion.div
+            key={item.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.05 }}
+          >
+            <MatchLogCard 
+              log={item} 
+              onLike={handleLike}
+            />
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   )
 }

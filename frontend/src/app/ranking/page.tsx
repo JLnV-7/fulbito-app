@@ -22,7 +22,7 @@ export default function RankingPage() {
     const [loading, setLoading] = useState(true)
     const [periodo, setPeriodo] = useState<'semanal' | 'mensual' | 'global'>('global')
     const [filtroSocial, setFiltroSocial] = useState<'global' | 'amigos'>('global')
-    const [rankingTab, setRankingTab] = useState<'prode' | 'resenas'>('prode')
+    const [rankingTab, setRankingTab] = useState<'prode' | 'resenas' | 'tribuneros'>('prode')
     const [rankingResenas, setRankingResenas] = useState<{
       user_id: string
       username: string
@@ -31,7 +31,19 @@ export default function RankingPage() {
       avg_rating: number
       total_likes: number
     }[]>([])
+    const [rankingTribuneros, setRankingTribuneros] = useState<{
+      id: string
+      username: string
+      avatar_url?: string
+      xp: number
+      level: number
+      equipo?: string
+      total_likes_received: number
+    }[]>([])
     const [loadingResenas, setLoadingResenas] = useState(false)
+    const [loadingTribuneros, setLoadingTribuneros] = useState(false)
+    const [selectedLeague, setSelectedLeague] = useState<string | null>(null)
+    const [reviewPeriod, setReviewPeriod] = useState<'mensual' | 'global'>('global')
 
     useEffect(() => {
         fetchRanking()
@@ -103,17 +115,31 @@ export default function RankingPage() {
     const fetchRankingResenas = async () => {
         setLoadingResenas(true)
         try {
-            const { data: logs } = await supabase
+            let query = supabase
                 .from('match_logs')
                 .select(`
                     user_id,
                     rating_partido,
+                    created_at,
+                    liga,
                     likes_count:match_log_likes(count),
                     profile:profiles!match_logs_user_id_fkey(username, avatar_url)
                 `)
                 .eq('is_private', false)
                 .not('review_text', 'is', null)
 
+            if (selectedLeague) {
+                query = query.eq('liga', selectedLeague)
+            }
+
+            if (reviewPeriod === 'mensual') {
+                const oneMonthAgo = new Date()
+                oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
+                query = query.gte('created_at', oneMonthAgo.toISOString())
+            }
+
+            const { data: logs, error } = await query
+            if (error) throw error
             if (!logs) return
 
             const userMap = new Map<string, {
@@ -158,9 +184,52 @@ export default function RankingPage() {
         }
     }
 
+    const fetchRankingTribuneros = async () => {
+        setLoadingTribuneros(true)
+        try {
+            // 1. Fetch top profiles by XP
+            const { data: topProfiles, error: profileError } = await supabase
+                .from('profiles')
+                .select('id, username, avatar_url, xp, level, equipo')
+                .order('xp', { ascending: false })
+                .limit(50)
+
+            if (profileError) throw profileError
+
+            // 2. Fetch total likes received for these users
+            const userIds = topProfiles.map(p => p.id)
+            const { data: likesData, error: likesError } = await supabase
+                .from('match_log_likes')
+                .select(`
+                  user_id,
+                  match_logs!inner(user_id)
+                `)
+                .in('match_logs.user_id', userIds)
+
+            // Aggregate likes per user manually (or we could use a RPC/View if we had one)
+            const likeMap = new Map<string, number>()
+            likesData?.forEach((like: any) => {
+                const ownerId = like.match_logs.user_id
+                likeMap.set(ownerId, (likeMap.get(ownerId) || 0) + 1)
+            })
+
+            const result = topProfiles.map(p => ({
+                ...p,
+                total_likes_received: likeMap.get(p.id) || 0
+            }))
+
+            setRankingTribuneros(result)
+        } catch (err) {
+            console.error('Error fetching tribuneros ranking:', err)
+        } finally {
+            setLoadingTribuneros(false)
+        }
+    }
+
     useEffect(() => {
         if (rankingTab === 'resenas') fetchRankingResenas()
-    }, [rankingTab])
+        if (rankingTab === 'tribuneros') fetchRankingTribuneros()
+    }, [rankingTab, selectedLeague, reviewPeriod])
 
     return (
         <>
@@ -258,9 +327,50 @@ export default function RankingPage() {
                                         : 'text-[var(--text-muted)]'
                                       }`}
                                 >
-                                    ⭐ Reseñas
+                                    ⭐ Críticos
+                                </button>
+                                <button
+                                    onClick={() => setRankingTab('tribuneros')}
+                                    className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
+                                      ${rankingTab === 'tribuneros'
+                                        ? 'bg-[var(--foreground)] text-[var(--background)] shadow-sm'
+                                        : 'text-[var(--text-muted)]'
+                                      }`}
+                                >
+                                    🏆 Tribuneros
                                 </button>
                             </div>
+
+                            {rankingTab === 'resenas' && (
+                                <div className="flex flex-wrap gap-2 mt-4">
+                                    <select 
+                                        value={selectedLeague || ''} 
+                                        onChange={(e) => setSelectedLeague(e.target.value || null)}
+                                        className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--foreground)] focus:outline-none"
+                                    >
+                                        <option value="">TODAS LAS LIGAS</option>
+                                        <option value="Liga Profesional">LIGA PROFESIONAL</option>
+                                        <option value="Copa Libertadores">LIBERTADORES</option>
+                                        <option value="Premier League">PREMIER LEAGUE</option>
+                                        <option value="La Liga">LA LIGA</option>
+                                        <option value="Serie A">SERIE A</option>
+                                    </select>
+                                    <div className="flex gap-1 bg-[var(--card-bg)] p-1 rounded-xl border border-[var(--card-border)]">
+                                        <button 
+                                            onClick={() => setReviewPeriod('global')}
+                                            className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${reviewPeriod === 'global' ? 'bg-[var(--foreground)] text-[var(--background)]' : 'text-[var(--text-muted)]'}`}
+                                        >
+                                            HISTÓRICO
+                                        </button>
+                                        <button 
+                                            onClick={() => setReviewPeriod('mensual')}
+                                            className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${reviewPeriod === 'mensual' ? 'bg-[var(--foreground)] text-[var(--background)]' : 'text-[var(--text-muted)]'}`}
+                                        >
+                                            ESTE MES
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -463,7 +573,7 @@ export default function RankingPage() {
                         </div>
                     </div>
                     </>
-                    ) : (
+                    ) : rankingTab === 'resenas' ? (
                     <div className="px-6 mb-12">
                         <div className="max-w-4xl mx-auto">
                             {loadingResenas ? (
@@ -513,6 +623,72 @@ export default function RankingPage() {
                                                         <td className="p-5 text-center font-black text-lg text-[var(--accent)]">{r.total_logs}</td>
                                                         <td className="p-5 text-center font-black text-sm">⭐ {r.avg_rating.toFixed(1)}</td>
                                                         <td className="p-5 text-center font-bold text-sm text-[var(--text-muted)]">{r.total_likes}</td>
+                                                    </tr>
+                                                )
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    ) : (
+                    <div className="px-6 mb-12">
+                        <div className="max-w-4xl mx-auto">
+                            {loadingTribuneros ? (
+                                <div className="text-center py-20 animate-pulse text-[var(--text-muted)] font-black italic tracking-widest">
+                                    Buscando a los mejores...
+                                </div>
+                            ) : rankingTribuneros.length === 0 ? (
+                                <div className="text-center py-20 bg-[var(--card-bg)] rounded-3xl border border-[var(--card-border)]">
+                                    <p className="text-4xl mb-4">🏆</p>
+                                    <p className="font-black italic text-[var(--text-muted)]">Cargando la elite...</p>
+                                </div>
+                            ) : (
+                                <div className="bg-[var(--card-bg)] rounded-[2.5rem] border border-[var(--card-border)] overflow-hidden shadow-2xl">
+                                    <table className="w-full text-left">
+                                        <thead className="bg-[var(--background)]/50 border-b border-[var(--card-border)]">
+                                            <tr>
+                                                <th className="p-5 text-[10px] font-black tracking-widest text-[var(--text-muted)]">POS</th>
+                                                <th className="p-5 text-[10px] font-black tracking-widest text-[var(--text-muted)]">TRIBUNERO</th>
+                                                <th className="p-5 text-center text-[10px] font-black tracking-widest text-[var(--text-muted)]">NIVEL</th>
+                                                <th className="p-5 text-center text-[10px] font-black tracking-widest text-[var(--text-muted)]">XP</th>
+                                                <th className="p-5 text-center text-[10px] font-black tracking-widest text-[var(--text-muted)]">❤️ RECIBIDOS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-[var(--card-border)]">
+                                            {rankingTribuneros.map((r, idx) => {
+                                                const isMe = user?.id === r.id
+                                                return (
+                                                    <tr
+                                                        key={r.id}
+                                                        onClick={() => router.push(`/perfil/${r.id}`)}
+                                                        className={`cursor-pointer transition-colors ${isMe ? 'bg-[var(--accent)]/5 hover:bg-[var(--accent)]/10' : 'hover:bg-[var(--hover-bg)]'}`}
+                                                    >
+                                                        <td className="p-5 text-center font-black text-[var(--text-muted)]">
+                                                            {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}
+                                                        </td>
+                                                        <td className="p-5">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 rounded-full bg-[var(--background)] border border-[var(--card-border)] flex items-center justify-center overflow-hidden group-hover:border-[var(--accent)] transition-colors">
+                                                                    {r.avatar_url
+                                                                        ? <img src={r.avatar_url} alt="" className="w-full h-full object-cover" />
+                                                                        : <span className="text-sm font-black">{r.username[0]?.toUpperCase()}</span>
+                                                                    }
+                                                                </div>
+                                                                <div>
+                                                                    <div className="font-bold text-sm tracking-tight">{r.username}</div>
+                                                                    <div className="text-[9px] font-black uppercase tracking-widest text-[var(--text-muted)]">{r.equipo || 'FANÁTICO'}</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-5 text-center">
+                                                            <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] font-black text-xs">
+                                                                {r.level}
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-5 text-center font-black text-sm tracking-tighter">{r.xp.toLocaleString()}</td>
+                                                        <td className="p-5 text-center font-black text-lg text-red-500">{r.total_likes_received}</td>
                                                     </tr>
                                                 )
                                             })}

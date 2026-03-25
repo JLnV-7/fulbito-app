@@ -13,6 +13,7 @@ import { FeedbackWidget } from '@/components/FeedbackWidget'
 import { ChallengesFAB } from '@/components/ChallengesFAB'
 import { NotificationSettings } from '@/components/NotificationSettings'
 import { BadgeDisplay } from '@/components/BadgeDisplay'
+import { ActivityHeatmap } from '@/components/ActivityHeatmap'
 import { motion, AnimatePresence } from 'framer-motion'
 import { hapticFeedback, getTeamColor } from '@/lib/helpers'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -37,6 +38,7 @@ import { PushDebug } from '@/components/PushDebug'
 import { Button } from '@/components/ui/Button'
 import { BuildXI } from '@/components/perfil/BuildXI'
 import { MatchDiary } from '@/components/perfil/MatchDiary'
+import { FavoriteTeamsList } from '@/components/perfil/FavoriteTeamsList'
 import { useMatchLogs } from '@/hooks/useMatchLogs'
 import { Settings, Edit3, QrCode, LogOut, Users, BarChart2, BookOpen, ChevronRight, Search, Trophy } from 'lucide-react'
 
@@ -325,10 +327,29 @@ export default function Perfil() {
             <div className="mb-5">
               <h1 className="text-2xl font-black tracking-tight">{profile?.username || 'Usuario'}</h1>
               {profile?.equipo && (
-                <p className="text-sm font-bold mt-0.5" style={{ color: teamColor }}>
+                <Link 
+                  href={`/buscar?q=${encodeURIComponent(profile.equipo)}`}
+                  className="text-sm font-bold mt-0.5 inline-flex items-center gap-1 hover:underline transition-all" 
+                  style={{ color: teamColor }}
+                >
                   ❤️ {profile.equipo}
-                </p>
+                </Link>
               )}
+              <div className="flex items-center gap-3 mt-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+                <button 
+                  onClick={() => setFollowModalState({ isOpen: true, type: 'followers', title: 'Mis Seguidores' })}
+                  className="hover:text-[var(--accent)] transition-colors"
+                >
+                  {followersCount || 0} Seguidores
+                </button>
+                <span className="opacity-30">|</span>
+                <button 
+                  onClick={() => setFollowModalState({ isOpen: true, type: 'following', title: 'Siguiendo' })}
+                  className="hover:text-[var(--accent)] transition-colors"
+                >
+                  {followingCount || 0} Siguiendo
+                </button>
+              </div>
               <p className="text-[11px] text-[var(--text-muted)] mt-1">{user.email}</p>
             </div>
 
@@ -413,7 +434,9 @@ export default function Perfil() {
               {/* ── TAB PERFIL / SOCIAL ── */}
               {activeTab === 'social' && (
                 <div className="space-y-5">
-                  <MatchDiary userId={user.id} />
+                  <ActivityHeatmap userId={user.id} />
+                  <FavoriteTeamsList userId={user.id} isOwnProfile={true} />
+                  <MatchDiary userId={user.id} limit={4} />
                   <TopPartidos userId={user.id} />
                   <UserListsView userId={user.id} isOwnProfile={true} />
                   <UserBadgesGallery userId={user.id} isOwnProfile={true} />
@@ -427,17 +450,17 @@ export default function Perfil() {
                   {/* Stats rápidas */}
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { label: 'Promedio General', value: stats.promedio_general?.toFixed(1) || '–', emoji: '⭐' },
-                      { label: 'Total Votos', value: stats.total_votos || 0, emoji: '🗳️' },
-                      { label: 'Votos Amigos', value: stats.friend_matches_votes || 0, emoji: '⚽' },
-                      { label: 'Prom. Amigos', value: stats.friend_matches_average?.toFixed(1) || '–', emoji: '📊' },
+                      { label: 'Promedio General', value: stats.promedio_general?.toFixed(1) || '–', emoji: '⭐', color: 'text-yellow-500' },
+                      { label: 'Total Votos', value: stats.total_votos || 0, emoji: '🗳️', color: 'text-blue-500' },
+                      { label: 'Votos Amigos', value: stats.friend_matches_votes || 0, emoji: '⚽', color: 'text-green-500' },
+                      { label: 'Prom. Amigos', value: stats.friend_matches_average?.toFixed(1) || '–', emoji: '📊', color: 'text-purple-500' },
                     ].map((s, i) => (
-                      <div key={i} className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-4">
+                      <div key={i} className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-4 shadow-sm hover:border-[var(--card-border-hover)] transition-all">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-lg">{s.emoji}</span>
                           <span className="text-[10px] text-[var(--text-muted)] font-black uppercase tracking-widest">{s.label}</span>
                         </div>
-                        <p className="text-2xl font-black">{s.value}</p>
+                        <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
                       </div>
                     ))}
                   </div>

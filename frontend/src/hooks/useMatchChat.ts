@@ -12,9 +12,20 @@ export interface ChatMessage {
     user_id: string
     content: string
     is_edited: boolean
+    reply_to_id?: string
     created_at: string
     updated_at: string
     profile?: Profile
+    reply_to?: {
+        id: string
+        content: string
+        profile?: { username: string }
+    }
+    reactions?: {
+        id: string
+        reaction_type: string
+        user_id: string
+    }[]
 }
 
 export function useMatchChat(partidoId?: string) {
@@ -32,13 +43,19 @@ export function useMatchChat(partidoId?: string) {
                 .from('partido_comments')
                 .select(`
                     *,
-                    profile:profiles!partido_comments_user_id_fkey(*)
+                    profile:profiles!partido_comments_user_id_fkey(*),
+                    reply_to:partido_comments!partido_comments_reply_to_id_fkey(
+                        id, 
+                        content, 
+                        profile:profiles!partido_comments_user_id_fkey(username)
+                    ),
+                    reactions:partido_comment_reactions(*)
                 `)
                 .eq('partido_id', partidoId)
-                .order('created_at', { ascending: true }) // Older first, so new push to bottom
+                .order('created_at', { ascending: true })
 
             if (error) throw error
-            setMessages(data as ChatMessage[])
+            setMessages(data as any[])
         } catch (error) {
             console.error('Error fetching chat messages:', error)
         } finally {
@@ -62,15 +79,45 @@ export function useMatchChat(partidoId?: string) {
             .on('postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'partido_comments', filter: `partido_id=eq.${partidoId}` },
                 async (payload) => {
-                    // We need to fetch the profile data as the realtime payload only has the row
-                    const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('*')
-                        .eq('id', payload.new.user_id)
+                    const { data: fullMsg } = await supabase
+                        .from('partido_comments')
+                        .select(`
+                            *,
+                            profile:profiles!partido_comments_user_id_fkey(*),
+                            reply_to:partido_comments!partido_comments_reply_to_id_fkey(
+                                id, content, profile:profiles!partido_comments_user_id_fkey(username)
+                            ),
+                            reactions:partido_comment_reactions(*)
+                        `)
+                        .eq('id', payload.new.id)
                         .single()
 
-                    const newMsg = { ...payload.new, profile } as ChatMessage
-                    setMessages(prev => [...prev, newMsg])
+                    if (fullMsg) {
+                        setMessages(prev => [...prev, fullMsg as any])
+                    }
+                }
+            )
+            // Listen for reactions
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'partido_comment_reactions' },
+                async (payload) => {
+                    // Update the local message's reactions
+                    const reaction = payload.new as any || payload.old as any
+                    const commentId = reaction.comment_id
+
+                    if (payload.eventType === 'INSERT') {
+                        setMessages(prev => prev.map(m => 
+                            m.id === commentId 
+                            ? { ...m, reactions: [...(m.reactions || []), reaction] } 
+                            : m
+                        ))
+                    } else if (payload.eventType === 'DELETE') {
+                        setMessages(prev => prev.map(m => 
+                            m.id === commentId 
+                            ? { ...m, reactions: (m.reactions || []).filter(r => r.id !== payload.old.id) } 
+                            : m
+                        ))
+                    }
                 }
             )
             // Listen for deletes
@@ -83,7 +130,6 @@ export function useMatchChat(partidoId?: string) {
             // Presence sync
             .on('presence', { event: 'sync' }, () => {
                 const newState = channel.presenceState()
-                // presenceState returns a Record of objects grouped by presence key
                 setOnlineUsers(Object.keys(newState).length)
             })
             // Subscribe & track presence
@@ -98,7 +144,7 @@ export function useMatchChat(partidoId?: string) {
         }
     }, [partidoId, user])
 
-    const sendMessage = async (content: string) => {
+    const sendMessage = async (content: string, replyToId?: string) => {
         if (!user || !partidoId || !content.trim()) return false
 
         try {
@@ -107,15 +153,43 @@ export function useMatchChat(partidoId?: string) {
                 .insert({
                     partido_id: partidoId,
                     user_id: user.id,
-                    content: content.trim()
+                    content: content.trim(),
+                    reply_to_id: replyToId
                 })
 
             if (error) throw error
-            // The message will be added via the realtime subscription,
-            // but we can also optionally append it optimistically if we want instant feedback.
             return true
         } catch (error) {
             console.error('Error sending message:', error)
+            return false
+        }
+    }
+
+    const toggleReaction = async (commentId: string, type: string) => {
+        if (!user) return false
+
+        try {
+            // Check if exists
+            const { data: existing } = await supabase
+                .from('partido_comment_reactions')
+                .select('id')
+                .eq('comment_id', commentId)
+                .eq('user_id', user.id)
+                .eq('reaction_type', type)
+                .single()
+
+            if (existing) {
+                await supabase.from('partido_comment_reactions').delete().eq('id', existing.id)
+            } else {
+                await supabase.from('partido_comment_reactions').insert({
+                    comment_id: commentId,
+                    user_id: user.id,
+                    reaction_type: type
+                })
+            }
+            return true
+        } catch (error) {
+            console.error('Error toggling reaction:', error)
             return false
         }
     }
@@ -127,7 +201,6 @@ export function useMatchChat(partidoId?: string) {
                 .from('partido_comments')
                 .delete()
                 .eq('id', messageId)
-            // RLS ensures they can only delete their own
 
             if (error) throw error
             return true
@@ -142,6 +215,7 @@ export function useMatchChat(partidoId?: string) {
         loading,
         onlineUsers,
         sendMessage,
+        toggleReaction,
         deleteMessage
     }
 }

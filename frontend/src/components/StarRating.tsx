@@ -9,7 +9,7 @@ interface StarRatingProps {
     value: number
     onChange?: (value: number) => void
     max?: number
-    size?: 'sm' | 'md' | 'lg'
+    size?: 'xs' | 'sm' | 'md' | 'lg'
     readonly?: boolean
     showValue?: boolean
     label?: string
@@ -17,6 +17,7 @@ interface StarRatingProps {
 }
 
 const SIZES = {
+    xs: 12,
     sm: 16,
     md: 22,
     lg: 30,
@@ -126,7 +127,7 @@ export function StarRatingDisplay({
     color = '#f59e0b',
 }: {
     value: number
-    size?: 'sm' | 'md'
+    size?: 'xs' | 'sm' | 'md'
     color?: string
 }) {
     const starSize = SIZES[size]

@@ -21,6 +21,8 @@ import { ActivityHeatmap } from '@/components/ActivityHeatmap'
 import { useProfileFollowers } from '@/hooks/useProfileFollowers'
 import { FollowListModal, type FollowListType } from '@/components/FollowListModal'
 import { MatchLogCard } from '@/components/MatchLogCard'
+import { TEAM_THEMES } from '@/lib/constants'
+import { ViterboInsight } from '@/components/ViterboInsight'
 import Link from 'next/link'
 
 type Props = {
@@ -42,6 +44,8 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
   const [followModal, setFollowModal] = useState<FollowListType | null>(null)
   const [listas, setListas] = useState<any[]>([])
   const isOwnProfile = user?.id === initialProfile.id
+
+  const teamTheme = initialProfile.equipo_favorito ? TEAM_THEMES[initialProfile.equipo_favorito] : null
 
   useEffect(() => {
     const fetchListas = async () => {
@@ -77,27 +81,50 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
         <div className="max-w-4xl mx-auto space-y-10">
 
           {/* Header */}
-          <div className="relative bg-[var(--card-bg)] rounded-3xl p-8 border border-[var(--card-border)] overflow-hidden shadow-2xl">
+          <div 
+            className="relative bg-[var(--card-bg)] rounded-3xl p-8 border border-[var(--card-border)] overflow-hidden shadow-2xl transition-all duration-700"
+            style={{ 
+              borderColor: teamTheme ? `${teamTheme.primary}40` : undefined,
+              boxShadow: teamTheme ? `0 20px 50px -12px ${teamTheme.primary}20` : undefined
+            }}
+          >
+            {/* Team Themed Background Glow */}
+            {teamTheme && (
+              <div 
+                className="absolute inset-0 opacity-10 pointer-events-none"
+                style={{ 
+                  background: `radial-gradient(circle at 100% 0%, ${teamTheme.primary}, transparent), radial-gradient(circle at 0% 100%, ${teamTheme.secondary}, transparent)` 
+                }}
+              />
+            )}
+            
             <div className="absolute inset-0 opacity-5 pointer-events-none overflow-hidden">
-              <div className="absolute -top-10 -right-10 text-[150px] rotate-12">⚽</div>
+              <div className="absolute -top-10 -right-10 text-[150px] rotate-12">
+                {initialProfile.equipo_favorito === 'Boca Juniors' ? '🟦🟨' : 
+                 initialProfile.equipo_favorito === 'River Plate' ? '⬜🟥' : '⚽'}
+              </div>
             </div>
 
             <div className="flex flex-col md:flex-row items-center md:items-end gap-8 relative z-10">
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="w-28 h-28 md:w-36 md:h-36 rounded-full bg-[var(--accent)]/10 flex items-center justify-center text-5xl border-4 border-[var(--background)] shadow-xl overflow-hidden shrink-0"
+                className="w-28 h-28 md:w-36 md:h-36 rounded-full flex items-center justify-center text-5xl border-4 shadow-xl overflow-hidden shrink-0 transition-colors duration-500"
+                style={{ 
+                  backgroundColor: teamTheme ? teamTheme.primary : 'var(--accent)',
+                  borderColor: teamTheme ? teamTheme.secondary : 'var(--background)'
+                }}
               >
                 {initialProfile.avatar_url ? (
                   <img src={initialProfile.avatar_url} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="font-black italic opacity-20">{initialProfile.username?.[0] || '?'}</span>
+                  <span className="font-black italic text-white/40">{initialProfile.username?.[0] || '?'}</span>
                 )}
               </motion.div>
 
               <div className="text-center md:text-left flex-1 space-y-4">
                 <div className="space-y-1">
-                  <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">
+                  <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none drop-shadow-sm">
                     @{initialProfile.username}
                   </h1>
                   <div className="flex flex-wrap justify-center md:justify-start gap-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
@@ -119,7 +146,14 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
 
                 <div className="flex flex-wrap justify-center md:justify-start gap-3">
                   {initialProfile.equipo_favorito && (
-                    <div className="px-4 py-1.5 bg-[var(--background)] border border-[var(--card-border)] rounded-full text-[10px] font-bold uppercase tracking-widest text-[var(--accent)] flex items-center gap-2">
+                    <div 
+                      className="px-4 py-1.5 border rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 shadow-sm transition-all"
+                      style={{ 
+                        backgroundColor: teamTheme ? `${teamTheme.primary}15` : 'var(--background)',
+                        borderColor: teamTheme ? `${teamTheme.primary}40` : 'var(--card-border)',
+                        color: teamTheme ? teamTheme.primary : 'var(--accent)'
+                      }}
+                    >
                       ❤️ {initialProfile.equipo_favorito}
                     </div>
                   )}
@@ -159,8 +193,19 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
               { label: 'PUNTERÍA', value: `${initialStats?.porcentaje_aciertos ?? 0}%`, color: 'text-green-500' },
               { label: 'RATING', value: Number(initialStats?.rating_promedio || 0).toFixed(1), color: 'text-yellow-500' },
             ].map((s) => (
-              <div key={s.label} className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-6 text-center">
-                <p className={`text-3xl font-black italic tracking-tighter ${s.color}`}>{s.value}</p>
+              <div 
+                key={s.label} 
+                className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-6 text-center transition-all hover:scale-[1.02]"
+                style={{ 
+                  borderColor: teamTheme ? `${teamTheme.primary}20` : undefined,
+                }}
+              >
+                <p 
+                  className={`text-3xl font-black italic tracking-tighter ${s.color}`}
+                  style={{ color: (s.label === 'PUNTERÍA' || s.label === 'RATING') && teamTheme ? teamTheme.primary : undefined }}
+                >
+                  {s.value}
+                </p>
                 <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1">{s.label}</p>
               </div>
             ))}
@@ -184,6 +229,12 @@ export function ProfileClient({ initialProfile, initialStats, initialResenas, in
               <ArrowRight size={16} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors" />
             </Link>
           )}
+
+          {/* Viterbo Insight */}
+          <ViterboInsight 
+            resenas={initialResenas} 
+            equipoFavorito={initialProfile.equipo_favorito} 
+          />
 
           {/* Activity Heatmap */}
           <ActivityHeatmap userId={initialProfile.id} />

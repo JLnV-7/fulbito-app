@@ -13,6 +13,15 @@ import { GiphySelector } from '@/components/GiphySelector'
 import { CreateGroupModal } from '@/components/CreateGroupModal'
 import { ChatPoll } from '@/components/ChatPoll'
 
+const REACTIONS = [
+    { type: 'like', emoji: '❤️', label: 'Me gusta' },
+    { type: 'fuego', emoji: '🔥', label: 'Fuego' },
+    { type: 'risa', emoji: '😂', label: 'Risa' },
+    { type: 'termo', emoji: '🧉', label: 'Termo' },
+    { type: 'roja', emoji: '🟥', label: 'Roja' },
+    { type: 'clasp', emoji: '👏', label: 'Aplauso' },
+]
+
 interface MatchLiveChatProps {
     partidoId: string
     matchTitle?: string
@@ -47,13 +56,15 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
     const { user } = useAuth()
     const { showToast } = useToast()
     const router = useRouter()
-    const { messages, loading, onlineUsers, sendMessage, deleteMessage } = useMatchChat(partidoId)
+    const { messages, loading, onlineUsers, sendMessage, deleteMessage, toggleReaction } = useMatchChat(partidoId)
 
     const [newMessage, setNewMessage] = useState('')
     const [isSending, setIsSending] = useState(false)
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
     const [showGiphy, setShowGiphy] = useState(false)
     const [showCreateGroup, setShowCreateGroup] = useState(false)
+    const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null)
+    const [showReactionPickerId, setShowReactionPickerId] = useState<string | null>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const chatContainerRef = useRef<HTMLDivElement>(null)
 
@@ -75,14 +86,24 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
         if (!newMessage.trim() || !user || isSending) return
 
         setIsSending(true)
-        const success = await sendMessage(newMessage)
+        const success = await sendMessage(newMessage, replyingTo?.id)
         if (success) {
             setNewMessage('')
+            setReplyingTo(null)
             // Auto scroll will trigger from effect
         } else {
             showToast('Error al enviar mensaje', 'error')
         }
         setIsSending(false)
+    }
+
+    const handleToggleReaction = async (msgId: string, type: string) => {
+        if (!user) {
+            router.push('/login')
+            return
+        }
+        await toggleReaction(msgId, type)
+        setShowReactionPickerId(null)
     }
 
     const handleSelectGif = async (gifUrl: string) => {
@@ -291,20 +312,28 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
                                 </div>
 
                                 <div className={`flex flex-col relative group max-w-[80%] ${isOwn ? 'items-end' : 'items-start'}`}>
-                                    <div className="flex items-baseline gap-2 mb-1 px-1">
-                                        <span
-                                            className="text-[9px] font-black capitalize text-[var(--text-muted)] cursor-pointer hover:text-[var(--foreground)] hover:underline transition-colors"
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                if (msg.user_id) window.location.href = `/perfil/${msg.user_id}`
-                                            }}
-                                        >
-                                            {isOwn ? 'Vos' : (msg.profile?.username || 'Anónimo')}
-                                        </span>
-                                        <span className="text-[9px] text-[var(--text-muted)] opacity-60">
-                                            {timeAgoShort(msg.created_at)}
-                                        </span>
-                                    </div>
+                                        <div className="flex items-baseline gap-2 mb-1 px-1">
+                                            <span
+                                                className="text-[9px] font-black capitalize text-[var(--text-muted)] cursor-pointer hover:text-[var(--foreground)] hover:underline transition-colors"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    if (msg.user_id) window.location.href = `/perfil/${msg.user_id}`
+                                                }}
+                                            >
+                                                {isOwn ? 'Vos' : (msg.profile?.username || 'Anónimo')}
+                                            </span>
+                                            <span className="text-[9px] text-[var(--text-muted)] opacity-60">
+                                                {timeAgoShort(msg.created_at)}
+                                            </span>
+                                        </div>
+
+                                        {/* Reply Preview inside bubble */}
+                                        {msg.reply_to && (
+                                            <div className={`mb-2 p-2 rounded-lg border-l-2 bg-black/5 flex flex-col gap-0.5 max-w-full overflow-hidden ${isOwn ? 'border-white/30 text-white/70' : 'border-[var(--accent)] text-[var(--text-muted)]'}`}>
+                                                <span className="text-[8px] font-black uppercase tracking-widest truncate">{msg.reply_to.profile?.username || 'Usuario'}</span>
+                                                <p className="text-[10px] truncate italic">{msg.reply_to.content}</p>
+                                            </div>
+                                        )}
 
                                     <div className={`
                                         relative px-4 py-2.5 text-sm leading-relaxed border border-[var(--card-border)]
@@ -315,25 +344,85 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
                                     `} style={{ borderRadius: 'var(--radius)' }}>
                                         {renderMessage(msg.content)}
 
+                                        {/* Reactions Row */}
+                                        {msg.reactions && msg.reactions.length > 0 && (
+                                            <div className={`flex flex-wrap gap-1 mt-2 -mb-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                                                {Object.entries(
+                                                    msg.reactions.reduce((acc: Record<string, number>, r) => {
+                                                        acc[r.reaction_type] = (acc[r.reaction_type] || 0) + 1
+                                                        return acc
+                                                    }, {})
+                                                ).map(([type, count]) => (
+                                                    <button
+                                                        key={type}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            handleToggleReaction(msg.id, type)
+                                                        }}
+                                                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-black border transition-all
+                                                            ${msg.reactions?.some(r => r.user_id === user?.id && r.reaction_type === type)
+                                                                ? 'bg-[var(--accent)]/20 border-[var(--accent)]'
+                                                                : 'bg-black/5 border-transparent hover:border-[var(--card-border)]'
+                                                            }`}
+                                                    >
+                                                        <span>{REACTIONS.find(r => r.type === type)?.emoji}</span>
+                                                        {count > 1 && <span className="text-[9px]">{count}</span>}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+
                                         {/* Actions Menu Trigger */}
                                         {user && (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    setActiveMenuId(isMenuOpen ? null : msg.id)
-                                                }}
-                                                className={`absolute top-1/2 -translate-y-1/2 p-1.5 rounded-full transition-opacity
-                                                    ${isOwn ? '-left-8 text-[var(--text-muted)] hover:bg-[var(--hover-bg)]' : '-right-8 text-[var(--text-muted)] hover:bg-[var(--hover-bg)]'}
-                                                    ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
-                                                `}
-                                            >
-                                                <MoreVertical size={14} />
-                                            </button>
+                                            <div className={`absolute top-1/2 -translate-y-1/2 flex items-center
+                                                ${isOwn ? '-left-12' : '-right-12'}
+                                                ${isMenuOpen || showReactionPickerId === msg.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
+                                                transition-opacity
+                                            `}>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setShowReactionPickerId(showReactionPickerId === msg.id ? null : msg.id)
+                                                    }}
+                                                    className="p-1.5 rounded-full text-[var(--text-muted)] hover:bg-[var(--hover-bg)]"
+                                                >
+                                                    <Smile size={14} />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setActiveMenuId(isMenuOpen ? null : msg.id)
+                                                    }}
+                                                    className="p-1.5 rounded-full text-[var(--text-muted)] hover:bg-[var(--hover-bg)]"
+                                                >
+                                                    <MoreVertical size={14} />
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
 
                                     {/* Action Context Menu */}
                                     <AnimatePresence>
+                                        {showReactionPickerId === msg.id && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: 10 }}
+                                                className={`absolute bottom-full mb-2 ${isOwn ? 'right-0' : 'left-0'} z-30 bg-[var(--card-bg)] border border-[var(--card-border)] p-1.5 flex gap-1 shadow-2xl rounded-2xl`}
+                                            >
+                                                {REACTIONS.map((r) => (
+                                                    <button
+                                                        key={r.type}
+                                                        onClick={() => handleToggleReaction(msg.id, r.type)}
+                                                        className="w-8 h-8 flex items-center justify-center hover:bg-[var(--hover-bg)] rounded-xl transition-colors text-lg"
+                                                        title={r.label}
+                                                    >
+                                                        {r.emoji}
+                                                    </button>
+                                                ))}
+                                            </motion.div>
+                                        )}
+
                                         {isMenuOpen && user && (
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.95 }}
@@ -343,6 +432,16 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
                                                         bg-[var(--card-bg)] border border-[var(--card-border)] shadow-xl overflow-hidden py-1 min-w-[120px]`}
                                                 style={{ borderRadius: 'var(--radius)' }}
                                             >
+                                                <button
+                                                    onClick={() => {
+                                                        setReplyingTo(msg)
+                                                        setActiveMenuId(null)
+                                                    }}
+                                                    className="w-full flex items-center gap-2 px-4 py-2 text-xs text-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-colors whitespace-nowrap border-b border-[var(--card-border)]"
+                                                >
+                                                    <Send size={14} className="rotate-180" />
+                                                    Responder
+                                                </button>
                                                 {isOwn ? (
                                                     <button
                                                         onClick={() => handleDelete(msg.id)}
@@ -373,6 +472,28 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
 
             {/* Input Area */}
             <div className="p-3 bg-[var(--background)] border-t border-[var(--card-border)] relative">
+                {/* Reply Bar */}
+                <AnimatePresence>
+                    {replyingTo && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            className="bg-[var(--card-bg)] border border-[var(--card-border)] border-b-0 p-3 flex items-center justify-between rounded-t-2xl -mt-12 absolute bottom-full left-3 right-3 shadow-xl"
+                        >
+                            <div className="flex flex-col gap-0.5 max-w-[80%]">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-[var(--accent)]">Respondiendo a {replyingTo.profile?.username}</span>
+                                <p className="text-[10px] text-[var(--text-muted)] truncate italic">{replyingTo.content}</p>
+                            </div>
+                            <button
+                                onClick={() => setReplyingTo(null)}
+                                className="p-1.5 hover:bg-[var(--hover-bg)] rounded-full text-[var(--text-muted)]"
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
                 {showGiphy && (
                     <div className="absolute bottom-full right-4 mb-2 z-50">
                         <GiphySelector

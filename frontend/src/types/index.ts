@@ -311,6 +311,8 @@ export interface MatchLog {
   tags?: string[]
   profile?: Profile
   my_reaction?: string // Nueva columna para reacciones temáticas
+  prode_hit?: 'exacto' | 'ganador_diferencia' | 'ganador' | 'ninguno'
+  prode_puntos?: number
 }
 
 export interface MatchLogPlayerRating {

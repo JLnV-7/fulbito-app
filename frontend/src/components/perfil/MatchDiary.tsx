@@ -203,8 +203,17 @@ export function MatchDiary({ userId, isOwnProfile = false, limit = 5 }: MatchDia
                                     <div className="text-xs font-bold truncate">
                                         {log.equipo_local} {log.goles_local != null ? `${log.goles_local}-${log.goles_visitante}` : 'vs'} {log.equipo_visitante}
                                     </div>
-                                    <div className="text-[10px] text-[var(--text-muted)]">
-                                        {log.liga && <span>{log.liga} · </span>}
+                                    <div className="text-[10px] text-[var(--text-muted)] flex items-center gap-1">
+                                        {log.liga && (
+                                            <Link 
+                                                href={`/buscar?q=${encodeURIComponent(log.liga)}`}
+                                                className="hover:text-[var(--accent)] hover:underline transition-colors"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                {log.liga}
+                                            </Link>
+                                        )}
+                                        {log.liga && <span>·</span>}
                                         {new Date(log.fecha_partido).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
                                     </div>
                                 </div>
