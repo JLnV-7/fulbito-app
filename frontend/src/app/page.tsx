@@ -28,6 +28,9 @@ import { NewsTab } from '@/components/NewsTab'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { LiveMatchesStrip } from '@/components/LiveMatchesStrip'
 import { LeagueChips } from '@/components/LeagueChips'
+import { HeroHeader } from '@/components/home/HeroHeader'
+import { LiveMatchesSticky } from '@/components/home/LiveMatchesSticky'
+import { TopRatedMatches } from '@/components/home/TopRatedMatches'
 import { hapticFeedback } from '@/lib/helpers'
 import { LIGAS, type Liga } from '@/lib/constants'
 import type { Partido } from '@/types'
@@ -299,32 +302,55 @@ function HomeContent() {
 
                     {/* TAB: PARTIDOS (default) */}
                     {(activeTab === 'partidos' || activeTab === 'fixtures') && (
-                      <>
-                        {/* Live strip */}
-                        <LiveMatchesStrip partidos={livePartidos} />
+                      <div className="space-y-4">
+                        {/* 1. Hero Header */}
+                        <HeroHeader />
 
-                        {/* Date navigation */}
-                        <DateScroller
-                          dateRange={dateRange}
-                          selectedDate={selectedDate}
-                          onSelect={setSelectedDate}
-                          localeFormat={localeFormat}
-                        />
+                        {/* 2. Sticky Live / Hot matches carrousel */}
+                        <LiveMatchesSticky liveMatches={livePartidos} upcomingMatches={partidosFiltrados} />
 
-                        {/* Fixture */}
-                        <section>
-                          <div className="flex items-center justify-between mb-3 px-1">
+                        {/* 3. Top Rated Matches today */}
+                        <div className="px-1 mt-6">
+                            <TopRatedMatches />
+                        </div>
+
+                        {/* 4. Mini Feed (La Tribuna Habla) inside home */}
+                        <div className="mt-8 px-1 pb-10 border-b border-[var(--card-border)]/50">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-[var(--foreground)] font-black text-xl italic tracking-tighter uppercase">
+                                    💬 La Tribuna Habla
+                                </h2>
+                                <Link
+                                    href="/comunidad"
+                                    className="text-[10px] font-black text-[var(--accent)] hover:opacity-70 uppercase tracking-widest transition-opacity"
+                                >
+                                    Ver todo →
+                                </Link>
+                            </div>
+                            <FeedGlobal />
+                        </div>
+
+                        {/* 5. Classic Fixture underneath */}
+                        <section className="mt-8">
+                          <div className="flex justify-center mb-6">
+                            <h3 className="text-[10px] font-black px-4 py-1.5 rounded-full border border-[var(--card-border)] uppercase tracking-widest text-[var(--text-muted)]">
+                                Explorar Fixture
+                            </h3>
+                          </div>
+                          <DateScroller
+                            dateRange={dateRange}
+                            selectedDate={selectedDate}
+                            onSelect={setSelectedDate}
+                            localeFormat={localeFormat}
+                          />
+
+                          <div className="flex items-center justify-between mb-3 px-1 mt-6">
                             <div className="flex items-center gap-2">
                               <h2 className="text-[12px] font-bold tracking-tight capitalize">
                                 Fixture: {filtroLiga === 'Todos' || filtroLiga === 'Favoritos'
                                   ? formatDateLabel(new Date(selectedDate + 'T12:00:00'), t, localeFormat).toUpperCase()
                                   : filtroLiga.toUpperCase()}
                               </h2>
-                              {liveCount > 0 && (
-                                <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-600 text-[8px] font-black animate-pulse flex items-center gap-1">
-                                  {liveCount} VIVO
-                                </span>
-                              )}
                             </div>
                           </div>
 
@@ -369,7 +395,7 @@ function HomeContent() {
                             </div>
                           )}
                         </section>
-                      </>
+                      </div>
                     )}
                   </motion.div>
                 </AnimatePresence>
