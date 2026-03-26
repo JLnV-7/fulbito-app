@@ -1,11 +1,4 @@
 // src/components/FixtureTable.tsx
-// REDISEÑO: de lista plana a fixture con carácter visual real
-// — Logos grandes (36px)
-// — Barra lateral de color para partidos LIVE
-// — Score tipografía bold prominente
-// — Agrupado por liga cuando hay múltiples ligas
-// — Filas con hover glassmorphism sutil
-
 import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -16,7 +9,6 @@ interface FixtureTableProps {
   isLoading?: boolean
 }
 
-// Agrupa partidos por liga manteniendo orden de aparición
 function groupByLiga(partidos: Partido[]): Map<string, Partido[]> {
   const map = new Map<string, Partido[]>()
   for (const p of partidos) {
@@ -40,15 +32,10 @@ function MatchRow({ p }: { p: Partido }) {
   return (
     <Link
       href={`/partido/${linkId}`}
-      className={`
-        relative flex items-center gap-3 px-4 py-3 transition-all group
-        hover:bg-white/[0.03]
-        ${isLive ? 'bg-red-500/[0.04]' : ''}
-      `}
+      className={`relative flex items-center gap-3 px-4 py-3 transition-all group hover:bg-white/[0.03] ${isLive ? 'bg-red-500/[0.04]' : ''}`}
     >
       {/* Barra lateral de estado */}
-      <div className={`
-        absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full transition-all
+      <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full transition-all
         ${isLive     ? 'h-8 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]' : ''}
         ${isFinished ? 'h-4 bg-[var(--card-border)]' : ''}
         ${!isLive && !isFinished ? 'h-4 bg-[var(--accent)]/40' : ''}
@@ -73,7 +60,7 @@ function MatchRow({ p }: { p: Partido }) {
 
         {/* Equipo local */}
         <div className="flex-1 flex items-center justify-end gap-2 min-w-0">
-          <span className={`text-xs font-black truncate text-right leading-tight ${isLive ? 'text-[var(--foreground)]' : isFinished ? 'text-[var(--text-muted)]' : 'text-[var(--foreground)]'}`}>
+          <span className={`text-xs font-black truncate text-right leading-tight ${isFinished ? 'text-[var(--text-muted)]' : 'text-[var(--foreground)]'}`}>
             {p.equipo_local}
           </span>
           <div className="relative w-8 h-8 shrink-0">
@@ -84,7 +71,6 @@ function MatchRow({ p }: { p: Partido }) {
                 fill
                 className="object-contain drop-shadow-sm"
                 sizes="32px"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = '0' }}
               />
             ) : (
               <div className="w-8 h-8 rounded-full bg-[var(--card-border)] flex items-center justify-center text-[10px] font-black text-[var(--text-muted)]">
@@ -97,13 +83,11 @@ function MatchRow({ p }: { p: Partido }) {
         {/* Score / VS */}
         <div className="w-16 shrink-0 text-center">
           {hasScore && (isFinished || isLive) ? (
-            <div className={`
-              inline-flex items-center gap-1 px-2 py-0.5 rounded-lg font-black text-sm tabular-nums
+            <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg font-black text-sm tabular-nums
               ${isLive
                 ? 'bg-red-500/10 text-red-400 border border-red-500/20'
                 : 'bg-[var(--hover-bg)] text-[var(--foreground)] border border-[var(--card-border)]'
-              }
-            `}>
+              }`}>
               <span>{p.goles_local}</span>
               <span className="text-[var(--text-muted)] font-light opacity-50 text-xs">-</span>
               <span>{p.goles_visitante}</span>
@@ -123,7 +107,6 @@ function MatchRow({ p }: { p: Partido }) {
                 fill
                 className="object-contain drop-shadow-sm"
                 sizes="32px"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = '0' }}
               />
             ) : (
               <div className="w-8 h-8 rounded-full bg-[var(--card-border)] flex items-center justify-center text-[10px] font-black text-[var(--text-muted)]">
@@ -131,16 +114,14 @@ function MatchRow({ p }: { p: Partido }) {
               </div>
             )}
           </div>
-          <span className={`text-xs font-black truncate leading-tight ${isLive ? 'text-[var(--foreground)]' : isFinished ? 'text-[var(--text-muted)]' : 'text-[var(--foreground)]'}`}>
+          <span className={`text-xs font-black truncate leading-tight ${isFinished ? 'text-[var(--text-muted)]' : 'text-[var(--foreground)]'}`}>
             {p.equipo_visitante}
           </span>
         </div>
       </div>
 
       {/* Flecha hover */}
-      <div className="w-4 shrink-0 text-[var(--text-muted)] opacity-0 group-hover:opacity-40 transition-opacity text-xs">
-        →
-      </div>
+      <div className="w-4 shrink-0 text-[var(--text-muted)] opacity-0 group-hover:opacity-40 transition-opacity text-xs">→</div>
     </Link>
   )
 }
@@ -178,7 +159,6 @@ export const FixtureTable: React.FC<FixtureTableProps> = ({ partidos, isLoading 
     )
   }
 
-  // Si todos son de la misma liga, mostrar lista simple sin header de grupo
   const groups = groupByLiga(partidos)
   const isMultiLiga = groups.size > 1
 
@@ -190,16 +170,12 @@ export const FixtureTable: React.FC<FixtureTableProps> = ({ partidos, isLoading 
     )
   }
 
-  // Multi-liga: agrupar con separador
   return (
     <div>
       {[...groups.entries()].map(([liga, matches]) => (
         <div key={liga}>
-          {/* Header de liga */}
           <div className="flex items-center gap-2 px-4 py-2 bg-[var(--hover-bg)]/50 border-y border-[var(--card-border)]/50">
-            <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--text-muted)]">
-              {liga}
-            </span>
+            <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--text-muted)]">{liga}</span>
             <div className="flex-1 h-px bg-[var(--card-border)]/30" />
             <span className="text-[9px] text-[var(--text-muted)] opacity-40 font-bold">
               {matches.length} {matches.length === 1 ? 'partido' : 'partidos'}

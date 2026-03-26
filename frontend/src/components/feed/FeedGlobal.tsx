@@ -1,15 +1,5 @@
 'use client'
 // src/components/feed/FeedGlobal.tsx
-//
-// CAMBIOS:
-// 🔴 FIX CRÍTICO: la versión anterior consultaba la vista `feed_global` que probablemente
-//    no existe en Supabase → siempre se quedaba en skeleton o tiraba error silencioso.
-//    Ahora consulta directamente `match_logs` con join a `profiles` — sin depender de ninguna vista.
-//
-// ✅ REDISEÑO: cards más compactas con mejor jerarquía visual
-// ✅ Fallback robusto: si `match_logs` tampoco tiene datos, muestra estado vacío con CTA
-// ✅ Rating visual con número + estrella
-// ✅ Avatar con fallback a inicial del username
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -24,7 +14,6 @@ type ItemFeed = {
   jugador_estrella: string | null
   equipo_local: string | null
   equipo_visitante: string | null
-  is_private: boolean
   created_at: string
   profile: {
     username: string
@@ -33,14 +22,13 @@ type ItemFeed = {
 }
 
 export function FeedGlobal() {
-  const [items, setItems]   = useState<ItemFeed[]>([])
+  const [items, setItems]     = useState<ItemFeed[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError]   = useState<string | null>(null)
+  const [error, setError]     = useState<string | null>(null)
 
   useEffect(() => {
     const fetchFeed = async () => {
       try {
-        // ✅ Query directo a match_logs + join profiles — sin depender de vista
         const { data, error: fetchError } = await supabase
           .from('match_logs')
           .select(`
@@ -51,7 +39,6 @@ export function FeedGlobal() {
             jugador_estrella,
             equipo_local,
             equipo_visitante,
-            is_private,
             created_at,
             profile:profiles!match_logs_user_id_fkey(username, avatar_url)
           `)
@@ -72,7 +59,6 @@ export function FeedGlobal() {
 
     fetchFeed()
 
-    // Realtime: nueva reseña → refetch
     const channel = supabase
       .channel('feed_global_changes')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'match_logs' }, fetchFeed)
@@ -92,9 +78,7 @@ export function FeedGlobal() {
   if (!items.length) return (
     <div className="p-12 text-center bg-[var(--card-bg)] border border-dashed border-[var(--card-border)] rounded-3xl">
       <p className="text-3xl mb-3">🏟️</p>
-      <p className="text-[var(--text-muted)] text-sm font-black italic tracking-tighter">
-        El feed está en silencio.
-      </p>
+      <p className="text-[var(--text-muted)] text-sm font-black italic tracking-tighter">El feed está en silencio.</p>
       <p className="text-[10px] text-[var(--text-muted)] mt-1 opacity-60 uppercase tracking-widest font-bold">
         ¡Sé el primero en dejar una reseña!
       </p>
@@ -103,9 +87,7 @@ export function FeedGlobal() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {items.map((item) => (
-        <FeedCard key={item.id} item={item} />
-      ))}
+      {items.map(item => <FeedCard key={item.id} item={item} />)}
     </div>
   )
 }
@@ -115,30 +97,23 @@ function FeedCard({ item }: { item: ItemFeed }) {
   const avatar   = item.profile?.avatar_url
   const initial  = username.slice(0, 1).toUpperCase()
 
-  const matchLabel = item.equipo_local && item.equipo_visitante
-    ? `${item.equipo_local} vs ${item.equipo_visitante}`
-    : `Partido #${item.partido_id}`
-
   return (
     <div className="group bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-4 flex flex-col gap-3 hover:border-[var(--accent)]/30 hover:bg-white/[0.02] transition-all">
 
       {/* Header */}
       <div className="flex items-center justify-between">
         <Link href={`/perfil/${username}`} className="flex items-center gap-2 min-w-0">
-          {/* Avatar */}
           <div className="w-7 h-7 rounded-full bg-[var(--accent)]/10 border border-[var(--card-border)] flex items-center justify-center overflow-hidden shrink-0">
-            {avatar ? (
-              <img src={avatar} alt={username} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-[10px] font-black text-[var(--accent)]">{initial}</span>
-            )}
+            {avatar
+              ? <img src={avatar} alt={username} className="w-full h-full object-cover" />
+              : <span className="text-[10px] font-black text-[var(--accent)]">{initial}</span>
+            }
           </div>
           <span className="text-xs font-black italic tracking-tighter text-[var(--foreground)] truncate hover:text-[var(--accent)] transition-colors">
             @{username}
           </span>
         </Link>
 
-        {/* Rating badge */}
         {item.rating_partido != null && (
           <div className="flex items-center gap-1 bg-[var(--accent)]/10 border border-[var(--accent)]/20 px-2 py-0.5 rounded-lg shrink-0">
             <Star size={9} className="text-yellow-400 fill-yellow-400" />
@@ -149,7 +124,7 @@ function FeedCard({ item }: { item: ItemFeed }) {
         )}
       </div>
 
-      {/* Texto de la reseña */}
+      {/* Texto */}
       {item.review_text && (
         <p className="text-[var(--foreground)] text-xs leading-relaxed font-medium line-clamp-3 opacity-90 flex-1">
           "{item.review_text}"
@@ -159,23 +134,19 @@ function FeedCard({ item }: { item: ItemFeed }) {
       {/* Footer */}
       <div className="flex items-center justify-between pt-2 border-t border-[var(--card-border)]/40">
         <div className="flex items-center gap-2 min-w-0">
-          {/* MVP */}
-          {item.jugador_estrella && (
+          {item.jugador_estrella ? (
             <div className="flex items-center gap-1">
               <Trophy size={9} className="text-yellow-500 shrink-0" />
               <span className="text-[9px] font-black text-yellow-500 uppercase tracking-wider truncate">
                 {item.jugador_estrella}
               </span>
             </div>
-          )}
-          {/* Fecha */}
-          {!item.jugador_estrella && (
+          ) : (
             <span className="text-[9px] text-[var(--text-muted)] opacity-40 font-bold uppercase tracking-wide">
               {new Date(item.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })}
             </span>
           )}
         </div>
-
         <Link
           href={`/partido/${item.partido_id}`}
           className="flex items-center gap-1 text-[var(--accent)] text-[9px] font-black uppercase tracking-widest hover:opacity-70 transition-opacity shrink-0"
