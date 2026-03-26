@@ -105,6 +105,9 @@ const nextConfig: NextConfig = {
     // ✅ canvas-confetti eliminado (ya no se importa en el proyecto)
     optimizePackageImports: ['framer-motion', 'lucide-react'],
   },
+  // ✅ turbopack: {} vacío — requerido en Next.js 16 cuando hay plugins con webpack config (next-pwa)
+  // Sin esto, CI/Vercel falla con: "This build is using Turbopack, with a webpack config and no turbopack config"
+  turbopack: {},
   // ✅ typescript.ignoreBuildErrors ELIMINADO
   // Tenías esto activo → TypeScript nunca fallaba el build aunque hubiera errores reales.
   // Si el build empieza a fallar después de este cambio, esos son bugs reales que hay que fixear.
