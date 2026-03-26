@@ -1,8 +1,7 @@
 // src/components/NewsTab.tsx
-// ANTES: 'use client' — fetcha noticias después de hydration (usuario ve pantalla vacía)
-// AHORA: Server Component — noticias pre-fetched, llegan con el HTML inicial
-
-import { ExternalLink, Flame, Newspaper } from 'lucide-react'
+// Server Component — las noticias llegan con el HTML inicial, sin spinner
+import { Suspense } from 'react'
+import { ExternalLink, Newspaper } from 'lucide-react'
 import { fetchTyCNewsAction } from '@/app/actions/news'
 
 interface NewsItem {
@@ -14,8 +13,7 @@ interface NewsItem {
     description: string
 }
 
-// Server Component — sin 'use client', sin useEffect, sin useState
-export async function NewsTab() {
+async function NewsList() {
     let news: NewsItem[] = []
     let error = false
 
@@ -25,106 +23,99 @@ export async function NewsTab() {
             news = data.map((item: any) => ({
                 title: item.title,
                 link: item.link,
-                description: item.description || '',
+                description: item.description,
                 pubDate: new Date(item.pubDate || new Date()).toLocaleDateString('es-AR', {
                     day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
                 }),
-                thumbnail: item.thumbnail || '',
+                thumbnail: item.thumbnail,
                 source: 'TyC Sports'
             }))
         } else {
             error = true
         }
-    } catch (err) {
-        console.error('Error fetching news:', err)
+    } catch {
         error = true
     }
 
-    if (error || news.length === 0) {
+    if (error) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-                <Newspaper size={40} className="text-[var(--text-muted)] mb-4 opacity-40" />
-                <p className="font-black text-sm">No pudimos cargar las noticias</p>
-                <p className="text-[10px] text-[var(--text-muted)] mt-1">
-                    Intentá de nuevo en unos minutos
+            <div className="text-center py-12 bg-[var(--card-bg)] border border-red-500/20 rounded-xl">
+                <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Newspaper size={32} className="text-red-500/70" />
+                </div>
+                <p className="text-sm font-black text-[var(--foreground)] uppercase tracking-widest mb-2">
+                    No pudimos cargar las noticias
+                </p>
+                <p className="text-xs text-[var(--text-muted)] font-medium max-w-xs mx-auto">
+                    TyC Sports no está respondiendo. Intentá de nuevo en un rato.
                 </p>
             </div>
         )
     }
 
-    const featured = news[0]
-    const rest = news.slice(1)
-
     return (
-        <div className="space-y-4">
-            {/* Nota destacada */}
-            {featured && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {news.map((item, idx) => (
                 <a
-                    href={featured.link}
+                    key={idx}
+                    href={item.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl overflow-hidden hover:border-[var(--foreground)]/20 transition-all group"
+                    className="group flex flex-col bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl overflow-hidden hover:border-[var(--accent)] hover:shadow-lg transition-all"
                 >
-                    {featured.thumbnail && (
-                        <div className="relative h-48 bg-[var(--hover-bg)] overflow-hidden">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <div className="relative h-48 w-full bg-[var(--background)] overflow-hidden">
+                        {item.thumbnail ? (
                             <img
-                                src={featured.thumbnail}
-                                alt={featured.title}
+                                src={item.thumbnail}
+                                alt={item.title}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                loading="eager"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                            <div className="absolute bottom-3 left-4 flex items-center gap-1.5">
-                                <Flame size={12} className="text-orange-400" />
-                                <span className="text-[10px] font-black text-white uppercase tracking-widest">Destacado</span>
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center opacity-10">
+                                <Newspaper size={48} />
                             </div>
+                        )}
+                        <div className="absolute top-3 left-3 px-2 py-1 bg-[var(--foreground)] text-[var(--background)] text-[9px] font-black uppercase tracking-widest rounded shadow-sm">
+                            {item.source}
                         </div>
-                    )}
-                    <div className="p-4">
-                        <p className="font-black text-sm leading-snug group-hover:text-[var(--accent)] transition-colors">
-                            {featured.title}
+                    </div>
+                    <div className="p-4 flex flex-col flex-1">
+                        <h3 className="text-sm font-black leading-snug mb-2 line-clamp-2 capitalize">
+                            {item.title}
+                        </h3>
+                        <p className="text-xs font-medium text-[var(--text-muted)] line-clamp-2 mb-4 flex-1">
+                            {item.description}
                         </p>
-                        <div className="flex items-center justify-between mt-3">
-                            <span className="text-[10px] text-[var(--text-muted)] font-bold">{featured.source} · {featured.pubDate}</span>
-                            <ExternalLink size={12} className="text-[var(--text-muted)]" />
+                        <div className="flex items-center justify-between border-t border-[var(--card-border)] pt-3 mt-auto">
+                            <span className="text-[10px] font-bold text-[var(--text-muted)]">
+                                {item.pubDate}
+                            </span>
+                            <span className="text-[10px] font-black text-[var(--accent)] flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                Leer más <ExternalLink size={12} />
+                            </span>
                         </div>
                     </div>
                 </a>
-            )}
-
-            {/* Lista de noticias */}
-            <div className="space-y-2">
-                {rest.map((item, i) => (
-                    <a
-                        key={i}
-                        href={item.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex gap-3 p-3 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl hover:border-[var(--foreground)]/20 transition-all group"
-                    >
-                        {item.thumbnail && (
-                            <div className="w-20 h-16 rounded-xl overflow-hidden shrink-0 bg-[var(--hover-bg)]">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                    src={item.thumbnail}
-                                    alt={item.title}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                    loading="lazy"
-                                />
-                            </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                            <p className="font-bold text-xs leading-snug line-clamp-2 group-hover:text-[var(--accent)] transition-colors">
-                                {item.title}
-                            </p>
-                            <p className="text-[9px] text-[var(--text-muted)] mt-1.5 font-bold">
-                                {item.source} · {item.pubDate}
-                            </p>
-                        </div>
-                    </a>
-                ))}
-            </div>
+            ))}
         </div>
+    )
+}
+
+function NewsTabSkeleton() {
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="h-72 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl animate-pulse" />
+            ))}
+        </div>
+    )
+}
+
+// Export — envuelto en Suspense para streaming
+export function NewsTab() {
+    return (
+        <Suspense fallback={<NewsTabSkeleton />}>
+            <NewsList />
+        </Suspense>
     )
 }

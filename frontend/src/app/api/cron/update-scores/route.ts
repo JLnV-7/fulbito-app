@@ -5,8 +5,7 @@ import { getFixturesByDate } from '@/lib/api'
 import { LIGAS_MAP, CURRENT_SEASONS } from '@/lib/constants'
 import type { ApiFixture } from '@/types/api'
 
-// ✅ Edge runtime: más rápido y más barato que Node para este cron simple
-export const runtime = 'edge'
+// ⚠️ Node.js runtime requerido — revalidateTag no funciona en edge runtime
 
 // Se inicializa Supabase Admin client (bypass RLS) dentro del handler para evitar crashear el build
 
@@ -96,7 +95,8 @@ export async function GET(request: Request) {
         }
 
         // ✅ Invalidar cache de fixtures → próximo visitante recibe datos frescos
-        revalidateTag('fixtures', 'max')
+        // Next.js 16: revalidateTag(tag, profile) — segundo arg requerido
+        revalidateTag('fixtures', {})
 
         return NextResponse.json({
             success: true,
