@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { revalidateTag } from 'next/cache'
 import { getFixturesByDate } from '@/lib/api'
 import { LIGAS_MAP, CURRENT_SEASONS } from '@/lib/constants'
 import type { ApiFixture } from '@/types/api'
+
+// ✅ Edge runtime: más rápido y más barato que Node para este cron simple
+export const runtime = 'edge'
 
 // Se inicializa Supabase Admin client (bypass RLS) dentro del handler para evitar crashear el build
 
@@ -91,11 +95,15 @@ export async function GET(request: Request) {
             }
         }
 
+        // ✅ Invalidar cache de fixtures → próximo visitante recibe datos frescos
+        revalidateTag('fixtures', 'max')
+
         return NextResponse.json({
             success: true,
             updated: updatedCount,
             errors: errors.length > 0 ? errors : undefined
         })
+
 
     } catch (error) {
         console.error('Cron Error:', error)

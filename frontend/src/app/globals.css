@@ -197,3 +197,11 @@ body {
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
+
+/* ============================================
+   Utility: iOS safe area bottom padding
+   (moved from NavBar dangerouslySetInnerHTML)
+   ============================================ */
+.pb-safe {
+  padding-bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 5rem);
+}

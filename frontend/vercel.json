@@ -1,28 +1,65 @@
 {
-    "framework": "nextjs",
-    "crons": [
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/update-scores",
+      "schedule": "*/15 * * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/perfil(.*)",
+      "headers": [
         {
-            "path": "/api/cron/update-scores",
-            "schedule": "0 0 * * *"
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate, proxy-revalidate"
         }
-    ],
-    "headers": [
+      ]
+    },
+    {
+      "source": "/api/partido/:id/lineups",
+      "headers": [
         {
-            "source": "/perfil(.*)",
-            "headers": [
-                {
-                    "key": "Cache-Control",
-                    "value": "no-store, no-cache, must-revalidate, proxy-revalidate"
-                },
-                {
-                    "key": "Pragma",
-                    "value": "no-cache"
-                },
-                {
-                    "key": "Expires",
-                    "value": "0"
-                }
-            ]
+          "key": "Cache-Control",
+          "value": "public, s-maxage=3600, stale-while-revalidate=86400"
         }
-    ]
+      ]
+    },
+    {
+      "source": "/api/partido/:id/stats",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, s-maxage=3600, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/api/partido/:id/timeline",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, s-maxage=3600, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/api/partido/:id/head-to-head",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, s-maxage=86400, stale-while-revalidate=604800"
+        }
+      ]
+    },
+    {
+      "source": "/partido/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, s-maxage=60, stale-while-revalidate=300"
+        }
+      ]
+    }
+  ]
 }

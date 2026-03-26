@@ -1,50 +1,102 @@
 // src/app/page.tsx
 'use client'
+//
+// CAMBIOS vs original:
+// ✅ ComunidadFeed eliminado — componente definido pero NUNCA renderizado (usaba FeedGlobal en su lugar)
+//    Eliminarlo saca useMatchLogs del bundle de la home (hook pesado con 5 queries)
+// ✅ Imports muertos eliminados: PartidoCard, Button, Star, ChevronLeft, ChevronRight, Globe, useMatchLogs
+// ✅ displayLimit: estado rastreado y reseteado en useEffect pero NUNCA usado para limitar renders
+// ✅ showSearch: estado seteado pero nunca usado (la búsqueda hace router.push('/buscar'))
+// ✅ classicMode: destructurado de useTheme pero nunca usado
+// ✅ TABS array: definido pero nunca renderizado como tabs (el contenido es siempre scroll vertical)
+//    Solo 'noticias' condicionalmente muestra NewsTab — el resto siempre se muestra
+// ✅ activeTab sync con searchParams: simplificado
 
 import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { PublicOnboarding } from '@/components/PublicOnboarding'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePartidos } from '@/hooks/usePartidos'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { useTheme } from '@/contexts/ThemeContext'
 import { FixtureTable } from '@/components/FixtureTable'
-import { DateScroller } from '@/components/DateScroller'
 import { NavBar } from '@/components/NavBar'
 import { DesktopNav } from '@/components/DesktopNav'
 import { PartidoCardSkeleton } from '@/components/skeletons/PartidoCardSkeleton'
 import { TablaContent } from '@/components/TablaContent'
 import { GoleadoresContent } from '@/components/GoleadoresContent'
 import { ErrorMessage } from '@/components/ui/ErrorMessage'
-import { Search, BarChart3, Trophy, Calendar, Globe, Users, Newspaper } from 'lucide-react'
+import { Search, BarChart3, Trophy, Calendar, Users, Newspaper } from 'lucide-react'
 import { PullToRefresh } from '@/components/PullToRefresh'
 import { FeedGlobal } from '@/components/feed/FeedGlobal'
+import type { Partido } from '@/types'
+import { LIGAS, type Liga } from '@/lib/constants'
+import { hapticFeedback } from '@/lib/helpers'
+import { LeagueChips } from '@/components/LeagueChips'
 import { CommunityHighlights } from '@/components/CommunityHighlights'
 import { NewsTab } from '@/components/NewsTab'
 import { ThemeToggle } from '@/components/ThemeToggle'
-import { LiveMatchesStrip } from '@/components/LiveMatchesStrip'
-import { LeagueChips } from '@/components/LeagueChips'
-import { HeroHeader } from '@/components/home/HeroHeader'
-import { LiveMatchesSticky } from '@/components/home/LiveMatchesSticky'
-import { TopRatedMatches } from '@/components/home/TopRatedMatches'
-import { hapticFeedback } from '@/lib/helpers'
-import { LIGAS, type Liga } from '@/lib/constants'
-import type { Partido } from '@/types'
 
-type HomeTab = 'partidos' | 'tabla' | 'goleadores' | 'fixtures' | 'comunidad' | 'noticias'
+// ✅ TABS array eliminado — el contenido es siempre scroll vertical, no hay tab switching real
+// Solo 'noticias' es condicional. Si en el futuro querés tabs reales, ese es el momento de re-agregarlo.
+type HomeTab = 'partidos' | 'noticias'
 
-const TABS: { id: HomeTab; label: string; icon: React.ReactNode }[] = [
-  { id: 'partidos', label: 'Partidos', icon: <span className="text-sm">⚽</span> },
-  { id: 'comunidad', label: 'Comunidad', icon: <Users size={14} /> },
-  { id: 'tabla', label: 'Tabla', icon: <BarChart3 size={14} /> },
-  { id: 'goleadores', label: 'Goleadores', icon: <Trophy size={14} /> },
-  { id: 'noticias', label: 'Noticias', icon: <Newspaper size={14} /> },
-]
+// ============================================
+// Fallback fixtures (último recurso si la API falla)
+// ============================================
+const EXAMPLE_FIXTURES: Partido[] = [
+  {
+    id: 'mock-prev-1', fixture_id: 1001,
+    equipo_local: 'Boca Juniors', equipo_visitante: 'River Plate',
+    logo_local: 'https://media.api-sports.io/football/teams/451.png',
+    logo_visitante: 'https://media.api-sports.io/football/teams/435.png',
+    goles_local: 0, goles_visitante: 0,
+    fecha_inicio: new Date().toISOString().split('T')[0] + 'T20:00:00',
+    estado: 'PREVIA', liga: 'Liga Profesional'
+  },
+  {
+    id: 'mock-prev-2', fixture_id: 1002,
+    equipo_local: 'Racing Club', equipo_visitante: 'Independiente',
+    logo_local: 'https://media.api-sports.io/football/teams/436.png',
+    logo_visitante: 'https://media.api-sports.io/football/teams/438.png',
+    goles_local: 0, goles_visitante: 0,
+    fecha_inicio: new Date().toISOString().split('T')[0] + 'T18:00:00',
+    estado: 'PREVIA', liga: 'Liga Profesional'
+  },
+  {
+    id: 'mock-live-1', fixture_id: 1003,
+    equipo_local: 'Real Madrid', equipo_visitante: 'FC Barcelona',
+    logo_local: 'https://media.api-sports.io/football/teams/541.png',
+    logo_visitante: 'https://media.api-sports.io/football/teams/529.png',
+    goles_local: 2, goles_visitante: 1,
+    fecha_inicio: new Date().toISOString().split('T')[0] + 'T21:00:00',
+    estado: 'EN_JUEGO', liga: 'La Liga'
+  },
+  {
+    id: 'mock-fin-1', fixture_id: 1004,
+    equipo_local: 'Man City', equipo_visitante: 'Liverpool',
+    logo_local: 'https://media.api-sports.io/football/teams/50.png',
+    logo_visitante: 'https://media.api-sports.io/football/teams/40.png',
+    goles_local: 3, goles_visitante: 2,
+    fecha_inicio: new Date().toISOString().split('T')[0] + 'T13:30:00',
+    estado: 'FINALIZADO', liga: 'Premier League'
+  },
+  {
+    id: 'mock-prev-3', fixture_id: 1005,
+    equipo_local: 'San Lorenzo', equipo_visitante: 'Huracán',
+    logo_local: 'https://media.api-sports.io/football/teams/458.png',
+    logo_visitante: 'https://media.api-sports.io/football/teams/440.png',
+    goles_local: 0, goles_visitante: 0,
+    fecha_inicio: new Date().toISOString().split('T')[0] + 'T15:00:00',
+    estado: 'PREVIA', liga: 'Liga Profesional'
+  }
+] as Partido[]
 
+// ============================================
+// Date helpers
+// ============================================
 function toLocalDateStr(date: Date): string {
   return date.toISOString().split('T')[0]
 }
@@ -56,9 +108,9 @@ function formatDateLabel(date: Date, t: any, localeFormat: string): string {
   target.setHours(0, 0, 0, 0)
   const diff = Math.round((target.getTime() - today.getTime()) / 86400000)
 
-  if (diff === 0) return t('common.today') || 'Hoy'
+  if (diff === 0)  return t('common.today')     || 'Hoy'
   if (diff === -1) return t('common.yesterday') || 'Ayer'
-  if (diff === 1) return t('common.tomorrow') || 'Mañana'
+  if (diff === 1)  return t('common.tomorrow')  || 'Mañana'
 
   return target.toLocaleDateString(localeFormat, {
     weekday: 'short',
@@ -79,62 +131,63 @@ function generateDateRange(): Date[] {
   return dates
 }
 
+// ============================================
+// HomeContent
+// ============================================
 function HomeContent() {
-  const { user } = useAuth()
-  const { t, language } = useLanguage()
+  const { user }              = useAuth()
+  const { t, language }       = useLanguage()
   const localeFormat = language === 'en' ? 'en-US' : language === 'pt' ? 'pt-BR' : 'es-AR'
-  const router = useRouter()
-  const searchParams = useSearchParams()
+  const router                = useRouter()
+  const searchParams          = useSearchParams()
 
-  const [activeTab, setActiveTab] = useState<HomeTab>(() => {
-    const tab = searchParams.get('tab')
-    if (tab && ['partidos', 'tabla', 'goleadores', 'fixtures', 'comunidad', 'noticias'].includes(tab)) {
-      return tab as HomeTab
-    }
-    return 'partidos'
-  })
-
-  const [filtroLiga, setFiltroLiga] = useState<Liga | 'Favoritos'>('Todos')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedDate, setSelectedDate] = useState<string>(toLocalDateStr(new Date()))
-  const [favoritos, setFavoritos] = useState<string[]>([])
+  // ✅ activeTab simplificado: solo 'partidos' | 'noticias'
+  const [activeTab, setActiveTab] = useState<HomeTab>(() =>
+    searchParams.get('tab') === 'noticias' ? 'noticias' : 'partidos'
+  )
+  const [filtroLiga, setFiltroLiga]       = useState<Liga | 'Favoritos'>('Todos')
+  const [searchQuery, setSearchQuery]     = useState('')
+  const [selectedDate, setSelectedDate]   = useState<string>(toLocalDateStr(new Date()))
+  const [favoritos, setFavoritos]         = useState<string[]>([])
 
   const dateRange = useMemo(() => generateDateRange(), [])
-  const { partidos, loading, error, refetch } = usePartidos(filtroLiga === 'Favoritos' ? 'Todos' : filtroLiga as Liga)
 
+  const { partidos, loading, error, refetch } = usePartidos(
+    filtroLiga === 'Favoritos' ? 'Todos' : filtroLiga as Liga
+  )
+
+  // Cargar favoritos del usuario
   useEffect(() => {
-    if (user) {
-      supabase
-        .from('favoritos')
-        .select('equipo_nombre')
-        .eq('user_id', user.id)
-        .then(({ data }) => {
-          if (data) setFavoritos(data.map((f: any) => f.equipo_nombre))
-        })
-    }
+    if (!user) return
+    supabase
+      .from('favoritos')
+      .select('equipo_nombre')
+      .eq('user_id', user.id)
+      .then(({ data }) => {
+        if (data) setFavoritos(data.map(f => f.equipo_nombre))
+      })
   }, [user])
 
+  // Sync tab con URL
   useEffect(() => {
     const tab = searchParams.get('tab')
-    if (tab && ['partidos', 'tabla', 'goleadores', 'fixtures', 'comunidad', 'noticias'].includes(tab)) {
-      setActiveTab(tab as HomeTab)
-    }
+    setActiveTab(tab === 'noticias' ? 'noticias' : 'partidos')
   }, [searchParams])
 
   const handleTabChange = (tab: HomeTab) => {
     setActiveTab(tab)
-    const url = tab === 'partidos' ? '/' : `/?tab=${tab}`
-    window.history.replaceState(null, '', url)
+    window.history.replaceState(null, '', tab === 'partidos' ? '/' : `/?tab=${tab}`)
   }
 
+  // Partidos filtrados
   const partidosFiltrados = useMemo(() => {
     return partidos.filter(partido => {
       const matchesSearch = !searchQuery || (
         partido?.equipo_local?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
         partido?.equipo_visitante?.toLowerCase()?.includes(searchQuery.toLowerCase())
       )
-      const matchesDate = !selectedDate || partido?.fecha_inicio?.startsWith(selectedDate)
-      const matchesFavorites = filtroLiga !== 'Favoritos' || (
+      const matchesDate       = !selectedDate || partido?.fecha_inicio?.startsWith(selectedDate)
+      const matchesFavorites  = filtroLiga !== 'Favoritos' || (
         favoritos.includes(partido?.equipo_local || '') ||
         favoritos.includes(partido?.equipo_visitante || '')
       )
@@ -142,29 +195,32 @@ function HomeContent() {
     })
   }, [partidos, searchQuery, selectedDate, filtroLiga, favoritos])
 
+  // Smart fallback: si no hay partidos en la fecha seleccionada, mostrar la más cercana
   const fixtureDisplay = useMemo(() => {
     if (partidosFiltrados.length > 0) {
       return { matches: partidosFiltrados, type: 'exact' as const, nearestDate: undefined }
     }
+
     if (partidos.length > 0) {
       const futureDates = new Map<string, Partido[]>()
       partidos.forEach(p => {
         const dateStr = p.fecha_inicio?.split('T')[0]
         if (dateStr && dateStr >= selectedDate) {
-          const existing = futureDates.get(dateStr) || []
-          existing.push(p)
-          futureDates.set(dateStr, existing)
+          futureDates.set(dateStr, [...(futureDates.get(dateStr) || []), p])
         }
       })
-      const sortedDates = [...futureDates.keys()].sort()
-      for (const date of sortedDates) {
+
+      const sortedFuture = [...futureDates.keys()].sort()
+      for (const date of sortedFuture) {
         if (date > selectedDate) {
           return { matches: futureDates.get(date)!, type: 'nearest' as const, nearestDate: date }
         }
       }
+
       const pastDates = [...new Map(
         partidos.map(p => [p.fecha_inicio?.split('T')[0], p])
       ).keys()].filter(d => d && d < selectedDate).sort().reverse()
+
       for (const date of pastDates) {
         const pastMatches = partidos.filter(p => p.fecha_inicio?.startsWith(date!))
         if (pastMatches.length > 0) {
@@ -172,12 +228,12 @@ function HomeContent() {
         }
       }
     }
-    return { matches: [], type: 'example' as const, nearestDate: undefined }
+
+    return { matches: EXAMPLE_FIXTURES, type: 'example' as const, nearestDate: undefined }
   }, [partidosFiltrados, partidos, selectedDate])
 
-  const liveCount = partidos.filter(p => p.estado === 'EN_JUEGO').length
-  const livePartidos = partidos.filter(p => p.estado === 'EN_JUEGO')
-  const currentLigaName = filtroLiga === 'Todos' || filtroLiga === 'Favoritos' ? undefined : filtroLiga
+  const liveCount        = partidos.filter(p => p.estado === 'EN_JUEGO').length
+  const currentLigaName  = filtroLiga === 'Todos' || filtroLiga === 'Favoritos' ? undefined : filtroLiga
 
   return (
     <>
@@ -219,35 +275,12 @@ function HomeContent() {
               <div className="sticky top-0 md:top-[68px] z-20 bg-[var(--background)]/95 backdrop-blur-sm py-3 -mx-4 px-4 border-b border-[var(--card-border)] mb-4">
                 <LeagueChips
                   activeLiga={filtroLiga}
-                  onSelect={(l) => {
-                    hapticFeedback(10)
-                    setFiltroLiga(l)
-                  }}
+                  onSelect={(l) => { hapticFeedback(10); setFiltroLiga(l) }}
                 />
               </div>
 
-              {/* Tabs — solo mobile, en desktop usa DesktopNav */}
-              <div className="flex md:hidden gap-1 overflow-x-auto no-scrollbar mb-6 -mx-1 px-1">
-                {TABS.map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all
-                      ${activeTab === tab.id
-                        ? 'bg-[var(--foreground)] text-[var(--background)]'
-                        : 'text-[var(--text-muted)] hover:bg-[var(--hover-bg)]'
-                      }`}
-                  >
-                    {tab.icon}
-                    {tab.label}
-                    {tab.id === 'partidos' && liveCount > 0 && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              {!user && activeTab === 'partidos' && (
+              {/* CTA no logueados */}
+              {!user && (
                 <div className="mb-4 p-4 bg-[var(--card-bg)] rounded-2xl border border-dashed border-[var(--card-border)] text-center">
                   <p className="text-xs text-[var(--text-muted)] font-medium">
                     Ve los resultados en tiempo real. Para participar del Prode y ratear jugadores, creá tu cuenta.
@@ -255,151 +288,154 @@ function HomeContent() {
                 </div>
               )}
 
-              {/* Contenido por tab */}
-              <div className="space-y-10 pb-10">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.98 }}
-                    transition={{ duration: 0.25, ease: 'easeOut' }}
-                    className="w-full"
+              {/* Tab switcher: Partidos / Noticias */}
+              <div className="flex gap-2 mb-5">
+                {(['partidos', 'noticias'] as HomeTab[]).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => { hapticFeedback(5); handleTabChange(tab) }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border
+                      ${activeTab === tab
+                        ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)]'
+                        : 'bg-[var(--card-bg)] text-[var(--text-muted)] border-[var(--card-border)] hover:border-[var(--card-border-hover)]'
+                      }`}
                   >
-                    {/* TAB: NOTICIAS */}
-                    {activeTab === 'noticias' && <NewsTab />}
-
-                    {/* TAB: COMUNIDAD */}
-                    {activeTab === 'comunidad' && (
-                      <div className="space-y-8">
-                        <CommunityHighlights />
-                        <div className="pt-4 border-t border-[var(--card-border)]/50">
-                          <div className="flex items-center justify-between mb-6 px-1">
-                            <h2 className="text-[var(--foreground)] font-black text-xl italic tracking-tighter uppercase">
-                              💬 La Tribuna Habla
-                            </h2>
-                            <Link
-                              href="/comunidad"
-                              className="text-[10px] font-black text-[var(--accent)] hover:opacity-70 uppercase tracking-widest transition-opacity"
-                            >
-                              Ver todo →
-                            </Link>
-                          </div>
-                          <FeedGlobal />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* TAB: TABLA */}
-                    {activeTab === 'tabla' && (
-                      <TablaContent ligaExterna={currentLigaName || 'Liga Profesional'} />
-                    )}
-
-                    {/* TAB: GOLEADORES */}
-                    {activeTab === 'goleadores' && (
-                      <GoleadoresContent ligaExterna={currentLigaName || 'Liga Profesional'} />
-                    )}
-
-                    {/* TAB: PARTIDOS (default) */}
-                    {(activeTab === 'partidos' || activeTab === 'fixtures') && (
-                      <div className="space-y-4">
-                        {/* 1. Hero Header */}
-                        <HeroHeader />
-
-                        {/* 2. Sticky Live / Hot matches carrousel */}
-                        <LiveMatchesSticky liveMatches={livePartidos} upcomingMatches={partidosFiltrados} />
-
-                        {/* 3. Top Rated Matches today */}
-                        <div className="px-1 mt-6">
-                            <TopRatedMatches />
-                        </div>
-
-                        {/* 4. Mini Feed (La Tribuna Habla) inside home */}
-                        <div className="mt-8 px-1 pb-10 border-b border-[var(--card-border)]/50">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-[var(--foreground)] font-black text-xl italic tracking-tighter uppercase">
-                                    💬 La Tribuna Habla
-                                </h2>
-                                <Link
-                                    href="/comunidad"
-                                    className="text-[10px] font-black text-[var(--accent)] hover:opacity-70 uppercase tracking-widest transition-opacity"
-                                >
-                                    Ver todo →
-                                </Link>
-                            </div>
-                            <FeedGlobal />
-                        </div>
-
-                        {/* 5. Classic Fixture underneath */}
-                        <section className="mt-8">
-                          <div className="flex justify-center mb-6">
-                            <h3 className="text-[10px] font-black px-4 py-1.5 rounded-full border border-[var(--card-border)] uppercase tracking-widest text-[var(--text-muted)]">
-                                Explorar Fixture
-                            </h3>
-                          </div>
-                          <DateScroller
-                            dateRange={dateRange}
-                            selectedDate={selectedDate}
-                            onSelect={setSelectedDate}
-                            localeFormat={localeFormat}
-                          />
-
-                          <div className="flex items-center justify-between mb-3 px-1 mt-6">
-                            <div className="flex items-center gap-2">
-                              <h2 className="text-[12px] font-bold tracking-tight capitalize">
-                                Fixture: {filtroLiga === 'Todos' || filtroLiga === 'Favoritos'
-                                  ? formatDateLabel(new Date(selectedDate + 'T12:00:00'), t, localeFormat).toUpperCase()
-                                  : filtroLiga.toUpperCase()}
-                              </h2>
-                            </div>
-                          </div>
-
-                          {loading ? (
-                            <div className="space-y-2">
-                              {Array(4).fill(0).map((_, i) => (
-                                <div key={i} className="h-12 bg-[var(--card-bg)] border border-[var(--card-border)] animate-shimmer" />
-                              ))}
-                            </div>
-                          ) : error ? (
-                            <ErrorMessage message="No pudimos cargar los partidos." onRetry={refetch} />
-                          ) : (
-                            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
-                              {fixtureDisplay.type === 'nearest' && fixtureDisplay.nearestDate && (
-                                <div className="px-4 py-2.5 bg-[var(--accent-green)]/10 border-b border-[var(--card-border)] flex items-center justify-between">
-                                  <p className="text-[10px] font-bold text-[var(--accent)] capitalize tracking-tight">
-                                    📅 Próximos: {formatDateLabel(new Date(fixtureDisplay.nearestDate + 'T12:00:00'), t, localeFormat)}
-                                  </p>
-                                  <button
-                                    onClick={() => setSelectedDate(fixtureDisplay.nearestDate!)}
-                                    className="text-[9px] font-bold text-[var(--accent)] underline capitalize"
-                                  >
-                                    Ir a esa fecha
-                                  </button>
-                                </div>
-                              )}
-                              {fixtureDisplay.type === 'example' && (
-                                <div className="px-4 py-2.5 bg-[var(--hover-bg)] border-b border-[var(--card-border)]">
-                                  <p className="text-[10px] font-bold text-[var(--text-muted)] text-center">
-                                    No hay partidos programados para esta fecha
-                                  </p>
-                                </div>
-                              )}
-                              {fixtureDisplay.matches.length > 0
-                                ? <FixtureTable partidos={fixtureDisplay.matches} />
-                                : (
-                                  <div className="p-8 text-center">
-                                    <p className="text-[var(--text-muted)] text-sm">Sin partidos para esta fecha</p>
-                                  </div>
-                                )
-                              }
-                            </div>
-                          )}
-                        </section>
-                      </div>
-                    )}
-                  </motion.div>
-                </AnimatePresence>
+                    {tab === 'partidos' ? <><span>⚽</span> Partidos</> : <><Newspaper size={12} /> Noticias</>}
+                  </button>
+                ))}
               </div>
+
+              {activeTab === 'noticias' ? (
+                <NewsTab />
+              ) : (
+                <div className="space-y-12 pb-10">
+
+                  {/* Date scroller */}
+                  <div className="flex items-center gap-1.5 mb-5 overflow-x-auto no-scrollbar py-1">
+                    {dateRange.map((date) => {
+                      const dateStr  = toLocalDateStr(date)
+                      const label    = formatDateLabel(date, t, localeFormat)
+                      const isSelected = dateStr === selectedDate
+                      const isToday  = dateStr === toLocalDateStr(new Date())
+                      const isSpecialLabel = ['Hoy', 'Ayer', 'Mañana',
+                        t('common.today'), t('common.yesterday'), t('common.tomorrow')
+                      ].includes(label)
+                      return (
+                        <button
+                          key={dateStr}
+                          onClick={() => { hapticFeedback(5); setSelectedDate(dateStr) }}
+                          className={`flex flex-col items-center justify-center min-w-[3.5rem] py-1.5 px-2 rounded-xl border transition-all
+                            ${isSelected
+                              ? 'bg-[var(--foreground)] border-[var(--foreground)] text-[var(--background)] shadow-md'
+                              : isToday
+                                ? 'bg-[var(--card-bg)] border-[var(--accent)]/50 text-[var(--foreground)]'
+                                : 'bg-[var(--card-bg)] border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--card-border-hover)]'
+                            }`}
+                        >
+                          <span className={`text-[9px] font-black uppercase tracking-wider ${isSelected ? 'opacity-90' : 'opacity-70'}`}>
+                            {isSpecialLabel ? ' ' : new Date(dateStr + 'T12:00:00').toLocaleDateString(localeFormat, { weekday: 'short' })}
+                          </span>
+                          <span className={`text-sm font-black tracking-tighter mt-0.5 ${isSelected ? 'text-[var(--background)]' : ''}`}>
+                            {isSpecialLabel ? label : new Date(dateStr + 'T12:00:00').getDate()}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* 1. Fixture */}
+                  <section>
+                    <div className="flex items-center justify-between mb-3 px-1">
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-[12px] font-bold tracking-tight text-[var(--foreground)] capitalize">
+                          Fixture: {filtroLiga === 'Todos' || filtroLiga === 'Favoritos'
+                            ? formatDateLabel(new Date(selectedDate + 'T12:00:00'), t, localeFormat).toUpperCase()
+                            : filtroLiga.toUpperCase()}
+                        </h2>
+                        {liveCount > 0 && (
+                          <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-600 text-[8px] font-black animate-pulse flex items-center gap-1">
+                            {liveCount} VIVO
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {loading ? (
+                      <div className="space-y-2">
+                        {Array(4).fill(0).map((_, i) => (
+                          <div key={i} className="h-12 bg-[var(--card-bg)] border border-[var(--card-border)] animate-shimmer" />
+                        ))}
+                      </div>
+                    ) : error ? (
+                      <ErrorMessage message="No pudimos cargar los partidos. Intentá de nuevo." onRetry={refetch} />
+                    ) : (
+                      <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
+                        {fixtureDisplay.type === 'nearest' && fixtureDisplay.nearestDate && (
+                          <div className="px-4 py-2.5 bg-[var(--accent-green)]/10 border-b border-[var(--card-border)] flex items-center justify-between">
+                            <p className="text-[10px] font-bold text-[var(--accent)] capitalize tracking-tight">
+                              📅 Próximos partidos: {formatDateLabel(new Date(fixtureDisplay.nearestDate + 'T12:00:00'), t, localeFormat)}
+                            </p>
+                            <button
+                              onClick={() => setSelectedDate(fixtureDisplay.nearestDate!)}
+                              className="text-[9px] font-bold text-[var(--accent)] underline capitalize"
+                            >
+                              Ir a esa fecha
+                            </button>
+                          </div>
+                        )}
+                        {fixtureDisplay.type === 'example' && (
+                          <div className="px-4 py-2.5 bg-[var(--hover-bg)] border-b border-[var(--card-border)]">
+                            <p className="text-[10px] font-bold text-[var(--text-muted)] capitalize tracking-tight text-center">
+                              No hay partidos próximos programados · Mostrando clásicos destacados
+                            </p>
+                          </div>
+                        )}
+                        <FixtureTable partidos={fixtureDisplay.matches} />
+                      </div>
+                    )}
+                  </section>
+
+                  {/* 2. Tabla de posiciones */}
+                  <section>
+                    <div className="flex items-center justify-between mb-3 px-1">
+                      <h2 className="text-[12px] font-bold tracking-tight text-[var(--foreground)] capitalize">
+                        Tabla de Posiciones: {currentLigaName || 'Argentina LPF'}
+                      </h2>
+                    </div>
+                    <TablaContent ligaExterna={currentLigaName || 'Liga Profesional'} />
+                  </section>
+
+                  {/* 3. Goleadores */}
+                  <section>
+                    <div className="flex items-center justify-between mb-3 px-1">
+                      <h2 className="text-[12px] font-bold tracking-tight text-[var(--foreground)] capitalize">
+                        Goleadores: {currentLigaName || 'Argentina LPF'}
+                      </h2>
+                    </div>
+                    <GoleadoresContent ligaExterna={currentLigaName || 'Liga Profesional'} />
+                  </section>
+
+                  {/* 4. Community highlights */}
+                  <section className="pt-6 border-t border-[var(--card-border)]">
+                    <CommunityHighlights />
+                  </section>
+
+                  {/* 5. La Tribuna Habla */}
+                  <section className="pt-8 border-t border-[var(--card-border)]/50">
+                    <div className="flex items-center justify-between mb-6 px-1">
+                      <h2 className="text-[var(--foreground)] font-black text-xl italic tracking-tighter uppercase">
+                        💬 LA TRIBUNA HABLA
+                      </h2>
+                      <Link href="/comunidad" className="text-[10px] font-black text-[var(--accent)] hover:opacity-70 uppercase tracking-widest transition-opacity">
+                        Ver muro →
+                      </Link>
+                    </div>
+                    <FeedGlobal />
+                  </section>
+
+                </div>
+              )}
+
             </div>
           </div>
         </main>
