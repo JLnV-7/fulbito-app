@@ -6,69 +6,144 @@
         "back": "Back",
         "today": "Today",
         "yesterday": "Yesterday",
-        "tomorrow": "Tomorrow"
+        "tomorrow": "Tomorrow",
+        "change": "Change",
+        "retry": "Try again",
+        "seeAll": "See all",
+        "noResults": "No results.",
+        "error": "Something went wrong. Please try again."
     },
     "nav": {
         "home": "Home",
         "prode": "Predictor",
         "ranking": "Ranking",
         "community": "Community",
-        "profile": "Profile"
+        "profile": "My profile"
+    },
+    "home": {
+        "liveCount": "live",
+        "noMatchesDate": "No matches on this date.",
+        "nearestMatches": "Upcoming matches",
+        "goToDate": "Go to that date",
+        "exampleMatches": "No scheduled matches · Featured classics",
+        "installBanner": "Install FutLog on your phone to always have it handy.",
+        "installAction": "Install",
+        "loginPrompt": "Create an account to rate matches, make predictions and follow friends.",
+        "feedTitle": "The stands speak",
+        "feedSeeAll": "See all →"
     },
     "profile": {
-        "title": "Player Profile",
+        "title": "My profile",
         "gamification": {
             "level": "Level",
             "xp": "XP",
             "nextLevel": "To next level"
         },
         "stats": {
-            "title": "Your Stats",
-            "matchesRated": "Matches Rated",
-            "averageScore": "Avg Score"
+            "title": "Your stats",
+            "matchesRated": "Matches rated",
+            "averageScore": "Overall average",
+            "totalVotes": "Player votes",
+            "proPoints": "Predictor points"
         },
         "badges": {
-            "title": "Your Badges",
+            "title": "Your achievements",
             "locked": "Locked"
         },
         "history": {
-            "title": "Recent History",
-            "noMatches": "No matches rated yet."
+            "title": "Recent history",
+            "noMatches": "You haven't rated any matches yet."
         },
         "teams": {
-            "title": "Your Teams",
-            "favorite": "Your Favorite Team",
-            "noTeam": "You don't have a favorite team.",
-            "configure": "Configure team",
+            "title": "Your teams",
+            "favorite": "Your favorite team",
+            "noTeam": "You don't have a favorite team yet.",
+            "configure": "Choose team",
             "change": "Change",
             "notifications": "Match notifications"
         },
         "settings": {
             "title": "Settings",
             "language": "Language",
-            "logout": "Logout",
+            "logout": "Log out",
             "sync": {
-                "title": "Offline Sync",
-                "desc": "If you saved reviews offline, you can manually upload them here.",
-                "action": "SYNC"
+                "title": "Offline sync",
+                "desc": "If you saved reviews without internet, upload them here when you're back online.",
+                "action": "Sync now"
             },
             "appearance": {
                 "title": "Appearance",
-                "classic": "Classic Mode",
+                "classic": "Classic mode",
                 "classicDesc": "Arial, neutral, long scroll",
-                "dark": "Dark Theme",
-                "darkDesc": "Protect your eyes"
+                "dark": "Dark theme",
+                "darkDesc": "Rest your eyes"
             },
             "danger": {
-                "title": "Danger"
+                "title": "Danger zone"
             },
             "pwa": {
-                "title": "Install App",
-                "desc": "Add FutLog to your home screen to load faster.",
-                "offline": "OFFLINE",
-                "fast": "FAST"
+                "title": "Install FutLog",
+                "desc": "Add it to your home screen and it loads instantly, no browser needed.",
+                "offline": "Works offline",
+                "fast": "Lightning fast"
             }
         }
+    },
+    "match": {
+        "status": {
+            "live": "Live",
+            "finished": "Finished",
+            "upcoming": "Upcoming",
+            "postponed": "Postponed",
+            "cancelled": "Cancelled"
+        },
+        "rate": "Rate match",
+        "writeReview": "Write your review",
+        "reviewPlaceholder": "What did you think of the match? Tell us...",
+        "spoilerReveal": "Show result",
+        "noReviews": "No reviews yet. Be the first!",
+        "communityRating": "Community rating",
+        "yourRating": "Your rating",
+        "ratePlayer": "Rate players"
+    },
+    "prode": {
+        "title": "Predictor",
+        "predict": "Make prediction",
+        "correct": "Nailed it!",
+        "partial": "Partial result",
+        "wrong": "Not this time",
+        "points": "points",
+        "leaderboard": "Predictor table",
+        "noHistory": "You haven't made any predictions yet."
+    },
+    "community": {
+        "title": "Community",
+        "tabs": {
+            "all": "All",
+            "friends": "Friends",
+            "myTeam": "My team"
+        },
+        "noReviews": "No reviews yet.",
+        "beFirst": "Be the first to rate a match!",
+        "likes": "likes",
+        "follow": "Follow",
+        "following": "Following",
+        "followers": "Followers"
+    },
+    "lists": {
+        "title": "My lists",
+        "new": "New list",
+        "empty": "You haven't created any lists yet.",
+        "share": "Share list",
+        "addMatch": "Add match"
+    },
+    "groups": {
+        "title": "My groups",
+        "new": "Create group",
+        "join": "Join",
+        "empty": "You're not in any groups yet.",
+        "invite": "Invite friends",
+        "stats": "Group stats"
     },
     "ratings": {
         "subratings": {
@@ -77,9 +152,19 @@
             "garra": "Grit"
         }
     },
+    "errors": {
+        "loadMatches": "Couldn't load matches. Please try again.",
+        "loadFeed": "Couldn't load community reviews.",
+        "loadProfile": "Couldn't load your profile.",
+        "loadStandings": "Couldn't load the standings.",
+        "loadScorers": "Couldn't load top scorers.",
+        "saveReview": "Couldn't save your review. Check your connection.",
+        "saveProd": "Couldn't save your prediction.",
+        "generic": "Something went wrong. Try again in a moment."
+    },
     "footer": {
         "privacy": "Privacy",
         "terms": "Terms",
-        "sources": "Sources"
+        "sources": "Data sources"
     }
 }
