@@ -28,7 +28,7 @@ import { PartidoCardSkeleton } from '@/components/skeletons/PartidoCardSkeleton'
 import { TablaContent } from '@/components/TablaContent'
 import { GoleadoresContent } from '@/components/GoleadoresContent'
 import { ErrorMessage } from '@/components/ui/ErrorMessage'
-import { Search, BarChart3, Trophy, Calendar, Users, Newspaper } from 'lucide-react'
+import { Search, BarChart3, Trophy, Calendar, Users, Newspaper, Eye, EyeOff } from 'lucide-react'
 import { PullToRefresh } from '@/components/PullToRefresh'
 import { FeedGlobal } from '@/components/feed/FeedGlobal'
 import type { Partido } from '@/types'
@@ -39,6 +39,7 @@ import { CommunityHighlights } from '@/components/CommunityHighlights'
 import { NewsTab } from '@/components/NewsTab'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { PWAInstallBanner } from '@/components/PWAInstallBanner'
+import { useSpoilerMode } from '@/hooks/useSpoilerMode'
 
 // ✅ TABS array eliminado — el contenido es siempre scroll vertical, no hay tab switching real
 // Solo 'noticias' es condicional. Si en el futuro querés tabs reales, ese es el momento de re-agregarlo.
@@ -151,6 +152,8 @@ function HomeContent() {
   const [selectedDate, setSelectedDate]   = useState<string>(toLocalDateStr(new Date()))
   const [favoritos, setFavoritos]         = useState<string[]>([])
 
+  const { spoilerMode, toggleSpoilerMode, isRevealed, revealMatch } = useSpoilerMode()
+
   const dateRange = useMemo(() => generateDateRange(), [])
 
   const { partidos, loading, error, refetch } = usePartidos(
@@ -255,6 +258,13 @@ function HomeContent() {
                   <Trophy size={16} />
                 </button>
                 <div className="w-px h-4 bg-[var(--card-border)] mx-0.5" />
+                <button
+                  title={spoilerMode ? 'Mostrar resultados' : 'Ocultar resultados'}
+                  onClick={() => { hapticFeedback(10); toggleSpoilerMode() }}
+                  className={`p-1.5 rounded-md transition-all ${spoilerMode ? 'text-[var(--accent)] bg-[var(--accent)]/10' : 'text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-bg)]'}`}
+                >
+                  {spoilerMode ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
                 <button
                   onClick={() => router.push('/buscar')}
                   className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-bg)]"
@@ -394,7 +404,12 @@ function HomeContent() {
                             </p>
                           </div>
                         )}
-                        <FixtureTable partidos={fixtureDisplay.matches} />
+                        <FixtureTable
+                          partidos={fixtureDisplay.matches}
+                          spoilerMode={spoilerMode}
+                          isRevealed={isRevealed}
+                          onReveal={revealMatch}
+                        />
                       </div>
                     )}
                   </section>

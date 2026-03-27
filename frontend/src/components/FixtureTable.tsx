@@ -1,12 +1,19 @@
 // src/components/FixtureTable.tsx
-import React from 'react'
+'use client'
+
+import React, { useState, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Eye } from 'lucide-react'
 import type { Partido } from '@/types'
+import { hapticFeedback } from '@/lib/helpers'
 
 interface FixtureTableProps {
   partidos: Partido[]
   isLoading?: boolean
+  spoilerMode?: boolean
+  isRevealed?: (id: string) => boolean
+  onReveal?: (id: string) => void
 }
 
 function groupByLiga(partidos: Partido[]): Map<string, Partido[]> {
@@ -19,7 +26,12 @@ function groupByLiga(partidos: Partido[]): Map<string, Partido[]> {
   return map
 }
 
-function MatchRow({ p }: { p: Partido }) {
+function MatchRow({ p, spoilerMode, isRevealed, onReveal }: {
+  p: Partido
+  spoilerMode?: boolean
+  isRevealed?: boolean
+  onReveal?: () => void
+}) {
   const hora = p.fecha_inicio
     ? new Date(p.fecha_inicio).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
     : '--:--'
@@ -29,9 +41,22 @@ function MatchRow({ p }: { p: Partido }) {
   const hasScore   = p.goles_local != null && p.goles_visitante != null
   const linkId     = p.id || p.fixture_id
 
+  // Spoiler: ocultar resultado de finalizados si el modo está activo y no se reveló
+  const hiddenBySpoi = spoilerMode && isFinished && !isRevealed
+
+  const handleSpoilerTap = (e: React.MouseEvent) => {
+    if (hiddenBySpoi && onReveal) {
+      e.preventDefault()
+      e.stopPropagation()
+      hapticFeedback(10)
+      onReveal()
+    }
+  }
+
   return (
     <Link
-      href={`/partido/${linkId}`}
+      href={hiddenBySpoi ? '#' : `/partido/${linkId}`}
+      onClick={hiddenBySpoi ? handleSpoilerTap : undefined}
       className={`relative flex items-center gap-3 px-4 py-3 transition-all group hover:bg-white/[0.03] ${isLive ? 'bg-red-500/[0.04]' : ''}`}
     >
       {/* Barra lateral de estado */}
@@ -80,9 +105,18 @@ function MatchRow({ p }: { p: Partido }) {
           </div>
         </div>
 
-        {/* Score / VS */}
+        {/* Score / VS / Spoiler */}
         <div className="w-16 shrink-0 text-center">
-          {hasScore && (isFinished || isLive) ? (
+          {hiddenBySpoi ? (
+            <button
+              onClick={handleSpoilerTap}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[var(--hover-bg)] border border-[var(--card-border)] text-[var(--text-muted)] hover:text-[var(--foreground)] hover:border-[var(--foreground)]/30 transition-all"
+              title="Ver resultado"
+            >
+              <Eye size={11} />
+              <span className="text-[9px] font-black uppercase tracking-wider">Ver</span>
+            </button>
+          ) : hasScore && (isFinished || isLive) ? (
             <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg font-black text-sm tabular-nums
               ${isLive
                 ? 'bg-red-500/10 text-red-400 border border-red-500/20'
@@ -126,7 +160,7 @@ function MatchRow({ p }: { p: Partido }) {
   )
 }
 
-export const FixtureTable: React.FC<FixtureTableProps> = ({ partidos, isLoading }) => {
+export const FixtureTable: React.FC<FixtureTableProps> = ({ partidos, isLoading, spoilerMode, isRevealed, onReveal }) => {
   if (isLoading) {
     return (
       <div className="divide-y divide-[var(--card-border)]">
@@ -159,13 +193,26 @@ export const FixtureTable: React.FC<FixtureTableProps> = ({ partidos, isLoading 
     )
   }
 
+  const renderRow = (p: Partido) => {
+    const matchId = String(p.id || p.fixture_id)
+    return (
+      <MatchRow
+        key={p.id}
+        p={p}
+        spoilerMode={spoilerMode}
+        isRevealed={isRevealed?.(matchId)}
+        onReveal={() => onReveal?.(matchId)}
+      />
+    )
+  }
+
   const groups = groupByLiga(partidos)
   const isMultiLiga = groups.size > 1
 
   if (!isMultiLiga) {
     return (
       <div className="divide-y divide-[var(--card-border)]/50">
-        {partidos.map(p => <MatchRow key={p.id} p={p} />)}
+        {partidos.map(renderRow)}
       </div>
     )
   }
@@ -182,7 +229,7 @@ export const FixtureTable: React.FC<FixtureTableProps> = ({ partidos, isLoading 
             </span>
           </div>
           <div className="divide-y divide-[var(--card-border)]/50">
-            {matches.map(p => <MatchRow key={p.id} p={p} />)}
+            {matches.map(renderRow)}
           </div>
         </div>
       ))}
