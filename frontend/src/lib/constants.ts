@@ -4,31 +4,37 @@ export const API_BASE_URL = 'https://v3.football.api-sports.io'
 
 // IDs de ligas en API-Football
 export const LEAGUE_IDS = {
+    // Argentina
     LIGA_PROFESIONAL: 128,
     PRIMERA_NACIONAL: 129,
+    COPA_ARGENTINA: 130,
+    // Europa
     LA_LIGA: 140,
     PREMIER_LEAGUE: 39,
     SERIE_A: 135,
     BUNDESLIGA: 78,
     LIGUE_1: 61,
-    BRASILEIRAO: 71,
+    // Copas internacionales
     CHAMPIONS_LEAGUE: 2,
     COPA_LIBERTADORES: 13,
     COPA_SUDAMERICANA: 11,
+    // Latinoamérica
+    BRASILEIRAO: 71,
+    LIGA_MX: 262,
+    PRIMERA_DIVISION_CHILE: 265,
+    LIGA_BETPLAY_COLOMBIA: 239,
+    PRIMERA_DIVISION_URUGUAY: 268,
+    LIGA_1_PERU: 281,
+    // Resto
     MLS: 253,
-    CHILE: 265,
-    COLOMBIA: 239,
-    MEXICO: 262,
-    URUGUAY: 268,
-    PERU: 281,
-    ECUADOR: 242,
 } as const
 
 // Temporadas actuales
 export const CURRENT_SEASONS = {
     ARGENTINA: 2025,
-    EUROPE: 2025,    // 2025-2026 runs Aug-May
+    EUROPE: 2025,
     BRAZIL: 2025,
+    LATAM: 2025,
     MLS: 2026,
 } as const
 
@@ -36,75 +42,82 @@ export const CURRENT_SEASONS = {
 export const LIGAS_MAP: Record<string, number> = {
     'Liga Profesional': LEAGUE_IDS.LIGA_PROFESIONAL,
     'Primera Nacional': LEAGUE_IDS.PRIMERA_NACIONAL,
+    'Copa Argentina': LEAGUE_IDS.COPA_ARGENTINA,
     'La Liga': LEAGUE_IDS.LA_LIGA,
     'Premier League': LEAGUE_IDS.PREMIER_LEAGUE,
     'Serie A': LEAGUE_IDS.SERIE_A,
     'Bundesliga': LEAGUE_IDS.BUNDESLIGA,
     'Ligue 1': LEAGUE_IDS.LIGUE_1,
-    'Brasileirão': LEAGUE_IDS.BRASILEIRAO,
     'Champions League': LEAGUE_IDS.CHAMPIONS_LEAGUE,
     'Copa Libertadores': LEAGUE_IDS.COPA_LIBERTADORES,
     'Copa Sudamericana': LEAGUE_IDS.COPA_SUDAMERICANA,
+    'Brasileirão': LEAGUE_IDS.BRASILEIRAO,
+    'Liga MX': LEAGUE_IDS.LIGA_MX,
+    'Primera División Chile': LEAGUE_IDS.PRIMERA_DIVISION_CHILE,
+    'Liga BetPlay': LEAGUE_IDS.LIGA_BETPLAY_COLOMBIA,
+    'Primera División Uruguay': LEAGUE_IDS.PRIMERA_DIVISION_URUGUAY,
+    'Liga 1 Perú': LEAGUE_IDS.LIGA_1_PERU,
     'MLS': LEAGUE_IDS.MLS,
-    'Chile': LEAGUE_IDS.CHILE,
-    'Colombia': LEAGUE_IDS.COLOMBIA,
-    'México': LEAGUE_IDS.MEXICO,
-    'Uruguay': LEAGUE_IDS.URUGUAY,
-    'Perú': LEAGUE_IDS.PERU,
-    'Ecuador': LEAGUE_IDS.ECUADOR,
 }
 
 // Configuración de revalidación (en segundos)
 export const REVALIDATE_CONFIG = {
-    STANDINGS: 3600,      // 1 hora
-    FIXTURES: 1800,       // 30 min
-    LIVE: 60,             // 1 minuto
-    SCORERS: 43200,       // 12 horas
-    STATISTICS: 120,      // 2 min (detalle partido)
+    STANDINGS: 3600,
+    FIXTURES: 1800,
+    LIVE: 60,
+    SCORERS: 43200,
+    STATISTICS: 120,
 } as const
 
-// Ligas soportadas en la aplicación
+// Ligas soportadas en la aplicación — orden: Argentina primero, luego Latam, luego Europa
 export const LIGAS = [
     'Todos',
+    'Favoritos',
+    // Argentina
     'Liga Profesional',
     'Primera Nacional',
+    'Copa Argentina',
+    // Latinoamérica
     'Copa Libertadores',
     'Copa Sudamericana',
+    'Brasileirão',
+    'Liga MX',
+    'Primera División Chile',
+    'Liga BetPlay',
+    'Primera División Uruguay',
+    'Liga 1 Perú',
+    // Europa
     'Champions League',
     'La Liga',
     'Premier League',
     'Serie A',
     'Bundesliga',
     'Ligue 1',
-    'Brasileirão',
+    // Resto
     'MLS',
-    'Chile',
-    'Colombia',
-    'México',
-    'Uruguay',
-    'Perú',
-    'Ecuador',
 ] as const
+export type Liga = typeof LIGAS[number]
 
+// Banderas por liga (para mostrar en chips y tabs)
 export const LIGA_FLAGS: Record<string, string> = {
     'Liga Profesional': '🇦🇷',
     'Primera Nacional': '🇦🇷',
+    'Copa Argentina': '🇦🇷',
+    'Copa Libertadores': '🌎',
+    'Copa Sudamericana': '🌎',
+    'Brasileirão': '🇧🇷',
+    'Liga MX': '🇲🇽',
+    'Primera División Chile': '🇨🇱',
+    'Liga BetPlay': '🇨🇴',
+    'Primera División Uruguay': '🇺🇾',
+    'Liga 1 Perú': '🇵🇪',
+    'Champions League': '🏆',
     'La Liga': '🇪🇸',
-    'Premier League': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+    'Premier League': '🏴',
     'Serie A': '🇮🇹',
     'Bundesliga': '🇩🇪',
     'Ligue 1': '🇫🇷',
-    'Brasileirão': '🇧🇷',
-    'Champions League': '🇪🇺',
-    'Copa Libertadores': '🏆',
-    'Copa Sudamericana': '🏆',
     'MLS': '🇺🇸',
-    'Chile': '🇨🇱',
-    'Colombia': '🇨🇴',
-    'México': '🇲🇽',
-    'Uruguay': '🇺🇾',
-    'Perú': '🇵🇪',
-    'Ecuador': '🇪🇨',
 }
 
 export const TEAM_THEMES: Record<string, { primary: string; secondary: string; dark?: string }> = {
@@ -126,5 +139,3 @@ export const TEAM_THEMES: Record<string, { primary: string; secondary: string; d
     'Real Madrid': { primary: '#FFFFFF', secondary: '#FEBE10', dark: '#e6e6e6' },
     'FC Barcelona': { primary: '#A50044', secondary: '#004D98', dark: '#7a0032' },
 }
-
-export type Liga = typeof LIGAS[number]
