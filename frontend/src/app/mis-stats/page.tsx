@@ -7,13 +7,15 @@ import { DesktopNav } from '@/components/DesktopNav'
 import { NavBar } from '@/components/NavBar'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { motion } from 'framer-motion'
-import { Trophy, Star, Shield, Share2, TrendingUp, Calendar, Zap, Download } from 'lucide-react'
+import { Trophy, Star, Share2, TrendingUp, Calendar, Zap, Download } from 'lucide-react'
 import { hapticFeedback } from '@/lib/helpers'
 import { TeamLogo } from '@/components/TeamLogo'
+import { useToast } from '@/contexts/ToastContext'
 import { toBlob } from 'html-to-image'
 
 export default function MyStatsPage() {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const supabase = createClient()
   const [stats, setStats] = useState<any>(null)
   const [topTeam, setTopTeam] = useState<{ name: string; logo?: string; count: number } | null>(null)
@@ -242,7 +244,7 @@ export default function MyStatsPage() {
                         }
                       } catch (err) {
                         console.error('Error sharing image:', err)
-                        alert('No se pudo generar la imagen para compartir.')
+                        showToast('No pudimos generar la imagen. Intentá de nuevo.', 'error')
                       }
                     }}
                     className="w-full sm:w-auto bg-[var(--accent)] text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-[var(--accent)]/20"
@@ -253,7 +255,7 @@ export default function MyStatsPage() {
                     onClick={() => {
                       hapticFeedback(15)
                       navigator.clipboard.writeText(window.location.href)
-                      alert('Enlace copiado al portapapeles')
+                      showToast('Enlace copiado al portapapeles.', 'success')
                     }}
                     className="w-full sm:w-auto bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-all"
                   >
