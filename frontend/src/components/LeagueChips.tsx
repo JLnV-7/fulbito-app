@@ -1,82 +1,108 @@
-'use client'
 // src/components/LeagueChips.tsx
+'use client'
 
-import { LIGAS, type Liga } from '@/lib/constants'
+import { Globe, Star } from 'lucide-react'
+import { LIGAS, LIGA_FLAGS, type Liga } from '@/lib/constants'
 import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import { hapticFeedback } from '@/lib/helpers'
 
 interface LeagueChipsProps {
-  activeLiga: Liga | 'Favoritos'
-  onSelect: (liga: Liga | 'Favoritos') => void
-  favorites?: string[] // mantenido por compatibilidad con page.tsx
+    activeLiga: Liga | 'Favoritos'
+    onSelect: (liga: Liga | 'Favoritos') => void
+    favorites?: string[]
 }
 
-const LIGA_CONFIG: Record<string, { emoji: string; color: string; bg: string; border: string }> = {
-  'Liga Profesional':   { emoji: '🇦🇷', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',  border: 'rgba(96,165,250,0.3)' },
-  'Primera Nacional':   { emoji: '🇦🇷', color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.3)' },
-  'Copa Libertadores':  { emoji: '🏆', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',   border: 'rgba(251,191,36,0.3)' },
-  'Copa Sudamericana':  { emoji: '🌎', color: '#34d399', bg: 'rgba(52,211,153,0.12)',   border: 'rgba(52,211,153,0.3)' },
-  'Champions League':   { emoji: '⭐', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',   border: 'rgba(96,165,250,0.3)' },
-  'La Liga':            { emoji: '🇪🇸', color: '#f87171', bg: 'rgba(248,113,113,0.12)', border: 'rgba(248,113,113,0.3)' },
-  'Premier League':     { emoji: '🏴', color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.3)' },
-  'Serie A':            { emoji: '🇮🇹', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',  border: 'rgba(96,165,250,0.3)' },
-  'Bundesliga':         { emoji: '🇩🇪', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',  border: 'rgba(251,191,36,0.3)' },
-  'Ligue 1':            { emoji: '🇫🇷', color: '#f87171', bg: 'rgba(248,113,113,0.12)', border: 'rgba(248,113,113,0.3)' },
-}
+const GRUPOS: { label: string; ligas: (Liga)[] }[] = [
+    {
+        label: 'Argentina',
+        ligas: ['Liga Profesional', 'Primera Nacional', 'Copa Argentina'],
+    },
+    {
+        label: 'Latinoamérica',
+        ligas: ['Copa Libertadores', 'Copa Sudamericana', 'Brasileirão', 'Liga MX', 'Primera División Chile', 'Liga BetPlay', 'Primera División Uruguay', 'Liga 1 Perú'],
+    },
+    {
+        label: 'Europa',
+        ligas: ['Champions League', 'La Liga', 'Premier League', 'Serie A', 'Bundesliga', 'Ligue 1'],
+    },
+    {
+        label: 'Resto',
+        ligas: ['MLS'],
+    },
+]
 
-const DEFAULT_CONFIG = { emoji: '⚽', color: '#16a34a', bg: 'rgba(22,163,74,0.12)', border: 'rgba(22,163,74,0.3)' }
+export function LeagueChips({ activeLiga, onSelect, favorites = [] }: LeagueChipsProps) {
+    const router = useRouter()
 
-export function LeagueChips({ activeLiga, onSelect }: LeagueChipsProps) {
-  return (
-    <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+    const getSlug = (liga: string) => liga.toLowerCase().replace(/\s+/g, '-').replace(/[áéíóú]/g, c =>
+        ({ á: 'a', é: 'e', í: 'i', ó: 'o', ú: 'u' }[c] || c)
+    )
 
-      <ChipButton
-        active={activeLiga === 'Todos'}
-        onClick={() => { hapticFeedback(10); onSelect('Todos') }}
-        emoji="🌐" label="Todos"
-        color="#16a34a" bg="rgba(22,163,74,0.12)" border="rgba(22,163,74,0.3)"
-      />
+    const handleLeagueClick = (liga: Liga | 'Favoritos') => {
+        hapticFeedback(10)
+        if (liga === 'Todos' || liga === 'Favoritos') {
+            onSelect(liga)
+            return
+        }
+        router.push(`/liga/${getSlug(liga)}`)
+    }
 
-      <ChipButton
-        active={activeLiga === 'Favoritos'}
-        onClick={() => { hapticFeedback(10); onSelect('Favoritos') }}
-        emoji="⭐" label="Mis Equipos"
-        color="#f59e0b" bg="rgba(245,158,11,0.12)" border="rgba(245,158,11,0.3)"
-      />
+    const chipBase = 'px-3 py-1.5 rounded-xl text-[12px] font-bold tracking-tight transition-all flex items-center gap-1.5 whitespace-nowrap border'
+    const chipActive = 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)] shadow-sm'
+    const chipInactive = 'bg-[var(--card-bg)] text-[var(--text-muted)] hover:text-[var(--foreground)] border-[var(--card-border)]'
 
-      {LIGAS.filter(l => l !== 'Todos').map(liga => {
-        const cfg = LIGA_CONFIG[liga] || DEFAULT_CONFIG
-        return (
-          <ChipButton
-            key={liga}
-            active={activeLiga === liga}
-            onClick={() => { hapticFeedback(10); onSelect(liga) }}
-            emoji={cfg.emoji} label={liga}
-            color={cfg.color} bg={cfg.bg} border={cfg.border}
-          />
-        )
-      })}
-    </div>
-  )
-}
+    return (
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
 
-function ChipButton({ active, onClick, emoji, label, color, bg, border }: {
-  active: boolean; onClick: () => void
-  emoji: string; label: string
-  color: string; bg: string; border: string
-}) {
-  return (
-    <motion.button
-      whileTap={{ scale: 0.93 }}
-      onClick={onClick}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all border"
-      style={active
-        ? { backgroundColor: bg, color, borderColor: border }
-        : { backgroundColor: 'var(--card-bg)', color: 'var(--text-muted)', borderColor: 'var(--card-border)' }
-      }
-    >
-      <span className="text-sm leading-none">{emoji}</span>
-      {label}
-    </motion.button>
-  )
+            {/* Todos */}
+            <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => onSelect('Todos')}
+                aria-label="Ver todos los partidos"
+                className={`${chipBase} ${activeLiga === 'Todos' ? chipActive : chipInactive}`}
+            >
+                <Globe size={13} />
+                Todos
+            </motion.button>
+
+            {/* Favoritos */}
+            <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => onSelect('Favoritos')}
+                aria-label="Ver partidos de mis equipos favoritos"
+                className={`${chipBase} ${activeLiga === 'Favoritos'
+                    ? 'bg-[var(--accent-yellow)]/10 text-[var(--accent-yellow)] border-[var(--accent-yellow)]/30'
+                    : chipInactive}`}
+            >
+                <Star size={13} fill={activeLiga === 'Favoritos' ? 'currentColor' : 'none'} />
+                Mis equipos
+            </motion.button>
+
+            {/* Separador */}
+            <div className="w-px bg-[var(--card-border)] self-stretch mx-0.5 shrink-0" />
+
+            {/* Grupos de ligas */}
+            {GRUPOS.map((grupo, gi) => (
+                <div key={grupo.label} className="flex items-center gap-1.5">
+                    {/* Separador entre grupos (excepto el primero) */}
+                    {gi > 0 && (
+                        <div className="w-px bg-[var(--card-border)] self-stretch mx-0.5 shrink-0" />
+                    )}
+                    {grupo.ligas.map((liga) => (
+                        <motion.button
+                            key={liga}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleLeagueClick(liga)}
+                            aria-label={`Ver partidos de ${liga}`}
+                            className={`${chipBase} ${activeLiga === liga ? chipActive : chipInactive}`}
+                        >
+                            <span style={{ fontSize: 14 }}>{LIGA_FLAGS[liga] ?? '🏆'}</span>
+                            {liga}
+                        </motion.button>
+                    ))}
+                </div>
+            ))}
+        </div>
+    )
 }
