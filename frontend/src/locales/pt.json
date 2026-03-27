@@ -6,40 +6,59 @@
         "back": "Voltar",
         "today": "Hoje",
         "yesterday": "Ontem",
-        "tomorrow": "Amanhã"
+        "tomorrow": "Amanhã",
+        "change": "Mudar",
+        "retry": "Tentar novamente",
+        "seeAll": "Ver tudo",
+        "noResults": "Sem resultados.",
+        "error": "Algo deu errado. Tente novamente."
     },
     "nav": {
         "home": "Início",
         "prode": "Palpites",
         "ranking": "Ranking",
         "community": "Comunidade",
-        "profile": "Perfil"
+        "profile": "Meu perfil"
+    },
+    "home": {
+        "liveCount": "ao vivo",
+        "noMatchesDate": "Nenhuma partida para esta data.",
+        "nearestMatches": "Próximas partidas",
+        "goToDate": "Ir para esta data",
+        "exampleMatches": "Sem partidas programadas · Clássicos em destaque",
+        "installBanner": "Instale o FutLog no seu celular para tê-lo sempre à mão.",
+        "installAction": "Instalar",
+        "loginPrompt": "Crie sua conta para avaliar partidas, dar palpites e seguir amigos.",
+        "feedTitle": "A arquibancada fala",
+        "feedSeeAll": "Ver mural →"
     },
     "profile": {
-        "title": "Perfil do Jogador",
+        "title": "Meu perfil",
         "gamification": {
             "level": "Nível",
             "xp": "XP",
             "nextLevel": "Para o próximo nível"
         },
         "stats": {
-            "title": "Suas Estatísticas",
-            "matchesRated": "Partidas Avaliadas",
-            "averageScore": "Nota Média"
+            "title": "Suas estatísticas",
+            "matchesRated": "Partidas avaliadas",
+            "averageScore": "Média geral",
+            "totalVotes": "Votos em jogadores",
+            "proPoints": "Pontos de palpites"
         },
         "badges": {
-            "title": "Suas Insígnias",
+            "title": "Suas conquistas",
             "locked": "Bloqueada"
         },
         "history": {
-            "title": "Histórico Recente",
-            "noMatches": "Nenhuma partida avaliada ainda."
+            "title": "Histórico recente",
+            "noMatches": "Você ainda não avaliou nenhuma partida."
         },
         "teams": {
-            "title": "Seus Times",
-            "favorite": "Seu Time Favorito",
-            "noTeam": "Você não tem um time favorito.",
-            "configure": "Configurar time",
+            "title": "Seus times",
+            "favorite": "Seu time do coração",
+            "noTeam": "Você ainda não tem um time favorito.",
+            "configure": "Escolher time",
             "change": "Mudar",
             "notifications": "Notificações de partidas"
         },
@@ -49,26 +68,82 @@
             "logout": "Sair",
             "sync": {
                 "title": "Sincronização offline",
-                "desc": "Se você salvou resenhas sem internet, pode enviá-las manualmente aqui.",
-                "action": "SINCRONIZAR"
+                "desc": "Se salvou resenhas sem internet, envie-as por aqui quando tiver sinal.",
+                "action": "Sincronizar agora"
             },
             "appearance": {
                 "title": "Aparência",
-                "classic": "Modo Clássico",
+                "classic": "Modo clássico",
                 "classicDesc": "Arial, neutro, scroll longo",
-                "dark": "Tema Escuro",
-                "darkDesc": "Proteja sua visão"
+                "dark": "Tema escuro",
+                "darkDesc": "Descanse a vista"
             },
             "danger": {
-                "title": "Perigo"
+                "title": "Zona de perigo"
             },
             "pwa": {
-                "title": "Instalar o App",
-                "desc": "Adicione o FutLog à sua tela inicial para carregar mais rápido.",
-                "offline": "OFFLINE",
-                "fast": "RÁPIDA"
+                "title": "Instalar o FutLog",
+                "desc": "Adicione à sua tela inicial e carregue rápido, sem abrir o navegador.",
+                "offline": "Sem internet",
+                "fast": "Muito rápida"
             }
         }
+    },
+    "match": {
+        "status": {
+            "live": "Ao vivo",
+            "finished": "Finalizado",
+            "upcoming": "Próxima",
+            "postponed": "Adiado",
+            "cancelled": "Cancelado"
+        },
+        "rate": "Avaliar partida",
+        "writeReview": "Escreva sua resenha",
+        "reviewPlaceholder": "O que achou da partida? Conta pra nós...",
+        "spoilerReveal": "Mostrar resultado",
+        "noReviews": "Sem resenhas ainda. Seja o primeiro!",
+        "communityRating": "Nota da comunidade",
+        "yourRating": "Sua nota",
+        "ratePlayer": "Avaliar jogadores"
+    },
+    "prode": {
+        "title": "Palpites",
+        "predict": "Fazer palpite",
+        "correct": "Acertou na mosca!",
+        "partial": "Resultado parcial",
+        "wrong": "Não foi dessa vez",
+        "points": "pontos",
+        "leaderboard": "Tabela de palpites",
+        "noHistory": "Você ainda não deu nenhum palpite."
+    },
+    "community": {
+        "title": "Comunidade",
+        "tabs": {
+            "all": "Todos",
+            "friends": "Amigos",
+            "myTeam": "Meu time"
+        },
+        "noReviews": "Nenhuma resenha ainda.",
+        "beFirst": "Seja o primeiro a avaliar uma partida!",
+        "likes": "curtidas",
+        "follow": "Seguir",
+        "following": "Seguindo",
+        "followers": "Seguidores"
+    },
+    "lists": {
+        "title": "Minhas listas",
+        "new": "Nova lista",
+        "empty": "Você ainda não criou nenhuma lista.",
+        "share": "Compartilhar lista",
+        "addMatch": "Adicionar partida"
+    },
+    "groups": {
+        "title": "Meus grupos",
+        "new": "Criar grupo",
+        "join": "Entrar",
+        "empty": "Você ainda não está em nenhum grupo.",
+        "invite": "Convidar amigos",
+        "stats": "Estatísticas do grupo"
     },
     "ratings": {
         "subratings": {
@@ -77,9 +152,19 @@
             "garra": "Raça"
         }
     },
+    "errors": {
+        "loadMatches": "Não conseguimos carregar as partidas. Tente novamente.",
+        "loadFeed": "Não conseguimos carregar as resenhas da comunidade.",
+        "loadProfile": "Não conseguimos carregar seu perfil.",
+        "loadStandings": "Não conseguimos carregar a tabela.",
+        "loadScorers": "Não conseguimos carregar os artilheiros.",
+        "saveReview": "Não conseguimos salvar sua resenha. Verifique sua conexão.",
+        "saveProd": "Não conseguimos salvar seu palpite.",
+        "generic": "Algo deu errado. Tente novamente em alguns instantes."
+    },
     "footer": {
         "privacy": "Privacidade",
         "terms": "Termos",
-        "sources": "Fontes"
+        "sources": "Fontes de dados"
     }
 }

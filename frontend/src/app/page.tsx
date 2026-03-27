@@ -38,6 +38,7 @@ import { LeagueChips } from '@/components/LeagueChips'
 import { CommunityHighlights } from '@/components/CommunityHighlights'
 import { NewsTab } from '@/components/NewsTab'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { PWAInstallBanner } from '@/components/PWAInstallBanner'
 
 // ✅ TABS array eliminado — el contenido es siempre scroll vertical, no hay tab switching real
 // Solo 'noticias' es condicional. Si en el futuro querés tabs reales, ese es el momento de re-agregarlo.
@@ -268,6 +269,9 @@ function HomeContent() {
                 )}
               </div>
             </div>
+
+            {/* Banner de instalación PWA — aparece solo si no está instalada */}
+            <PWAInstallBanner />
 
             <div className="max-w-4xl mx-auto px-4 mt-2">
 
