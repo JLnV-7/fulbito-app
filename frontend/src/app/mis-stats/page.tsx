@@ -7,9 +7,10 @@ import { DesktopNav } from '@/components/DesktopNav'
 import { NavBar } from '@/components/NavBar'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { motion } from 'framer-motion'
-import { Trophy, Star, Shield, Share2, TrendingUp, Calendar, Zap } from 'lucide-react'
+import { Trophy, Star, Shield, Share2, TrendingUp, Calendar, Zap, Download } from 'lucide-react'
 import { hapticFeedback } from '@/lib/helpers'
 import { TeamLogo } from '@/components/TeamLogo'
+import { toBlob } from 'html-to-image'
 
 export default function MyStatsPage() {
   const { user } = useAuth()
@@ -124,20 +125,29 @@ export default function MyStatsPage() {
       <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] pb-32 md:pt-20">
         <div className="max-w-4xl mx-auto px-6 py-12">
 
-          <header className="text-center mb-12">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="inline-block p-4 rounded-3xl bg-[var(--accent)]/10 text-[var(--accent)] mb-6"
-            >
-              <TrendingUp size={48} />
-            </motion.div>
-            <h1 className="text-5xl font-black tracking-tighter italic mb-4">MI RESUMEN 2025</h1>
-            <p className="text-[var(--text-muted)] font-bold tracking-tight">Tu temporada en FutLog en números.</p>
-          </header>
+          <div id="stats-wrapped-capture" className="p-4 sm:p-8 rounded-[3rem] bg-[var(--background)] relative">
+            {/* Elementos decorativos para la imagen */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)]/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -ml-32 -mb-32 pointer-events-none" />
 
-          {/* Cards de stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            <header className="text-center mb-10 relative z-10">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-[var(--accent)]/10 text-[var(--accent)] mb-6 shadow-xl"
+              >
+                <TrendingUp size={40} />
+              </motion.div>
+              <h1 className="text-4xl md:text-6xl font-black tracking-tighter italic mb-3 text-transparent bg-clip-text bg-gradient-to-br from-[var(--foreground)] to-[var(--text-muted)]">
+                FUTLOG WRAPPED
+              </h1>
+              <p className="text-[var(--text-muted)] font-black uppercase tracking-widest text-xs md:text-sm">
+                Tu temporada en números
+              </p>
+            </header>
+
+            {/* Cards de stats */}
+            <div className="grid grid-cols-2 gap-3 sm:gap-6 mb-8 relative z-10">
             {cards.map((card, i) => {
               const Icon = card.icon
               return (
@@ -158,10 +168,10 @@ export default function MyStatsPage() {
                 </motion.div>
               )
             })}
-          </div>
+            </div>
 
-          {/* Equipo más visto */}
-          {topTeam && (
+            {/* Equipo más visto */}
+            {topTeam && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -176,39 +186,85 @@ export default function MyStatsPage() {
                 </p>
               </div>
             </motion.div>
-          )}
+            )}
+            
+            <div className="mt-8 pt-6 border-t border-[var(--card-border)]/50 flex justify-between items-center opacity-50 relative z-10">
+               <span className="font-black italic tracking-tighter">FUTLOG APP</span>
+               <span className="text-[10px] uppercase font-bold tracking-widest">{user.user_metadata?.full_name || user.email}</span>
+            </div>
+          </div>
 
           {/* Compartir */}
-          <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-8 relative overflow-hidden">
+          <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-3xl p-8 relative overflow-hidden mt-6">
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="max-w-md">
-                <h2 className="text-2xl font-black tracking-tight mb-3">¿Listo para compartir tu pasión?</h2>
-                <p className="text-sm text-[var(--text-muted)] font-medium mb-6">
-                  Compartí tus estadísticas con tus amigos y mostrá tu amor por el fútbol.
+              <div className="max-w-md text-center md:text-left">
+                <h2 className="text-3xl font-black tracking-tighter mb-3">Presumí tus números</h2>
+                <p className="text-sm text-[var(--text-muted)] font-medium mb-8">
+                  Generá una imagen de tu FutLog Wrapped y compartila con tus amigos en WhatsApp o redes sociales.
                 </p>
-                <button
-                  onClick={() => {
-                    hapticFeedback(50)
-                    if (navigator.share) {
-                      navigator.share({
-                        title: 'Mis stats en FutLog',
-                        text: `Logueé ${stats?.total_resenas || 0} partidos con un rating promedio de ${Number(stats?.rating_promedio || 0).toFixed(1)}⭐`,
-                        url: window.location.href,
-                      }).catch(() => {})
-                    } else {
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <button
+                    onClick={async () => {
+                      hapticFeedback(50)
+                      try {
+                        const node = document.getElementById('stats-wrapped-capture')
+                        if (!node) return
+                        
+                        // Añadimos un feedback visual de carga
+                        const originalBg = node.style.backgroundColor
+                        node.style.backgroundColor = '#0a0a0a' // Forzar fondo oscuro para la captura si es dark mode
+                        
+                        const blob = await toBlob(node, { 
+                            cacheBust: true, 
+                            quality: 1,
+                            pixelRatio: 2 // Alta calidad
+                        })
+                        
+                        node.style.backgroundColor = originalBg
+
+                        if (!blob) throw new Error('Blob is null')
+
+                        const file = new File([blob], 'futlog-wrapped.png', { type: 'image/png' })
+                        
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                          await navigator.share({
+                            title: 'Mi FutLog Wrapped',
+                            text: `¡Mirá mi temporada en FutLog! Logueé ${stats?.total_resenas || 0} partidos.`,
+                            files: [file]
+                          })
+                        } else {
+                          // Fallback descarga
+                          const url = URL.createObjectURL(blob)
+                          const a = document.createElement('a')
+                          a.href = url
+                          a.download = 'futlog-wrapped.png'
+                          a.click()
+                        }
+                      } catch (err) {
+                        console.error('Error sharing image:', err)
+                        alert('No se pudo generar la imagen para compartir.')
+                      }
+                    }}
+                    className="w-full sm:w-auto bg-[var(--accent)] text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-[var(--accent)]/20"
+                  >
+                    <Download size={18} /> Crear Tarjeta
+                  </button>
+                  <button
+                    onClick={() => {
+                      hapticFeedback(15)
                       navigator.clipboard.writeText(window.location.href)
-                    }
-                  }}
-                  className="w-full md:w-auto bg-[var(--foreground)] text-[var(--background)] px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95"
-                >
-                  <Share2 size={16} /> Compartir mis stats
-                </button>
+                      alert('Enlace copiado al portapapeles')
+                    }}
+                    className="w-full sm:w-auto bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-all"
+                  >
+                    <Share2 size={16} /> Copiar Link
+                  </button>
+                </div>
               </div>
-              <div className="w-full md:w-64 aspect-square bg-gradient-to-br from-[var(--accent)] to-[#6366f1] rounded-3xl rotate-3 shadow-2xl flex items-center justify-center text-white">
-                <Shield size={100} className="drop-shadow-lg" />
+              <div className="w-full md:w-64 aspect-square bg-gradient-to-br from-[var(--accent)] via-[#6366f1] to-purple-600 rounded-3xl rotate-6 shadow-2xl flex items-center justify-center text-white p-8">
+                <Trophy size={80} className="drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]" />
               </div>
             </div>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)]/5 rounded-full blur-3xl -mr-32 -mt-32" />
           </div>
 
         </div>

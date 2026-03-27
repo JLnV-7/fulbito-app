@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
-import { Star, Trophy, ArrowRight, Users, Heart, Globe } from 'lucide-react'
+import { Star, Trophy, ArrowRight, Users, Heart, Globe, Crown } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { hapticFeedback } from '@/lib/helpers'
 
@@ -24,6 +24,7 @@ type ItemFeed = {
   profile: {
     username: string
     avatar_url: string | null
+    is_pro?: boolean
   } | null
 }
 
@@ -72,7 +73,7 @@ export function FeedGlobal() {
           equipo_local,
           equipo_visitante,
           created_at,
-          profile:profiles!match_logs_user_id_fkey(username, avatar_url)
+          profile:profiles!match_logs_user_id_fkey(username, avatar_url, is_pro)
         `)
         .eq('is_private', false)
         .not('review_text', 'is', null)
@@ -212,8 +213,9 @@ function FeedCard({ item }: { item: ItemFeed }) {
               : <span className="text-[10px] font-black text-[var(--accent)]">{initial}</span>
             }
           </div>
-          <span className="text-xs font-black italic tracking-tighter text-[var(--foreground)] truncate hover:text-[var(--accent)] transition-colors">
+          <span className="text-xs font-black italic tracking-tighter text-[var(--foreground)] truncate hover:text-[var(--accent)] transition-colors flex items-center gap-1">
             @{username}
+            {item.profile?.is_pro && <Crown size={12} className="text-yellow-400 fill-yellow-400" />}
           </span>
         </Link>
 

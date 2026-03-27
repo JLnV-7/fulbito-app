@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Users, MoreVertical, Trash2, Smile, AlertTriangle, ShieldAlert } from 'lucide-react'
+import { Send, Users, MoreVertical, Trash2, Smile, AlertTriangle, ShieldAlert, Crown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -314,13 +314,14 @@ export function MatchLiveChat({ partidoId, matchTitle }: MatchLiveChatProps) {
                                 <div className={`flex flex-col relative group max-w-[80%] ${isOwn ? 'items-end' : 'items-start'}`}>
                                         <div className="flex items-baseline gap-2 mb-1 px-1">
                                             <span
-                                                className="text-[9px] font-black capitalize text-[var(--text-muted)] cursor-pointer hover:text-[var(--foreground)] hover:underline transition-colors"
+                                                className="text-[9px] font-black capitalize text-[var(--text-muted)] cursor-pointer hover:text-[var(--foreground)] hover:underline transition-colors flex items-center gap-1"
                                                 onClick={(e) => {
                                                     e.stopPropagation()
                                                     if (msg.user_id) window.location.href = `/perfil/${msg.user_id}`
                                                 }}
                                             >
                                                 {isOwn ? 'Vos' : (msg.profile?.username || 'Anónimo')}
+                                                {msg.profile?.is_pro && <Crown size={10} className="text-yellow-400 fill-yellow-400" />}
                                             </span>
                                             <span className="text-[9px] text-[var(--text-muted)] opacity-60">
                                                 {timeAgoShort(msg.created_at)}

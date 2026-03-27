@@ -30,12 +30,13 @@ import { QuickPoll } from '@/components/QuickPoll'
 import { AdvancedStats } from '@/components/AdvancedStats'
 import { MatchLiveChat } from '@/components/MatchLiveChat'
 import { AiPredictionWidget } from '@/components/AiPredictionWidget'
+import { AiMatchSummary } from '@/components/AiMatchSummary'
 import { PullToRefresh } from '@/components/PullToRefresh'
 import { Heatmap } from '@/components/Heatmap'
 import { TeamLogo } from '@/components/TeamLogo'
 import { FormularioResena } from '@/components/resenas/FormularioResena'
 import { ListaResenas } from '@/components/resenas/ListaResenas'
-import { MessageSquare, MessagesSquare, ChevronDown, ChevronUp, BarChart2, Clock, Zap, Star } from 'lucide-react'
+import { MessageSquare, MessagesSquare, ChevronDown, ChevronUp, BarChart2, Clock, Zap, Star, Crown } from 'lucide-react'
 import type { Partido, EstadoPartido } from '@/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────
@@ -62,7 +63,7 @@ interface Props {
 // ─── Component ───────────────────────────────────────────────────────────
 export function PartidoClient({ initialPartido, id }: Props) {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
 
   // ── State ────────────────────────────────────────────────────────────
   // ✅ partido arranca con datos del Server — sin loading inicial
@@ -231,19 +232,43 @@ export function PartidoClient({ initialPartido, id }: Props) {
         <main className={`min-h-screen bg-[var(--background)] text-[var(--foreground)] md:pt-20
                          ${isVotingMode ? 'pb-44' : 'pb-28'}`}>
 
-          {/* ── Header ── */}
-          <div className="bg-[var(--card-bg)] border-b border-[var(--card-border)]">
-            <div className="max-w-4xl mx-auto px-6 py-4">
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  onClick={() => {
-                    hapticFeedback(15)
-                    window.history.length > 2 ? router.back() : router.push('/')
-                  }}
-                  className="text-[var(--text-muted)] text-sm hover:text-[var(--foreground)] transition-colors"
-                >
-                  ← Volver
-                </button>
+          {/* ── HERO ESTILO PELÍCULA ── */}
+          <div className="relative overflow-hidden bg-black/40 border-b border-white/10 pt-4 pb-10 md:pt-8 md:pb-16 mt-[-1px]">
+            {/* Fondos blurreados para dramatismo */}
+            <div className="absolute inset-0 z-0 opacity-60">
+              <div
+                className="absolute top-[-20%] left-[-10%] w-[60%] h-[140%] blur-[100px] md:blur-[140px] opacity-70"
+                style={{ backgroundColor: getTeamColor(partido.equipo_local) }}
+              />
+              <div
+                className="absolute top-[-20%] right-[-10%] w-[60%] h-[140%] blur-[100px] md:blur-[140px] opacity-70"
+                style={{ backgroundColor: getTeamColor(partido.equipo_visitante) }}
+              />
+            </div>
+
+            {/* Top Bar Navigation (sobre el blur) */}
+            <div className="relative z-20 max-w-5xl mx-auto px-6 mb-8 flex items-center justify-between">
+              <button
+                onClick={() => {
+                  hapticFeedback(15)
+                  window.history.length > 2 ? router.back() : router.push('/')
+                }}
+                className="flex items-center gap-2 text-white/70 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10"
+              >
+                ← Volver
+              </button>
+              
+              <div className="flex items-center gap-3">
+                <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border backdrop-blur-md shadow-sm ${
+                  estado === 'PREVIA'    ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
+                  : estado === 'EN_JUEGO' ? 'bg-red-500/20 text-red-300 border-red-500/30 animate-pulse'
+                  : 'bg-white/10 text-white/80 border-white/20'
+                }`}>
+                  {estado === 'PREVIA'     && 'Próximo'}
+                  {estado === 'EN_JUEGO'   && 'En vivo'}
+                  {estado === 'FINALIZADO' && 'Finalizado'}
+                </span>
+
                 <ShareButton
                   titulo={`Partido: ${partido.equipo_local} vs ${partido.equipo_visitante}`}
                   texto={`¡Mirá y votá en este partido en FutLog! ${partido.equipo_local} vs ${partido.equipo_visitante}`}
@@ -251,62 +276,48 @@ export function PartidoClient({ initialPartido, id }: Props) {
                   captureRef={formacionesRef}
                 />
               </div>
+            </div>
 
-              {/* Status + Liga */}
-              <div className="flex items-center justify-between mt-2 mb-6">
-                <span className="text-xs font-black text-[#16a34a] capitalize tracking-wider bg-[#16a34a]/10 px-2.5 py-1 rounded-full border border-[#16a34a]/20">
+            {/* Poster Content */}
+            <div className="relative z-20 max-w-5xl mx-auto px-4 flex flex-col items-center">
+              {/* Liga Pill */}
+              <div className="mb-6">
+                <span className="text-[10px] font-black text-white/90 uppercase tracking-[0.2em] bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20 shadow-xl">
                   {partido.liga}
-                </span>
-                <span className={`text-[10px] font-black capitalize px-2.5 py-1 rounded-full border shadow-sm ${
-                  estado === 'PREVIA'    ? 'bg-[var(--accent-yellow)]/10 text-[var(--accent-yellow)] border-[var(--accent-yellow)]/20'
-                  : estado === 'EN_JUEGO' ? 'bg-[var(--accent-red)]/10 text-[var(--accent-red)] border-[var(--accent-red)]/20 animate-pulse'
-                  : 'bg-[var(--foreground)]/5 text-[var(--text-muted)] border-[var(--card-border)]'
-                }`}>
-                  {estado === 'PREVIA'     && 'Próximo'}
-                  {estado === 'EN_JUEGO'   && 'En vivo'}
-                  {estado === 'FINALIZADO' && 'Finalizado'}
                 </span>
               </div>
 
-              {/* Matchup */}
-              <div className="flex items-center justify-between max-w-lg mx-auto py-4 relative">
+              {/* Matchup principal */}
+              <div className="flex items-center justify-center w-full gap-2 md:gap-8">
                 {/* Local */}
-                <div className="flex flex-col items-center flex-1 gap-3 relative z-10 w-[120px]">
-                  <div className="relative">
-                    <div className="absolute inset-0 blur-2xl rounded-full scale-110 opacity-30 dark:opacity-40"
-                         style={{ backgroundColor: getTeamColor(partido.equipo_local) }} />
-                    <TeamLogo src={partido.logo_local || undefined} teamName={partido.equipo_local} size={72}
-                              className="relative z-10 shadow-2xl drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
-                  </div>
-                  <h3 className="font-black text-sm md:text-base text-center leading-tight">
+                <div className="flex flex-col items-center flex-1 gap-4 w-[130px] md:w-[200px]">
+                  <TeamLogo src={partido.logo_local || undefined} teamName={partido.equipo_local} size={90}
+                            className="shadow-2xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] scale-110 md:scale-125 transition-transform" />
+                  <h3 className="font-black text-sm md:text-xl text-center leading-tight text-white drop-shadow-md">
                     {partido.equipo_local}
                   </h3>
                 </div>
 
-                {/* Score / VS */}
-                <div className="flex flex-col items-center justify-center shrink-0 w-[100px] z-20">
+                {/* Score / VS en el centro, gigante */}
+                <div className="flex flex-col items-center justify-center shrink-0 w-[110px] md:w-[160px]">
                   {estado === 'PREVIA' ? (
-                    <div className="w-12 h-12 rounded-full border border-white/10 bg-white/5 flex items-center justify-center shadow-lg backdrop-blur-md">
-                      <span className="font-black text-[var(--text-muted)] italic">VS</span>
+                    <div className="flex items-center justify-center pt-4">
+                      <span className="font-black text-2xl md:text-4xl text-white/40 italic tracking-tighter">VS</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 font-black text-4xl md:text-5xl tracking-tighter text-center">
+                    <div className="flex items-center justify-center gap-3 font-black text-5xl md:text-7xl tracking-tighter text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
                       <span>{partido.goles_local ?? '-'}</span>
-                      <span className="text-[var(--text-muted)] text-3xl font-light opacity-50 px-1">-</span>
+                      <span className="text-white/30 text-4xl md:text-5xl font-light px-1">-</span>
                       <span>{partido.goles_visitante ?? '-'}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Visitante */}
-                <div className="flex flex-col items-center flex-1 gap-3 relative z-10 w-[120px]">
-                  <div className="relative">
-                    <div className="absolute inset-0 blur-2xl rounded-full scale-110 opacity-30 dark:opacity-40"
-                         style={{ backgroundColor: getTeamColor(partido.equipo_visitante) }} />
-                    <TeamLogo src={partido.logo_visitante || undefined} teamName={partido.equipo_visitante} size={72}
-                              className="relative z-10 shadow-2xl drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
-                  </div>
-                  <h3 className="font-black text-sm md:text-base text-center leading-tight">
+                <div className="flex flex-col items-center flex-1 gap-4 w-[130px] md:w-[200px]">
+                  <TeamLogo src={partido.logo_visitante || undefined} teamName={partido.equipo_visitante} size={90}
+                            className="shadow-2xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] scale-110 md:scale-125 transition-transform" />
+                  <h3 className="font-black text-sm md:text-xl text-center leading-tight text-white drop-shadow-md">
                     {partido.equipo_visitante}
                   </h3>
                 </div>
@@ -327,46 +338,47 @@ export function PartidoClient({ initialPartido, id }: Props) {
                   <p className="text-[var(--text-muted)]">Alineaciones no disponibles</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {/* Acordeón: Resumen */}
-                  <Accordion id="resumen" open={openAccordion} onToggle={setOpenAccordion}
-                    icon={<BarChart2 size={16} className="text-[#16a34a]" />} label="Resumen del Partido">
-                    <MatchStats />
-                  </Accordion>
-
-                  {/* Acordeón: Cronología */}
+                <div className="space-y-10">
+                  {/* Cronica de Partido AI */}
                   {typeof partido.id === 'number' && (
-                    <Accordion id="cronologia" open={openAccordion} onToggle={setOpenAccordion}
-                      icon={<Clock size={16} className="text-[#f59e0b]" />} label="Cronología">
-                      <MatchTimeline fixtureId={partido.id} equipoLocal={partido.equipo_local} equipoVisitante={partido.equipo_visitante} />
-                    </Accordion>
+                     <AiMatchSummary partidoId={partido.id} />
                   )}
 
-                  {/* Acordeón: Stats Avanzadas */}
+                  {/* Timeline Narrativo (Fuera del acordeón) */}
                   {typeof partido.id === 'number' && (
-                    <Accordion id="avanzadas" open={openAccordion} onToggle={setOpenAccordion}
-                      icon={<Zap size={16} className="text-[#6366f1]" />} label="Estadísticas Avanzadas">
-                      <AdvancedStats fixtureId={partido.id} />
-                    </Accordion>
+                    <MatchTimeline fixtureId={partido.id} equipoLocal={partido.equipo_local} equipoVisitante={partido.equipo_visitante} />
                   )}
 
-                  <div className="text-center bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] p-4">
-                    <p className="text-sm text-[var(--text-muted)]">
-                      Hacé click en cada jugador para votarlo (1-10)
-                    </p>
+                  {/* Casting (Formaciones estilo Letterboxd) */}
+                  <div ref={formacionesRef}>
+                    <div className="flex items-center justify-between mb-4 px-2">
+                        <h3 className="text-xl font-black uppercase tracking-widest text-[var(--foreground)] mt-2">Casting (Formaciones)</h3>
+                    </div>
+                    
+                    <div className="text-center bg-white/5 rounded-xl border border-white/10 p-3 mb-6">
+                      <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider font-bold">
+                        Hacé click en cada jugador para calificar su actuación (1-10)
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {equipos.map(equipo => (
+                        <CanchaFormacion
+                          key={equipo.id}
+                          jugadores={equipo.titulares}
+                          nombreEquipo={equipo.nombre}
+                          votos={votos}
+                          onVotar={handleVotar}
+                          partidoFinalizado={estado === 'FINALIZADO'}
+                        />
+                      ))}
+                    </div>
                   </div>
 
-                  <div ref={formacionesRef} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {equipos.map(equipo => (
-                      <CanchaFormacion
-                        key={equipo.id}
-                        jugadores={equipo.titulares}
-                        nombreEquipo={equipo.nombre}
-                        votos={votos}
-                        onVotar={handleVotar}
-                        partidoFinalizado={estado === 'FINALIZADO'}
-                      />
-                    ))}
+                  {/* Accesorios y Extras (Stats) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-[var(--card-border)]/50">
+                    <MatchStats />
+                    {typeof partido.id === 'number' && <AdvancedStats fixtureId={partido.id} />}
                   </div>
                 </div>
               )
@@ -398,7 +410,23 @@ export function PartidoClient({ initialPartido, id }: Props) {
                 {typeof partido.id === 'number' && (
                   <>
                     <MatchTimeline fixtureId={partido.id} equipoLocal={partido.equipo_local} equipoVisitante={partido.equipo_visitante} />
-                    <AdvancedStats fixtureId={partido.id} />
+                    {profile?.is_pro ? (
+                        <AdvancedStats fixtureId={partido.id} />
+                    ) : (
+                        <div className="bg-[var(--card-bg)] border border-yellow-500/20 rounded-3xl p-6 shadow-sm text-center relative overflow-hidden group mb-6">
+                           <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent pointer-events-none" />
+                           <Crown size={32} className="mx-auto mb-3 text-yellow-500 opacity-50" />
+                           <h3 className="text-sm font-black mb-2 flex items-center justify-center gap-2 capitalize tracking-tighter text-yellow-500">
+                             Estadísticas Avanzadas Pro
+                           </h3>
+                           <p className="text-[10px] uppercase font-bold tracking-widest text-[var(--text-muted)] mb-4 leading-relaxed">
+                             Suscribite a FutLog Pro para desbloquear el radar táctico, expected goals y las métricas profundas del partido.
+                           </p>
+                           <button onClick={() => router.push('/pro')} className="inline-block bg-yellow-500 text-black px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all active:scale-95 shadow-[0_0_15px_rgba(234,179,8,0.2)]">
+                             Desbloquear Ahora
+                           </button>
+                        </div>
+                    )}
                   </>
                 )}
               </div>

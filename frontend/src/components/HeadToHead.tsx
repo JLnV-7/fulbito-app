@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import Image from 'next/image'
-import { CollapsibleSection } from './CollapsibleSection'
 
 interface H2HMatch {
     id: string
@@ -136,9 +135,13 @@ export function HeadToHead({ equipoLocal, equipoVisitante, logoLocal, logoVisita
     const pct2 = total > 0 ? (stats.victorias2 / total) * 100 : 33
 
     return (
-        <CollapsibleSection title="Historial de Enfrentamientos" icon={<span className="text-xl">⚔️</span>} defaultOpen={false}>
-
-            <div className="p-5">
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-6">
+                <span className="text-xl">⚔️</span>
+                <h3 className="text-xs font-black uppercase tracking-widest text-[var(--foreground)]">Frente a Frente</h3>
+            </div>
+            
+            <div className="px-2">
                 {/* Escudos y stats */}
                 <div className="flex items-center justify-between gap-4 mb-4">
                     {/* Equipo 1 */}
@@ -246,6 +249,6 @@ export function HeadToHead({ equipoLocal, equipoVisitante, logoLocal, logoVisita
                     </motion.div>
                 )}
             </div>
-        </CollapsibleSection>
+        </div>
     )
 }

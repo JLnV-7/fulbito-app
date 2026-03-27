@@ -70,6 +70,7 @@ export interface Profile {
   level?: number
   created_at: string
   notification_prefs?: Record<string, boolean>
+  is_pro?: boolean
 }
 
 export interface UserStats {

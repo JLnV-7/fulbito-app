@@ -5,8 +5,17 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
+export interface Profile {
+    id: string
+    username?: string
+    full_name?: string
+    avatar_url?: string
+    is_pro?: boolean
+}
+
 interface AuthContextType {
     user: User | null
+    profile: Profile | null
     loading: boolean
     signIn: (email: string, password: string) => Promise<void>
     signUp: (email: string, password: string) => Promise<void>
@@ -18,18 +27,30 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
+    const [profile, setProfile] = useState<Profile | null>(null)
     const [loading, setLoading] = useState(true)
+
+    const fetchProfile = async (userId: string) => {
+        const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
+        if (data) setProfile(data)
+    }
 
     useEffect(() => {
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setUser(session?.user ?? null)
+            if (session?.user) fetchProfile(session.user.id)
             setLoading(false)
         })
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user ?? null)
+            if (session?.user) {
+                fetchProfile(session.user.id)
+            } else {
+                setProfile(null)
+            }
 
             // Sync with cookie for middleware
             if (session) {
@@ -74,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <AuthContext.Provider value={{ user, loading, signIn, signUp, signInWithGoogle, signOut }}>
+        <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signInWithGoogle, signOut }}>
             {children}
         </AuthContext.Provider>
     )

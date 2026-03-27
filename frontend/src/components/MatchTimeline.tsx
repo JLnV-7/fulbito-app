@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CollapsibleSection } from './CollapsibleSection'
 
 interface TimelineEvent {
     minuto: string | number
@@ -69,14 +68,14 @@ export function MatchTimeline({ fixtureId, equipoLocal, equipoVisitante }: Match
 
     if (loading) {
         return (
-            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-4" style={{ borderRadius: 'var(--radius)' }}>
-                <div className="flex items-center gap-2 mb-3">
-                    <span className="text-sm">⏱️</span>
-                    <h3 className="text-[10px] font-black text-[var(--text-muted)] capitalize tracking-widest font-black capitalize">Timeline</h3>
+            <div className="bg-[var(--card-bg)] border border-[var(--card-border)] p-5 rounded-2xl shadow-sm">
+                <div className="flex items-center gap-2 mb-4">
+                    <span className="text-lg">⏱️</span>
+                    <h3 className="text-xs font-black text-[var(--foreground)] uppercase tracking-widest">Línea de tiempo</h3>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="h-8 bg-[var(--background)] animate-pulse" style={{ borderRadius: 'var(--radius)' }} />
+                        <div key={i} className="h-10 bg-[var(--background)] animate-pulse rounded-xl" />
                     ))}
                 </div>
             </div>
@@ -90,36 +89,29 @@ export function MatchTimeline({ fixtureId, equipoLocal, equipoVisitante }: Match
     const displayEvents = expanded ? events : keyEvents
 
     return (
-        <CollapsibleSection
-            title={
-                <div className="flex flex-col gap-1 w-full mr-2">
-                    <div className="flex items-center justify-between">
-                        <span>Timeline del Partido</span>
-                        <div className="flex gap-2 items-center">
-                            <span className="text-[9px] font-black capitalize text-[var(--text-muted)] bg-[var(--background)] border border-[var(--card-border)] px-1.5 py-0.5" style={{ borderRadius: 'var(--radius)' }}>
-                                {events.length} eventos
-                            </span>
-                            {events.length > keyEvents.length && (
-                                <button
-                                    onClick={(e: any) => {
-                                        e.stopPropagation()
-                                        setExpanded(!expanded)
-                                    }}
-                                    className="text-[10px] font-black capitalize text-[#16a34a] hover:underline"
-                                >
-                                    {expanded ? 'Solo clave' : 'Ver todo'}
-                                </button>
-                            )}
-                        </div>
-                    </div>
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2 text-[var(--foreground)]">
+                    <span className="text-xl">⏱️</span>
+                    <h3 className="text-xs font-black uppercase tracking-widest">Línea de tiempo</h3>
                 </div>
-            }
-            icon={<span className="text-xl">⏱️</span>}
-            defaultOpen={false}
-        >
+                <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-black capitalize text-[var(--text-muted)] bg-[var(--background)] border border-[var(--card-border)] px-2 py-1 rounded-lg">
+                        {events.length} eventos
+                    </span>
+                    {events.length > keyEvents.length && (
+                        <button
+                            onClick={() => setExpanded(!expanded)}
+                            className="text-[10px] font-black uppercase tracking-wider text-[var(--accent)] hover:opacity-70 transition-opacity bg-[var(--accent)]/10 px-2 py-1 rounded-lg"
+                        >
+                            {expanded ? 'Solo clave' : 'Ver todo'}
+                        </button>
+                    )}
+                </div>
+            </div>
 
             {/* Events */}
-            <div className="px-4 py-2">
+            <div className="px-2">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={expanded ? 'all' : 'key'}
@@ -194,6 +186,6 @@ export function MatchTimeline({ fixtureId, equipoLocal, equipoVisitante }: Match
                     </motion.div>
                 </AnimatePresence>
             </div>
-        </CollapsibleSection>
+        </div>
     )
 }

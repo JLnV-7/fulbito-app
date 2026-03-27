@@ -13,6 +13,7 @@ interface NotificationPrefs {
     resultadoProde: boolean
     nuevosSeguidores: boolean
     insignias: boolean
+    previa30m: boolean
 }
 
 export function NotificationSettings() {
@@ -22,7 +23,8 @@ export function NotificationSettings() {
         golFavorito: true,
         resultadoProde: true,
         nuevosSeguidores: true,
-        insignias: true
+        insignias: true,
+        previa30m: true
     })
     const { isSupported, isOptedIn, subscribeToPush, loading } = usePushNotifications()
     const [permissionState, setPermissionState] = useState<NotificationPermission>('default')
@@ -135,6 +137,13 @@ export function NotificationSettings() {
                                 description="Al arrancar un partido pronosticado"
                                 enabled={prefs.partidoInicio}
                                 onToggle={() => togglePref('partidoInicio')}
+                            />
+                            <ToggleOption
+                                icon="⏰"
+                                label="La Previa"
+                                description="Aviso 30 min antes (Equipo Favorito)"
+                                enabled={prefs.previa30m}
+                                onToggle={() => togglePref('previa30m')}
                             />
                             <ToggleOption
                                 icon="❤️"
