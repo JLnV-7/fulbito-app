@@ -22,6 +22,7 @@ export function CommunityRating({ partidoId, equipoLocal, equipoVisitante, equip
         avg_dt: 0,
         top_estrella: '',
         top_villano: '',
+        ratingDistribution: [] as { rating: number; count: number }[],
         playerRatings: [] as { id: number, name: string, avg: number, votes: number }[]
     })
     const [loading, setLoading] = useState(true)
@@ -87,6 +88,15 @@ export function CommunityRating({ partidoId, equipoLocal, equipoVisitante, equip
                             .sort((a, b) => b.avg - a.avg) // Best first
                     }
 
+                    // Build rating distribution (1-10)
+                    const dist: Record<number, number> = {}
+                    for (let i = 1; i <= 10; i++) dist[i] = 0
+                    data.forEach(l => {
+                        const r = Math.round(l.rating_partido)
+                        if (r >= 1 && r <= 10) dist[r]++
+                    })
+                    const ratingDistribution = Object.entries(dist).map(([k, v]) => ({ rating: Number(k), count: v }))
+
                     setStats({
                         total_reviews: total,
                         avg_rating: avgRating,
@@ -95,6 +105,7 @@ export function CommunityRating({ partidoId, equipoLocal, equipoVisitante, equip
                         avg_dt: avgDt,
                         top_estrella: topEstrella,
                         top_villano: topVillano,
+                        ratingDistribution,
                         playerRatings: aggregatedPlayers
                     })
                 }
@@ -153,6 +164,44 @@ export function CommunityRating({ partidoId, equipoLocal, equipoVisitante, equip
                     </div>
                 </div>
             </div>
+
+            {/* Rating distribution histogram */}
+            {stats.ratingDistribution.length > 0 && (() => {
+                const maxCount = Math.max(...stats.ratingDistribution.map(d => d.count), 1)
+                return (
+                    <div className="mb-4 p-3 rounded-xl bg-[var(--background)] border border-[var(--card-border)]">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-3">Distribución de ratings</h4>
+                        <div className="flex items-end gap-[3px] h-16">
+                            {stats.ratingDistribution.map(d => {
+                                const pct = d.count > 0 ? (d.count / maxCount) * 100 : 4
+                                const isAvg = d.rating === Math.round(stats.avg_rating)
+                                return (
+                                    <div key={d.rating} className="flex-1 flex flex-col items-center gap-1">
+                                        <span className="text-[8px] font-bold tabular-nums text-[var(--text-muted)] opacity-70">
+                                            {d.count > 0 ? d.count : ''}
+                                        </span>
+                                        <div
+                                            className={`w-full rounded-t-sm transition-all ${
+                                                isAvg
+                                                    ? 'bg-[#f59e0b]'
+                                                    : d.count > 0
+                                                        ? 'bg-[var(--accent)]/60'
+                                                        : 'bg-[var(--card-border)]/40'
+                                            }`}
+                                            style={{ height: `${pct}%`, minHeight: 2 }}
+                                        />
+                                        <span className={`text-[9px] tabular-nums font-bold ${
+                                            isAvg ? 'text-[#f59e0b]' : 'text-[var(--text-muted)] opacity-60'
+                                        }`}>
+                                            {d.rating}
+                                        </span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )
+            })()}
 
             {/* Sub-ratings */}
             <div className="grid grid-cols-3 gap-2 mb-3">
