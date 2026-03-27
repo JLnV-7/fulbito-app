@@ -9,6 +9,7 @@ interface UsePWAInstallReturn {
     promptInstall: () => Promise<boolean>  // llama al prompt nativo, retorna si aceptó
     dismiss: () => void        // el usuario lo cerró — no volver a mostrar
     isDismissed: boolean
+    isIOS: boolean             // true si es un dispositivo iOS (iPhone, iPad, iPod)
 }
 
 const STORAGE_KEY = 'futlog-pwa-dismissed'
@@ -18,6 +19,7 @@ export function usePWAInstall(): UsePWAInstallReturn {
     const [canInstall, setCanInstall] = useState(false)
     const [isInstalled, setIsInstalled] = useState(false)
     const [isDismissed, setIsDismissed] = useState(false)
+    const [isIOS, setIsIOS] = useState(false)
 
     useEffect(() => {
         // Ya está instalada como PWA
@@ -29,6 +31,11 @@ export function usePWAInstall(): UsePWAInstallReturn {
             setIsInstalled(true)
             return
         }
+
+        // Detectar iOS
+        const userAgent = window.navigator.userAgent.toLowerCase()
+        const isIOSDevice = /iphone|ipad|ipod/.test(userAgent)
+        setIsIOS(isIOSDevice)
 
         // El usuario ya cerró el banner antes
         const dismissed = localStorage.getItem(STORAGE_KEY)
@@ -71,5 +78,5 @@ export function usePWAInstall(): UsePWAInstallReturn {
         setCanInstall(false)
     }
 
-    return { canInstall, isInstalled, promptInstall, dismiss, isDismissed }
+    return { canInstall, isInstalled, promptInstall, dismiss, isDismissed, isIOS }
 }
