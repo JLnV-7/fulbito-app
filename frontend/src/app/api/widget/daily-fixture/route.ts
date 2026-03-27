@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// Inicializar supabase server client (Service Role para poder leer sin auth de cookie)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-const supabase = createClient(supabaseUrl, supabaseKey)
+export const dynamic = 'force-dynamic'
+
+// Función auxiliar para inicializar el cliente solo cuando se llama al endpoint
+const getSupabaseClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  
+  // Evitar que crashee en build time (GitHub Actions) si no hay variables
+  if (!supabaseUrl || !supabaseKey) return null
+  
+  return createClient(supabaseUrl, supabaseKey)
+}
 
 // Endpoint ultraligero para un Widget Nativo (iOS/Android) 
 // Ejemplo de uso: GET /api/widget/daily-fixture?userId=123
@@ -15,6 +23,11 @@ export async function GET(request: Request) {
 
     if (!userId) {
       return NextResponse.json({ error: 'Missing userId parameter' }, { status: 400 })
+    }
+
+    const supabase = getSupabaseClient()
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase configuration missing' }, { status: 500 })
     }
 
     // 1. Obtener el equipo favorito del usuario
