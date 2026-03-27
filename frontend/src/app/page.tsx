@@ -40,6 +40,7 @@ import { NewsTab } from '@/components/NewsTab'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { PWAInstallBanner } from '@/components/PWAInstallBanner'
 import { useSpoilerMode } from '@/hooks/useSpoilerMode'
+import { FeaturedLists } from '@/components/FeaturedLists'
 
 // ✅ TABS array eliminado — el contenido es siempre scroll vertical, no hay tab switching real
 // Solo 'noticias' es condicional. Si en el futuro querés tabs reales, ese es el momento de re-agregarlo.
@@ -437,6 +438,11 @@ function HomeContent() {
                   {/* 4. Community highlights */}
                   <section className="pt-6 border-t border-[var(--card-border)]">
                     <CommunityHighlights />
+                  </section>
+
+                  {/* 4.5. Listas destacadas */}
+                  <section className="pt-6 border-t border-[var(--card-border)]">
+                    <FeaturedLists />
                   </section>
 
                   {/* 5. La Tribuna Habla */}
