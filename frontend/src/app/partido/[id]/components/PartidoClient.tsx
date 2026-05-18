@@ -36,7 +36,8 @@ import { Heatmap } from '@/components/Heatmap'
 import { TeamLogo } from '@/components/TeamLogo'
 import { FormularioResena } from '@/components/resenas/FormularioResena'
 import { ListaResenas } from '@/components/resenas/ListaResenas'
-import { MessageSquare, MessagesSquare, ChevronDown, ChevronUp, BarChart2, Clock, Zap, Star, Crown } from 'lucide-react'
+import { VotacionModal } from './VotacionModal'
+import { MessageSquare, MessagesSquare, ChevronDown, ChevronUp, BarChart2, Clock, Zap, Star, Crown, Edit3 } from 'lucide-react'
 import type { Partido, EstadoPartido } from '@/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────
@@ -85,6 +86,7 @@ export function PartidoClient({ initialPartido, id }: Props) {
   const [resenasKey, setResenasKey]       = useState(0) // ✅ fuerza re-render de ListaResenas sin reload()
   const [activeTab, setActiveTab]         = useState<'reviews' | 'chat'>('reviews')
   const [openAccordion, setOpenAccordion] = useState<string | null>(null)
+  const [showVotacionModal, setShowVotacionModal] = useState(false)
 
   const formacionesRef = useRef<HTMLDivElement>(null)
   const chatRef        = useRef<HTMLDivElement>(null)
@@ -451,7 +453,7 @@ export function PartidoClient({ initialPartido, id }: Props) {
               </div>
             )}
 
-            {/* ── ✅ Sección de Reseñas (UNA sola vez — había 2 instancias) ── */}
+            {/* ── ✅ Sección de Reseñas ── */}
             {estado === 'FINALIZADO' && (
               <div className="space-y-10 mt-4">
                 <div className="flex items-center gap-3">
@@ -460,24 +462,28 @@ export function PartidoClient({ initialPartido, id }: Props) {
                   <div className="h-px flex-1 bg-[var(--card-border)] opacity-30" />
                 </div>
 
+                {/* ── Nuevo: Botón inmersivo para abrir VotacionModal ── */}
                 {user ? (
-                  <FormularioResena
-                    partidoId={Number(partido.id)}
-                    equipoLocal={partido.equipo_local}
-                    equipoVisitante={partido.equipo_visitante}
-                    logoLocal={partido.logo_local || undefined}
-                    logoVisitante={partido.logo_visitante || undefined}
-                    liga={partido.liga}
-                    golesLocal={partido.goles_local}
-                    golesVisitante={partido.goles_visitante}
-                    jugadoresDelPartido={jugadoresParaFormulario}
-                    resenaExistente={miResena}
-                    onGuardado={() => {
-                      hapticFeedback(50)
-                      // ✅ Incrementar key fuerza re-render de ListaResenas sin window.location.reload()
-                      setResenasKey(k => k + 1)
+                  <button
+                    type="button"
+                    onClick={() => {
+                      hapticFeedback(20)
+                      setShowVotacionModal(true)
                     }}
-                  />
+                    className="w-full bg-gradient-to-r from-[var(--accent)] to-[color-mix(in_srgb,var(--accent)_80%,#7c3aed)] text-white rounded-2xl p-5 flex items-center justify-between gap-3 shadow-lg hover:shadow-xl transition-all active:scale-[0.98] group border border-white/10"
+                  >
+                    <div className="flex flex-col items-start gap-0.5">
+                      <span className="text-sm font-black uppercase tracking-wider">
+                        {miResena ? '✏️ Editar tu reseña' : '⭐ Dejar tu reseña'}
+                      </span>
+                      <span className="text-[10px] font-semibold opacity-70">
+                        {miResena ? 'Modificá tu calificación y comentarios' : 'Puntuá, elegí la figura y contá cómo estuvo'}
+                      </span>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                      {miResena ? <Edit3 size={18} /> : <Star size={18} />}
+                    </div>
+                  </button>
                 ) : (
                   <div className="bg-[var(--card-bg)] rounded-3xl border border-dashed border-[var(--card-border)] p-8 text-center">
                     <Star size={32} className="mx-auto mb-4 text-[var(--text-muted)] opacity-20" />
@@ -485,6 +491,7 @@ export function PartidoClient({ initialPartido, id }: Props) {
                       Iniciá sesión para dejar tu reseña y puntuar el partido
                     </p>
                     <button
+                      type="button"
                       onClick={() => router.push('/login')}
                       className="px-6 py-2 bg-[var(--accent)] text-white rounded-xl font-bold text-xs uppercase"
                     >
@@ -611,6 +618,34 @@ export function PartidoClient({ initialPartido, id }: Props) {
           )}
         </main>
       </PullToRefresh>
+
+      {/* ── VotacionModal (Sprint 2) ── */}
+      {partido && estado === 'FINALIZADO' && (
+        <VotacionModal
+          isOpen={showVotacionModal}
+          onClose={() => setShowVotacionModal(false)}
+          partidoId={partido.id}
+          equipoLocal={partido.equipo_local}
+          equipoVisitante={partido.equipo_visitante}
+          logoLocal={partido.logo_local || undefined}
+          logoVisitante={partido.logo_visitante || undefined}
+          liga={partido.liga}
+          golesLocal={partido.goles_local}
+          golesVisitante={partido.goles_visitante}
+          jugadores={jugadoresParaFormulario}
+          existingVote={miResena ? {
+            rating_partido: miResena.rating_partido,
+            review_text: miResena.review_text,
+            jugador_estrella: miResena.jugador_estrella,
+            jugador_villano: miResena.jugador_villano,
+            tags: miResena.tags,
+          } : null}
+          onVotoGuardado={() => {
+            hapticFeedback(50)
+            setResenasKey(k => k + 1)
+          }}
+        />
+      )}
     </>
   )
 }
