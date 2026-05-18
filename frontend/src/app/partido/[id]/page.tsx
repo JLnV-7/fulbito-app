@@ -11,6 +11,42 @@ import { syncPartidosToSupabase } from '@/app/actions/syncPartidos'
 import { PartidoClient } from './components/PartidoClient'
 import type { Partido } from '@/types'
 
+// Revalidate all matches every 60 seconds (Incremental Static Regeneration)
+export const revalidate = 60
+export const dynamicParams = true // Fallback to on-demand generation for non-prerendered matches
+
+// Pre-render superclasicos or highly anticipated matches
+export async function generateStaticParams() {
+  try {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => [],
+          setAll: () => {},
+        },
+      }
+    )
+
+    // Pre-render top 20 most recent matches with most logs
+    const { data } = await supabase
+      .from('partidos')
+      .select('id')
+      .order('fecha_inicio', { ascending: false })
+      .limit(20)
+
+    if (data) {
+      return data.map((partido) => ({
+        id: String(partido.id),
+      }))
+    }
+  } catch (error) {
+    console.error('Error in generateStaticParams:', error)
+  }
+  return [] // Fallback gracefully
+}
+
 // ─── Server-side data fetching ─────────────────────────────────────────────
 async function getPartido(id: string): Promise<Partido | null> {
   const cookieStore = await cookies()
@@ -81,6 +117,47 @@ async function getPartido(id: string): Promise<Partido | null> {
 
 // ─── Page ──────────────────────────────────────────────────────────────────
 // params debe ser awaitable en Next.js 15
+import { Metadata } from 'next'
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const partido = await getPartido(id)
+
+  if (!partido) {
+    return { title: 'Partido no encontrado | FutLog' }
+  }
+
+  const isPlayed = calcularEstadoPartido(partido.fecha_inicio) === 'FINALIZADO'
+  const title = `${partido.equipo_local} ${isPlayed ? `${partido.goles_local} - ${partido.goles_visitante}` : 'vs'} ${partido.equipo_visitante} | FutLog`
+  
+  // Build OG image URL
+  const ogUrl = new URL(`/api/og/partido/${id}`, process.env.NEXT_PUBLIC_BASE_URL || 'https://futlog.app')
+  ogUrl.searchParams.set('local', partido.equipo_local)
+  ogUrl.searchParams.set('visitante', partido.equipo_visitante)
+  if (partido.logo_local) ogUrl.searchParams.set('logoL', partido.logo_local)
+  if (partido.logo_visitante) ogUrl.searchParams.set('logoV', partido.logo_visitante)
+  ogUrl.searchParams.set('status', calcularEstadoPartido(partido.fecha_inicio))
+  if (isPlayed && partido.goles_local !== null && partido.goles_visitante !== null) {
+    ogUrl.searchParams.set('gl', String(partido.goles_local))
+    ogUrl.searchParams.set('gv', String(partido.goles_visitante))
+  }
+
+  return {
+    title,
+    description: `Puntuá, comentá y mirá las estadísticas de la comunidad para ${partido.equipo_local} vs ${partido.equipo_visitante} en FutLog.`,
+    openGraph: {
+      title,
+      description: `Comunidad FutLog: ${partido.equipo_local} vs ${partido.equipo_visitante}`,
+      images: [{ url: ogUrl.toString(), width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      images: [ogUrl.toString()],
+    }
+  }
+}
+
 export default async function PartidoPage({
   params,
 }: {

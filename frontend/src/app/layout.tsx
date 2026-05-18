@@ -16,6 +16,8 @@ import { Geist } from 'next/font/google'
 import Link from 'next/link'
 import Script from 'next/script'
 import { LayoutClientWrapper } from '@/components/LayoutClientWrapper'
+import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 
 // ✅ Solo Geist Sans — Mono eliminado (no se usaba, +30KB en FOUT)
@@ -121,6 +123,10 @@ export default function RootLayout({
             </p>
           </footer>
         </LayoutClientWrapper>
+
+        {/* ── Vercel Monitoring (zero-config, auto-activado en Vercel) ── */}
+        <Analytics />
+        <SpeedInsights />
 
         {/*
           ✅ Service Worker cleanup via next/script Strategy="afterInteractive"

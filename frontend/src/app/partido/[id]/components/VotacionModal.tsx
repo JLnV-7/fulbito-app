@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useOptimistic } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { hapticFeedback } from '@/lib/helpers'
@@ -185,9 +185,17 @@ export function VotacionModal({
   }
 
   // ── Submit ─────────────────────────────────────────────────────────────
+  const [optimisticState, addOptimisticState] = useOptimistic<{ submitting: boolean; showResumen: boolean }, Partial<{ submitting: boolean; showResumen: boolean }>>(
+    { submitting: false, showResumen: false },
+    (state, updates) => ({ ...state, ...updates })
+  )
+
   const handleSubmit = async () => {
     hapticFeedback(30)
     setSubmitting(true)
+
+    // Optimistic UI update
+    addOptimisticState({ submitting: true, showResumen: true })
 
     const payload: VotoPayload = {
       partido_id: String(partidoId),
@@ -206,12 +214,13 @@ export function VotacionModal({
     }
 
     try {
+      // Execute without awaiting for UI update
       const result = await guardarVotoAction(payload)
       if (!result.success) {
         throw new Error(result.error)
       }
       clearDraft(partidoId)
-      setShowResumen(true)
+      setShowResumen(true) // Set actual state
       onVotoGuardado?.()
     } catch (err: any) {
       showToast(err.message || 'Error al guardar el voto', 'error')
@@ -231,8 +240,8 @@ export function VotacionModal({
       <div className="votacion-modal__overlay" onClick={onClose} />
 
       {/* Modal content */}
-      <div className={`votacion-modal__content ${showResumen ? 'votacion-modal__content--resumen' : ''}`}>
-        {showResumen ? (
+      <div className={`votacion-modal__content ${optimisticState.showResumen || showResumen ? 'votacion-modal__content--resumen' : ''}`}>
+        {optimisticState.showResumen || showResumen ? (
           <VotoResumen
             nota={nota}
             equipoLocal={equipoLocal}
@@ -340,9 +349,9 @@ export function VotacionModal({
                   type="button"
                   className="votacion-modal__submit-btn"
                   onClick={handleSubmit}
-                  disabled={submitting || nota === 0}
+                  disabled={submitting || optimisticState.submitting || nota === 0}
                 >
-                  {submitting ? 'Guardando...' : isEdit ? 'Actualizar' : 'Enviar reseña'}
+                  {submitting || optimisticState.submitting ? 'Guardando...' : isEdit ? 'Actualizar' : 'Enviar reseña'}
                 </button>
               )}
             </div>

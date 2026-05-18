@@ -9,6 +9,7 @@
 // ✅ headers de cache para /api/ routes que no son user-specific
 
 import type { NextConfig } from 'next'
+import { withSentryConfig } from '@sentry/nextjs'
 
 const withPWA = require('@ducanh2912/next-pwa').default({
   dest: 'public',
@@ -114,4 +115,15 @@ const nextConfig: NextConfig = {
   // Podés agregar ignoreBuildErrors: true temporalmente mientras los resolvés, pero no dejarlo permanente.
 }
 
-export default withPWA(nextConfig)
+const pwaConfig = withPWA(nextConfig)
+
+export default withSentryConfig(pwaConfig, {
+  org: "futlog",
+  project: "futlog-web",
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  tunnelRoute: "/monitoring",
+  sourcemaps: {
+    disable: true,
+  },
+})

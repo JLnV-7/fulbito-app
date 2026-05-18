@@ -7,13 +7,24 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "vitest"
+    "type-check": "tsc --noEmit",
+    "test": "vitest",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix"
+    ]
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
+    "@sentry/nextjs": "^10.53.1",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.39.0",
     "@types/canvas-confetti": "^1.9.0",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/og": "^0.11.1",
+    "@vercel/speed-insights": "^2.0.0",
     "axios": "^1.6.0",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
@@ -45,7 +56,9 @@
     "dotenv": "^17.2.4",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
+    "husky": "^9.1.7",
     "jsdom": "^28.0.0",
+    "lint-staged": "^17.0.5",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5",
